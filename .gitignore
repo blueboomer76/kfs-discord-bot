@@ -1,0 +1,16 @@
+# Dependency directories
+node_modules/
+
+# Bot package
+package-lock.json
+
+# Bot config
+/config.json
+.env
+
+# Start the bot
+startBot.bat
+
+# Test directory and command
+test/
+test.js
