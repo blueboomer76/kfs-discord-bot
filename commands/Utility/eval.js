@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const config = require("../config.json");
+const config = require("../../config.json");
 
 module.exports.run = async (bot, message, args) => {
 	if (config.ownerIDs.indexOf(message.author.id) == -1) return message.channel.send("This command is owner-only.");

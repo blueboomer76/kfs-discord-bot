@@ -5,33 +5,36 @@ const fs = require("fs");
 const bot = new Discord.Client();
 bot.commands = new Discord.Collection();
 
-fs.readdir("./commands/", (err, files) => {
-	if (err) throw err;
-	var jsfiles = files.filter(f => f.split(".").pop() === "js");
-	if (jsfiles.length == 0) throw new Error("No commands found in directory");
-	jsfiles.forEach((f, i) => {
-		var props = require(`./commands/${f}`);
-		console.log("The file " + f + " has been loaded.");
-		bot.commands.set(props.help.name, props);
-	})
+fs.readdir("./commands/", (err1, files1) => {
+	if (err1) throw err1;
+	var subdirs = files1;
+	if (subdirs.length == 0) {
+		throw new Error("No category folders found in directory");
+	} else {
+		var jsfiles, fCounter;
+		subdirs.forEach((f1, i1) => {
+			fs.readdir(`./commands/${f1}`, (err2, files2) => {
+				if (err2) return;
+				fCounter = 0;
+				jsfiles = files2.filter(f2 => f2.split(".").pop() == "js");
+				if (jsfiles.length != 0) {
+					jsfiles.forEach((f2, i2) => {
+						fCounter++;
+						var props = require(`./commands/${f1}/${f2}`);
+						bot.commands.set(props.help.name, props);
+					})
+					console.log(`${fCounter} files have been loaded in the category ${f1}.`);
+				}
+			})
+		})
+	}
 })
 
 var initialized = false;
-var arr;
-var phoneChannels = [];
-var phoneMsgCount = 0;
-var recentCommands = {"channels": [], "commands": [], "removeAt": []}
-
-function handlePhoneOverload(channels) {
-	var phoneMsg = ":telephone: The phone connection was cut off due to possible overload.";
-	bot.channels.get(channels[0]).send(phoneMsg);
-	bot.channels.get(channels[1]).send(phoneMsg);
-}
-
-function decreasePMC() {phoneMsgCount--;}
+var recentCommands = {"ids": [], "commands": [], "removeAt": []}
 
 function addCooldown(chnlID, command, msecs) {
-	recentCommands.channels.push(chnlID);
+	recentCommands.ids.push(chnlID);
 	recentCommands.commands.push(command);
 	recentCommands.removeAt.push(Number(new Date()) + msecs);
 	bot.setTimeout(removeCooldown, msecs, chnlID, command)
@@ -40,14 +43,14 @@ function removeCooldown(chnlID, command) {
 	var i = 0;
 	var currCdIndex = 0;
 	var chnlCdIndex;
-	while (currCdIndex < recentCommands.channels.length) {
-		chnlCdIndex = recentCommands.channels.indexOf(chnlID, currCdIndex);
+	while (currCdIndex < recentCommands.ids.length) {
+		chnlCdIndex = recentCommands.ids.indexOf(chnlID, currCdIndex);
 		if (chnlCdIndex == recentCommands.commands.indexOf(command, currCdIndex) && chnlCdIndex != -1) {
 			i = currCdIndex;
 		}
 		currCdIndex++;
 	}
-	recentCommands.channels.splice(i, 1);
+	recentCommands.ids.splice(i, 1);
 	recentCommands.commands.splice(i, 1);
 	recentCommands.removeAt.splice(i, 1);
 }
@@ -69,87 +72,38 @@ bot.on("guildDelete", guild => {
 });
 
 bot.on("message", async message => {
-	if (message.author.bot) return;
+	if (message.author.bot || !message.content.startsWith(config.prefix)) return;
 	var args = message.content.slice(config.prefix.length).trim().split(/ +/g);
 	var currChannel = message.channel.id;
 	var command = args.shift().toLowerCase();
-	if (message.content.startsWith(config.prefix)) {
-		if (message.guild && !message.channel.permissionsFor(bot.user).has(["VIEW_CHANNEL", "SEND_MESSAGES"])) return;
-		var cdIndex = -1;
-		var currCdIndex = 0;
-		var chnlCdIndex;
-		while (currCdIndex < recentCommands.channels.length) {
-			chnlCdIndex = recentCommands.channels.indexOf(currChannel, currCdIndex);
-			if (chnlCdIndex == recentCommands.commands.indexOf(command, currCdIndex) && chnlCdIndex != -1) {
-				cdIndex = currCdIndex;
-			}
-			currCdIndex++;
+	var cdIndex = -1;
+	var currCdIndex = 0;
+	var chnlCdIndex;
+	while (currCdIndex < recentCommands.ids.length) {
+		chnlCdIndex = recentCommands.ids.indexOf(currChannel, currCdIndex);
+		if (chnlCdIndex == recentCommands.commands.indexOf(command, currCdIndex) && chnlCdIndex != -1) {
+			cdIndex = currCdIndex;
 		}
-		if (cdIndex == -1) {
-			if (config.currCommands.indexOf(command) != -1) {
-				addCooldown(currChannel, command, config.cooldowns[config.currCommands.indexOf(command)]);
-			}
-			if (command == "phone") {
-				let phoneMsg = "";
-				let phoneMsg0 = "";
-				if (phoneChannels.indexOf(currChannel) == -1) {
-					phoneChannels.push(currChannel);
-					if (phoneChannels.length == 1) {
-						message.react("☎");
-					} else {
-						message.channel.send(":telephone: A phone connection has started! Greet them!");
-						if (phoneChannels.length == 2) {
-							phoneMsg0 = "The other side has picked up!";
-						} else {
-							phoneMsg0 = "Looks like someone else picked up the phone."
-							bot.channels.get(phoneChannels.shift()).send(":telephone: Someone else is now using the phone...");
-						}
-						bot.channels.get(phoneChannels[0]).send(":telephone: " + phoneMsg0)
-					}
-				} else {
-					if (phoneChannels.length == 1) {
-						phoneMsg = "There was no response from the phone, hanging up.";
-					} else {
-						arr = 0;
-						phoneMsg = "The phone was hung up.";
-						if (currChannel == phoneChannels[0]) {arr = 1};
-						bot.channels.get(phoneChannels[arr]).send(":telephone: " + phoneMsg);
-					}
-					phoneChannels = [];
-					message.channel.send(":telephone: " + phoneMsg);
-				}
-			} else {
-				let commandfile = bot.commands.get(command);
-				if (commandfile) {
-					commandfile.run(bot, message, args)
-					.catch(err => {
-						var e = err;
-						if (e && err.stack) e = err.stack;
-						if (e && e.length > 1500) e = e.slice(0, 1500) + "...";
-						message.channel.send(":x: An error has occurred while running the command:```" + e + "```This error has been reported.")
-						if (message.guild.id != config.ownerServerID) {
-							bot.channels.get(config.errorChannel).send(message.channel.name + " (ID " + currChannel + ")```" + e + "```")
-						}
-					});
-				}
-			}
-		} else {
-			message.channel.send(":no_entry: **Cooldown:**\nThe `" + command + "` command can't be used again for " +
-			(Math.floor((recentCommands.removeAt[cdIndex] - new Date()) / 100) / 10) + " seconds!");
+		currCdIndex++;
+	}
+	if (cdIndex == -1) {
+		if (config.currCommands.indexOf(command) != -1) {
+			addCooldown(currChannel, command, config.cooldowns[config.currCommands.indexOf(command)]);
 		}
-	} else if (phoneChannels.length > 1 && phoneChannels.indexOf(currChannel) != -1) {
-		if (message.guild && !message.channel.permissionsFor(bot.user).has("SEND_MESSAGES")) return;
-		phoneMsgCount++;
-		setTimeout(decreasePMC, 5000);
-		arr = 0;
-		if (currChannel == phoneChannels[0]) arr = 1;
-		var content = message.content;
-		if (content.length > 1500) content = content.slice(0, 1500) + "...";
-		bot.channels.get(phoneChannels[arr]).send(":telephone_receiver: " + content);
-		if (phoneMsgCount >= 4) {
-			setTimeout(handlePhoneOverload, 5000, phoneChannels);
-			phoneChannels = [];
+		let rCommand = bot.commands.get(command);
+		if (rCommand) {
+			if (message.guild && !message.channel.permissionsFor(bot.user).has(["VIEW_CHANNEL", "SEND_MESSAGES"])) return;
+			rCommand.run(bot, message, args)
+			.catch(err => {
+				var e = err;
+				if (e && err.stack) e = err.stack;
+				if (e && e.length > 1500) e = e.slice(0, 1500) + "...";
+				message.channel.send("An error has occurred while running the command:```javascript" + "\n" + e + "```");
+			});
 		}
+	} else {
+		message.channel.send(":no_entry: **Cooldown:**\nThe `" + command + "` command can't be used again for " +
+		(Math.floor((recentCommands.removeAt[cdIndex] - new Date()) / 100) / 10) + " seconds!");
 	}
 });
 
