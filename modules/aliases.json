@@ -1,0 +1,18 @@
+{
+	"aliases": [
+		"bot",
+		"8b",
+		"role",
+		"guild",
+		"server",
+		"user"
+	],
+	"aCmds": [
+		"botinfo",
+		"8ball",
+		"roleinfo",
+		"serverinfo",
+		"serverinfo",
+		"userinfo"
+	]
+}

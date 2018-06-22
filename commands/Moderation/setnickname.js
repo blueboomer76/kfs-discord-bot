@@ -22,6 +22,23 @@ module.exports.run = async (bot, message, args) => {
 	.catch(() => message.channel.send("Could not set the new nickname for the user."))
 }
 
+module.exports.config = {
+	"aliases": ["changenick", "setnick"],
+	"cooldown": {
+		"waitTime": 15000,
+		"type": "user"
+	},
+	"guildOnly": true,
+	"perms": {
+		"level": 2,
+		"reqEmbed": false,
+		"reqPerms": "MANAGE_NICKNAMES"
+	}
+}
+
 module.exports.help = {
-	"name": "setnickname"
+	"name": "setnickname",
+	"category": "Moderation",
+	"description": "Changes a user's nickname in this server",
+	"usage": "setnickname <user> <new nickname>"
 }

@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 const config = require("../../config.json");
 
 module.exports.run = async (bot, message, args) => {
-	if (config.ownerIDs.indexOf(message.author.id) == -1) return message.channel.send("This command is owner-only.");
+	if (config.ownerIDs.indexOf(message.author.id) == -1) return message.channel.send("This command has restricted access.");
 	var argstext = args.join(" ");
 	var result;
 	try {
@@ -26,6 +26,23 @@ module.exports.run = async (bot, message, args) => {
 	);
 }
 
+module.exports.config = {
+	"aliases": null,
+	"cooldown": {
+		"waitTime": 1000,
+		"type": "global"
+	},
+	"guildOnly": false,
+	"perms": {
+		"level": 10,
+		"reqEmbed": true,
+		"reqPerms": null
+	}
+}
+
 module.exports.help = {
-	"name": "eval"
+	"name": "eval",
+	"category": "Utility",
+	"description": "Evaluate JavaScript code. Only the bot owner(s) can access this command",
+	"usage": "eval <code>"
 }

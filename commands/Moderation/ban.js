@@ -20,6 +20,23 @@ module.exports.run = async (bot, message, args) => {
 	.catch(() => message.channel.send("Could not ban the user from the server."))
 }
 
+module.exports.config = {
+	"aliases": null,
+	"cooldown": {
+		"waitTime": 15000,
+		"type": "user"
+	},
+	"guildOnly": true,
+	"perms": {
+		"level": 3,
+		"reqEmbed": false,
+		"reqPerms": "BAN_MEMBERS"
+	}
+}
+
 module.exports.help = {
-	"name": "ban"
+	"name": "ban",
+	"category": "Moderation",
+	"description": "Bans a user from this server",
+	"usage": "ban <user>"
 }

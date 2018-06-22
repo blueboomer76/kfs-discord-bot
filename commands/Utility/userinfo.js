@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const fList = require("../../modules/functions.js");
 
 module.exports.run = async (bot, message, args) => {
 	var uiMem;
@@ -24,8 +25,8 @@ module.exports.run = async (bot, message, args) => {
 	.setColor(uiMem.displayColor)
 	.setFooter("ID: " + uiMem.id)
 	.setThumbnail(uiMem.user.avatarURL)
-	.addField("Account created at", ucDate.toUTCString())
-	.addField("Joined this server at", ujDate.toUTCString())
+	.addField("Account created at", ucDate.toUTCString() + " (" + fList.getDuration(ucDate) + ")")
+	.addField("Joined this server at", ujDate.toUTCString() + " (" + fList.getDuration(ujDate) + ")")
 	.addField("Status", uiMem.presence.status)
 	.addField("Is a bot", uiMem.user.bot)
 	.addField("Nickname", uiMem.nickname)
@@ -37,6 +38,23 @@ module.exports.run = async (bot, message, args) => {
 	*/
 }
 
+module.exports.config = {
+	"aliases": ["user"],
+	"cooldown": {
+		"waitTime": 15000,
+		"type": "channel"
+	},
+	"guildOnly": true,
+	"perms": {
+		"level": 0,
+		"reqEmbed": true,
+		"reqPerms": null
+	}
+}
+
 module.exports.help = {
-	"name": "userinfo"
+	"name": "userinfo",
+	"category": "Utility",
+	"description": "Get info about you, or another user",
+	"usage": "userinfo [user]"
 }

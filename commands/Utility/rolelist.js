@@ -22,6 +22,23 @@ module.exports.run = async (bot, message, args) => {
 	);
 }
 
+module.exports.config = {
+	"aliases": ["roles"],
+	"cooldown": {
+		"waitTime": 30000,
+		"type": "guild"
+	},
+	"guildOnly": true,
+	"perms": {
+		"level": 0,
+		"reqEmbed": true,
+		"reqPerms": null
+	}
+}
+
 module.exports.help = {
-	"name": "rolelist"
+	"name": "rolelist",
+	"category": "Utility",
+	"description": "Get the server's roles",
+	"usage": "rolelist [page]"
 }

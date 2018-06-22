@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const fList = require("../../modules/functions.js");
 
 module.exports.run = async (bot, message, args) => {
 	var ciChnl;
@@ -13,7 +14,7 @@ module.exports.run = async (bot, message, args) => {
 	.setTitle("Channel Info for " + ciChnl.name)
 	.setColor(Math.floor(Math.random() * 16777216))
 	.setFooter("ID: " + ciChnl.id)
-	.addField("Channel created at", ccDate.toUTCString())
+	.addField("Channel created at", ccDate.toUTCString() + " (" + fList.getDuration(ccDate) + ")")
 	.addField("Channel type", ciChnl.type)
 	);
 	/*
@@ -22,6 +23,23 @@ module.exports.run = async (bot, message, args) => {
 	*/
 }
 
+module.exports.config = {
+	"aliases": ["channel"],
+	"cooldown": {
+		"waitTime": 15000,
+		"type": "channel"
+	},
+	"guildOnly": true,
+	"perms": {
+		"level": 0,
+		"reqEmbed": true,
+		"reqPerms": null
+	}
+}
+
 module.exports.help = {
-	"name": "channelinfo"
+	"name": "channelinfo",
+	"category": "Utility",
+	"description": "Get info about a channel",
+	"usage": "channelinfo [channel]"
 }
