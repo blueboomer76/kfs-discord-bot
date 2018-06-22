@@ -13,6 +13,23 @@ module.exports.run = async (bot, message, args) => {
 	);
 }
 
+module.exports.config = {
+	"aliases": null,
+	"cooldown": {
+		"waitTime": 15000,
+		"type": "user"
+	},
+	"guildOnly": true,
+	"perms": {
+		"level": 0,
+		"reqEmbed": true,
+		"reqPerms": null
+	}
+}
+
 module.exports.help = {
-	"name": "cat"
+	"name": "cat",
+	"category": "Fun",
+	"description": "Get a random cat!",
+	"usage": "cat"
 }

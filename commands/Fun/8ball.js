@@ -29,6 +29,23 @@ module.exports.run = async (bot, message, args) => {
 	}
 }
 
+module.exports.config = {
+	"aliases": ["8b"],
+	"cooldown": {
+		"waitTime": 15000,
+		"type": "user"
+	},
+	"guildOnly": true,
+	"perms": {
+		"level": 0,
+		"reqEmbed": false,
+		"reqPerms": null
+	}
+}
+
 module.exports.help = {
-	"name": "8ball"
+	"name": "8ball",
+	"category": "Fun",
+	"description": "Ask the 8 ball a question and get an answer!",
+	"usage": "8ball <question>"
 }
