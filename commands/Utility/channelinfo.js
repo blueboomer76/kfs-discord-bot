@@ -11,7 +11,7 @@ module.exports.run = async (bot, message, args) => {
 	}
 	let ccDate = new Date(ciChnl.createdTimestamp);
 	message.channel.send(new Discord.RichEmbed()
-	.setTitle("Channel Info for " + ciChnl.name)
+	.setTitle("Channel Info - " + ciChnl.name)
 	.setColor(Math.floor(Math.random() * 16777216))
 	.setFooter("ID: " + ciChnl.id)
 	.addField("Channel created at", ccDate.toUTCString() + " (" + fList.getDuration(ccDate) + ")")
@@ -24,22 +24,22 @@ module.exports.run = async (bot, message, args) => {
 }
 
 module.exports.config = {
-	"aliases": ["channel"],
-	"cooldown": {
-		"waitTime": 15000,
-		"type": "channel"
+	aliases: ["channel"],
+	cooldown: {
+		waitTime: 15000,
+		type: "channel"
 	},
-	"guildOnly": true,
-	"perms": {
-		"level": 0,
-		"reqEmbed": true,
-		"reqPerms": null
+	guildOnly: true,
+	perms: {
+		level: 0,
+		reqEmbed: true,
+		reqPerms: null
 	}
 }
 
 module.exports.help = {
-	"name": "channelinfo",
-	"category": "Utility",
-	"description": "Get info about a channel",
-	"usage": "channelinfo [channel]"
+	name: "channelinfo",
+	category: "Utility",
+	description: "Get info about a channel",
+	usage: "channelinfo [channel]"
 }

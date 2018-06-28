@@ -6,16 +6,20 @@ module.exports.run = async (bot, message, args) => {
 	if (args.length == 0) {
 		uiMem = message.guild.member(message.author);
 	} else {
-		var mention = message.mentions.users.first();
-		if (mention) {
-			uiMem = message.guild.member(mention);
-		} else {
-			uiMem = message.guild.members.get(args[0]);
-		}
-		if (!uiMem) return message.channel.send("No users were found! A valid user mention or ID is needed.");
+		var argstext = args.join(" ");
+		uiMem = fList.findMember(bot, message, argstext);
+		if (!uiMem) return message.channel.send("The user provided could not be found in this server.");
 	}
+
 	let ucDate = new Date(uiMem.user.createdTimestamp);
 	let ujDate = new Date(uiMem.joinedTimestamp);
+	var memNick;
+	if (uiMem.nickname == null) {memNick = "None"} else {memNick = uiMem.nickname}
+	let tsList = [];
+	let ugMembers = message.guild.members;
+	ugMembers.forEach(mem => tsList.push(mem.joinedTimestamp))
+	tsList.sort((a, b) => a - b);
+	
 	message.channel.send(new Discord.RichEmbed()
 	.setTitle("User Info for " + uiMem.user.tag)
 	.setColor(uiMem.displayColor)
@@ -25,32 +29,33 @@ module.exports.run = async (bot, message, args) => {
 	.addField("Joined this server at", ujDate.toUTCString() + " (" + fList.getDuration(ujDate) + ")")
 	.addField("Status", uiMem.presence.status)
 	.addField("Is a bot", uiMem.user.bot)
-	.addField("Nickname", uiMem.nickname)
+	.addField("Nickname", memNick)
+	.addField("Member #", tsList.indexOf(uiMem.joinedTimestamp) + 1)
 	.addField("Roles - " + uiMem.roles.array().length, uiMem.roles.array().join(", "))
 	);
 	/*
 		Others found:
-		Seen on guild(s), Join order, Is Admin, Permissions
+		Seen on guild(s), Is Admin, Permissions
 	*/
 }
 
 module.exports.config = {
-	"aliases": ["user"],
-	"cooldown": {
-		"waitTime": 15000,
-		"type": "channel"
+	aliases: ["user"],
+	cooldown: {
+		waitTime: 15000,
+		type: "channel"
 	},
-	"guildOnly": true,
-	"perms": {
-		"level": 0,
-		"reqEmbed": true,
-		"reqPerms": null
+	guildOnly: true,
+	perms: {
+		level: 0,
+		reqEmbed: true,
+		reqPerms: null
 	}
 }
 
 module.exports.help = {
-	"name": "userinfo",
-	"category": "Utility",
-	"description": "Get info about you, or another user",
-	"usage": "userinfo [user]"
+	name: "userinfo",
+	category: "Utility",
+	description: "Get info about you, or another user",
+	usage: "userinfo [user]"
 }

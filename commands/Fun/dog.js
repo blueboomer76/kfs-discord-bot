@@ -14,22 +14,22 @@ module.exports.run = async (bot, message, args) => {
 }
 
 module.exports.config = {
-	"aliases": null,
-	"cooldown": {
-		"waitTime": 15000,
-		"type": "user"
+	aliases: ["woof", "puppy"],
+	cooldown: {
+		waitTime: 15000,
+		type: "channel"
 	},
-	"guildOnly": true,
-	"perms": {
-		"level": 0,
-		"reqEmbed": true,
-		"reqPerms": null
+	guildOnly: true,
+	perms: {
+		level: 0,
+		reqEmbed: true,
+		reqPerms: null
 	}
 }
 
 module.exports.help = {
-	"name": "dog",
-	"category": "Fun",
-	"description": "Get a random dog!",
-	"usage": "dog"
+	name: "dog",
+	category: "Fun",
+	description: "Get a random dog!",
+	usage: "dog"
 }

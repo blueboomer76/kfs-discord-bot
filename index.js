@@ -4,6 +4,7 @@ const fs = require("fs");
 
 const bot = new Discord.Client();
 bot.commands = new Discord.Collection();
+bot.aliases = new Discord.Collection();
 
 fs.readdir("./commands/", (err1, files1) => {
 	if (err1) throw err1;
@@ -22,6 +23,11 @@ fs.readdir("./commands/", (err1, files1) => {
 						fCounter++;
 						var props = require(`./commands/${f1}/${f2}`);
 						bot.commands.set(props.help.name, props);
+						if (props.config.aliases.length > 0) {
+							props.config.aliases.forEach(a => {
+								bot.aliases.set(a, props.help.name);
+							})
+						}
 					})
 					console.log(`${fCounter} files have been loaded in the category ${f1}.`);
 				}
@@ -30,78 +36,24 @@ fs.readdir("./commands/", (err1, files1) => {
 	}
 })
 
-var recentCommands = {"ids": [], "commands": [], "removeAt": []}
-
-function addCooldown(chnlID, command, msecs) {
-	recentCommands.ids.push(chnlID);
-	recentCommands.commands.push(command);
-	recentCommands.removeAt.push(Number(new Date()) + msecs);
-	bot.setTimeout(removeCooldown, msecs, chnlID, command)
-}
-function removeCooldown(chnlID, command) {
-	var i = 0;
-	var currCdIndex = 0;
-	var chnlCdIndex;
-	while (currCdIndex < recentCommands.ids.length) {
-		chnlCdIndex = recentCommands.ids.indexOf(chnlID, currCdIndex);
-		if (chnlCdIndex == recentCommands.commands.indexOf(command, currCdIndex) && chnlCdIndex != -1) {
-			i = currCdIndex;
-		}
-		currCdIndex++;
-	}
-	recentCommands.ids.splice(i, 1);
-	recentCommands.commands.splice(i, 1);
-	recentCommands.removeAt.splice(i, 1);
-}
-
-bot.on("ready", () => {
-	console.log("Bot started successfully on " + new Date());
-	bot.user.setActivity("with you in " + bot.guilds.size + " servers");
-});
-
-bot.on("guildCreate", guild => {
-	console.log(`This bot has joined ${guild.name} (${guild.id}), which has ${guild.memberCount} members.`)
-});
-
-bot.on("guildDelete", guild => {
-	console.log(`This bot has been removed from ${guild.name} (${guild.id})`)
-});
-
-bot.on("message", async message => {
-	if (message.author.bot || !message.content.startsWith(config.prefix)) return;
-	var args = message.content.slice(config.prefix.length).trim().split(/ +/g);
-	var currChannel = message.channel.id;
-	var command = args.shift().toLowerCase();
-
-	var cdIndex = -1;
-	var currCdIndex = 0;
-	var chnlCdIndex;
-	while (currCdIndex < recentCommands.ids.length) {
-		chnlCdIndex = recentCommands.ids.indexOf(currChannel, currCdIndex);
-		if (chnlCdIndex == recentCommands.commands.indexOf(command, currCdIndex) && chnlCdIndex != -1) {
-			cdIndex = currCdIndex;
-		}
-		currCdIndex++;
-	}
-	if (cdIndex == -1) {
-		if (config.currCommands.indexOf(command) != -1) {
-			addCooldown(currChannel, command, config.cooldowns[config.currCommands.indexOf(command)]);
-		}
-		let rCommand = bot.commands.get(command);
-		if (rCommand) {
-			if (message.guild && !message.channel.permissionsFor(bot.user).has("SEND_MESSAGES")) return;
-			rCommand.run(bot, message, args)
-			.catch(err => {
-				var e = err;
-				if (err && err.stack) e = err.stack;
-				message.channel.send("An error has occurred while running the command:```javascript" + "\n" + e + "```");
-			});
-		}
+fs.readdir("./events/", (err, files) => {
+	var evfiles;
+	var evCounter = 0;
+	if (err) {console.log(err); return}
+	evfiles = files.filter(f => f.split(".").pop() == "js");
+	if (evfiles.length != 0) {
+		evfiles.forEach(f => {
+			evCounter++;
+			var eventName = f.split(".")[0];
+			var ev = require(`./events/${f}`);
+			bot.on(eventName, ev.bind(null, bot));
+			delete require.cache[require.resolve(`./events/${f}`)];
+		})
+		console.log(`${evCounter} events have been loaded.`);
 	} else {
-		message.channel.send(":no_entry: **Cooldown:**\nThe `" + command + "` command can't be used again for " +
-		(Math.floor((recentCommands.removeAt[cdIndex] - new Date()) / 100) / 10) + " seconds!");
+		console.log("No events were found!");
 	}
-});
+})
 
 process.on("uncaughtException", err => {
 	console.error(`[Exception] ${new Date()}:`)

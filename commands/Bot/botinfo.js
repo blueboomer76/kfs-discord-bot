@@ -32,22 +32,22 @@ module.exports.run = async (bot, message, args) => {
 }
 
 module.exports.config = {
-	"aliases": ["bot"],
-	"cooldown": {
-		"waitTime": 15000,
-		"type": "guild"
+	aliases: ["bot"],
+	cooldown: {
+		waitTime: 15000,
+		type: "guild"
 	},
-	"guildOnly": false,
-	"perms": {
-		"level": 0,
-		"reqEmbed": true,
-		"reqPerms": null
+	guildOnly: false,
+	perms: {
+		level: 0,
+		reqEmbed: true,
+		reqPerms: null
 	}
 }
 
 module.exports.help = {
-	"name": "botinfo",
-	"category": "Bot",
-	"description": "Get info about the bot",
-	"usage": "botinfo"
+	name: "botinfo",
+	category: "Bot",
+	description: "Get info about the bot",
+	usage: "botinfo"
 }

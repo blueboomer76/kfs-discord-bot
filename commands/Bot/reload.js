@@ -16,22 +16,22 @@ module.exports.run = async (bot, message, args) => {
 };
 
 module.exports.config = {
-	"aliases": [],
-	"cooldown": {
-		"waitTime": 0,
-		"type": "global"
+	aliases: [],
+	cooldown: {
+		waitTime: 0,
+		type: "global"
 	},
-	"guildOnly": false,
-	"perms": {
-		"level": 9,
-		"reqEmbed": false,
-		"reqPerms": null
+	guildOnly: false,
+	perms: {
+		level: 9,
+		reqEmbed: false,
+		reqPerms: null
 	}
 }
 
 module.exports.help = {
-	"name": "reload",
-	"category": "Bot",
-	"description": "Reload a command. It must be a command that has been loaded when the bot was started.",
-	"usage": "reload <command>"
+	name: "reload",
+	category: "Bot",
+	description: "Reload a command. It must be a command that has been loaded when the bot was started.",
+	usage: "reload <command>"
 }
