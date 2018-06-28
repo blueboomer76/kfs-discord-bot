@@ -34,21 +34,21 @@ module.exports.run = async (bot, message, args) => {
 }
 
 module.exports.config = {
-	"aliases": ["8b"],
-	"cooldown": {
-		"waitTime": 15000,
-		"type": "user"
+	aliases: ["8b"],
+	cooldown: {
+		waitTime: 15000,
+		type: "user"
 	},
-	"guildOnly": true,
-	"perms": {
-		"level": 0,
-		"reqPerms": null
+	guildOnly: true,
+	perms: {
+		level: 0,
+		reqPerms: []
 	}
 }
 
 module.exports.help = {
-	"name": "8ball",
-	"category": "Fun",
-	"description": "Ask the 8 ball a question and get an answer!",
-	"usage": "k,8ball <question>"
+	name: "8ball",
+	category: "Fun",
+	description: "Ask the 8 ball a question and get an answer!",
+	usage: "k,8ball <question>"
 }

@@ -19,21 +19,21 @@ module.exports.run = async (bot, message, args) => {
 }
 
 module.exports.config = {
-	"aliases": null,
-	"cooldown": {
-		"waitTime": 1000,
-		"type": "global"
+	aliases: ["exec"],
+	cooldown: {
+		waitTime: 0,
+		type: "global"
 	},
-	"guildOnly": false,
-	"perms": {
-		"level": 10,
-		"reqPerms": null
+	guildOnly: false,
+	perms: {
+		level: 10,
+		reqPerms: []
 	}
 }
 
 module.exports.help = {
-	"name": "eval",
-	"category": "Util",
-	"description": "Evaluate JavaScript code. Only the bot owner(s) can access this command",
-	"usage": "k,eval <code>"
+	name: "eval",
+	category: "Utility",
+	description: "Evaluate JavaScript code. Only the bot owner(s) can access this command",
+	usage: "k,eval <code>"
 }

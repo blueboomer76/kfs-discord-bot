@@ -44,10 +44,14 @@ module.exports.getDuration = ts => {
 module.exports.findMember = (msg, str) => {
 	let member = msg.mentions.members.first() || msg.guild.members.get(str);
 	if (!member) {
-		let sMem = msg.guild.members.find(mem => mem.user.tag.toLowerCase() === str.toLowerCase());
-		if (!sMem) sMem = msg.guild.members.find(mem => mem.user.username.toLowerCase() === str.toLowerCase());
-		if (!sMem) sMem = msg.guild.members.find(mem => mem.displayName.toLowerCase() === str.toLowerCase());
-		if (!sMem) return "`No users found`"
+		let sMem = msg.guild.members.find(mem => mem.user.tag.toLowerCase().includes(str.toLowerCase()));
+		if (!sMem) sMem = msg.guild.members.find(mem => mem.user.username.toLowerCase().includes(str.toLowerCase()));
+		if (!sMem) sMem = msg.guild.members.find(mem => mem.displayName.toLowerCase().includes(str.toLowerCase()));
+		if (!sMem) {
+			return undefined;
+		} else {
+			member = sMem;
+		}
 	}
 	return member;
 }

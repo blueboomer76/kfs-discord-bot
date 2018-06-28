@@ -36,21 +36,21 @@ module.exports.run = async (bot, message, args) => {
 }
 
 module.exports.config = {
-	"aliases": ["role"],
-	"cooldown": {
-		"waitTime": 15000,
-		"type": "channel"
+	aliases: ["role"],
+	cooldown: {
+		waitTime: 15000,
+		type: "channel"
 	},
-	"guildOnly": true,
-	"perms": {
-		"level": 0,
-		"reqPerms": null
+	guildOnly: true,
+	perms: {
+		level: 0,
+		reqPerms: []
 	}
 }
 
 module.exports.help = {
-	"name": "roleinfo",
-	"category": "Utility",
-	"description": "Get info about a role",
-	"usage": "k,role <role>"
+	name: "roleinfo",
+	category: "Utility",
+	description: "Get info about a role",
+	usage: "k,roleinfo <role>"
 }

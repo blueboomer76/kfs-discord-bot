@@ -6,21 +6,21 @@ module.exports.run = async (bot, message, args) => {
 }
 
 module.exports.config = {
-	"aliases": [],
-	"cooldown": {
-		"waitTime": 15000,
-		"type": "channel"
+	aliases: [],
+	cooldown: {
+		waitTime: 15000,
+		type: "channel"
 	},
-	"guildOnly": false,
-	"perms": {
-		"level": 0,
-		"reqPerms": null
+	guildOnly: false,
+	perms: {
+		level: 0,
+		reqPerms: []
 	}
 }
 
 module.exports.help = {
-	"name": "ping",
-	"category": "Bot",
-	"description": "Get bot ping and API latency of the bot",
-	"usage": "k,ping"
+	name: "ping",
+	category: "Bot",
+	description: "Get bot ping and API latency of the bot",
+	usage: "k,ping"
 }

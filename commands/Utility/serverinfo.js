@@ -7,8 +7,9 @@ module.exports.run = async (bot, message, args) => {
 	var botCount = 0;
 	message.guild.members.forEach(bcMember => {if (bcMember.user.bot) {botCount++;}});
 	message.channel.send(new Discord.RichEmbed()
-	.setTitle("Detailed server Info for " + message.guild.name)
+	.setTitle("Server Info - " + message.guild.name)
 	.setColor(Math.floor(Math.random() * 16777216))
+	.setThumbnail(message.guild.iconURL)
 	.setFooter("ID: " + message.guild.id + " ~ Server data as of")
 	.setTimestamp(message.createdAt)
 	.addField("Created at", gcDate.toUTCString() + " (" + fList.getDuration(message.guild.createdAt) + ")")
@@ -30,21 +31,21 @@ module.exports.run = async (bot, message, args) => {
 }
 
 module.exports.config = {
-	"aliases": ["guild", "server"],
-	"cooldown": {
-		"waitTime": 120000,
-		"type": "guild"
+	aliases: ["guild", "guildinfo", "server"],
+	cooldown: {
+		waitTime: 120000,
+		type: "guild"
 	},
-	"guildOnly": true,
-	"perms": {
-		"level": 0,
-		"reqPerms": null
+	guildOnly: true,
+	perms: {
+		level: 0,
+		reqPerms: []
 	}
 }
 
 module.exports.help = {
-	"name": "serverinfo",
-	"category": "Utility",
-	"description": "Get info about this server",
-	"usage": "k,serverinfo"
+	name: "serverinfo",
+	category: "Utility",
+	description: "Get info about this server",
+	usage: "k,serverinfo"
 }

@@ -1,15 +1,24 @@
 {
-  "name": "discordbot",
-  "version": "1.0.0",
-  "description": "",
+  "name": "kendrabot",
+  "version": "0.3.11",
+  "description": "Multipurpose bot",
   "main": "index.js",
+  "dependencies": {
+    "discord.js": "^11.3.2",
+    "superagent": "^3.8.3"
+  },
+  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blueboomer76/kendraBot.git"
+  },
+  "author": "blueboomer76",
   "license": "ISC",
-  "dependencies": {
-    "discord.js": "^11.3.2",
-    "npm": "^5.8.0"
-  }
+  "bugs": {
+    "url": "https://github.com/blueboomer76/kendraBot/issues"
+  },
+  "homepage": "https://github.com/blueboomer76/kendraBot#readme"
 }
