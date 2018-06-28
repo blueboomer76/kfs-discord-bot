@@ -22,7 +22,7 @@ module.exports.run = async (bot, message, args) => {
 		}
 	});
 	message.channel.send(new Discord.RichEmbed()
-	.setTitle("Detailed Server Info for " + message.guild.name)
+	.setTitle("Server Info - " + message.guild.name)
 	.setColor(Math.floor(Math.random() * 16777216))
 	.setFooter("ID: " + message.guild.id + " | Server data as of")
 	.setThumbnail(message.guild.iconURL)
@@ -39,22 +39,22 @@ module.exports.run = async (bot, message, args) => {
 }
 
 module.exports.config = {
-	"aliases": ["guild", "guildinfo", "server"],
-	"cooldown": {
-		"waitTime": 120000,
-		"type": "guild"
+	aliases: ["guild", "guildinfo", "server"],
+	cooldown: {
+		waitTime: 120000,
+		type: "guild"
 	},
-	"guildOnly": true,
-	"perms": {
-		"level": 0,
-		"reqEmbed": true,
-		"reqPerms": null
+	guildOnly: true,
+	perms: {
+		level: 0,
+		reqEmbed: true,
+		reqPerms: null
 	}
 }
 
 module.exports.help = {
-	"name": "serverinfo",
-	"category": "Utility",
-	"description": "Get info about this server",
-	"usage": "serverinfo"
+	name: "serverinfo",
+	category: "Utility",
+	description: "Get info about this server",
+	usage: "serverinfo"
 }

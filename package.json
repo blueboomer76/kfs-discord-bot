@@ -1,15 +1,16 @@
 {
   "name": "kfs-discord-bot",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "description": "A multipurpose Discord bot for utility, fun, and more",
   "main": "index.js",
+  "dependencies": {
+    "discord.js": "^11.3.2",
+    "superagent": "^3.8.3"
+  },
+  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "discord.js": "^11.3.2",
-    "superagent": "^3.8.3"
-  }
+  "license": "ISC"
 }

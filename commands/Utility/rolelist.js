@@ -9,8 +9,8 @@ module.exports.run = async (bot, message, args) => {
 	} else {
 		rlStart = Math.floor(args[0]) - 1;
 	}
-	var roleList = message.guild.roles.array();
-	var pageRoles = roleList.slice(rlStart * 20, (rlStart + 1) * 20);
+	let roleList = message.guild.roles.array();
+	let pageRoles = roleList.slice(rlStart * 20, (rlStart + 1) * 20);
 	if (pageRoles.length == 0) return message.channel.send("No roles found on this page.");
 	var dispRoles = [];
 	pageRoles.forEach(pRole => dispRoles.push(pRole.name));
@@ -18,27 +18,27 @@ module.exports.run = async (bot, message, args) => {
 	.setTitle("List of roles in this server")
 	.setDescription(dispRoles.join("\n"))
 	.setColor(Math.floor(Math.random() * 16777216))
-	.setFooter("Page " + (rlStart + 1))
+	.setFooter("Page " + (rlStart + 1) + " / " + Math.ceil(roleList.length / 20))
 	);
 }
 
 module.exports.config = {
-	"aliases": ["roles"],
-	"cooldown": {
-		"waitTime": 30000,
-		"type": "guild"
+	aliases: ["roles"],
+	cooldown: {
+		waitTime: 30000,
+		type: "guild"
 	},
-	"guildOnly": true,
-	"perms": {
-		"level": 0,
-		"reqEmbed": true,
-		"reqPerms": null
+	guildOnly: true,
+	perms: {
+		level: 0,
+		reqEmbed: true,
+		reqPerms: null
 	}
 }
 
 module.exports.help = {
-	"name": "rolelist",
-	"category": "Utility",
-	"description": "Get the server's roles",
-	"usage": "rolelist [page]"
+	name: "rolelist",
+	category: "Utility",
+	description: "Get the server's roles",
+	usage: "rolelist [page]"
 }

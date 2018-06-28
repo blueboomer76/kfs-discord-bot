@@ -36,10 +36,14 @@ module.exports.getDuration = ts => {
 	return baseStr + " " + endStr;
 }
 
-module.exports.findMember = (msg, str) => {
-	let member = msg.mentions.members.first() || msg.guild.members.get(str);
+module.exports.findMember = (bot, msg, str) => {
+	let member;
+	msg.mentions.members.forEach(mem => {
+		if (mem.id != bot.user.id) member = mem;
+	})
 	if (!member) {
-		member = msg.guild.members.find(mem => mem.user.tag.toLowerCase().includes(str.toLowerCase()));
+		member = msg.guild.members.get(str);
+		if (!member) member = msg.guild.members.find(mem => mem.user.tag.toLowerCase().includes(str.toLowerCase()));
 		if (!member) member = msg.guild.members.find(mem => mem.user.username.toLowerCase().includes(str.toLowerCase()));
 		if (!member) member = msg.guild.members.find(mem => mem.displayName.toLowerCase().includes(str.toLowerCase()));
 		if (!member) return undefined;

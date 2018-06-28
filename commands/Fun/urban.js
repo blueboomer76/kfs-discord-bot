@@ -11,7 +11,7 @@ module.exports.run = async (bot, message, args) => {
 			let defs = res.body;
 			if (defs.list.length > 0) {
 				let def1 = defs.list[0].definition;
-				if (def1.length > 1000) def1 = def1.slice(0, 1000) + "...";
+				if (def1.length > 2000) def1 = def1.slice(0, 2000) + "...";
 				let example1 = defs.list[0].example;
 				if (example1.length > 1000) {
 					example1 = example1.slice(0, 1000) + "...";
@@ -19,9 +19,9 @@ module.exports.run = async (bot, message, args) => {
 					example1 = "No example given";
 				}
 				let uEmbed = new Discord.RichEmbed()
-				.setTitle("Urban Dictionary definitions for " + argstext)
+				.setDescription(def1)
+				.setAuthor("Urban Dictionary - " + argstext, "https://i.imgur.com/nwERwQE.jpg")
 				.setColor(Math.floor(Math.random() * 16777216))
-				.addField("Definition", def1)
 				.addField("Example", example1)
 				if (defs.list[1]) {
 					let def2 = defs.list[1].definition;
@@ -32,8 +32,8 @@ module.exports.run = async (bot, message, args) => {
 					} else if (example2.length == 0) {
 						example2 = "No example given";
 					}
-					uEmbed.addField("Definition", def2)
-					.addField("Example", example2)
+					uEmbed.addField("Another Definition", def2)
+					.addField("Another Example", example2)
 				}
 				message.channel.send(uEmbed);
 			} else {
@@ -46,22 +46,22 @@ module.exports.run = async (bot, message, args) => {
 }
 
 module.exports.config = {
-	"aliases": null,
-	"cooldown": {
-		"waitTime": 15000,
-		"type": "user"
+	aliases: ["ud"],
+	cooldown: {
+		waitTime: 15000,
+		type: "user"
 	},
-	"guildOnly": true,
-	"perms": {
-		"level": 0,
-		"reqEmbed": true,
-		"reqPerms": null
+	guildOnly: true,
+	perms: {
+		level: 0,
+		reqEmbed: true,
+		reqPerms: null
 	}
 }
 
 module.exports.help = {
-	"name": "urban",
-	"category": "Fun",
-	"description": "Get definitions of a term from Urban Dictionary.",
-	"usage": "urban <term>"
+	name: "urban",
+	category: "Fun",
+	description: "Get definitions of a term from Urban Dictionary.",
+	usage: "urban <term>"
 }
