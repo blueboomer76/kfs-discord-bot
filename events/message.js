@@ -55,35 +55,62 @@ function removeCooldown(id, command) {
 }
 
 module.exports = async (bot, message) => {
-	if (message.author.bot || (!message.content.startsWith(config.prefix) && message.mentions.users.first() != bot.user)) return;
-	var args = message.content.slice(config.prefix.length).trim().split(/ +/g);
-	var command = args.shift().toLowerCase();
-	var rCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
-	if (rCommand) {
-		if (!message.guild && rCommand.config.guildOnly == true) return message.channel.send("This command cannot be used in Direct Messages.")
-		let cmdReqPerms = rCommand.config.perms.reqPerms
-		if (message.channel.type != "dm" && cmdReqPerms) {
-			let allowed = {state: true, faultMsg: null};
-			if (!message.member.hasPermission(cmdReqPerms)) {allowed.state = false; allowed.faultMsg = "You are"}
-			if (!message.guild.member(bot.user).hasPermission(cmdReqPerms)) {allowed.state = false; allowed.faultMsg = "I, the bot, is"}
-			if (allowed.state == false) {
-				return message.channel.send(allowed.faultMsg + " missing the following permission to run this command: `" + cmdReqPerms + "`")
+	if (message.author.bot) return; 
+	let prefixMention = new RegExp(`^<@!?${bot.user.id}>`);
+	if (!message.content.startsWith(config.prefix) && !message.content.match(prefixMention)) {
+		if (bot.phoneVars.channels.length > 1 && bot.phoneVars.channels.indexOf(message.channel.id) != -1) {
+			if (bot.phoneVars.callExpires > Number(new Date())) {
+				bot.phoneVars.callExpires = Number(new Date()) + 600000;
+				bot.phoneVars.msgCount++;
+				setTimeout(() => {bot.phoneVars.msgCount--;}, 5000);
+				let affected = 0;
+				if (message.channel.id == bot.phoneVars.channels[0]) {affected = 1};
+				bot.channels.get(bot.phoneVars.channels[affected]).send(":telephone_receiver: " + message.content);
+				if (bot.phoneVars.msgCount > 4) {
+					let phoneMsg = "☎️ The phone connection was cut off due to being overloaded."
+					bot.channels.get(bot.phoneVars.channels[0]).send(phoneMsg);
+					bot.channels.get(bot.phoneVars.channels[1]).send(phoneMsg);
+					bot.phoneVars.channels = [];
+				}
+			} else {
+				let phoneMsg = "⏰ The phone call has timed out due to inactivity."
+				bot.channels.get(bot.phoneVars.channels[0]).send(phoneMsg);
+				bot.channels.get(bot.phoneVars.channels[1]).send(phoneMsg);
+				bot.phoneVars.channels = [];
 			}
-		};
-		let cdCheck = checkCooldown(bot, message, rCommand.help.name);
-		let cdInfo = bot.commands.get(rCommand.help.name).config.cooldown;
-		if (cdCheck == true) {
-			rCommand.run(bot, message, args)
-			.catch(err => message.channel.send("An error occurred while trying to execute the command code. ```javascript" + "\n" + err.stack + "```"));
-			if (cdInfo.waitTime != 0) {addCooldown(bot, message, rCommand.help.name)};
-		} else {
-			let cdSuffix = "";
-			if (cdInfo.type == "channel") {
-				cdSuffix = " in this channel"
-			} else if (cdInfo.type == "guild") {
-				cdSuffix = " in this guild"
-			}
-			message.channel.send(":no_entry: **Cooldown:**\nThis command cannot be used again for " + cdCheck + " seconds" + cdSuffix + "!")
 		}
-	};
+	} else {
+		let prefixSliceAmt;
+		prefixSliceAmt = message.mentions.users.first() == bot.user ? 21 : config.prefix.length;
+		var args = message.content.slice(prefixSliceAmt).trim().split(/ +/g);
+		var command = args.shift().toLowerCase();
+		var rCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
+		if (rCommand) {
+			if (!message.guild && rCommand.config.guildOnly == true) return message.channel.send("This command cannot be used in Direct Messages.")
+			let cmdReqPerms = rCommand.config.perms.reqPerms
+			if (message.channel.type != "dm" && cmdReqPerms) {
+				let allowed = {state: true, faultMsg: null};
+				if (!message.member.hasPermission(cmdReqPerms)) {allowed.state = false; allowed.faultMsg = "You are"}
+				if (!message.guild.member(bot.user).hasPermission(cmdReqPerms)) {allowed.state = false; allowed.faultMsg = "I, the bot, is"}
+				if (allowed.state == false) {
+					return message.channel.send(allowed.faultMsg + " missing the following permission to run this command: `" + cmdReqPerms + "`")
+				}
+			};
+			let cdCheck = checkCooldown(bot, message, rCommand.help.name);
+			let cdInfo = bot.commands.get(rCommand.help.name).config.cooldown;
+			if (cdCheck == true) {
+				rCommand.run(bot, message, args)
+				.catch(err => message.channel.send("An error occurred while trying to execute the command code. ```javascript" + "\n" + err.stack + "```"));
+				if (cdInfo.waitTime != 0) {addCooldown(bot, message, rCommand.help.name)};
+			} else {
+				let cdSuffix = "";
+				if (cdInfo.type == "channel") {
+					cdSuffix = " in this channel"
+				} else if (cdInfo.type == "guild") {
+					cdSuffix = " in this guild"
+				}
+				message.channel.send(":no_entry: **Cooldown:**\nThis command cannot be used again for " + cdCheck + " seconds" + cdSuffix + "!")
+			}
+		}
+	}
 }

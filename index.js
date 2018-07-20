@@ -4,6 +4,7 @@ const config = require("./config.json");
 const fs = require("fs");
 bot.commands = new Discord.Collection();
 bot.aliases = new Discord.Collection();
+bot.phoneVars = {channels: [], msgCount: 0, callExpires: 0};
 
 fs.readdir("./commands/", (err, files) => {
 	var jsfiles, fCounter;
