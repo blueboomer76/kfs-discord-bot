@@ -5,6 +5,7 @@ const fs = require("fs");
 const bot = new Discord.Client();
 bot.commands = new Discord.Collection();
 bot.aliases = new Discord.Collection();
+bot.phoneVars = {channels: [], msgCount: 0, callExpires: 0};
 
 fs.readdir("./commands/", (err1, files1) => {
 	if (err1) throw err1;

@@ -5,5 +5,6 @@ module.exports = async bot => {
 	if (!initialized) {
 		initialized = true;
 		console.log("Bot started successfully on " + new Date());
+		bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
 	}
 };

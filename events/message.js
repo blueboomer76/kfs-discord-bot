@@ -56,49 +56,82 @@ function removeCooldown(id, command) {
 }
 
 module.exports = async (bot, message) => {
-	if (message.author.bot || !message.content.startsWith(config.prefix)) return;
-	var args = message.content.slice(config.prefix.length).trim().split(/ +/g);
-	var command = args.shift().toLowerCase();
-	var rCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
-	if (rCommand) {
-		if (message.guild) {
+	if (message.author.bot) return;
+	let mentionMatch = message.content.match(bot.mentionPrefix);
+	if (!message.content.startsWith(config.prefix) && !mentionMatch) {
+		if (bot.phoneVars.channels.length > 1 && bot.phoneVars.channels.indexOf(message.channel.id) != -1) {
 			if (!message.channel.permissionsFor(bot.user).has(["VIEW_CHANNEL", "SEND_MESSAGES"])) return;
-			if (rCommand.config.perms.reqEmbed && !message.channel.permissionsFor(bot.user).has("EMBED_LINKS")) {
-				return message.channel.send("This command requires the bot to have the `EMBED_MESSAGES` permission to post an embed.");
-			}
-			let cmdReqPerms = rCommand.config.perms.reqPerms;
-			if (cmdReqPerms) {
-				let allowed = {state: true, faultMsg: null};
-				if (!message.channel.permissionsFor(message.author).has(cmdReqPerms)) {allowed.state = false; allowed.faultMsg = "You are"}
-				if (!message.channel.permissionsFor(bot.user).has(cmdReqPerms)) {allowed.state = false; allowed.faultMsg = "I, the bot, is"}
-				if (allowed.state == false) {
-					return message.channel.send(allowed.faultMsg + " missing the following permission to run this command: `" + cmdReqPerms + "`")
+			let ch0 = bot.phoneVars.channels[0];
+			let ch1 = bot.phoneVars.channels[1];
+			if (bot.phoneVars.callExpires > Number(new Date())) {
+				bot.phoneVars.callExpires = Number(new Date()) + 600000;
+				bot.phoneVars.msgCount++;
+				setTimeout(() => {bot.phoneVars.msgCount--;}, 5000);
+				let affected = 0;
+				if (message.channel.id == ch0) affected = 1;
+				let content = message.content;
+				if (content.length > 1500) content = content.slice(0, 1500) + "...";
+				bot.channels.get(bot.phoneVars.channels[affected]).send(":telephone_receiver: " + content);
+				if (bot.phoneVars.msgCount >= 4) {
+					setTimeout(() => {
+						let phoneMsg = "☎ The phone connection was cut off due to possible overload."
+						bot.channels.get(ch0).send(phoneMsg);
+						bot.channels.get(ch1).send(phoneMsg);
+					}, 5000);
+					bot.phoneVars.channels = [];
 				}
+			} else {
+				let phoneMsg = "⏰ The phone call has timed out due to inactivity."
+				bot.channels.get(ch0).send(phoneMsg);
+				bot.channels.get(ch1).send(phoneMsg);
+				bot.phoneVars.channels = [];
 			}
-		} else if (rCommand.config.guildOnly == true) {
-			return message.channel.send("This command cannot be used in Direct Messages.");
 		}
-		let cdInfo = rCommand.config.cooldown;
-		if (cdInfo.waitTime != 0) {
-			let cdCheck = checkCooldown(bot, message, rCommand.help.name);
-			if (cdCheck != true) {
-				let cdSuffix = "";
-				if (message.guild) {
-					if (cdInfo.type == "channel") {
-						cdSuffix = " in this channel";
-					} else if (cdInfo.type == "guild") {
-						cdSuffix = " in this server";
+	} else {
+		let prefixLength = mentionMatch ? mentionMatch[0].length : config.prefix.length;
+		var args = message.content.slice(prefixLength).trim().split(/ +/g);
+		var command = args.shift().toLowerCase();
+		var rCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
+		if (rCommand) {
+			if (message.guild) {
+				if (!message.channel.permissionsFor(bot.user).has(["VIEW_CHANNEL", "SEND_MESSAGES"])) return;
+				if (rCommand.config.perms.reqEmbed && !message.channel.permissionsFor(bot.user).has("EMBED_LINKS")) {
+					return message.channel.send("This command requires the bot to have the `EMBED_MESSAGES` permission to post an embed.");
+				}
+				let cmdReqPerms = rCommand.config.perms.reqPerms;
+				if (cmdReqPerms) {
+					let allowed = {state: true, faultMsg: null};
+					if (!message.channel.permissionsFor(message.author).has(cmdReqPerms)) {allowed.state = false; allowed.faultMsg = "You are"}
+					if (!message.channel.permissionsFor(bot.user).has(cmdReqPerms)) {allowed.state = false; allowed.faultMsg = "I, the bot, is"}
+					if (allowed.state == false) {
+						return message.channel.send(allowed.faultMsg + " missing the following permission to run this command: `" + cmdReqPerms + "`")
 					}
 				}
-				return message.channel.send(":no_entry: **Cooldown:**\nThis command cannot be used again for " + cdCheck + " seconds" + cdSuffix + "!")
+			} else if (rCommand.config.guildOnly == true) {
+				return message.channel.send("This command cannot be used in Direct Messages.");
 			}
-			addCooldown(bot, message, rCommand.help.name);
+			let cdInfo = rCommand.config.cooldown;
+			if (cdInfo.waitTime != 0) {
+				let cdCheck = checkCooldown(bot, message, rCommand.help.name);
+				if (cdCheck != true) {
+					let cdSuffix = "";
+					if (message.guild) {
+						if (cdInfo.type == "channel") {
+							cdSuffix = " in this channel";
+						} else if (cdInfo.type == "guild") {
+							cdSuffix = " in this server";
+						}
+					}
+					return message.channel.send(":no_entry: **Cooldown:**\nThis command cannot be used again for " + cdCheck + " seconds" + cdSuffix + "!")
+				}
+				addCooldown(bot, message, rCommand.help.name);
+			}
+			rCommand.run(bot, message, args).catch(err => {
+				let e = err;
+				if (e && err.stack) e = err.stack;
+				if (e && e.length > 1500) e = e.slice(0, 1500) + "...";
+				message.channel.send("An error has occurred while running the command:```javascript" + "\n" + e + "```");
+			});
 		}
-		rCommand.run(bot, message, args).catch(err => {
-			let e = err;
-			if (e && err.stack) e = err.stack;
-			if (e && e.length > 1500) e = e.slice(0, 1500) + "...";
-			message.channel.send("An error has occurred while running the command:```javascript" + "\n" + e + "```");
-		});
 	}
 };
