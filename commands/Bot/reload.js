@@ -4,8 +4,8 @@ module.exports.run = async (bot, message, args) => {
 	if (!args[0]) return message.channel.send("You must provide a command to reload.");
 	try {
 		let cat = bot.commands.get(args[0]).help.category;
-		let newData = require(`../../${cat}/${args[0]}.js`);
 		delete require.cache[require.resolve(`../${cat}/${args[0]}.js`)];
+		let newData = require(`../${cat}/${args[0]}.js`);
 		bot.commands.set(args[0], newData);
 		message.channel.send(`The command ${args[0]} was reloaded.`);
 	} catch(err) {
@@ -30,5 +30,5 @@ module.exports.help = {
 	name: "reload",
 	category: "Bot",
 	description: "Reload a command. It must be a command that has been loaded when the bot was started.",
-	usage: "k,reload <category> <command>"
+	usage: "k,reload <command>"
 }
