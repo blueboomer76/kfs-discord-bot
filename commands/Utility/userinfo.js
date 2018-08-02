@@ -1,65 +1,65 @@
 const Discord = require("discord.js");
 const fList = require("../../modules/functions.js");
 
-module.exports.run = async (bot, message, args) => {
-	var uiMem;
-	if (args.length == 0) {
-		uiMem = message.guild.member(message.author);
-	} else {
-		var argstext = args.join(" ");
-		uiMem = fList.findMember(bot, message, argstext);
-		if (!uiMem) return message.channel.send("The user provided could not be found in this server.");
-	}
-	var uiRoles = [];
-	uiMem.roles.forEach(r => uiRoles.push(r.name));
-	var roleList = uiRoles.join(", ");
-	if (roleList.length > 1000) roleList = roleList.slice(0, 1000) + "...";
+module.exports = {
+	run: async (bot, message, args, flags) => {
+		let member = args[0];
+		if (!args[0]) member = message.guild.member(message.author);
 
-	let ucDate = new Date(uiMem.user.createdTimestamp);
-	let ujDate = new Date(uiMem.joinedTimestamp);
-	var memNick;
-	if (uiMem.nickname == null) {memNick = "None"} else {memNick = uiMem.nickname}
-	let tsList = [];
-	let ugMembers = message.guild.members;
-	ugMembers.forEach(mem => tsList.push(mem.joinedTimestamp))
-	tsList.sort((a, b) => a - b);
-	
-	message.channel.send(new Discord.RichEmbed()
-	.setTitle("User Info for " + uiMem.user.tag)
-	.setColor(uiMem.displayColor)
-	.setFooter("ID: " + uiMem.id)
-	.setThumbnail(uiMem.user.avatarURL)
-	.addField("Account created at", ucDate.toUTCString() + " (" + fList.getDuration(ucDate) + ")")
-	.addField("Joined this server at", ujDate.toUTCString() + " (" + fList.getDuration(ujDate) + ")")
-	.addField("Status", uiMem.presence.status)
-	.addField("Is a bot", uiMem.user.bot)
-	.addField("Nickname", memNick)
-	.addField("Member #", tsList.indexOf(uiMem.joinedTimestamp) + 1)
-	.addField("Roles - " + uiMem.roles.array().length, roleList)
-	);
-	/*
-		Others found:
-		Seen on guild(s), Is Admin, Permissions
-	*/
-}
+		let createdDate = new Date(member.user.createdTimestamp);
+		let joinedDate = new Date(member.joinedTimestamp);
+		let nick = member.nickname || "None";
+		let joinTimes = [];
+		message.guild.members.forEach(mem => joinTimes.push(mem.joinedTimestamp))
+		joinTimes.sort((a, b) => a - b);
+		let roles = [];
+		member.roles.forEach(r => roles.push(r.name));
+		let roleList = roles.join(", ");
+		if (roleList.length > 1000) roleList = roleList.slice(0, 1000) + "...";
 
-module.exports.config = {
-	aliases: ["user"],
-	cooldown: {
-		waitTime: 15000,
-		type: "channel"
+		message.channel.send(new Discord.RichEmbed()
+		.setTitle("User Info - " + member.user.tag)
+		.setColor(member.displayColor)
+		.setFooter("ID: " + member.id)
+		.setThumbnail(member.user.avatarURL)
+		.addField("Account created at", `${createdDate.toUTCString()} (${fList.getDuration(createdDate)})`)
+		.addField("Joined this server at", `${joinedDate.toUTCString()} (${fList.getDuration(joinedDate)})`)
+		.addField("Status", member.presence.status)
+		.addField("Bot user", member.user.bot)
+		.addField("Nickname", nick)
+		.addField("Member #", joinTimes.indexOf(member.joinedTimestamp) + 1)
+		.addField("Roles - " + member.roles.array().length, roleList)
+		);
+
+		/*
+			Others found:
+			Seen on guild(s), Is Admin, Permissions
+		*/
 	},
-	guildOnly: true,
-	perms: {
-		level: 0,
-		reqEmbed: true,
-		reqPerms: null
+	commandInfo: {
+		aliases: ["user"],
+		args: [
+			{
+				allowQuotes: false,
+				num: Infinity,
+				optional: true,
+				type: "member"
+			}
+		],
+		category: "Utility",
+		cooldown: {
+			time: 15000,
+			type: "channel"
+		},
+		description: "Get info about a user",
+		flags: null,
+		guildOnly: true,
+		name: "userinfo",
+		perms: {
+			bot: ["EMBED_LINKS"],
+			user: null,
+			level: 0
+		},
+		usage: "userinfo [user]"
 	}
-}
-
-module.exports.help = {
-	name: "userinfo",
-	category: "Utility",
-	description: "Get info about you, or another user",
-	usage: "userinfo [user]"
 }

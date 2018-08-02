@@ -14,6 +14,7 @@ module.exports.resolve = (bot, message, obj, type) => {
 			}
 			break;
 		case "channel":
+			if (message.mentions.channels.size > 1) {return null}
 			let channel = message.mentions.channels.first() || message.guild.channels.get(obj);
 			if (!channel) channel = message.guild.channels.find(chnl => chnl.name.toLowerCase().includes(lowerObj));
 			if (channel) {return channel} else {return null}
@@ -23,6 +24,7 @@ module.exports.resolve = (bot, message, obj, type) => {
 			if (command) {return command} else {return null}
 			break;
 		case "member":
+			if (message.mentions.members.size > 1) {return null}
 			let member;
 			let guildMembers = message.guild.members;
 			message.mentions.members.forEach(mem => {
@@ -42,6 +44,7 @@ module.exports.resolve = (bot, message, obj, type) => {
 			if (!isNaN(num) && num >= obj.min && num <= obj.max) {return num} else {return null}
 			break;
 		case "role":
+			if (message.mentions.roles.size > 1) {return null}
 			let role = message.mentions.roles.first() || message.guild.roles.get(obj);
 			if (!role) role = message.guild.roles.find(role => role.name.toLowerCase().includes(lowerObj));
 			if (role) {return role} else {return null}

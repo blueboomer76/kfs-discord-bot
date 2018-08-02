@@ -23,10 +23,10 @@ fs.readdir("./commands/", (err1, files1) => {
 					jsfiles.forEach((f2, i2) => {
 						fCounter++;
 						var props = require(`./commands/${f1}/${f2}`);
-						bot.commands.set(props.help.name, props);
-						if (props.config.aliases.length > 0) {
-							props.config.aliases.forEach(a => {
-								bot.aliases.set(a, props.help.name);
+						bot.commands.set(props.commandInfo.name, props);
+						if (props.commandInfo.aliases.length > 0) {
+							props.commandInfo.aliases.forEach(a => {
+								bot.aliases.set(a, props.commandInfo.name);
 							})
 						}
 					})

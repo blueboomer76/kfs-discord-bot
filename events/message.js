@@ -1,3 +1,4 @@
+const argParser = require("../utils/argsParser.js");
 const config = require("../config.json");
 
 var recentCmds = {"ids": [], "commands": [], "expires": []}
@@ -13,7 +14,7 @@ function checkCooldown(bot, message, command) {
 }
 
 function getIDByType(bot, message, command) {
-	let idType = bot.commands.get(command).config.cooldown.type;
+	let idType = bot.commands.get(command).commandInfo.cooldown.type;
 	if (idType == "user") {
 		return message.author.id;
 	} else if (idType == "channel") {
@@ -41,7 +42,7 @@ function findCooldown(id, command) {
 
 function addCooldown(bot, message, command) {
 	let cdID = getIDByType(bot, message, command);
-	let cdTime = bot.commands.get(command).config.cooldown.waitTime;
+	let cdTime = bot.commands.get(command).commandInfo.cooldown.time;
 	recentCmds.ids.push(cdID);
 	recentCmds.commands.push(command);
 	recentCmds.expires.push(Number(new Date()) + cdTime);
@@ -91,28 +92,26 @@ module.exports = async (bot, message) => {
 		let prefixLength = mentionMatch ? mentionMatch[0].length : config.prefix.length;
 		var args = message.content.slice(prefixLength).trim().split(/ +/g);
 		var command = args.shift().toLowerCase();
-		var rCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
-		if (rCommand) {
+		var runCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
+		if (runCommand) {
+			let info = runCommand.commandInfo;
 			if (message.guild) {
 				if (!message.channel.permissionsFor(bot.user).has(["VIEW_CHANNEL", "SEND_MESSAGES"])) return;
-				if (rCommand.config.perms.reqEmbed && !message.channel.permissionsFor(bot.user).has("EMBED_LINKS")) {
-					return message.channel.send("This command requires the bot to have the `EMBED_MESSAGES` permission to post an embed.");
-				}
-				let cmdReqPerms = rCommand.config.perms.reqPerms;
-				if (cmdReqPerms) {
+				let requiredPerms = info.perms;
+				if (requiredPerms.bot || requiredPerms.user) {
 					let allowed = {state: true, faultMsg: null};
-					if (!message.channel.permissionsFor(message.author).has(cmdReqPerms)) {allowed.state = false; allowed.faultMsg = "You are"}
-					if (!message.channel.permissionsFor(bot.user).has(cmdReqPerms)) {allowed.state = false; allowed.faultMsg = "I, the bot, is"}
+					if (requiredPerms.user && !message.channel.permissionsFor(message.author).has(requiredPerms.user[0])) {allowed.state = false; allowed.faultMsg = "You are"}
+					if (requiredPerms.bot && !message.channel.permissionsFor(bot.user).has(requiredPerms.bot[0])) {allowed.state = false; allowed.faultMsg = "I, the bot, is"}
 					if (allowed.state == false) {
-						return message.channel.send(allowed.faultMsg + " missing the following permission to run this command: `" + cmdReqPerms + "`")
+						return message.channel.send(allowed.faultMsg + " missing the following permission to run this command: `" + requiredPerms + "`")
 					}
 				}
-			} else if (rCommand.config.guildOnly == true) {
+			} else if (info.guildOnly == true) {
 				return message.channel.send("This command cannot be used in Direct Messages.");
 			}
-			let cdInfo = rCommand.config.cooldown;
-			if (cdInfo.waitTime != 0) {
-				let cdCheck = checkCooldown(bot, message, rCommand.help.name);
+			let cdInfo = runCommand.commandInfo.cooldown;
+			if (cdInfo.time != 0) {
+				let cdCheck = checkCooldown(bot, message, runCommand.commandInfo.name);
 				if (cdCheck != true) {
 					let cdSuffix = "";
 					if (message.guild) {
@@ -124,9 +123,23 @@ module.exports = async (bot, message) => {
 					}
 					return message.channel.send(":no_entry: **Cooldown:**\nThis command cannot be used again for " + cdCheck + " seconds" + cdSuffix + "!")
 				}
-				addCooldown(bot, message, rCommand.help.name);
+				addCooldown(bot, message, runCommand.commandInfo.name);
 			}
-			rCommand.run(bot, message, args).catch(err => {
+			let flags, unparsedFlags;
+			if (info.flags) {
+				unparsedFlags = argParser.getFlags(args);
+				flags = argParser.parseFlags(bot, message, unparsedFlags.flags, info.flags);
+				if (flags.error) {
+					return message.channel.send(flags.message);
+				}
+				args = argParser.parseArgs(bot, message, unparsedFlags.newArgs, info.args);
+			} else {
+				args = argParser.parseArgs(bot, message, args, info.args);
+			}
+			if (args.error) {
+				return message.channel.send(args.message);
+			}
+			runCommand.run(bot, message, args, flags).catch(err => {
 				let e = err;
 				if (e && err.stack) e = err.stack;
 				if (e && e.length > 1500) e = e.slice(0, 1500) + "...";
