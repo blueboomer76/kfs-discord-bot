@@ -105,7 +105,6 @@ module.exports = {
 		};
 	},
 	parseFlags: (bot, message, flags, commandFlags) => {
-		let parsedFlags = [];
 		let flagShortNames = commandFlags.map(f => f.name.charAt(0));
 		let flagLongNames = commandFlags.map(f => f.name);
 		for (let i = 0; i < flags.length; i++) {
@@ -123,9 +122,9 @@ module.exports = {
 				if (toResolve == null) {
 					return {error: "userError", message: "Invalid argument in a flag", at: i};
 				}
+				flags[i].args = toResolve;
 			}
-			parsedFlags.push(toResolve);
 		}
-		return parsedFlags;
+		return flags;
 	}
 }

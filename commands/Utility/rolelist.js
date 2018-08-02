@@ -1,44 +1,49 @@
-const Discord = require("discord.js");
+const paginator = require("../../utils/paginator.js")
 
-module.exports.run = async (bot, message, args) => {
-	var rlStart;
-	if (!args[0]) {
-		rlStart = 0;
-	} else if (isNaN(args[0]) || args[0] < 1) {
-		return message.channel.send("The page must be at least 1");
-	} else {
-		rlStart = Math.floor(args[0]) - 1;
-	}
-	let roleList = message.guild.roles.array();
-	let pageRoles = roleList.slice(rlStart * 20, (rlStart + 1) * 20);
-	if (pageRoles.length == 0) return message.channel.send("No roles found on this page.");
-	var dispRoles = [];
-	pageRoles.forEach(pRole => dispRoles.push(pRole.name));
-	message.channel.send(new Discord.RichEmbed()
-	.setTitle("List of roles in this server")
-	.setDescription(dispRoles.join("\n"))
-	.setColor(Math.floor(Math.random() * 16777216))
-	.setFooter("Page " + (rlStart + 1) + " / " + Math.ceil(roleList.length / 20))
-	);
-}
-
-module.exports.config = {
-	aliases: ["roles"],
-	cooldown: {
-		waitTime: 30000,
-		type: "guild"
+module.exports = {
+	run: async (bot, message, args, flags) => {
+		let startPage;
+		if (!args[0]) {startPage = 1} else {startPage = args[0]}
+		let roles = message.guild.roles.array();
+		let entries = [];
+		for (let i = 0; i < roles.length; i++) {
+			entries.push(roles[i].name);
+		}
+		let roleListEmbed = paginator.generateEmbed(startPage, entries, null, 20, null)
+		message.channel.send(roleListEmbed
+		.setTitle("List of roles - " + message.guild.name)
+		)
+		.then(newMessage => {
+			if (roles.length > 20) {
+				paginator.addPgCollector(message, newMessage, entries, null, 20)
+			}
+		})
 	},
-	guildOnly: true,
-	perms: {
-		level: 0,
-		reqEmbed: true,
-		reqPerms: null
+	commandInfo: {
+		aliases: ["roles"],
+		args: [
+			{
+				allowQuotes: false,
+				num: 1,
+				optional: true,
+				type: "number",
+				min: 1
+			}
+		],
+		category: "Utility",
+		cooldown: {
+			time: 30000,
+			type: "guild"
+		},
+		description: "Get the server's roles",
+		flags: null,
+		guildOnly: true,
+		name: "rolelist",
+		perms: {
+			bot: ["ADD_REACTIONS", "EMBED_LINKS", "MANAGE_MESSAGES"],
+			user: null,
+			level: 0
+		},
+		usage: "rolelist [page]"
 	}
-}
-
-module.exports.help = {
-	name: "rolelist",
-	category: "Utility",
-	description: "Get the server's roles",
-	usage: "rolelist [page]"
 }

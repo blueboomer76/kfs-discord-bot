@@ -1,54 +1,53 @@
 const Discord = require("discord.js");
-const fList = require("../../modules/functions.js")
+const fList = require("../../modules/functions.js");
 
-module.exports.run = async (bot, message, args) => {
-	if (args.length == 0) return message.channel.send("You must provide a role for info.");
-	var riRole = message.mentions.roles.first() || message.guild.roles.get(args[0]);
-	if (!riRole) {
-		var argstext = args.join(" ");
-		message.guild.roles.forEach(gRole => {
-			if (gRole.name == argstext) {riRole = gRole}
-		});
-	}
-	if (!riRole) return message.channel.send("No roles were found.");
+module.exports = {
+	run: async (bot, message, args, flags) => {
+		let role = args[0];
+		let createdDate = new Date(role.createdTimestamp);
+		let onlineRoleMembers = 0;
+		role.members.forEach(mem => {
+			if (mem.presence.status == "online") onlineRoleMembers++;
+		})
+		let rPos = role.calculatedPosition + 1;
 
-	let rcDate = new Date(riRole.createdTimestamp);
-	var roMembers = 0;
-	riRole.members.forEach(rMember => {
-		if (rMember.presence.status == "online") {roMembers++;}
-	});
-	
-	message.channel.send(new Discord.RichEmbed()
-	.setTitle("Role Info for " + riRole.name)
-	.setColor(riRole.color)
-	.setFooter("ID: " + riRole.id)
-	.addField("Role created at", rcDate.toUTCString() + " (" + fList.getDuration(rcDate) + ")")
-	.addField("Members in Role [" + riRole.members.array().length + " total]", roMembers + " Online", true)
-	.addField("Color", riRole.hexColor)
-	.addField("Position", (riRole.calculatedPosition + 1) + "/" + message.guild.roles.array().length)
-	.addField("Displays separately (hoisted)", riRole.hoist)
-	.addField("Mentionable", riRole.mentionable)
-	.addField("Managed", riRole.managed)
-	);
-}
-
-module.exports.config = {
-	aliases: ["role"],
-	cooldown: {
-		waitTime: 15000,
-		type: "channel"
+		message.channel.send(new Discord.RichEmbed()
+		.setTitle("Role Info - " + role.name)
+		.setColor(role.color)
+		.setFooter("ID: " + role.id)
+		.addField("Role created at", `${createdDate.toUTCString()} (${fList.getDuration(createdDate)})`)
+		.addField("Members in Role [" + role.members.array().length + " total]", onlineRoleMembers + " Online", true)
+		.addField("Color", role.hexColor)
+		.addField("Position from bottom", rPos + "/" + message.guild.roles.array().length)
+		.addField("Displays separately (hoisted)", role.hoist)
+		.addField("Mentionable", role.mentionable)
+		.addField("Managed", role.managed)
+		);
 	},
-	guildOnly: true,
-	perms: {
-		level: 0,
-		reqEmbed: true,
-		reqPerms: null
+	commandInfo: {
+		aliases: ["role"],
+		args: [
+			{
+				allowQuotes: false,
+				num: Infinity,
+				optional: false,
+				type: "role"
+			}
+		],
+		category: "Utility",
+		cooldown: {
+			time: 15000,
+			type: "channel"
+		},
+		description: "Get info about a role",
+		flags: null,
+		guildOnly: true,
+		name: "roleinfo",
+		perms: {
+			bot: ["EMBED_LINKS"],
+			user: null,
+			level: 0
+		},
+		usage: "roleinfo <role>"
 	}
-}
-
-module.exports.help = {
-	name: "roleinfo",
-	category: "Utility",
-	description: "Get info about a role",
-	usage: "roleinfo <role>"
 }
