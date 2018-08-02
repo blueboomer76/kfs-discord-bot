@@ -1,38 +1,55 @@
 const Discord = require("discord.js");
-const fList = require("../../modules/functions.js")
+const fList = require("../../modules/functions.js");
 
-module.exports.run = async (bot, message, args) => {
-	var riRole = message.mentions.roles.first() || message.guild.roles.get(args[0]);
-	var argstext = args.join(" ");
-	if (args == "") {
-		return message.channel.send("You must provide a role for info.");
-	} else if (!riRole) {
-		message.guild.roles.forEach(rsRole => { 
-			if (rsRole.name == argstext) {riRole = rsRole}
-		});
-		if (!riRole) {
-			return message.channel.send("Invalid role was provided!");
-		}
+module.exports = {
+	run: async (bot, message, args, flags) => {
+		let role = args[0];
+		let createdDate = new Date(riRole.createdTimestamp);
+		let roleMembers = 0;
+		role.members.forEach(mem => {
+			if (mem.presence.status == "online") roleMembers++;
+		})
+		message.channel.send(new Discord.RichEmbed()
+		.setTitle("Role Info - " + role.name)
+		.setColor(role.color)
+		.setFooter("ID: " + role.id)
+		.addField("Role created at", `${createdDate.toUTCString()} (${fList.getDuration(createdDate)})`)
+		.addField("Color", role.hexColor)
+		.addField("Members in Role [" + Array.from(role.members).length + " total]",
+		roleMembers + " Online",
+		true)
+		.addField("Position from top", role.position + "/" + Array.from(role.members).length)
+		.addField("Displays separately (hoisted)", role.hoist)
+		.addField("Mentionable", role.mentionable)
+		.addField("Managed", role.managed)
+		);
+	},
+	commandInfo: {
+		aliases: ["role"],
+		args: [
+			{
+				allowQuotes: false,
+				num: Infinity,
+				optional: false,
+				type: "role"
+			}
+		],
+		category: "Utility",
+		cooldown: {
+			time: 15000,
+			type: "channel"
+		},
+		description: "Get info about a role",
+		flags: null,
+		guildOnly: true,
+		name: "roleinfo",
+		perms: {
+			bot: null,
+			user: null,
+			level: 0,
+		},
+		usage: "roleinfo <role>"
 	}
-	let rcDate = new Date(riRole.createdTimestamp);
-	var roMembers = 0;
-	riRole.members.forEach(rMember => {
-		if (rMember.presence.status == "online") {roMembers++;}
-	})
-	message.channel.send(new Discord.RichEmbed()
-	.setTitle("Role Info for " + riRole.name)
-	.setColor(riRole.color)
-	.setFooter("ID: " + riRole.id)
-	.addField("Role created at", rcDate.toUTCString() + " (" + fList.getDuration(rcDate) + ")")
-	.addField("Color", riRole.hexColor)
-	.addField("Members in Role [" + riRole.members.array().length + " total]",
-	roMembers + " Online",
-	true)
-	.addField("Position", riRole.position + "/" + message.guild.roles.array().length)
-	.addField("Displays separately (hoisted)", riRole.hoist)
-	.addField("Mentionable", riRole.mentionable)
-	.addField("Managed", riRole.managed)
-	);
 }
 
 module.exports.config = {
@@ -44,7 +61,7 @@ module.exports.config = {
 	guildOnly: true,
 	perms: {
 		level: 0,
-		reqPerms: []
+		reqPerms: null
 	}
 }
 

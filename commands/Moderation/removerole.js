@@ -1,17 +1,57 @@
 const Discord = require("discord.js");
-const fList = require("../../modules/functions.js");
 
-module.exports.run = async (bot, message, args) => {
-	let rrUser = fList.findMember(message, args.join(" "));
-	if (rrUser == undefined) return message.channel.send("The user provided could not be found in this guild.");
-	if (!args[1]) return message.reply("Please provide the role to add for that user.")
-	let rrRole = args.slice(1).join(" ");
-	rrRole = message.guild.roles.find("name", rrRole);
-	await rrUser.removeRole(rrRole)
-	.then(message.channel.send(`Role ${rrRole.name} has been removed from ${rrUser.tag}.`))
-	.catch(err => message.channel.send("Oops! An error occurred: ```" + err + "```"))
-}
+module.exports = {
+	run: async (bot, message, args, flags) => {
+		let member = args[0];
+		let role = args[1];
+		await member.removeRole(role)
+		.then(message.channel.send(`✅ Role **${role}** has been removed from **${member.user.tag}**.`))
+		.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
+	},
+	commandInfo: {
+		aliases: ["rr", "takerole"],
+		args: [
+			{
+				allowQuotes: true,
+				num: Infinity,
+				optional: false,
+				type: "user"
+			},
+			{
+				allowQuotes: false,
+				num: Infinity,
+				optional: false,
+				type: "role"
+			}
+		],
+		category: "Moderation",
+		cooldown: {
+			time: 20000,
+			type: "user"
+		},
+		description: "Removes a role a user has. It will be logged if a modlog channel was set",
+		flags: [
+			{
+				name: "role",
+				argsType: "role"
+			},
+			{
+				name: "user",
+				argsType: "user"
+			}
+		],
+		guildOnly: true,
+		name: "removerole",
+		perms: {
+			bot: ["MANAGE_ROLES"],
+			user: ["MANAGE_ROLES"],
+			level: 2,
+		},
+		usage: "removerole <user> <role> `or with flags`"
+	}
+};
 
+// Deprecated command info
 module.exports.config = {
 	aliases: ["rr", "takerole"],
 	cooldown: {
@@ -21,7 +61,7 @@ module.exports.config = {
 	guildOnly: true,
 	perms: {
 		level: 2,
-		reqPerms: ["MANAGE_ROLES"]
+		reqPerms: "MANAGE_ROLES"
 	}
 }
 

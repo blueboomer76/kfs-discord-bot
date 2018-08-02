@@ -1,15 +1,53 @@
 const Discord = require("discord.js");
-const fList = require("../../modules/functions.js");
+const resolver = require("../../utils/objResolver.js");
 
-module.exports.run = async (bot, message, args) => {
-	if (!message.member.hasPermission("BAN_MEMBERS")) return message.reply("You don't have the required permission `BAN_MEMBERS` to run this command!")
-	let bUser = fList.findMember(message, args.join(" "));
-	if (bUser == undefined) return message.channel.send("The user provided could not be found in this guild.");
-	await bUser.ban()
-	.then(message.channel.send(`:white_check_mark: The user ${bUser.tag} was banned from the guild.`))
-	.catch(err => message.channel.send("Oops! An error occurred: ```" + err + "```"))
-}
+module.exports = {
+	run: async (bot, message, args, flags) => {
+		let member = args[0];
+		await member.ban()
+		.then(message.channel.send(`✅ The user **${member.user.tag}** was banned from the guild.`))
+		.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
+	},
+	commandInfo: {
+		aliases: [],
+		args: [
+			{
+				allowQuotes: false,
+				num: Infinity,
+				optional: false,
+				type: "user"
+			}
+		],
+		category: "Moderation",
+		cooldown: {
+			time: 25000,
+			type: "user"
+		},
+		description: "Bans a member. It will be logged if a modlog channel was set",
+		flags: [
+			{
+				name: "reason",
+				argsType: "string"
+			},
+			{
+				name: "days",
+				argsType: "number",
+				min: 1,
+				max: 7
+			}
+		],
+		guildOnly: true,
+		name: "ban",
+		perms: {
+			bot: ["BAN_MEMBERS"],
+			user: ["BAN_MEMBERS"],
+			level: 2,
+		},
+		usage: "ban <user>"
+	}
+};
 
+// Deprecated command info
 module.exports.config = {
 	aliases: [],
 	cooldown: {
@@ -19,7 +57,7 @@ module.exports.config = {
 	guildOnly: true,
 	perms: {
 		level: 3,
-		reqPerms: ["BAN_MEMBERS"]
+		reqPerms: "BAN_MEMBERS"
 	}
 }
 

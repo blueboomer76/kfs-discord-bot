@@ -1,50 +1,65 @@
 const Discord = require("discord.js");
 const fList = require("../../modules/functions.js");
 
-module.exports.run = async (bot, message, args) => {
-	var argstext = args.join(" ");
-	var uiUser = fList.findMember(message, argstext)
-	if (args == "") {
-		uiUser = message.guild.member(message.author);
-	} else if (uiUser == undefined) {
-		return message.channel.send("The user provided could not be found in this guild.");
+module.exports = {
+	run: async (bot, message, args, flags) => {
+		let member = args[0];
+		if (!args[0]) user = message.guild.member(message.author);
+		let nick = user.nickname || "None";
+		let createdDate = new Date(member.user.createdTimestamp);
+		let joinedDate = new Date(member.joinedTimestamp);
+		let userRoles = member.roles.array();
+		userRoles.splice(userRoles.findIndex(role => role.name == "@everyone"), 1);
+		let joinTimes = [];
+		message.guild.members.forEach(mem => {
+			joinTimes.push(mem.joinedTimestamp);
+		})
+		joinTimes.sort(function(a, b){return a-b});
+		message.channel.send(new Discord.RichEmbed()
+		.setTitle("User Info - " + member.user.tag)
+		.setColor(member.displayColor)
+		.setThumbnail(member.user.avatarURL)
+		.setFooter("ID: " + member.id)
+		.addField("Account created at", `${createdDate.toUTCString()} (${fList.getDuration(createdDate)})`)
+		.addField("Joined this server at", `${joinedDate.toUTCString()} (${fList.getDuration(joinedDate)})`)
+		.addField("Bot user", member.user.bot)
+		.addField("Nickname", nick)
+		.addField("Status", member.presence.status)
+		.addField("Member #", joinTimes.indexOf(member.joinedTimestamp) + 1)
+		.addField("Roles - " + userRoles.length, userRoles.join(", "))
+		);
+		/*
+			Others found:
+			Seen on guild(s), Is Admin, Permissions
+		*/
+	},
+	commandInfo: {
+		aliases: ["user"],
+		args: {
+			allowQuotes: false,
+			num: Infinity,
+			optional: true,
+			type: "user"
+		},
+		category: "Utility",
+		cooldown: {
+			time: 15000,
+			type: "channel"
+		},
+		description: "Get info about you, or another user",
+		flags: null,
+		guildOnly: true,
+		name: "userinfo",
+		perms: {
+			bot: null,
+			user: null,
+			level: 0,
+		},
+		usage: "userinfo [user]"
 	}
-	
-	var uNick;
-	
-	let tsList = [];
-	let ugMembers = message.guild.members;
-	ugMembers.forEach(mem => {
-		tsList.push(mem.joinedTimestamp);
-	})
-	tsList.sort(function(a, b){return a-b});
-	
-	if (uiUser.nickname == null) {
-		uNick = "None"
-	} else {
-		uNick = uiUser.nickname
-	}
-	let ucDate = new Date(uiUser.user.createdTimestamp);
-	let ujDate = new Date(uiUser.joinedTimestamp);
-	message.channel.send(new Discord.RichEmbed()
-	.setTitle("User Info - " + uiUser.user.tag)
-	.setColor(uiUser.displayColor)
-	.setThumbnail(uiUser.user.avatarURL)
-	.setFooter("ID: " + uiUser.id)
-	.addField("Account created at", ucDate.toUTCString() + " (" + fList.getDuration(ucDate) + ")")
-	.addField("Joined this server at", ujDate.toUTCString() + " (" + fList.getDuration(ujDate) + ")")
-	.addField("Is a bot", uiUser.user.bot)
-	.addField("Nickname", uNick)
-	.addField("Status", uiUser.presence.status)
-	.addField("Member #", tsList.indexOf(uiUser.joinedTimestamp) + 1)
-	.addField("Roles - " + (uiUser.roles.array().length - 1), uiUser.roles.array().shift().toString().replace(/\,/g, "\, "))
-	);
-	/*
-		Others found:
-		Seen on guild(s), Is Admin, Permissions
-	*/
 }
 
+// Deprecated command info
 module.exports.config = {
 	aliases: ["user"],
 	cooldown: {
@@ -54,7 +69,7 @@ module.exports.config = {
 	guildOnly: true,
 	perms: {
 		level: 0,
-		reqPerms: []
+		reqPerms: null
 	}
 }
 

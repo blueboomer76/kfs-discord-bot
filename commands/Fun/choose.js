@@ -1,26 +1,33 @@
 const Discord = require("discord.js");
 
-module.exports.run = async (bot, message, args, flags) => {
-	if (!args[1]) return message.channel.send("You need to provide at least two choices for me to pick from!");
-	message.channel.send("I choose: " + args[Math.floor(Math.random() * args.length)]);
-}
-
-module.exports.config = {
-	aliases: ["pick, select"],
-	cooldown: {
-		waitTime: 15000,
-		type: "user"
+module.exports = {
+	run: async (bot, message, args, flags) => {
+		message.channel.send("I choose: " + args[Math.floor(Math.random() * args.length)]);
 	},
-	guildOnly: false,
-	perms: {
-		level: 0,
-		reqPerms: null
+	commandInfo: {
+		aliases: ["changenick", "setnick"],
+		args: [
+			{
+				allowQuotes: false,
+				num: Infinity,
+				optional: false,
+				type: "string"
+			},
+		],
+		category: "Moderation",
+		cooldown: {
+			time: 15000,
+			type: "user"
+		},
+		description: "Have the bot choose among a list of items",
+		flags: null,
+		guildOnly: false,
+		name: "choose",
+		perms: {
+			bot: null,
+			user: null,
+			level: 0,
+		},
+		usage: "choose <choice 1> <choice 2> [choices...]"
 	}
-}
-
-module.exports.help = {
-	name: "choose",
-	category: "Fun",
-	description: "Have the bot choose something for you",
-	usage: "k,urban <choice 1> <choice 2> [...]"
-}
+};

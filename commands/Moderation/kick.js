@@ -1,15 +1,47 @@
 const Discord = require("discord.js");
-const fList = require("../../modules/functions.js");
+const resolver = require("../../utils/objResolver.js");
 
-module.exports.run = async (bot, message, args) => {
-	if (!message.member.hasPermission("KICK_MEMBERS")) return message.reply("You don't have the required permission `KICK_MEMBERS` to run this command!")
-	let kUser = fList.findMember(message, args.join(" "));
-	if (kUser == undefined) return message.channel.send("The user provided could not be found in this guild.");
-	await kUser.kick()
-	.then(message.channel.send(`:white_check_mark: The user ${bUser.tag} was kicked from the guild.`))
-	.catch(err => message.channel.send("Oops! An error occurred: ```" + err + "```"))
-}
+module.exports = {
+	run: async (bot, message, args, flags) => {
+		let member = args[0];
+		await member.kick()
+		.then(message.channel.send(`✅ The user **${member.user.tag}** was kicked from the guild.`))
+		.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
+	},
+	commandInfo: {
+		aliases: [],
+		args: [
+			{
+				allowQuotes: false,
+				num: Infinity,
+				optional: false,
+				type: "user"
+			}
+		],
+		category: "Moderation",
+		cooldown: {
+			time: 25000,
+			type: "user"
+		},
+		description: "Kicks a member. It will be logged if a modlog channel was set",
+		flags: [
+			{
+				name: "reason",
+				argsType: "string"
+			},
+		],
+		guildOnly: true,
+		name: "kick",
+		perms: {
+			bot: ["KICK_MEMBERS"],
+			user: ["KICK_MEMBERS"],
+			level: 2,
+		},
+		usage: "kick <user>"
+	}
+};
 
+// Deprecated command info
 module.exports.config = {
 	aliases: [],
 	cooldown: {
@@ -19,7 +51,7 @@ module.exports.config = {
 	guildOnly: true,
 	perms: {
 		level: 2,
-		reqPerms: ["KICK_MEMBERS"]
+		reqPerms: "KICK_MEMBERS"
 	}
 }
 

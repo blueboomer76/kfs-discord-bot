@@ -1,16 +1,49 @@
 const Discord = require("discord.js");
-const fList = require("../../modules/functions.js");
 
-module.exports.run = async (bot, message, args) => {
-	let delAmount = Number(args[0])
-	if (isNaN(args[0]) || args[0] < 1 || args[0] > 100) return message.reply("The number of messages to delete must be a number between 1 and 100")
-	await message.channel.bulkDelete(delAmount + 1, true)
-	.then(
-		message.channel.send(`Deleted ${args[0]} messages from the channel!`).then(m => m.delete(5000))
-	)
-	.catch(err => message.channel.send("Oops! An error occurred: ```" + err + "```"))
+module.exports = {
+	run: async (bot, message, args, flags) => {
+		await message.channel.bulkDelete(args[0] + 1, true)
+		.then(
+			message.channel.send(`Deleted ${args[0]} messages from the channel!`).then(m => m.delete(6000))
+		)
+		.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
+	},
+	commandInfo: {
+		aliases: ["prune", "clear"],
+		args: [
+			{
+				allowQuotes: false,
+				num: 1,
+				optional: false,
+				type: "number",
+				min: 1,
+				max: 100
+			}
+		],
+		category: "Moderation",
+		cooldown: {
+			time: 20000,
+			type: "user"
+		},
+		description: "Deletes messages from a channel",
+		flags: [
+			{
+				name: "user",
+				argsType: "user"
+			},
+		],
+		guildOnly: true,
+		name: "purge",
+		perms: {
+			bot: ["MANAGE_MESSAGES"],
+			user: ["MANAGE_MESSAGES"],
+			level: 2,
+		},
+		usage: "purge <number>"
+	}
 }
 
+// Deprecated command info
 module.exports.config = {
 	aliases: ["prune", "clear"],
 	cooldown: {
@@ -20,7 +53,7 @@ module.exports.config = {
 	guildOnly: true,
 	perms: {
 		level: 2,
-		reqPerms: ["MANAGE_MESSAGES"]
+		reqPerms: "MANAGE_MESSAGES"
 	}
 }
 

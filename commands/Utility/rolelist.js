@@ -1,31 +1,55 @@
 const Discord = require("discord.js");
+const paginator = require("../../utils/paginator.js")
 
-module.exports.run = async (bot, message, args) => {
-	var rlStart;
-	if (!args[0]) {
-		rlStart = 0;
-	} else if (isNaN(args[0]) || args[0] < 1) {
-		return message.channel.send("Page provided is invalid!");
-	} else {
-		rlStart = args[0] - 1;
-	}
-	var dispRoles = [];
-	let roleList = message.guild.roles.array();
-	if (rlStart * 20 < roleList.length) {
-		for (let i = rlStart * 20; i < roleList.length && i < rlStart * 20 + 20; i++) {
-			dispRoles.push(roleList[i].name)
+module.exports = {
+	run: async (bot, message, args, flags) => {
+		let startPage;
+		if (!args[0]) {startPage = 1;} else {startPage = args[0];}
+		let roles = message.guild.roles.array();
+		let entries = [];
+		for (let i = 0; i < roles.length; i++) {
+			entries.push(roles[i].name);
 		}
-	} else {
-		return message.channel.send("No roles on this page.")
+		let roleListEmbed = paginator.generateEmbed(startPage, entries, null, 20, null)
+		message.channel.send(roleListEmbed
+		.setTitle("List of roles - " + message.guild.name)
+		)
+		.then(newMessage => {
+			if (roleList.length > 20) {
+				paginator.addPgCollector(message, newMessage, entries, null, 20, null)
+			}
+		})
+	},
+	commandInfo: {
+		aliases: ["roles"],
+		args: [
+			{
+				allowQuotes: false,
+				num: 1,
+				optional: true,
+				type: "number",
+				min: 1
+			}
+		],
+		category: "Utility",
+		cooldown: {
+			time: 30000,
+			type: "guild"
+		},
+		description: "Get the guild's roles",
+		flags: null,
+		guildOnly: true,
+		name: "rolelist",
+		perms: {
+			bot: null,
+			user: null,
+			level: 0,
+		},
+		usage: "rolelist [page]"
 	}
-	message.channel.send(new Discord.RichEmbed()
-	.setTitle("List of roles in this server")
-	.setColor(7713955)
-	.setDescription(dispRoles.join("\n"))
-	.setFooter("Page " + args[0] + " / " + Math.ceil(roleList.length / 20))
-	);
 }
 
+// Deprecated command info
 module.exports.config = {
 	aliases: ["roles"],
 	cooldown: {
@@ -35,7 +59,7 @@ module.exports.config = {
 	guildOnly: true,
 	perms: {
 		level: 0,
-		reqPerms: []
+		reqPerms: null
 	}
 }
 

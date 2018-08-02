@@ -1,51 +1,51 @@
 const Discord = require("discord.js");
 const fList = require("../../modules/functions.js");
 
-module.exports.run = async (bot, message, args) => {
-	var checkDate = new Date();
-	let gcDate = new Date(message.guild.createdTimestamp);
-	var botCount = 0;
-	message.guild.members.forEach(bcMember => {if (bcMember.user.bot) {botCount++;}});
-	message.channel.send(new Discord.RichEmbed()
-	.setTitle("Server Info - " + message.guild.name)
-	.setColor(Math.floor(Math.random() * 16777216))
-	.setThumbnail(message.guild.iconURL)
-	.setFooter("ID: " + message.guild.id + " ~ Server data as of")
-	.setTimestamp(message.createdAt)
-	.addField("Created at", gcDate.toUTCString() + " (" + fList.getDuration(message.guild.createdAt) + ")")
-	.addField("Owner", message.guild.owner.user.tag + " (ID " + message.guild.ownerID + ")")
-	.addField("Region", message.guild.region)
-	.addField("Verification Level", message.guild.verificationLevel)
-	.addField("Explicit Filter Level", message.guild.explicitContentFilter)
-	.addField("Members [" + message.guild.memberCount + " total]",
-	message.guild.presences.findAll(`status`, "online").length + " Online" + "\n" +
-	botCount + " Bots",
-	true)
-	.addField("Roles [" + message.guild.roles.array().length + " total]", "`k,rolelist` to see all roles", true)
-	.addField("Channels [" + message.guild.channels.array().length + " total]",
-	message.guild.channels.findAll(`type`, "text").length + " Text" + "\n" +
-	message.guild.channels.findAll(`type`, "voice").length + " Voice" + "\n" +
-	message.guild.channels.findAll(`type`, "category").length + " Categories",
-	true)
-	);
-}
-
-module.exports.config = {
-	aliases: ["guild", "guildinfo", "server"],
-	cooldown: {
-		waitTime: 120000,
-		type: "guild"
+module.exports = {
+	run: async (bot, message, args, flags) => {
+		let guild = message.guild;
+		let checkDate = new Date();
+		let createdDate = new Date(guild.createdTimestamp);
+		let botCount = 0;
+		guild.members.forEach(mem => {if (mem.user.bot) {botCount++;}});
+		message.channel.send(new Discord.RichEmbed()
+		.setTitle("Server Info - " + guild.name)
+		.setColor(Math.floor(Math.random() * 16777216))
+		.setThumbnail(guild.iconURL)
+		.setFooter("ID: " + guild.id + " | Server data as of")
+		.setTimestamp(message.createdAt)
+		.addField("Created at", `${createdDate.toUTCString()} (${fList.getDuration(createdDate)})`)
+		.addField("Owner", guild.owner.user.tag + " (ID " + guild.ownerID + ")")
+		.addField("Region", guild.region)
+		.addField("Verification Level", guild.verificationLevel)
+		.addField("Explicit Filter Level", guild.explicitContentFilter)
+		.addField("Members [" + guild.memberCount + " total]",
+		guild.presences.findAll(`status`, "online").length + " Online" + "\n" + botCount + " Bots", true)
+		.addField("Roles [" + Array.from(guild.roles).length + " total]", "`k,rolelist` to see all roles", true)
+		.addField("Channels [" + guild.channels.array().length + " total]",
+		message.guild.channels.findAll(`type`, "text").length + " Text" + "\n" +
+		message.guild.channels.findAll(`type`, "voice").length + " Voice" + "\n" +
+		message.guild.channels.findAll(`type`, "category").length + " Categories",
+		true)
+		);
 	},
-	guildOnly: true,
-	perms: {
-		level: 0,
-		reqPerms: []
+	commandInfo: {
+		aliases: ["guild", "guildinfo", "server"],
+		args: null,
+		category: "Utility",
+		cooldown: {
+			time: 120000,
+			type: "guild"
+		},
+		description: "Get info about this server",
+		flags: null,
+		guildOnly: true,
+		name: "serverinfo",
+		perms: {
+			bot: ["EMBED_LINKS"],
+			user: null,
+			level: 0,
+		},
+		usage: "serverinfo"
 	}
-}
-
-module.exports.help = {
-	name: "serverinfo",
-	category: "Utility",
-	description: "Get info about this server",
-	usage: "k,serverinfo"
 }
