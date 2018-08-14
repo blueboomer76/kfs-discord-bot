@@ -65,10 +65,10 @@ module.exports = {
 	},
 	addPgCollector: (message, newMessage, entryList1, entryList2, limit) => {
 		let emojiList = ["⬅", "⏹", "➡"];
-		for (let i = 0; i < 3; i++) {
+		for (let i = 0; i < emojiList.length; i++) {
 			setTimeout(() => {
 				newMessage.react(emojiList[i]).catch(err => {console.log(err)})
-			}, i * 500);
+			}, i * 750);
 		}
 		const pgCollector = newMessage.createReactionCollector((reaction, user) => 
 			user.id == message.author.id && (

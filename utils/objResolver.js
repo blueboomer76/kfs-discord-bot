@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 
-module.exports.resolve = (bot, message, obj, type) => {
+module.exports.resolve = (bot, message, obj, type, params) => {
 	switch (type) {
 		case "boolean":
 			let truthy = ["yes", "y", "true", "enable"]
@@ -12,23 +12,29 @@ module.exports.resolve = (bot, message, obj, type) => {
 			} else {return null}
 			break;
 		case "channel":
-			let channel = message.mentions.channels.first() || message.guild.channels.get(args[0]) || message.guild.channels.find("name", obj);
+			let channel = message.mentions.channels.first() || message.guild.channels.get(obj);
+			if (!channel) channel = message.guild.channels.find(chnl => chnl.name.toLowerCase().includes(obj.toLowerCase()));
 			if (channel) {return channel} else {return null}
 			break;
 		case "command":
 			let command = bot.commands.get(obj) || bot.commands.get(bot.aliases.get(obj))
 			if (command) {return command} else {return null}
 			break;
-		case "emoji":
-			// Not ready
+		case "duration":
+			// Coming soon
 			break;
-		case "guildMember":
+		case "emoji":
+			// Coming soon
+			break;
+		case "member":
 			let member;
+			let memberRegex = /<@!?\d+>/
 			let guildMembers = message.guild.members;
-			if (!message.mentions.users.first()) {
-				member = guildMembers.get(obj);
+			if (memberRegex.test(obj)) {
+				let memberRegex2 = /\d+/;
+				member = guildMembers.get(memberRegex2.match(obj)[0]);
 			} else {
-				member = guildMembers.get(message.mentions.users.first().id);
+				member = guildMembers.get(obj);
 			}
 			if (!member) {
 				let search = guildMembers.find(mem => mem.user.tag.toLowerCase().includes(obj.toLowerCase()));
@@ -43,14 +49,23 @@ module.exports.resolve = (bot, message, obj, type) => {
 			return member;
 			break;
 		case "number":
-			if (!isNaN(obj.test) && obj.test >= obj.min && obj.test <= obj.max) {return Math.round(obj.test)} else {return null}
+			if (!isNaN(obj) && obj >= params.min && obj <= params.max) {return Number(obj)} else {return null}
+			break;
+		case "oneof":
+			if (params.list.indexOf(obj) != -1) {return obj} else {return null}; 
+			break;
+		case "regex":
+			// Coming soon
 			break;
 		case "role":
-			let role = message.mentions.roles.first() || message.guild.roles.get(args[0]) || message.guild.channels.find("name", obj);
-			if (channel) {return channel} else {return null}
+			let role = message.mentions.roles.first() || message.guild.roles.get(obj)
+			if (!role) role = message.guild.roles.find(role => role.name.toLowerCase().includes(obj.toLowerCase()));
+			if (role) {return role} else {return null}
 			break;
 		case "string":
 			return obj.toString();
 			break;
+		default:
+			throw new Error("Invalid argument type to check");
 	}
 }

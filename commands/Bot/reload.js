@@ -1,42 +1,45 @@
 const Discord = require("discord.js");
+const Command = require("../../structures/command.js");
 
-module.exports = {
-	run: async (bot, message, args, flags) => {
+class ReloadCommand extends Command {
+	constructor() {
+		super({
+			name: "reload",
+			description: "Reload a command. It must be a command that is already loaded",
+			args: [
+				{
+					num: 1,
+					type: "command"
+				}
+			],
+			cooldown: {
+				time: 0,
+				type: "user"
+			},
+			perms: {
+				bot: [],
+				user: [],
+				level: 7
+			},
+			usage: "reload <command>"
+		});
+	}
+	
+	async run(bot, message, args, flags) {
+		let command = args[0];
+		let commandName = command.name;
+		let category = command.category;
 		try {
-			let commandName = args[0].commandInfo.name;
-			let cat = args[0].commandInfo.category;
-			delete require.cache[require.resolve(`../${cat}/${commandName}.js`)];
-			let newData = require(`../${cat}/${commandName}.js`);
-			bot.commands.set(commandName, newData);
+			delete require.cache[require.resolve(`../${category}/${commandName}.js`)];
+			let CommandClass = require(`../${category}/${commandName}.js`);
+			let command = new CommandClass();
+			command.category = category;
+			bot.commands.set(commandName, command);
 			message.channel.send(`The command ${commandName} was reloaded.`);
 		} catch(err) {
-			message.channel.send("There is an error in the code for the command you provided." + "\n" + ":```javascript" + err + "```");
+			message.channel.send("An error has occurred: ```javascript " + err + "```");
 		}
-	},
-	commandInfo: {
-		aliases: [],
-		args: [
-			{
-				allowQuotes: false,
-				num: 1,
-				optional: false,
-				type: "command"
-			}
-		],
-		category: "Bot",
-		cooldown: {
-			time: 0,
-			type: "global"
-		},
-		description: "Reload a command. It must be a command that is already loaded",
-		flags: null,
-		guildOnly: false,
-		name: "reload",
-		perms: {
-			bot: null,
-			user: null,
-			level: 7,
-		},
-		usage: "reload <command>"
 	}
-};
+}
+
+module.exports = ReloadCommand;

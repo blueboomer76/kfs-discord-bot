@@ -1,73 +1,55 @@
 const Discord = require("discord.js");
-const fList = require("../../modules/functions.js");
+const Command = require("../../structures/command.js");
+const functions = require("../../modules/functions.js");
 
-module.exports = {
-	run: async (bot, message, args, flags) => {
+class RoleInfoCommand extends Command {
+	constructor() {
+		super({
+			name: "roleinfo",
+			description: "Get info about a role",
+			aliases: ["role"],
+			args: [
+				{
+					num: Infinity,
+					type: "role"
+				}
+			],
+			category: "Utility",
+			cooldown: {
+				time: 15000,
+				type: "channel"
+			},
+			perms: {
+				bot: ["EMBED_LINKS"],
+				user: [],
+				level: 0,
+			},
+			usage: "roleinfo <role>"
+		});
+	}
+	
+	async run(bot, message, args, flags) {
 		let role = args[0];
-		let createdDate = new Date(riRole.createdTimestamp);
+		let createdDate = new Date(role.createdTimestamp);
 		let roleMembers = 0;
-		role.members.forEach(mem => {
-			if (mem.presence.status == "online") roleMembers++;
-		})
+		for (let mem of role.members.array()) {
+			if (mem.user.presence.status == "online") roleMembers++;
+		}
 		message.channel.send(new Discord.RichEmbed()
 		.setTitle("Role Info - " + role.name)
 		.setColor(role.color)
 		.setFooter("ID: " + role.id)
-		.addField("Role created at", `${createdDate.toUTCString()} (${fList.getDuration(createdDate)})`)
+		.addField("Role created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
 		.addField("Color", role.hexColor)
-		.addField("Members in Role [" + Array.from(role.members).length + " total]",
+		.addField("Members in Role [" + role.members.size + " total]",
 		roleMembers + " Online",
 		true)
-		.addField("Position from top", role.position + "/" + Array.from(role.members).length)
+		.addField("Position from bottom", role.position + "/" + message.guild.roles.size)
 		.addField("Displays separately (hoisted)", role.hoist)
 		.addField("Mentionable", role.mentionable)
 		.addField("Managed", role.managed)
 		);
-	},
-	commandInfo: {
-		aliases: ["role"],
-		args: [
-			{
-				allowQuotes: false,
-				num: Infinity,
-				optional: false,
-				type: "role"
-			}
-		],
-		category: "Utility",
-		cooldown: {
-			time: 15000,
-			type: "channel"
-		},
-		description: "Get info about a role",
-		flags: null,
-		guildOnly: true,
-		name: "roleinfo",
-		perms: {
-			bot: null,
-			user: null,
-			level: 0,
-		},
-		usage: "roleinfo <role>"
 	}
 }
 
-module.exports.config = {
-	aliases: ["role"],
-	cooldown: {
-		waitTime: 15000,
-		type: "channel"
-	},
-	guildOnly: true,
-	perms: {
-		level: 0,
-		reqPerms: null
-	}
-}
-
-module.exports.help = {
-	name: "roleinfo",
-	category: "Utility",
-	description: "Get info about a role",
-	usage: "k,roleinfo <role>"
-}
+module.exports = RoleInfoCommand;

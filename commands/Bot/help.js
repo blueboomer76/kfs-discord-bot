@@ -1,64 +1,59 @@
 const Discord = require("discord.js");
+const Command = require("../../structures/command.js");
 
-module.exports = {
-	run: async (bot, message, args, flags) => {
+class HelpCommand extends Command {
+	constructor() {
+		super({
+			name: "help",
+			description: "Get help for a command, or see all commands available.",
+			args: [
+				{
+					num: 1,
+					optional: true,
+					type: "command"
+				}
+			],
+			cooldown: {
+				time: 10000,
+				type: "channel"
+			},
+			perms: {
+				bot: ["EMBED_LINKS"],
+				user: [],
+				level: 0
+			},
+			usage: "help [command]"
+		});
+	}
+	
+	async run(bot, message, args, flags) {
 		let command = args[0];
 		if (!command) {
-			let commandList = Array.from(bot.commands.keys()).join(", ")
 			message.channel.send(new Discord.RichEmbed()
 			.setTitle("All the commands for this bot")
 			.setColor(Math.floor(Math.random() * 16777216))
-			.setDescription(commandList)
+			.setDescription(Array.from(bot.commands.keys()).join(", "))
 			);
 		} else {
-			let searchedCmd = bot.commands.get(args[0]) || bot.commands.get(bot.aliases.get(args[0]));
-			if (!searchedCmd) return message.channel.send("You provided an invalid command! See `k,help` for all the commands.\n\n*Syntax: `k,help <command>`*")
-			let commandPerms = searchedCmd.commandInfo.perms
+			let commandPerms = command.perms;
 			let permReq = {
-				bot: commandPerms.bot || "None",
-				user: commandPerms.user || "None"
+				bot: commandPerms.bot.length > 0 ? commandPerms.bot.join(", ") : "None",
+				user: commandPerms.user.length > 0 ? commandPerms.user.join(", ") : "None",
+				level: bot.cache.permLevels[commandPerms.level].name
 			};
-			if (commandPerms.bot) {
-				permReq.bot = commandPerms.bot.join(", ")
-			}
-			if (commandPerms.user) {
-				permReq.user = commandPerms.user.join(", ")
-			}
 			message.channel.send(new Discord.RichEmbed()
-			.setTitle("Help - " + hCmd)
+			.setTitle("Help - " + command.name)
 			.setColor(Math.floor(Math.random() * 16777216))
-			.addField("Category", sHCmd.help.category)
-			.addField("Description", sHCmd.help.description)
-			.addField("Usage", sHCmd.help.usage)
-			.addField("Aliases", sHCmd.config.aliases.join(", "))
-			.addField("Permissions", permReq)
+			.addField("Category", command.category)
+			.addField("Description", command.description)
+			.addField("Usage", command.usage)
+			.addField("Aliases", command.aliases.length > 0 ? command.aliases.join(", ") : "None")
+			.addField("Guild Only", command.guildOnly)
+			.addField("Permissions", "Bot - " + permReq.bot + "\nUser - " + permReq.user + " (with level " + permReq.level + ")")
+			.addField("Cooldown", (command.cooldown.time / 1000) + " seconds (per " + command.cooldown.type + ")")
 			);
 		}
-	},
-	commandInfo: {
-		aliases: [],
-		args: [
-			{
-				allowQuotes: false,
-				num: 1,
-				optional: true,
-				type: "command"
-			}
-		],
-		category: "Bot",
-		cooldown: {
-			time: 15000,
-			type: "channel"
-		},
-		description: "Get help for a command, or see all commands available.",
-		flags: null,
-		guildOnly: false,
-		name: "help",
-		perms: {
-			bot: ["EMBED_LINKS"],
-			user: null,
-			level: 0,
-		},
-		usage: "help [command]"
 	}
 }
+
+module.exports = HelpCommand;

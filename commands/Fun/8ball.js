@@ -1,7 +1,24 @@
 const Discord = require("discord.js");
+const Command = require("../../structures/command.js");
 
-module.exports = {
-	run: async (bot, message, args, flags) => {
+class EightBallCommand extends Command {
+	constructor() {
+		super({
+			name: "8ball",
+			description: "Ask the 8 ball a yes/no question and get an answer!",
+			aliases: ["8b"],
+			args: [
+				{
+					num: Infinity,
+					type: "string"
+				}
+			],
+			category: "Fun",
+			guildOnly: true
+		});
+	}
+	
+	async run(bot, message, args, flags) {
 		let magicmsgs = [
 			"Certainly",
 			"It is decidedly so",
@@ -24,57 +41,12 @@ module.exports = {
 			"Outlook not so good",
 			"Very doubtful"
 		]
-		if (!args[1]) {
+		if (!args[0].match(/ +/g)) {
 			message.channel.send(":8ball: You need to provide an actual question...");
 		} else {
 			message.channel.send(":8ball: " + magicmsgs[Math.floor(Math.random() * 20)]);
 		}
-	},
-	commandInfo: {
-		aliases: ["8b"],
-		args: [
-			{
-				allowQuotes: false,
-				num: Infinity,
-				optional: false,
-				type: "command"
-			}
-		],
-		category: "Fun",
-		cooldown: {
-			time: 15000,
-			type: "user"
-		},
-		description: "Ask the 8 ball a yes/no question and get an answer!",
-		flags: null,
-		guildOnly: true,
-		name: "8ball",
-		perms: {
-			bot: null,
-			user: null,
-			level: 0,
-		},
-		usage: "8ball <question>"
 	}
 }
 
-// Deprecated command info
-module.exports.config = {
-	aliases: ["8b"],
-	cooldown: {
-		waitTime: 15000,
-		type: "user"
-	},
-	guildOnly: true,
-	perms: {
-		level: 0,
-		reqPerms: null
-	}
-}
-
-module.exports.help = {
-	name: "8ball",
-	category: "Fun",
-	description: "Ask the 8 ball a question and get an answer!",
-	usage: "k,8ball <question>"
-}
+module.exports = EightBallCommand;
