@@ -1,8 +1,28 @@
 const Discord = require("discord.js");
-const fList = require("../../modules/functions.js");
+const Command = require("../../structures/command.js");
+const functions = require("../../modules/functions.js");
 
-module.exports = {
-	run: async (bot, message, args, flags) => {
+class ServerInfoCommand extends Command {
+	constructor() {
+		super({
+			name: "serverinfo",
+			description: "Get info about this server",
+			aliases: ["guild", "guildinfo", "server"],
+			category: "Utility",
+			cooldown: {
+				time: 120000,
+				type: "guild"
+			},
+			guildOnly: true,
+			perms: {
+				bot: ["EMBED_LINKS"],
+				user: [],
+				level: 0
+			}
+		});
+	}
+	
+	async run(bot, message, args, flags) {
 		let guild = message.guild;
 		let createdDate = new Date(guild.createdTimestamp);
 		let botCount = 0;
@@ -29,33 +49,16 @@ module.exports = {
 		.setFooter("ID: " + guild.id + " | Server data as of")
 		.setThumbnail(guild.iconURL)
 		.setTimestamp(message.createdAt)
-		.addField("Created at", `${createdDate.toUTCString()} (${fList.getDuration(createdDate)})`)
-		.addField("Owner", guild.owner.user.tag + " (ID " + guild.owner.id + ")")
+		.addField("Created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
+		.addField("Owner", guild.owner.user.tag + " `(ID " + guild.owner.id + ")`")
 		.addField("Region", guild.region)
 		.addField("Verification Level", guild.verificationLevel)
 		.addField("Explicit Filter Level", guild.explicitContentFilter)
 		.addField("Members [" + guild.memberCount + " total]", onlineCount + " Online" + "\n" + botCount + " Bots", true)
-		.addField("Roles [" + guild.roles.array().length + " total]", "Use `rolelist` to see all roles", true)
-		.addField("Channels [" + guild.channels.array().length + " total]", tcCount + " Text" + "\n" + vcCount + " Voice" + "\n" + ccCount + " Categories", true)
+		.addField("Roles [" + guild.roles.size + " total]", "Use `rolelist` to see all roles", true)
+		.addField("Channels [" + guild.channels.size + " total]", tcCount + " Text" + "\n" + vcCount + " Voice" + "\n" + ccCount + " Categories", true)
 		);
-	},
-	commandInfo: {
-		aliases: ["guild", "guildinfo", "server"],
-		args: null,
-		category: "Utility",
-		cooldown: {
-			time: 120000,
-			type: "guild"
-		},
-		description: "Get info about this server",
-		flags: null,
-		guildOnly: true,
-		name: "serverinfo",
-		perms: {
-			bot: ["EMBED_LINKS"],
-			user: null,
-			level: 0
-		},
-		usage: "serverinfo"
 	}
 }
+
+module.exports = ServerInfoCommand;

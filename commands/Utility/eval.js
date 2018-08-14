@@ -1,9 +1,37 @@
 const Discord = require("discord.js");
-const config = require("../../config.json");
+const Command = require("../../structures/command.js");
 
-module.exports = {
-	run: async (bot, message, args, flags) => {
-		if (config.ownerIDs.indexOf(message.author.id) == -1) return message.channel.send("This command has restricted access.");
+class EvalCommand extends Command {
+	constructor() {
+		super({
+			name: "eval",
+			description: "Evaluate JavaScript code",
+			args: [
+				{
+					num: Infinity,
+					type: "string"
+				}
+			],
+			category: "Utility",
+			cooldown: {
+				time: 0,
+				type: "user"
+			},
+			flags: [
+				{
+					name: "console"
+				}
+			],
+			perms: {
+				bot: ["EMBED_LINKS"],
+				user: [],
+				level: 8
+			},
+			usage: "eval <code> [--console]"
+		});
+	}
+	
+	async run(bot, message, args, flags) {
 		let consoleFlag = flags.find(f => f.name == "console");
 		let toEval = args[0];
 		let result;
@@ -32,36 +60,7 @@ module.exports = {
 			.addField("Result", "```javascript" + "\n" + result + "```")
 			);
 		}
-	},
-	commandInfo: {
-		aliases: ["exec"],
-		args: [
-			{
-				allowQuotes: false,
-				num: Infinity,
-				optional: false,
-				type: "string"
-			}
-		],
-		category: "Utility",
-		cooldown: {
-			time: 0,
-			type: "global"
-		},
-		description: "Evaluate JavaScript code. Only the bot owner(s) can access this command",
-		flags: [
-			{
-				name: "console",
-				argsType: null
-			}
-		],
-		guildOnly: false,
-		name: "eval",
-		perms: {
-			bot: ["EMBED_LINKS"],
-			user: null,
-			level: 8
-		},
-		usage: "eval <code>"
 	}
 }
+
+module.exports = EvalCommand;

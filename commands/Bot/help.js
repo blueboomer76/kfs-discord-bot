@@ -1,66 +1,65 @@
 const Discord = require("discord.js");
-const config = require("../../config.json");
+const Command = require("../../structures/command.js");
 
-module.exports = {
-	run: async (bot, message, args, flags) => {
+class HelpCommand extends Command {
+	constructor() {
+		super({
+			name: "help",
+			description: "Get help for a command, or see all commands available.",
+			args: [
+				{
+					num: 1,
+					optional: true,
+					type: "command"
+				}
+			],
+			category: "Bot",
+			cooldown: {
+				time: 10000,
+				type: "channel"
+			},
+			perms: {
+				bot: ["EMBED_LINKS"],
+				user: [],
+				level: 0
+			},
+			usage: "help [command]"
+		});
+	}
+	
+	async run(bot, message, args, flags) {
 		let command = args[0];
 		if (!command) {
 			let cmds = [];
-			bot.commands.forEach(cmd => cmds.push(cmd.commandInfo.name));
+			bot.commands.forEach(cmd => cmds.push(cmd.name));
 			message.channel.send(new Discord.RichEmbed()
 			.setTitle("All bot commands")
 			.setDescription(cmds.join(", "))
 			.setColor(Math.floor(Math.random() * 16777216))
 			);
 		} else {
-			let commandPerms = command.commandInfo.perms;
+			let commandFlags = command.flags.map(f => `--${f.name} (-${f.name.charAt(0)})`);
+			let commandPerms = command.perms;
 			let permReq = {
-				bot: commandPerms.bot || "None",
-				user: commandPerms.user || "None"
+				bot: commandPerms.bot.length > 0 ? commandPerms.bot.join(", ") : "None",
+				user: commandPerms.user.length > 0 ? commandPerms.user.join(", ") : "None",
+				level: bot.cache.permLevels[commandPerms.level].name
 			};
-			if (commandPerms.bot) permReq.bot = commandPerms.bot.join(", ");
-			if (commandPerms.user) permReq.user = commandPerms.user.join(", ");
 
-			let hEmbed = new Discord.RichEmbed()
-			.setTitle("Help - " + command.commandInfo.name)
+			message.channel.send(new Discord.RichEmbed()
+			.setTitle("Help - " + command.name)
 			.setColor(Math.floor(Math.random() * 16777216))
-			.addField("Category", command.commandInfo.category)
-			.addField("Description", command.commandInfo.description)
-			if (command.commandInfo.aliases.length > 0) hEmbed.addField("Aliases", command.commandInfo.aliases.join(", "));
-			if (command.commandInfo.flags) {
-				let commandFlags = command.commandInfo.flags.map(f => `--${f.name} (-${f.name.charAt(0)})`);
-				hEmbed.addField("Flags", commandFlags.join(", "));
-			}
-			hEmbed.addField("Usage", config.prefix + command.commandInfo.usage)
-			.addField("Permissions", "Bot - " + permReq.bot + "\nUser - " + permReq.user);
-
-			message.channel.send(hEmbed);
+			.addField("Category", command.category)
+			.addField("Description", command.description)
+			.addField("Aliases", command.aliases.length > 0 ? command.aliases.join(", ") : "None")
+			.addField("Flags", command.flags.length > 0 ? commandFlags.join("\n") : "None")
+			.addField("Usage", command.usage)
+			.addField("Server Only", command.guildOnly ? "Yes" : "No")
+			.addField("Permissions", "Bot - " + permReq.bot + "\nUser - " + permReq.user + " (with level " + permReq.level + ")")
+			.addField("Cooldown", (command.cooldown.time / 1000) + " seconds (per " + command.cooldown.type + ")")
+			);
 		}
-	},
-	commandInfo: {
-		aliases: [],
-		args: [
-			{
-				allowQuotes: false,
-				num: 1,
-				optional: true,
-				type: "command"
-			}
-		],
-		category: "Bot",
-		cooldown: {
-			time: 15000,
-			type: "channel"
-		},
-		description: "Get help for a command, or see all commands available.",
-		flags: null,
-		guildOnly: false,
-		name: "help",
-		perms: {
-			bot: ["EMBED_LINKS"],
-			user: null,
-			level: 0
-		},
-		usage: "help [command]"
 	}
 }
+
+module.exports = HelpCommand;

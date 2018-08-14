@@ -1,5 +1,24 @@
-module.exports = {
-	run: async (bot, message, args, flags) => {
+const Command = require("../../structures/command.js");
+
+class EightBallCommand extends Command {
+	constructor() {
+		super({
+			name: "8ball",
+			description: "Ask the 8 ball a yes/no question and get an answer!",
+			aliases: ["8b"],
+			args: [
+				{
+					num: Infinity,
+					type: "string"
+				}
+			],
+			category: "Fun",
+			guildOnly: true,
+			usage: "8ball <question>"
+		});
+	}
+	
+	async run(bot, message, args, flags) {
 		let magicMsgs = [
 			"Certainly",
 			"It is decidedly so",
@@ -27,31 +46,7 @@ module.exports = {
 		} else {
 			message.channel.send(":8ball: " + magicMsgs[Math.floor(Math.random() * 20)]);
 		}
-	},
-	commandInfo: {
-		aliases: ["8b"],
-		args: [
-			{
-				allowQuotes: false,
-				num: Infinity,
-				optional: false,
-				type: "string"
-			}
-		],
-		category: "Fun",
-		cooldown: {
-			time: 15000,
-			type: "user"
-		},
-		description: "Ask the 8 ball a yes/no question and get an answer!",
-		flags: null,
-		guildOnly: true,
-		name: "8ball",
-		perms: {
-			bot: null,
-			user: null,
-			level: 0
-		},
-		usage: "8ball <question>"
 	}
 }
+
+module.exports = EightBallCommand;

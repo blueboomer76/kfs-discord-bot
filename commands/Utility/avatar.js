@@ -1,39 +1,38 @@
 const Discord = require("discord.js");
+const Command = require("../../structures/command.js");
 
-module.exports = {
-	run: (bot, message, args, flags) => {
+class AvatarCommand extends Command {
+	constructor() {
+		super({
+			name: "avatar",
+			description: "Get a user's avatar",
+			aliases: ["profilepic", "pfp"],
+			args: [
+				{
+					num: Infinity,
+					optional: true,
+					type: "member"
+				}
+			],
+			category: "Utility",
+			cooldown: {
+				time: 15000,
+				type: "channel"
+			},
+			guildOnly: true,
+			usage: "avatar [user]"
+		});
+	}
+	
+	async run(bot, message, args, flags) {
 		let member = args[0];
-		if (!member) member = message.guild.member(message.author);
+		if (!member) member = message.member;
 		message.channel.send(new Discord.RichEmbed()
 		.setTitle("Avatar - " + member.user.tag)
 		.setColor(Math.floor(Math.random() * 16777216))
 		.setImage(member.user.avatarURL)
 		);
-	},
-	commandInfo: {
-		aliases: ["profilepic", "pfp"],
-		args: [
-			{
-				allowQuotes: false,
-				num: Infinity,
-				optional: true,
-				type: "member"
-			}
-		],
-		category: "Utility",
-		cooldown: {
-			time: 15000,
-			type: "channel"
-		},
-		description: "Get a user's avatar",
-		flags: null,
-		guildOnly: true,
-		name: "avatar",
-		perms: {
-			bot: ["EMBED_LINKS"],
-			user: null,
-			level: 0
-		},
-		usage: "avatar [user]"
 	}
 }
+
+module.exports = AvatarCommand;
