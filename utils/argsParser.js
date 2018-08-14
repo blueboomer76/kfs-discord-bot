@@ -1,11 +1,10 @@
 const resolver = require("./objResolver.js");
 
-function parseArgQuotes(args) {
+function parseArgQuotes(args, findAll) {
 	let beginMatches = args.filter(a => a.match(/^"\S/));
 	let endMatches = args.filter(a => a.match(/\S"$/));
 	if (beginMatches && endMatches) {
-		let beginIndexes = [];
-		let endIndexes = [];
+		let beginIndexes = [], endIndexes = [];
 		for (let i = 0; i < beginMatches.length; i++) {
 			beginIndexes.push(args.indexOf(beginMatches[i]));
 		}
@@ -21,6 +20,7 @@ function parseArgQuotes(args) {
 				let end = endIndex - shift + 1;
 				let newArg = args.splice(start, end - start).join(" ");
 				args.splice(start, 0, newArg.slice(1, newArg.length - 1));
+				if (!findAll) break;
 				shift += end - start - 1;
 			} else {
 				break;
@@ -38,32 +38,30 @@ module.exports = {
 			let arg = commandArgs[i];
 			if (arg.num == Infinity) {
 				if (arg.allowQuotes) {
-					args[i] = parseArgQuotes(args)[i];
+					let findAll = false;
+					if (arg.parseSeparately) findAll = !findAll;
+					let newArgs = parseArgQuotes(args.slice(i), findAll);
+					args = args.slice(0, i).concat(newArgs);
+					if (arg.parseSeparately) return parsedArgs.concat(newArgs);
 				} else {
 					args[i] = args.slice(i).join(" ");
 				}
 			}
 			if (!args[i]) {
 				if (!arg.optional) {
-					return {error: "userError", message: "Missing argument", at: i}
+					return {error: "userError", message: arg.errorMsg, at: i}
 				} else {
 					parsedArgs.push(null);
 					continue;
 				}
 			}
-			let toResolve;
-			if (arg.type != "number") {
-				toResolve = resolver.resolve(bot, message, args[i], arg.type)
-			} else {
-				let numObj = {
-					test: args[i],
-					min: -Infinity,
-					max: Infinity
-				};
-				if (arg.min) numObj.min = arg.min;
-				if (arg.max) numObj.max = arg.max;
-				toResolve = resolver.resolve(bot, message, numObj, arg.type)
+			let toResolve, params;
+			if (arg.type == "number") {
+				params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity}
+			} else if (arg.type == "oneof") {
+				params = {list: arg.allowedValues};
 			}
+			toResolve = resolver.resolve(bot, message, args[i], arg.type, params)
 			if (toResolve == null) {
 				return {error: "userError", message: "Invalid argument `(Must be a valid " + arg.type + ")`", at: i}
 			}
@@ -71,20 +69,16 @@ module.exports = {
 		}
 		return parsedArgs;
 	},
-	getFlags: args => {
-		let newArgs;
+	parseFlags: (bot, message, args, commandFlags) => {
+		// 1. Get flags
 		let flags = [];
 		let flagIndexes = [];
 		let flagRegex = /^(-[a-z]$|(--|—)[a-z][a-z])/i;
 		let flagBases = args.filter(a => flagRegex.test(a));
 		for (let i = 0; i < flagBases.length; i++) {
 			flagIndexes.push(args.indexOf(flagBases[i]));
-			let flagObj = {method: "", name: "", args: []};
-			if (flagBases[i].match(/^-{2}|—/)) {
-				flagObj.method = "long";
-			} else {
-				flagObj.method = "short";
-			}
+			let flagObj = {method: "short", name: "", args: []};
+			if (flagBases[i].match(/^-{2}|—/)) flagObj.method = "long";
 			if (flagBases[i].startsWith("--")) {
 				flagObj.name = flagBases[i].slice(2);
 			} else {
@@ -98,13 +92,10 @@ module.exports = {
 			}
 			flags.push(flagObj);
 		}
-		newArgs = args.slice(0, flagIndexes[0]);
-		return {
-			flags: flags,
-			newArgs: newArgs
-		};
-	},
-	parseFlags: (bot, message, flags, commandFlags) => {
+		let newArgs = args.slice(0, flagIndexes[0]);
+
+		// 2. Parse flags
+		let parsedFlags = [];
 		let flagShortNames = commandFlags.map(f => f.name.charAt(0));
 		let flagLongNames = commandFlags.map(f => f.name);
 		for (let i = 0; i < flags.length; i++) {
@@ -114,17 +105,31 @@ module.exports = {
 			}
 			let longNameIndex = flagLongNames.indexOf(flags[i].name);
 			if (shortIndex == -1 && longNameIndex == -1) {
-				return {error: "userError", message: "A nonexistant flag was provided", at: i}
+				if (parsedFlags.length == 0) {
+					if (i < flags.length - 1) {
+						newArgs = args.slice(0, flagIndexes[i+1]);
+						continue;
+					} else {
+						newArgs = args;
+						break;
+					}
+				} else {
+					continue;
+				}
 			}
-			let toResolve = flags[i].args;
-			if (commandFlags[longNameIndex].argsType) {
-				toResolve = resolver.resolve(bot, message, flags[i].args.join(" "), commandFlags[longNameIndex].argsType);
+			let commandFlag = commandFlags[longNameIndex];
+			if (commandFlag.arg) {
+				let toResolve = resolver.resolve(bot, message, flags[i].args.join(" "), commandFlag.arg.type);
 				if (toResolve == null) {
 					return {error: "userError", message: "Invalid argument in a flag", at: i};
 				}
 				flags[i].args = toResolve;
 			}
+			parsedFlags.push(flags[i]);
 		}
-		return flags;
+		return {
+			flags: parsedFlags,
+			newArgs: newArgs
+		};
 	}
 }

@@ -1,8 +1,28 @@
 const Discord = require("discord.js");
+const Command = require("../../structures/command.js");
 const superagent = require("superagent");
 
-module.exports = {
-	run: async (bot, message, args, flags) => {
+class DogCommand extends Command {
+	constructor() {
+		super({
+			name: "dog",
+			description: "Get a random dog!",
+			aliases: ["puppy", "woof"],
+			category: "Fun",
+			cooldown: {
+				time: 15000,
+				type: "channel"
+			},
+			guildOnly: true,
+			perms: {
+				bot: ["EMBED_LINKS"],
+				user: [],
+				level: 0
+			}
+		});
+	}
+	
+	async run(bot, message, args, flags) {
 		let {body} = await superagent
 		.get("https://random.dog/woof.json");
   
@@ -12,24 +32,7 @@ module.exports = {
 		.setFooter("From random.dog")
 		.setImage(body.url)
 		);
-	},
-	commandInfo: {
-		aliases: ["woof", "puppy"],
-		args: null,
-		category: "Fun",
-		cooldown: {
-			time: 15000,
-			type: "channel"
-		},
-		description: "Get a random dog!",
-		flags: null,
-		guildOnly: true,
-		name: "dog",
-		perms: {
-			bot: ["EMBED_LINKS"],
-			user: null,
-			level: 0
-		},
-		usage: "dog"
 	}
 }
+
+module.exports = DogCommand;

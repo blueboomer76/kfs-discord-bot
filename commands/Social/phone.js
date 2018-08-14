@@ -1,51 +1,51 @@
-module.exports = {
-	run: async (bot, message, args, flags) => {
+const Command = require("../../structures/command.js");
+
+class PhoneCommand extends Command {
+	constructor() {
+		super({
+			name: "phone",
+			description: "Chat with other servers on the phone!",
+			aliases: ["telephone"],
+			category: "Social",
+			cooldown: {
+				time: 20000,
+				type: "channel"
+			},
+			guildOnly: true
+		});
+	}
+	
+	async run(bot, message, args, flags) {
 		let phoneMsg, phoneMsg0;
-		if (bot.phoneVars.channels.indexOf(message.channel.id) == -1) {
-			bot.phoneVars.channels.push(message.channel.id);
-			if (bot.phoneVars.channels.length == 1) {
+		let phoneCache = bot.cache.phone;
+		if (phoneCache.channels.indexOf(message.channel.id) == -1) {
+			phoneCache.channels.push(message.channel.id);
+			if (phoneCache.channels.length == 1) {
 				message.react("☎");
 			} else {
-				bot.phoneVars.callExpires = Number(new Date()) + 600000;
+				phoneCache.callExpires = Number(new Date()) + 600000;
 				message.channel.send("☎ A phone connection has started! Greet the other side!");
-				if (bot.phoneVars.channels.length == 2) {
+				if (phoneCache.channels.length == 2) {
 					phoneMsg0 = "The other side has picked up the phone! Greet the other side!";
 				} else {
 					phoneMsg0 = "Looks like someone else picked up the phone."
-					bot.channels.get(bot.phoneVars.channels.shift()).send("☎ Someone else is now using the phone...");
+					bot.channels.get(phoneCache.channels.shift()).send("☎ Someone else is now using the phone...");
 				}
-				bot.channels.get(bot.phoneVars.channels[0]).send("☎ " + phoneMsg0);
+				bot.channels.get(phoneCache.channels[0]).send("☎ " + phoneMsg0);
 			}
 		} else {
-			if (bot.phoneVars.channels.length == 1) {
+			if (phoneCache.channels.length == 1) {
 				phoneMsg = "There was no response from the phone, hanging it up.";
 			} else {
 				let affected = 0;
-				phoneMsg = "The phone was hung up.";
-				if (message.channel.id == bot.phoneVars.channels[0]) {affected = 1};
-				bot.channels.get(bot.phoneVars.channels[affected]).send("☎ " + phoneMsg);
+				if (message.channel.id == phoneCache.channels[0]) {affected = 1};
+				message.channel.send("☎ You have hung up the phone.");
+				bot.channels.get(phoneCache.channels[affected]).send("☎ The other side hung up the phone.");
 			}
-			bot.phoneVars.channels = [];
+			phoneCache.channels = [];
 			message.channel.send("☎ " + phoneMsg);
 		}
-	},
-	commandInfo: {
-		aliases: ["telephone"],
-		args: null,
-		category: "Social",
-		cooldown: {
-			time: 20000,
-			type: "channel"
-		},
-		description: "Chat with other servers on the phone!",
-		flags: null,
-		guildOnly: true,
-		name: "phone",
-		perms: {
-			bot: null,
-			user: null,
-			level: 0
-		},
-		usage: "phone"
 	}
 }
+
+module.exports = PhoneCommand;

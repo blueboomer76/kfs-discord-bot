@@ -1,5 +1,38 @@
-module.exports = {
-	run: async (bot, message, args, flags) => {
+const Command = require("../../structures/command.js");
+
+class AddRoleCommand extends Command {
+	constructor() {
+		super({
+			name: "addrole",
+			description: "Adds a role to a user",
+			aliases: ["giverole", "setrole"],
+			args: [
+				{
+					allowQuotes: true,
+					num: Infinity,
+					type: "member"
+				},
+				{
+					num: Infinity,
+					type: "role"
+				}
+			],
+			category: "Moderation",
+			cooldown: {
+				time: 20000,
+				type: "user"
+			},
+			guildOnly: true,
+			perms: {
+				bot: ["MANAGE_ROLES"],
+				user: ["MANAGE_ROLES"],
+				level: 1
+			},
+			usage: "addrole <user> <role>"
+		});
+	}
+	
+	async run(bot, message, args, flags) {
 		let member = args[0];
 		let role = args[1];
 		if (member.id == message.author.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself or the bot.");
@@ -10,37 +43,7 @@ module.exports = {
 		member.addRole(role)
 		.then(() => message.channel.send(`✅ Role **${role.name}** has been added to the user **${member.user.tag}**.`))
 		.catch(() => message.channel.send("Could not add the role to the user."))
-	},
-	commandInfo: {
-		aliases: ["giverole", "setrole"],
-		args: [
-			{
-				allowQuotes: true,
-				num: Infinity,
-				optional: false,
-				type: "member"
-			},
-			{
-				allowQuotes: false,
-				num: Infinity,
-				optional: false,
-				type: "role"
-			}
-		],
-		category: "Moderation",
-		cooldown: {
-			time: 20000,
-			type: "user"
-		},
-		description: "Adds a role to a user",
-		flags: null,
-		guildOnly: true,
-		name: "addrole",
-		perms: {
-			bot: ["MANAGE_ROLES"],
-			user: ["MANAGE_ROLES"],
-			level: 2
-		},
-		usage: "addrole <user> <role>"
 	}
-};
+}
+
+module.exports = AddRoleCommand;
