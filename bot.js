@@ -77,15 +77,17 @@ class KendraBot extends Client {
 					}
 				}
 			],
-			messages: {
-				sessionCount: 0,
-				currentCount: 0,
-				lastCheck: Number(new Date())
-			},
 			guildCount: 0,
 			userCount: 0,
 			phone: {channels: [], msgCount: 0, expiresAt: 0},
 			recentCommands: [],
+			stats: {
+				lastCheck: Number(new Date()),
+				messageCurrentTotal: 0,
+				messageSessionTotal: 0,
+				commandSessionTotal: 0,
+				commandUsage: []
+			},
 			usage: []
 		};
 		this.ideaWebhook = new WebhookClient("477953968455155714", config.ideaWebhookToken);
@@ -142,31 +144,41 @@ class KendraBot extends Client {
 		})
 	}
 	
-	logStats() {
-		let stats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8"));
-		stats.messages.count += this.cache.messages.currentCount;
-		stats.messages.duration = stats.messages.duration + (Number(new Date()) - this.cache.messages.lastCheck)
-		let usage = stats.commandUsage;
-		let usageCache = this.cache.usage;
-		for (let i = 0; i < usageCache.length; i++) {
-			let cmdIndex = usage.findIndex(u => u.command == usageCache[i].command)
-			if (cmdIndex != -1) {
-				usage[cmdIndex].uses += usageCache[i].uses;
-			} else {
-				usage.push({
-					command: usageCache[i].command,
-					uses: usageCache[i].uses
-				})
-			}
+	async logStats() {
+		if (require.cache[require.resolve("./modules/stats.json")]) {
+			await delete require.cache[require.resolve("./modules/stats.json")];
 		}
-		fs.writeFile("modules/stats.json", JSON.stringify(stats), err => {if (err) throw err;});
-		this.cache.messages.sessionCount += this.cache.messages.currentCount;
-		this.cache.messages.currentCount = 0;
-		this.cache.messages.lastCheck = Number(new Date());
-		this.cache.usage = [];
+		setTimeout(() => {
+			let stats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8"));
+			let stats2 = this.cache.stats;
+			stats.duration = stats.duration + (Number(new Date()) - stats2.lastCheck)
+			stats.messageTotal += stats2.messageCurrentTotal;
+			let distrib = stats.commandDistrib;
+			let usageCache = stats2.commandUsage;
+			let commandCurrentTotal = 0;
+			for (let i = 0; i < usageCache.length; i++) {
+				let cmdIndex = distrib.findIndex(u => u.command == usageCache[i].command)
+				if (cmdIndex != -1) {
+					distrib[cmdIndex].uses += usageCache[i].uses;
+				} else {
+					distrib.push({
+						command: usageCache[i].command,
+						uses: usageCache[i].uses
+					})
+				}
+				commandCurrentTotal += usageCache[i].uses;
+			}
+			stats.commandTotal += commandCurrentTotal;
+			fs.writeFile("modules/stats.json", JSON.stringify(stats), err => {if (err) throw err;});
+			stats2.messageSessionTotal += stats2.messageCurrentTotal;
+			stats2.messageCurrentTotal = 0;
+			stats2.commandSessionTotal += commandCurrentTotal;
+			stats2.lastCheck = Number(new Date());
+			stats2.commandUsage = [];
+		}, 1000);
 	}
 	
-	handlePhoneMessage(message) {
+	async handlePhoneMessage(message) {
 		let phoneCache = this.cache.phone;
 		if (phoneCache.callExpires > Number(new Date())) {
 			phoneCache.callExpires = Number(new Date()) + 600000;
@@ -175,9 +187,8 @@ class KendraBot extends Client {
 			let affected = 0;
 			if (message.channel.id == phoneCache.channels[0]) {affected = 1};
 			let toSend = message.content.replace(/https?\:\/\/[^ ]+\.[^ ]+/gi, "")
-			.replace(/discord\.gg\/[0-9a-z]+/gi, "")
-			.replace(/discordapp\.com\/invite\/[0-9a-z]+/gi, "")
-			this.channels.get(phoneCache.channels[affected]).send(":telephone_receiver: " + toSend);
+			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
+			this.channels.get(phoneCache.channels[affected]).send("☎️ " + toSend);
 			if (phoneCache.msgCount > 4) {
 				let phoneMsg = "☎️ The phone connection was cut off due to being overloaded."
 				this.channels.get(phoneCache.channels[0]).send(phoneMsg);

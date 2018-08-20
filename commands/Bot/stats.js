@@ -8,17 +8,12 @@ class StatsCommand extends Command {
 	constructor() {
 		super({
 			name: "stats",
-			description: "Get stats for the Kendra bot",
+			description: "Get detailed stats for the Kendra bot",
 			aliases: ["botstats"],
 			cooldown: {
 				time: 120000,
 				type: "guild"
 			},
-			flags: [
-				{
-					name: "advanced"
-				}
-			],
 			perms: {
 				bot: ["EMBED_LINKS"],
 				user: [],
@@ -49,18 +44,18 @@ class StatsCommand extends Command {
 		message.channel.send(new Discord.RichEmbed()
 		.setAuthor(`KendraBot ver. ${version}`, bot.user.avatarURL)
 		.setColor(Math.floor(Math.random() * 16777216))
-		.setFooter(`⏰ Took: ${endEval - beginEval}ms | Stats as of`)
+		.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
 		.setTimestamp(message.createdAt)
 		.setDescription("Here's some detailed stats about the Kendra bot!")
 		.addField("Memory Usage", `${(process.memoryUsage().heapUsed / 1048576).toFixed(2)} MB`, true)
 		.addField("Last Restart", getDuration(bot.readyTimestamp), true)
 		.addField("Servers", 
 		`Total: ${serverCount.toLocaleString()}` + `\n` +
-		`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(2)}%)`
+		`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
 		, true)
 		.addField("Users", 
-		`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(2)}/server)` + `\n` +
-		`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(2)}%)`
+		`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + `\n` +
+		`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(1)}%)`
 		, true)
 		.addField("Channels", 
 		`Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + `\n` +
@@ -69,18 +64,18 @@ class StatsCommand extends Command {
 		, true)
 		.addField("Messages Seen",
 		`Session: ${sessionMessages.toLocaleString()} (${(1000 * sessionMessages / (Number(new Date()) - bot.readyTimestamp)).toFixed(2)}/sec)` + `\n` +
-		`Total: ${stats.messageTotal.toLocaleString()} (${(1000 * stats.messageTotal / stats.duration).toFixed(2)}/sec)`
+		`Total: ${totalMessages.toLocaleString()} (${(1000 * totalMessages / stats.duration).toFixed(2)}/sec)`
 		, true)
 		.addField("Commands",
-		`Session: ${sessionCommands.toLocaleString()} (${(1000 * sessionCommands / (Number(new Date()) - bot.readyTimestamp)).toFixed(3)}/sec)` + `\n` +
-		`Total: ${stats.commandTotal.toLocaleString()} (${(1000 * stats.commandTotal / stats.duration).toFixed(3)}/sec)`
+		`Session: ${sessionCommands.toLocaleString()} (${(60000 * sessionCommands / (Number(new Date()) - bot.readyTimestamp)).toFixed(2)}/min)` + `\n` +
+		`Total: ${totalCommands.toLocaleString()} (${(60000 * totalCommands / stats.duration).toFixed(2)}/min)`
 		, true)
 		)
 	}
 	
 	/*
 		Others found:
-		Bot Author, Shard Number, Command Count, Owner ID(s), RAM Usage, Shard Uptime,
+		Bot Author, Shard Number, RAM Usage, Shard Uptime,
 		
 		Ratios, Min, Max, Average,:
 		Pct Online/Guild

@@ -1,10 +1,10 @@
-const Discord = require("discord.js");
+﻿const Discord = require("discord.js");
 const config = require("../config.json");
 const argParser = require("../utils/argsParser.js");
 const cdChecker = require("../modules/cooldownChecker.js");
 
 module.exports = async (bot, message) => {
-	bot.cache.messages.currentCount++;
+	bot.cache.stats.messageCurrentTotal++;
 	if (message.author.bot) return;
 	if (!message.content.startsWith(config.prefix) && message.mentions.users.first() != bot.user) {
 		if (bot.cache.phone.channels.length > 1 && bot.cache.phone.channels.indexOf(message.channel.id) != -1) {
@@ -70,26 +70,35 @@ module.exports = async (bot, message) => {
 				}
 				runCommand.run(bot, message, args, flags)
 				.catch(err => {
-					message.channel.send("🤷 I was unable to execute the command because: ```javascript" + "\n" + err.stack + "```Come to the official server to discuss this bug.")
+					message.channel.send("🤷 An error occurred while trying to run this command because: ```javascript" + "\n" + err.stack + "```Come to the official server to discuss this bug.")
 				});
 				if (cdInfo.time != 0) {cdChecker.addCooldown(bot, message, runCommand.name)};
-				let commandUsage = bot.cache.usage.find(u => u.command == runCommand.name);
+				let commandUsage = bot.cache.stats.commandUsage.find(u => u.command == runCommand.name);
 				if (commandUsage) {
 					commandUsage.uses++;
 				} else {
-					bot.cache.usage.push({
+					bot.cache.stats.commandUsage.push({
 						command: runCommand.name,
 						uses: 1
 					})
-				}
+				};
 			} else {
+				let cdMessages = [
+					"You're calling me fast enough that I'm getting dizzy!",
+					"Watch out, seems like we might get a speeding ticket at this rate!",
+					"You have to wait before using the command again...",
+					"You're calling me a bit too fast, I am getting dizzy!",
+					"Don't be so greedy!",
+					"I want to do this, but please halt first.",
+					"Hang in there before using this command again..."
+				];
 				let cdSuffix = "";
 				if (cdInfo.type == "channel") {
 					cdSuffix = " in this channel"
 				} else if (cdInfo.type == "guild") {
 					cdSuffix = " in this guild"
 				}
-				message.channel.send("⛔ **Cooldown:**\nThis command cannot be used again for " + cdCheck + " seconds" + cdSuffix + "!")
+				message.channel.send(`⛔ **Cooldown:**\n*${cdMessages[Math.floor(Math.random() * cdMessages.length)]}*\nThis command cannot be used again for **${cdCheck} seconds**${cdSuffix}!`)
 			}
 		}
 	}

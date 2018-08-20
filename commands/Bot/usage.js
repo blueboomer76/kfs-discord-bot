@@ -21,29 +21,17 @@ class UsageCommand extends Command {
 				type: "guild"
 			},
 			perms: {
-				bot: ["EMBED_LINKS"],
+				bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
 				user: [],
 				level: 0,
 			},
 			usage: "k,usage [page]"
 		});
-		this.nextStatsCheck = 0;
 	}
 	
 	async run(bot, message, args, flags) {
 		let startPage;
 		if (!args[0]) {startPage = 1;} else {startPage = args[0];}
-		if (new Date() > this.nextStatsCheck) {
-			this.nextStatsCheck = Number(new Date()) + 3600000;
-			bot.logStats();
-			await delete require.cache[require.resolve("../../modules/stats.json")]
-			setTimeout(this.sendStats, 1000, message, startPage);
-		} else {
-			this.sendStats(message, startPage);
-		}
-	}
-	
-	async sendStats(message, startPage) {
 		let stats = require("../../modules/stats.json");
 		let commandUsage = stats.commandDistrib;
 		commandUsage.sort((a,b) => b.uses - a.uses);
