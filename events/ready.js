@@ -25,5 +25,6 @@ module.exports = async bot => {
 			}
 			bot.user.setActivity(prefix + "help | " + newBotGame);
 		}, 1000 * 180)
+		setInterval(() => {bot.logStats()}, 1000 * 3600);
 	}
 };
