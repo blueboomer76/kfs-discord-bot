@@ -84,7 +84,14 @@ class KFSDiscordBot extends Client {
 			guildCount: 0,
 			userCount: 0,
 			phone: {channels: [], msgCount: 0, callExpires: 0},
-			recentCommands: []
+			recentCommands: [],
+			stats: {
+				commandSessionTotal: 0,
+				messageCurrentTotal: 0,
+				messageSessionTotal: 0,
+				commandUsages: [],
+				lastCheck: Number(new Date())
+			}
 		};
 		if (config.ideaWebhookID && config.ideaWebhookToken) {
 			this.ideaWebhook = new WebhookClient(config.ideaWebhookID, config.ideaWebhookToken);
@@ -142,6 +149,44 @@ class KFSDiscordBot extends Client {
 		})
 	}
 	
+	logStats() {
+		delete require.cache[require.resolve("./modules/stats.json")];
+
+		fs.readFile("modules/stats.json", {encoding: "utf8"}, (err, data) => {
+			if (err) {console.error(err); return}
+			let storedStats = JSON.parse(data);
+			let cachedStats = this.cache.stats;
+
+			storedStats.duration += Number(new Date()) - cachedStats.lastCheck;
+
+			let storedUsages = storedStats.commandUsages;
+			let cachedUsages = cachedStats.commandUsages;
+			let commandCurrentTotal = 0;
+			for (let i = 0; i < cachedUsages.length; i++) {
+				let cmdIndex = storedUsages.findIndex(u => u.command == cachedUsages[i].command);
+				if (cmdIndex != -1) {
+					storedUsages[cmdIndex].uses += cachedUsages[i].uses;
+				} else {
+					storedUsages.push({
+						command: cachedUsages[i].command,
+						uses: cachedUsages[i].uses
+					})
+				}
+				commandCurrentTotal += cachedUsages[i].uses;
+			}
+			storedStats.commandTotal += commandCurrentTotal;
+			storedStats.messageTotal += cachedStats.messageCurrentTotal;
+
+			fs.writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {if (err) throw err});
+
+			cachedStats.commandSessionTotal += commandCurrentTotal;
+			cachedStats.messageSessionTotal += cachedStats.messageCurrentTotal;
+			cachedStats.messageCurrentTotal = 0;
+			cachedStats.commandUsages = [];
+			cachedStats.lastCheck = Number(new Date());
+		});
+	}
+
 	handlePhoneMessage(message) {
 		let phoneCache = this.cache.phone;
 		if (phoneCache.callExpires > Number(new Date())) {

@@ -3,6 +3,7 @@ const argParser = require("../utils/argsParser.js");
 const config = require("../config.json");
 
 module.exports = async (bot, message) => {
+	bot.cache.stats.messageCurrentTotal++;
 	if (message.author.bot) return;
 	let mentionMatch = message.content.match(bot.mentionPrefix);
 	if (!message.content.startsWith(config.prefix) && !mentionMatch) {
@@ -87,6 +88,15 @@ module.exports = async (bot, message) => {
 				if (err && err.stack) e = err.stack;
 				message.channel.send("An error has occurred while running the command:```javascript" + "\n" + e + "```");
 			});
+			let commandUsage = bot.cache.stats.commandUsages.find(u => u.command == runCommand.name);
+			if (commandUsage) {
+				commandUsage.uses++;
+			} else {
+				bot.cache.stats.commandUsages.push({
+					command: runCommand.name,
+					uses: 1
+				})
+			}
 		}
 	}
 };
