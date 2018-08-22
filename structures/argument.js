@@ -8,6 +8,10 @@ class Argument {
 		this.optional = props.optional || false;
 		this.type = props.type;
 		
+		if (props.min) this.min = props.min;
+		if (props.max) this.max = props.max;
+		if (props.allowedValues) this.allowedValues = props.allowedValues;
+		
 		if (!props.type) throw new Error("Argument type not given");
 	}
 }

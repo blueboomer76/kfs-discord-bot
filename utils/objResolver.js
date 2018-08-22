@@ -32,7 +32,7 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			let guildMembers = message.guild.members;
 			if (memberRegex.test(obj)) {
 				let memberRegex2 = /\d+/;
-				member = guildMembers.get(memberRegex2.match(obj)[0]);
+				member = guildMembers.get(obj.match(memberRegex2)[0]);
 			} else {
 				member = guildMembers.get(obj);
 			}

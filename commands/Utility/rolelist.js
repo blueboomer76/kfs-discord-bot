@@ -22,7 +22,7 @@ class RoleListCommand extends Command {
 				type: "guild"
 			},
 			perms: {
-				bot: ["EMBED_LINKS"],
+				bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
 				user: [],
 				level: 0,
 			},

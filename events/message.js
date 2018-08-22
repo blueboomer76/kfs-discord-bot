@@ -25,7 +25,8 @@ module.exports = async (bot, message) => {
 					for (const perm of requiredPerms.user) {
 						if (!message.member.hasPermission(perm)) {
 							allowed.state = false;
-							allowed.faultMsg += "You need these permissions to run this command:\n" + requiredPerms.user.join(", ")
+							allowed.faultMsg += "You need these permissions to run this command:\n" + requiredPerms.user.join(", ");
+							break;
 						}
 					}
 				}
@@ -46,6 +47,7 @@ module.exports = async (bot, message) => {
 						if (!message.guild.member(bot.user).hasPermission(perm)) {
 							allowed.state = false;
 							allowed.faultMsg += "\nI need these permissions to run this command:\n" + requiredPerms.bot.join(", ")
+							break;
 						}
 					}
 				}

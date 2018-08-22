@@ -32,7 +32,7 @@ module.exports = {
 			if (arg.type == "number") {
 				params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity}
 			} else if (arg.type == "oneof") {
-				params = {list: arg.acceptedValues}
+				params = {list: arg.allowedValues}
 			}
 			toResolve = resolver.resolve(bot, message, args[i], arg.type, params)
 			if (!toResolve) {
