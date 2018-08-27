@@ -15,7 +15,6 @@ class UsageCommand extends Command {
 					min: 1
 				}
 			],
-			category: "Bot",
 			cooldown: {
 				time: 30000,
 				type: "guild"
@@ -35,7 +34,7 @@ class UsageCommand extends Command {
 
 		let startPage;
 		if (!args[0]) {startPage = 1} else {startPage = args[0]}
-		let entries = storedUsages.map(cmd => cmd.command + " - used " + cmd.uses + " times");
+		let entries = storedUsages.map(cmd => `${cmd.command} - used ${cmd.uses} times`);
 		let usageEmbed = paginator.generateEmbed(startPage, entries, null, 20, null);
 		message.channel.send(usageEmbed
 		.setTitle("Most Popular Bot Commands")

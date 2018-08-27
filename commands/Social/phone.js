@@ -6,7 +6,6 @@ class PhoneCommand extends Command {
 			name: "phone",
 			description: "Chat with other servers on the phone!",
 			aliases: ["telephone"],
-			category: "Social",
 			cooldown: {
 				time: 20000,
 				type: "channel"
@@ -18,7 +17,7 @@ class PhoneCommand extends Command {
 	async run(bot, message, args, flags) {
 		let phoneMsg, phoneMsg0;
 		let phoneCache = bot.cache.phone;
-		if (phoneCache.channels.indexOf(message.channel.id) == -1) {
+		if (!phoneCache.channels.includes(message.channel.id)) {
 			phoneCache.channels.push(message.channel.id);
 			if (phoneCache.channels.length == 1) {
 				message.react("☎");
@@ -31,7 +30,7 @@ class PhoneCommand extends Command {
 					phoneMsg0 = "Looks like someone else picked up the phone."
 					bot.channels.get(phoneCache.channels.shift()).send("☎ Someone else is now using the phone...");
 				}
-				bot.channels.get(phoneCache.channels[0]).send("☎ " + phoneMsg0);
+				bot.channels.get(phoneCache.channels[0]).send(`☎ ${phoneMsg0}`);
 			}
 		} else {
 			if (phoneCache.channels.length == 1) {
@@ -39,11 +38,11 @@ class PhoneCommand extends Command {
 			} else {
 				let affected = 0;
 				if (message.channel.id == phoneCache.channels[0]) {affected = 1};
-				message.channel.send("☎ You have hung up the phone.");
+				phoneMsg = "You have hung up the phone.";
 				bot.channels.get(phoneCache.channels[affected]).send("☎ The other side hung up the phone.");
 			}
 			phoneCache.channels = [];
-			message.channel.send("☎ " + phoneMsg);
+			message.channel.send(`☎ ${phoneMsg}`);
 		}
 	}
 }

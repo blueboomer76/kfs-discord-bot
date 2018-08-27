@@ -15,7 +15,6 @@ class UserInfoCommand extends Command {
 					type: "member"
 				}
 			],
-			category: "Utility",
 			cooldown: {
 				time: 15000,
 				type: "channel"
@@ -32,27 +31,40 @@ class UserInfoCommand extends Command {
 	
 	async run(bot, message, args, flags) {
 		let member = args[0];
-		if (!args[0]) member = message.guild.member(message.author);
+		if (!args[0]) member = message.member;
 
 		let createdDate = new Date(member.user.createdTimestamp);
 		let joinedDate = new Date(member.joinedTimestamp);
+		
+		let rawPresence = member.presence, presence;
+		if (rawPresence.status == "online") {
+			presence = "Online";
+		} else if (rawPresence.status == "idle") {
+			presence = "Idle";
+		} else if (rawPresence.status == "dnd") {
+			presence = "Do Not Disturb";
+		} else {
+			presence = "Offline";
+		}
+		if (rawPresence.game) presence += ` (playing ${rawPresence.game.name})`;
+
 		let joinTimes = message.guild.members.map(mem => mem.joinedTimestamp);
 		joinTimes.sort((a, b) => a - b);
 		let roleList = member.roles.map(r => r.name).join(", ");
 		if (roleList.length > 1000) roleList = roleList.slice(0, 1000) + "...";
 
 		message.channel.send(new Discord.RichEmbed()
-		.setTitle("User Info - " + member.user.tag)
+		.setTitle(`User Info - ${member.user.tag}`)
 		.setColor(member.displayColor)
-		.setFooter("ID: " + member.id)
+		.setFooter(`ID: ${member.id}`)
 		.setThumbnail(member.user.avatarURL)
 		.addField("Account created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
 		.addField("Joined this server at", `${joinedDate.toUTCString()} (${functions.getDuration(joinedDate)})`)
-		.addField("Status", member.presence.status)
+		.addField("Status", presence)
 		.addField("Bot user", member.user.bot ? "Yes" : "No")
-		.addField("Nickname", member.nickname ? member.nickname : "None")
+		.addField("Nickname", member.nickname || "None")
 		.addField("Member #", joinTimes.indexOf(member.joinedTimestamp) + 1)
-		.addField("Roles - " + member.roles.array().length, roleList)
+		.addField(`Roles - ${member.roles.size}`, roleList)
 		);
 	}
 }

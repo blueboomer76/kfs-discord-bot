@@ -12,7 +12,6 @@ class EightBallCommand extends Command {
 					type: "string"
 				}
 			],
-			category: "Fun",
 			guildOnly: true,
 			usage: "8ball <question>"
 		});
@@ -42,9 +41,9 @@ class EightBallCommand extends Command {
 			"Very doubtful"
 		]
 		if (!args[0].match(/ +/g)) {
-			message.channel.send(":8ball: You need to provide an actual question...");
+			message.channel.send("🎱 You need to provide an actual question...");
 		} else {
-			message.channel.send(":8ball: " + magicMsgs[Math.floor(Math.random() * 20)]);
+			message.channel.send(`🎱 ${magicMsgs[Math.floor(Math.random() * 20)]}`);
 		}
 	}
 }

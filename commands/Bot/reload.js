@@ -11,7 +11,6 @@ class ReloadCommand extends Command {
 					type: "command"
 				}
 			],
-			category: "Bot",
 			cooldown: {
 				time: 0,
 				type: "user"

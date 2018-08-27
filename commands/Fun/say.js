@@ -12,7 +12,6 @@ class SayCommand extends Command {
 					type: "string"
 				}
 			],
-			category: "Fun",
 			flags: [
 				{
 					name: "embed"

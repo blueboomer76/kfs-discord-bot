@@ -17,7 +17,6 @@ class QuoteCommand extends Command {
 					type: "string"
 				}
 			],
-			category: "Fun",
 			guildOnly: true,
 			perms: {
 				bot: ["EMBED_LINKS"],

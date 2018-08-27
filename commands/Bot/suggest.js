@@ -13,7 +13,6 @@ class SuggestCommand extends Command {
 					type: "string"
 				}
 			],
-			category: "Bot",
 			cooldown: {
 				time: 30000,
 				type: "user"
