@@ -8,7 +8,6 @@ class CatCommand extends Command {
 			name: "cat",
 			description: "Get a random cat!",
 			aliases: ["kitten", "meow"],
-			category: "Fun",
 			cooldown: {
 				time: 15000,
 				type: "channel"

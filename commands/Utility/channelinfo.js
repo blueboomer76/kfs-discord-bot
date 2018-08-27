@@ -15,7 +15,6 @@ class ChannelInfoCommand extends Command {
 					type: "channel"
 				}
 			],
-			category: "Utility",
 			cooldown: {
 				time: 15000,
 				type: "channel"
@@ -35,9 +34,9 @@ class ChannelInfoCommand extends Command {
 		if (!args[0]) channel = message.channel;
 		let createdDate = new Date(channel.createdTimestamp);
 		message.channel.send(new Discord.RichEmbed()
-		.setTitle("Channel Info - " + channel.name)
+		.setTitle(`Channel Info - ${channel.name}`)
 		.setColor(Math.floor(Math.random() * 16777216))
-		.setFooter("ID: " + channel.id)
+		.setFooter(`ID: ${channel.id}`)
 		.addField("Channel created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
 		.addField("Channel type", channel.type)
 		);

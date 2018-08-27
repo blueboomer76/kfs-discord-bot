@@ -13,10 +13,9 @@ class HelpCommand extends Command {
 					type: "command"
 				}
 			],
-			category: "Bot",
 			cooldown: {
 				time: 10000,
-				type: "channel"
+				type: "user"
 			},
 			perms: {
 				bot: ["EMBED_LINKS"],
@@ -55,8 +54,8 @@ class HelpCommand extends Command {
 			.addField("Flags", command.flags.length > 0 ? commandFlags.join("\n") : "None")
 			.addField("Usage", command.usage)
 			.addField("Server Only", command.guildOnly ? "Yes" : "No")
-			.addField("Permissions", "Bot - " + permReq.bot + "\nUser - " + permReq.user + " (with level " + permReq.level + ")")
-			.addField("Cooldown", (command.cooldown.time / 1000) + " seconds (per " + command.cooldown.type + ")")
+			.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user} (with level ${permReq.level})`)
+			.addField("Cooldown", `${command.cooldown.time / 1000} seconds (per ${command.cooldown.type})`)
 			);
 		}
 	}

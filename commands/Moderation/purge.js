@@ -14,7 +14,6 @@ class PurgeCommand extends Command {
 					max: 99
 				}
 			],
-			category: "Moderation",
 			cooldown: {
 				time: 20000,
 				type: "user"
@@ -22,6 +21,12 @@ class PurgeCommand extends Command {
 			flags: [
 				{
 					name: "bots"
+				},
+				{
+					name: "text",
+					arg: {
+						type: "string"
+					}
 				},
 				{
 					name: "user",
@@ -36,21 +41,26 @@ class PurgeCommand extends Command {
 				user: ["MANAGE_MESSAGES"],
 				level: 1
 			},
-			usage: "purge <number> [--user <user>] [--bots]"
+			usage: "purge <1-99> [--user <user>] [--text <text>] [--bots]"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
 		let errorStatus = false;
 		let toDelete = args[0] + 1;
-		let botsFlag = flags.find(f => f.name == "bots");
-		let userFlag = flags.find(f => f.name == "user");
-		if (botsFlag || userFlag) {
+		if (flags.length > 0) {
 			await message.channel.fetchMessages({"limit": args[0]})
 			.then(messages => {
 				toDelete = messages;
-				if (botsFlag) toDelete = toDelete.filter(msg => msg.author.bot);
+				let userFlag = flags.find(f => f.name == "user");
 				if (userFlag) toDelete = toDelete.filter(msg => msg.author.id == userFlag.args.id);
+
+				let botsFlag = flags.find(f => f.name == "bots");
+				if (botsFlag) toDelete = toDelete.filter(msg => msg.author.bot);
+
+				let textFlag = flags.find(f => f.name == "text");
+				if (textFlag) toDelete = toDelete.filter(msg => msg.content.includes(textFlag.args));
+
 				if (!toDelete.get(message.id)) toDelete.set(message.id, message);
 			})
 			.catch(err => {

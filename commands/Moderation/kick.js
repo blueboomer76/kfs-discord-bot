@@ -11,7 +11,6 @@ class KickCommand extends Command {
 					type: "member"
 				}
 			],
-			category: "Moderation",
 			cooldown: {
 				time: 20000,
 				type: "user"

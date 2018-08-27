@@ -6,7 +6,6 @@ class InviteCommand extends Command {
 		super({
 			name: "invite",
 			description: "Get info about inviting the bot, joining the bot's server, or its references",
-			category: "Bot",
 			cooldown: {
 				time: 30000,
 				type: "guild"

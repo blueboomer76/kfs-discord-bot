@@ -13,7 +13,6 @@ class ChooseCommand extends Command {
 					type: "string"
 				}
 			],
-			category: "Fun",
 			guildOnly: true,
 			usage: "choose <choices...>"
 		});
@@ -21,7 +20,7 @@ class ChooseCommand extends Command {
 	
 	async run(bot, message, args, flags) {
 		if (args.length < 2) return message.channel.send("You need to provide at least two choices for me to pick from!");
-		message.channel.send("I choose: " + args[Math.floor(Math.random() * args.length)]);
+		message.channel.send(`I choose: ${args[Math.floor(Math.random() * args.length)]}`);
 	}
 }
 

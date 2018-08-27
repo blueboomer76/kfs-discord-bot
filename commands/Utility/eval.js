@@ -12,7 +12,6 @@ class EvalCommand extends Command {
 					type: "string"
 				}
 			],
-			category: "Utility",
 			cooldown: {
 				time: 0,
 				type: "user"
@@ -34,12 +33,15 @@ class EvalCommand extends Command {
 	async run(bot, message, args, flags) {
 		let consoleFlag = flags.find(f => f.name == "console");
 		let toEval = args[0];
-		let result;
+		let result, beginEvalDate, endEvalDate;
 		try {
+			beginEvalDate = Number(new Date());
 			result = eval(toEval);
 		} catch (err) {
 			result = err;
 			if (err && err.stack && !consoleFlag) result = err.stack;
+		} finally {
+			endEvalDate = Number(new Date());
 		}
 
 		if (consoleFlag) {
@@ -55,6 +57,7 @@ class EvalCommand extends Command {
 			message.channel.send(new Discord.RichEmbed()
 			.setTitle("discord.js Evaluator")
 			.setColor(Math.floor(Math.random() * 16777216))
+			.setFooter(`Execution took: ${endEvalDate - beginEvalDate}ms`)
 			.setTimestamp(message.createdAt)
 			.addField("Your code", "```javascript" + "\n" + toEval + "```")
 			.addField("Result", "```javascript" + "\n" + result + "```")

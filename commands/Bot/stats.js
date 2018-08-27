@@ -8,7 +8,6 @@ class StatsCommand extends Command {
 			name: "stats",
 			description: "Get detailed stats for the bot",
 			aliases: ["botstats"],
-			category: "Bot",
 			cooldown: {
 				time: 120000,
 				type: "guild"
