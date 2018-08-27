@@ -15,7 +15,7 @@ class HelpCommand extends Command {
 			],
 			cooldown: {
 				time: 10000,
-				type: "channel"
+				type: "user"
 			},
 			perms: {
 				bot: ["EMBED_LINKS"],
@@ -29,11 +29,14 @@ class HelpCommand extends Command {
 	async run(bot, message, args, flags) {
 		let command = args[0];
 		if (!command) {
-			message.channel.send(new Discord.RichEmbed()
+			let helpEmbed = new Discord.RichEmbed()
 			.setTitle("All the commands for this bot")
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setDescription(Array.from(bot.commands.keys()).join(", "))
-			);
+			.setColor(Math.floor(Math.random() * 16777216));
+			for (let i = 0; i < bot.categories.length; i++) {
+				let cmdsInCat = bot.commands.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
+				helpEmbed.addField(bot.categories[i], Array.from(cmdsInCat).join(", "));
+			}
+			message.channel.send(helpEmbed);
 		} else {
 			let commandPerms = command.perms;
 			let permReq = {
@@ -48,9 +51,9 @@ class HelpCommand extends Command {
 			.addField("Description", command.description)
 			.addField("Usage", command.usage)
 			.addField("Aliases", command.aliases.length > 0 ? command.aliases.join(", ") : "None")
-			.addField("Guild Only", command.guildOnly)
-			.addField("Permissions", "Bot - " + permReq.bot + "\nUser - " + permReq.user + " (with level " + permReq.level + ")")
-			.addField("Cooldown", (command.cooldown.time / 1000) + " seconds (per " + command.cooldown.type + ")")
+			.addField("Guild Only", command.guildOnly ? "Yes" : "No")
+			.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user} (with level ${permReq.level})`)
+			.addField("Cooldown", `${command.cooldown.time / 1000} seconds (per ${command.cooldown.type})`)
 			);
 		}
 	}

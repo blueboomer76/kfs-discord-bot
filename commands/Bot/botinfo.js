@@ -1,17 +1,15 @@
 const Discord = require("discord.js");
 const Command = require("../../structures/command.js");
-const functions = require("../../modules/functions.js");
-const stats = require("../../modules/stats.json");
-const {version} = require("../../package.json");
+const packageInfo = require("../../package.json");
 
 class BotInfoCommand extends Command {
 	constructor() {
 		super({
 			name: "botinfo",
-			description: "Get info about the Kendra bot",
-			aliases: ["bot"],
+			description: "Get general info about the bot",
+			aliases: ["about", "bot", "info"],
 			cooldown: {
-				time: 60000,
+				time: 30000,
 				type: "guild"
 			},
 			perms: {
@@ -23,41 +21,19 @@ class BotInfoCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let sessionMessages = bot.cache.messages.currentCount + bot.cache.messages.sessionCount;
-		let serverCount = bot.guilds.size;
-		let userCount = bot.users.size;
-		let channelCount = bot.channels.size;
 		message.channel.send(new Discord.RichEmbed()
-		.setAuthor("KendraBot ver. " + version, bot.user.avatarURL)
+		.setTitle("About Kendra")
+		.setDescription("Kendra is an actively developed bot that not only has fun, moderation, utility commands, but a phone command for calling other servers, and combines features from popular bots. New commands are added to Kendra often.")
 		.setColor(Math.floor(Math.random() * 16777216))
-		.setFooter("Bot ID: " + bot.user.id + " | Bot stats as of")
-		.setTimestamp(message.createdAt)
-		.addField("Memory Usage", `${(process.memoryUsage().heapUsed / 1048576).toFixed(2)} MB`, true)
-		.addField("Last Restart", functions.getDuration(bot.readyTimestamp), true)
-		.addField("Servers", serverCount.toLocaleString(), true)
-		.addField("Users", `${userCount.toLocaleString()}\n(${(userCount / serverCount).toFixed(2)} / server)`, true)
-		.addField("Channels", `${channelCount.toLocaleString()}\n(${(channelCount / serverCount).toFixed(2)} / server)`, true)
-		.addField("Messages (Session)", `${sessionMessages.toLocaleString()}\n(${(1000 * sessionMessages / (Number(new Date()) - bot.readyTimestamp)).toFixed(2)} / sec)`, true)
-		)
+		.setFooter(`Bot ID: ${bot.user.id}`)
+		.addField("Library", `Discord.js v${packageInfo.dependencies["discord.js"].slice(1)}`, true)
+		.addField("Bot Version", `${packageInfo.version}`, true)
+		.addField("Stats", `${bot.cache.guildCount} Servers\n${bot.cache.userCount} Users`, true)
+		.addField("Bot Invite", "[Go!](https://discordapp.com/api/oauth2/authorize?client_id=429807759144386572&permissions=403041398&scope=bot)", true)
+		.addField("Kendra's server", "[Go!](https://discord.gg/yB8TvWU)", true)
+		.addField("Upvote this bot", "[Go!](https://discordbots.org/bots/429807759144386572)", true)
+		);
 	}
-	
-	/*
-		Others found:
-		Bot Author, Shard Number, Command Count, Owner ID(s), Num Text/Voice Channels, Ping,
-		RAM Usage, Shard Uptime, Global Guilds, Channels, Users
-		
-		Ratios, Min, Max, Average,:
-		Online Users/Guild
-		Pct Online/Guild
-		Text Chnls/Guild
-		Voice Chnls/Guild
-		Music Listeners/Guild
-		ML Pct/Guild
-		Music Connections/Guild
-		Queue Size
-		Big servers
-		Being the only bot in a server
-	*/
 }
 
 module.exports = BotInfoCommand;

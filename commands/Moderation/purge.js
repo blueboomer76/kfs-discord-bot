@@ -15,7 +15,6 @@ class PurgeCommand extends Command {
 					max: 100
 				}
 			],
-			category: "Moderation",
 			cooldown: {
 				time: 20000,
 				type: "user"
@@ -23,6 +22,13 @@ class PurgeCommand extends Command {
 			flags: [
 				{
 					name: "bots"
+				},
+				{
+					name: "text",
+					arg: {
+						num: Infinity,
+						type: "string"
+					}
 				},
 				{
 					name: "user",
@@ -38,32 +44,30 @@ class PurgeCommand extends Command {
 				user: ["MANAGE_MESSAGES"],
 				level: 1
 			},
-			usage: "purge <number> [--user <user>] [--bots]"
+			usage: "purge <1-100> [--user <user>] [--text <text>] [--bots]"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
 		let errorStatus = false;
 		let toDelete = args[0] + 1;
-		let userFlag = flags.find(f => f.name == "user");
-		if (userFlag) {
-			await message.channel.fetchMessages({"limit": args[0]})
+		if (flags.length > 0) {
+			await message.channel.fetchMessages({"limit": toDelete})
 			.then(messages => {
-				console.log(userFlag.args[0]);
-				toDelete = messages.array().filter(msg => msg.member == userFlag.args[0]);
-				toDelete.push(message);
-			})
-			.catch(err => {
-				message.channel.send("Error occurred while trying to fetch messages:```" + err + "```")
-				errorStatus = true;
-			})
-		}
-		let botsFlag = flags.find(f => f.name == "bots");
-		if (botsFlag) {
-			await message.channel.fetchMessages({"limit": args[0]})
-			.then(messages => {
-				toDelete = messages.array().filter(msg => msg.author.bot);
-				toDelete.push(message);
+				toDelete = messages;
+				let userFlag = flags.find(f => f.name == "user");
+				if (userFlag) {
+					toDelete = toDelete.filter(msg => msg.member == userFlag.args[0]);
+				}
+				let botsFlag = flags.find(f => f.name == "bots");
+				if (botsFlag) {
+					toDelete = toDelete.filter(msg => msg.author.bot);
+				}
+				let textFlag = flags.find(f => f.name == "text");
+				if (textFlag) {
+					toDelete = toDelete.filter(msg => msg.content.includes(textFlag.args[0]));
+				}
+				if (!toDelete.get(message.id)) {toDelete.set(message.id, message)};
 			})
 			.catch(err => {
 				message.channel.send("Error occurred while trying to fetch messages:```" + err + "```")

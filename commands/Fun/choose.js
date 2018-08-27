@@ -14,14 +14,13 @@ class ChooseCommand extends Command {
 					type: "string"
 				}
 			],
-			category: "Fun",
 			guildOnly: true,
 			usage: "choose <choices...>"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
-		message.channel.send("I choose: " + args[Math.floor(Math.random() * args.length)]);
+		message.channel.send(`I choose: ${args[Math.floor(Math.random() * args.length)]}`);
 	}
 }
 

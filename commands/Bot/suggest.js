@@ -31,10 +31,10 @@ class SuggestCommand extends Command {
 				},
 				color: Math.floor(Math.random() * 16777216),
 				footer: {
-					text: `#${message.channel.name} \(ID ${message.channel.id}) in ${message.guild.name} (ID ${message.guild.id})`,
+					text: `#${message.channel.name} (ID ${message.channel.id}) in ${message.guild.name} (ID ${message.guild.id})`,
 					timestamp: message.createdAt
 				},
-				description: args[0].replace(/discord\.gg\/[0-9a-z]+/gi, "").replace(/discordapp\.com\/invite\/[0-9a-z]+/gi, "")
+				description: args[0].replace(/https?\:\/\/\S+\.\S+/gi, "").replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
 			}]
 		})
 		.then(() => {

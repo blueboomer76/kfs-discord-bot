@@ -15,15 +15,15 @@ class UserInfoCommand extends Command {
 					type: "member"
 				}
 			],
-			category: "Utility",
 			cooldown: {
 				time: 15000,
 				type: "channel"
 			},
+			guildOnly: true,
 			perms: {
 				bot: ["EMBED_LINKS"],
 				user: [],
-				level: 0,
+				level: 0
 			},
 			usage: "userinfo [user]"
 		});
@@ -31,30 +31,44 @@ class UserInfoCommand extends Command {
 	
 	async run(bot, message, args, flags) {
 		let member = args[0];
-		if (!args[0]) member = message.guild.member(message.author);
+		if (!args[0]) member = message.member;
+		
 		let createdDate = new Date(member.user.createdTimestamp);
 		let joinedDate = new Date(member.joinedTimestamp);
+		
 		let userRoles = member.roles.array();
-		if (userRoles.length > 1) {
-			userRoles.splice(userRoles.findIndex(role => role.name == "@everyone"), 1);
-			userRoles = userRoles.map(role => role.name);
-		} else {
-			userRoles = ["None"];
-		}
+		userRoles.splice(userRoles.findIndex(role => role.name == "@everyone"), 1);
+		userRoles = userRoles.map(role => role.name);
+		
 		let joinTimes = message.guild.members.map(mem => mem.joinedTimestamp);
-		joinTimes.sort((a, b) => a-b);
+		joinTimes.sort((a,b) => a-b);
+		
+		let memPresence = member.presence, userPresence;
+		if (memPresence.status == "online") {
+			userPresence = "Online";
+		} else if (memPresence.status == "idle") {
+			userPresence = "Idle";
+		} else if (memPresence.status == "dnd") {
+			userPresence = "Do Not Disturb";
+		} else {
+			userPresence = "Offline";
+		}
+		if (memPresence.game) {
+			userPresence += ` (playing ${memPresence.game.name})`
+		}
+		
 		message.channel.send(new Discord.RichEmbed()
-		.setTitle("User Info - " + member.user.tag)
+		.setTitle(`User Info - ${member.user.tag}`)
 		.setColor(member.displayColor)
 		.setThumbnail(member.user.avatarURL)
-		.setFooter("ID: " + member.id)
+		.setFooter(`ID: ${member.id}`)
 		.addField("Account created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
 		.addField("Joined this server at", `${joinedDate.toUTCString()} (${functions.getDuration(joinedDate)})`)
-		.addField("Bot user", member.user.bot ? "Yes" : "No")
 		.addField("Nickname", member.nickname ? member.nickname : "None")
-		.addField("Status", member.presence.status)
+		.addField("Bot user", member.user.bot ? "Yes" : "No")
+		.addField("Status", userPresence)
 		.addField("Member #", joinTimes.indexOf(member.joinedTimestamp) + 1)
-		.addField("Roles - " + (userRoles.length - 1), userRoles.join(", "))
+		.addField(`Roles - ${userRoles.length}`, userRoles.length == 0 ? "None" : userRoles.join(", "))
 		);
 	}
 }

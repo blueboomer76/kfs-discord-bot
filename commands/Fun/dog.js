@@ -8,7 +8,6 @@ class DogCommand extends Command {
 			name: "dog",
 			description: "Get a random dog!",
 			aliases: ["puppy", "woof"],
-			category: "Fun",
 			cooldown: {
 				time: 15000,
 				type: "channel"

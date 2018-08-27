@@ -35,7 +35,7 @@ class UsageCommand extends Command {
 		let stats = require("../../modules/stats.json");
 		let commandUsage = stats.commandDistrib;
 		commandUsage.sort((a,b) => b.uses - a.uses);
-		let entries = commandUsage.map(cmd => cmd.command + " - used " + cmd.uses + " times");
+		let entries = commandUsage.map(cmd => `${cmd.command} - used ${cmd.uses} times`);
 		let usageEmbed = paginator.generateEmbed(startPage, entries, null, 20, null)
 		message.channel.send(usageEmbed
 		.setTitle("Most Popular Commands (Updated every hour)")

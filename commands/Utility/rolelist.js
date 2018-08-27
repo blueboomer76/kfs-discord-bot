@@ -16,7 +16,6 @@ class RoleListCommand extends Command {
 					min: 1
 				}
 			],
-			category: "Utility",
 			cooldown: {
 				time: 30000,
 				type: "guild"

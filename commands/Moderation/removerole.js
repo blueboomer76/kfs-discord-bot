@@ -18,7 +18,6 @@ class RemoveRoleCommand extends Command {
 					type: "role"
 				}
 			],
-			category: "Moderation",
 			cooldown: {
 				time: 20000,
 				type: "user"

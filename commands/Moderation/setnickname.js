@@ -18,7 +18,6 @@ class SetNicknameCommand extends Command {
 					type: "string"
 				}
 			],
-			category: "Moderation",
 			cooldown: {
 				time: 20000,
 				type: "user"

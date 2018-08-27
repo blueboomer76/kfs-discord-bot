@@ -28,10 +28,9 @@ class StatsCommand extends Command {
 		let bigServerCount = bot.guilds.filter(g => g.large).size;
 		let userCount = bot.users.size;
 		let onlineUserCount = bot.users.filter(u => u.presence.status != "offline").size;
-		let onlineUserCountArray = bot.guilds.map(g => g.presences.size);
 		let textChannelCount = bot.channels.filter(chnl => chnl.type == "text").size;
 		let voiceChannelCount = bot.channels.filter(chnl => chnl.type == "voice").size;
-		let categoryCount = bot.channels.size - (textChannelCount + voiceChannelCount);
+		let categoryCount = bot.channels.filter(chnl => chnl.type == "category").size;
 		let sessionMessages = bot.cache.stats.messageCurrentTotal + bot.cache.stats.messageSessionTotal
 		let totalMessages = stats.messageTotal + bot.cache.stats.messageCurrentTotal;
 		let commandCurrentTotal = 1;
@@ -42,7 +41,7 @@ class StatsCommand extends Command {
 		let totalCommands = stats.commandTotal + commandCurrentTotal;
 		let endEval = new Date();
 		message.channel.send(new Discord.RichEmbed()
-		.setAuthor(`KendraBot ver. ${version}`, bot.user.avatarURL)
+		.setAuthor(`Kendra Bot Stats`, bot.user.avatarURL)
 		.setColor(Math.floor(Math.random() * 16777216))
 		.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
 		.setTimestamp(message.createdAt)

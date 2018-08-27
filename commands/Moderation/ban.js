@@ -12,7 +12,6 @@ class BanCommand extends Command {
 					type: "member"
 				}
 			],
-			category: "Moderation",
 			cooldown: {
 				time: 25000,
 				type: "user"

@@ -14,7 +14,6 @@ class AvatarCommand extends Command {
 					type: "member"
 				}
 			],
-			category: "Utility",
 			cooldown: {
 				time: 15000,
 				type: "channel"
@@ -28,7 +27,7 @@ class AvatarCommand extends Command {
 		let member = args[0];
 		if (!member) member = message.member;
 		message.channel.send(new Discord.RichEmbed()
-		.setTitle("Avatar - " + member.user.tag)
+		.setTitle(`Avatar - ${member.user.tag}`)
 		.setColor(Math.floor(Math.random() * 16777216))
 		.setImage(member.user.avatarURL)
 		);

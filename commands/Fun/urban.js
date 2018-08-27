@@ -16,7 +16,6 @@ class UrbanCommand extends Command {
 					type: "string"
 				}
 			],
-			category: "Fun",
 			guildOnly: true,
 			perms: {
 				bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
