@@ -12,6 +12,7 @@ class KFSDiscordBot extends Client {
 		this.supportIDs = config.supportIDs;
 		this.commands = new Collection();
 		this.aliases = new Collection();
+		this.categories = [];
 		this.cache = {
 			permLevels: [
 				{
@@ -108,10 +109,12 @@ class KFSDiscordBot extends Client {
 						if (err2) return;
 						let cmdFiles = files2.filter(f => f.split(".").pop() == "js");
 						if (cmdFiles.length != 0) {
+							let category = subdir.charAt(0).toUpperCase() + subdir.slice(1).toLowerCase();
+							this.categories.push(category);
 							for (const cmd of cmdFiles) {
 								let CommandClass = require(`./commands/${subdir}/${cmd}`);
 								let command = new CommandClass();
-								command.category = subdir;
+								command.category = category;
 								this.commands.set(command.name, command);
 								if (command.aliases.length > 0) {
 									for (const alias of command.aliases) { 
@@ -198,10 +201,9 @@ class KFSDiscordBot extends Client {
 			let affected = 0;
 			if (message.channel.id == ch0) {affected = 1};
 			let toSend = message.content.replace(/https?:\/\/\S+\.\S+/gi, "")
-			.replace(/discord\.gg\/[0-9a-z]+/gi, "")
-			.replace(/discordapp\.com\/invite\/[0-9a-z]+/gi, "")
+			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
 			if (toSend.length > 1500) toSend = toSend.slice(0, 1500) + "...";
-			this.channels.get(phoneCache.channels[affected]).send(":telephone_receiver: " + toSend);
+			this.channels.get(phoneCache.channels[affected]).send(`📞 ${toSend}`);
 			if (phoneCache.msgCount >= 4) {
 				setTimeout(() => {
 					let phoneMsg = "☎ The phone connection was cut off due to possible overload."

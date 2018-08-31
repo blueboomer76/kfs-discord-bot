@@ -63,7 +63,7 @@ module.exports = {
 			}
 			toResolve = resolver.resolve(bot, message, args[i], arg.type, params)
 			if (toResolve == null) {
-				return {error: "userError", message: "Invalid argument `(Must be a valid " + arg.type + ")`", at: i}
+				return {error: "userError", message: `\`${args[i].slice(0, 1500)}\` is not a valid ${arg.type}`}
 			}
 			parsedArgs.push(toResolve);
 		}
