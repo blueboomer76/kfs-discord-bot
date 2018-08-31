@@ -3,11 +3,11 @@ const Discord = require("discord.js");
 module.exports.resolve = (bot, message, obj, type, params) => {
 	switch (type) {
 		case "boolean":
-			let truthy = ["yes", "y", "true", "enable"]
-			let falsy = ["no", "n", "false", "disable"]
-			if (truthy.some(y => obj == y)) {
+			let truthy = ["yes", "y", "true", "enable"];
+			let falsy = ["no", "n", "false", "disable"];
+			if (truthy.includes(obj)) {
 				return true;
-			} else if (falsy.some(n => obj == n)) {
+			} else if (falsy.includes(obj)) {
 				return false;
 			} else {return null}
 			break;
@@ -28,7 +28,7 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			break;
 		case "member":
 			let member;
-			let memberRegex = /<@!?\d+>/
+			let memberRegex = /<@!?\d+>/;
 			let guildMembers = message.guild.members;
 			if (memberRegex.test(obj)) {
 				let memberRegex2 = /\d+/;
@@ -40,11 +40,7 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 				let search = guildMembers.find(mem => mem.user.tag.toLowerCase().includes(obj.toLowerCase()));
 				if (!search) search = guildMembers.find(mem => mem.user.username.toLowerCase().includes(obj.toLowerCase()));
 				if (!search) search = guildMembers.find(mem => mem.displayName.toLowerCase().includes(obj.toLowerCase()));
-				if (!search) {
-					return null;
-				} else {
-					member = search;
-				}
+				if (!search) {return null;} else {member = search;}
 			}
 			return member;
 			break;
@@ -52,13 +48,13 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			if (!isNaN(obj) && obj >= params.min && obj <= params.max) {return Number(obj)} else {return null}
 			break;
 		case "oneof":
-			if (params.list.indexOf(obj) != -1) {return obj} else {return null}; 
+			if (params.list.includes(obj)) {return obj} else {return null}; 
 			break;
 		case "regex":
 			// Coming soon
 			break;
 		case "role":
-			let role = message.mentions.roles.first() || message.guild.roles.get(obj)
+			let role = message.mentions.roles.first() || message.guild.roles.get(obj);
 			if (!role) role = message.guild.roles.find(role => role.name.toLowerCase().includes(obj.toLowerCase()));
 			if (role) {return role} else {return null}
 			break;

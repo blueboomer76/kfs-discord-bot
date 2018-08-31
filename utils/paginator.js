@@ -4,8 +4,7 @@ function setEntries(page, entries, limit) {
 	let maxPage = Math.ceil(entries.length / limit);
 	if (page > maxPage) page = maxPage;
 	if (page < 1) page = 1;
-	let pageIndex = page - 1;
-	let displayed = entries.slice(pageIndex * limit, page * limit);
+	let displayed = entries.slice((page - 1) * limit, page * limit);
 	return {
 		page: page,
 		maxPage: maxPage,
@@ -19,9 +18,9 @@ function paginateOnEdit(sentMessage, page, entryList1, entryList2, limit) {
 	let sentEmbed = sentMessage.embeds[0];
 	let embedToEdit = {
 		title: sentEmbed.title,
-		color: 3391637,
+		color: sentEmbed.color,
 		footer: {
-			text: "Page " + displayedList1.page + " / " + displayedList1.maxPage
+			text: `Page ${displayedList1.page} / ${displayedList1.maxPage}`
 		},
 		fields: []
 	}
@@ -52,8 +51,8 @@ module.exports = {
 	generateEmbed: (page, entryList1, entryList2, limit, fieldNames) => {
 		let displayedList1 = setEntries(page, entryList1, limit);
 		let paginatedEmbed = new Discord.RichEmbed()
-		.setColor(3391637)
-		.setFooter("Page " + displayedList1.page + " / " + displayedList1.maxPage)
+		.setColor(Math.floor(Math.random() * 16777216))
+		.setFooter(`Page ${displayedList1.page} / ${displayedList1.maxPage}`)
 		if (entryList2) {
 			let displayedList2 = setEntries(page, entryList2, limit);
 			paginatedEmbed.addField(fieldNames[0], displayedList1.entries[0])
@@ -68,7 +67,7 @@ module.exports = {
 		for (let i = 0; i < emojiList.length; i++) {
 			setTimeout(() => {
 				newMessage.react(emojiList[i]).catch(err => {console.log(err)})
-			}, i * 750);
+			}, i * 1000);
 		}
 		const pgCollector = newMessage.createReactionCollector((reaction, user) => 
 			user.id == message.author.id && (

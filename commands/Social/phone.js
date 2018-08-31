@@ -18,7 +18,7 @@ class PhoneCommand extends Command {
 	async run(bot, message, args, flags) {
 		let phoneMsg, phoneMsg0;
 		let phoneCache = bot.cache.phone;
-		if (phoneCache.channels.includes(message.channel.id)) {
+		if (!phoneCache.channels.includes(message.channel.id)) {
 			phoneCache.channels.push(message.channel.id);
 			if (phoneCache.channels.length == 1) {
 				message.react("☎")

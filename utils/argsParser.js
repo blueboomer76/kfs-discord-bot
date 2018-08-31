@@ -36,7 +36,7 @@ module.exports = {
 			}
 			toResolve = resolver.resolve(bot, message, args[i], arg.type, params)
 			if (!toResolve) {
-				return {error: "userError", message: "Invalid argument `(Must be a valid " + arg.type + ")`", at: i}
+				return {error: "userError", message: `\`${args[i]}\` is not a valid ${arg.type}`}
 			}
 			parsedArgs.push(toResolve);
 		}
@@ -75,7 +75,7 @@ module.exports = {
 			if (flags[i].method == "short") {
 				flags[i].name = flagLongNames[flagShortNames.indexOf(flags[i].name)]
 			}
-			if (flagLongNames.indexOf(flags[i].name) == -1) {
+			if (!flagLongNames.includes(flags[i].name)) {
 				if (parsedFlags.length == 0 && i < flags.length - 1) {
 					newArgs = args.slice(0, flagIndexes[i+1]);
 					flagArgs = args.slice(flagIndexes[i+1]);

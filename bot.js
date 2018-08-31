@@ -12,6 +12,7 @@ class KendraBot extends Client {
 		this.supportIds = config.supportIds;
 		this.commands = new Collection();
 		this.aliases = new Collection();
+		this.categories = [];
 		this.cache = {
 			permLevels: [
 				{
@@ -101,6 +102,7 @@ class KendraBot extends Client {
 				for (const subdir of subdirs) {
 					fs.readdir(`./commands/${subdir}`, (err, files) => {
 						if (err) throw err;
+						this.categories.push(subdir);
 						let cmdFiles = files.filter(f => f.split(".").pop() == "js");
 						if (cmdFiles.length != 0) {
 							for (const cmd of cmdFiles) {
@@ -186,9 +188,9 @@ class KendraBot extends Client {
 			setTimeout(() => {phoneCache.msgCount--;}, 5000);
 			let affected = 0;
 			if (message.channel.id == phoneCache.channels[0]) {affected = 1};
-			let toSend = message.content.replace(/https?\:\/\/[^ ]+\.[^ ]+/gi, "")
+			let toSend = message.content.replace(/https?\:\/\/\S+\.\S+/gi, "")
 			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
-			this.channels.get(phoneCache.channels[affected]).send("☎️ " + toSend);
+			this.channels.get(phoneCache.channels[affected]).send(`📞 ${toSend}`);
 			if (phoneCache.msgCount > 4) {
 				let phoneMsg = "☎️ The phone connection was cut off due to being overloaded."
 				this.channels.get(phoneCache.channels[0]).send(phoneMsg);
