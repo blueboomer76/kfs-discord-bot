@@ -31,7 +31,7 @@ class SuggestCommand extends Command {
 		}
 		bot.ideaWebhook.send({
 			embeds: [{
-				description: args[0].replace(/https?:\/\/\S+\.\S+/gi, "").replace(/discord\.gg\/[0-9a-z]+/gi, "").replace(/discordapp\.com\/invite\/[0-9a-z]+/gi, ""),
+				description: args[0].replace(/https?:\/\/\S+\.\S+/gi, "").replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, ""),
 				author: {
 					name: message.author.tag,
 					icon_url: message.author.avatarURL

@@ -60,13 +60,20 @@ module.exports = async (bot, message) => {
 			if (cdInfo.time != 0) {
 				let cdCheck = cdChecker.check(bot, message, runCommand.name);
 				if (cdCheck != true) {
+					let cdMessages = [
+						"You're calling me fast enough that I'm getting dizzy!",
+						"You have to wait before using the command again...",
+						"You're calling me a bit too fast, I am getting dizzy!",
+						"I am busy, try again after a bit",
+						"Hang in there before using this command again..."
+					];
 					let cdSuffix = "";
 					if (cdInfo.type == "channel") {
 						cdSuffix = " in this channel";
 					} else if (cdInfo.type == "guild") {
 						cdSuffix = " in this server";
 					}
-					return message.channel.send(":no_entry: **Cooldown:**\nThis command cannot be used again for " + cdCheck + " seconds" + cdSuffix + "!")
+					return message.channel.send(`⛔ **Cooldown:**\n*${cdMessages[Math.floor(Math.random() * cdMessages.length)]}*\nThis command cannot be used again for **${cdCheck} seconds**${cdSuffix}!`)
 				}
 				cdChecker.addCooldown(bot, message, runCommand.name);
 			}

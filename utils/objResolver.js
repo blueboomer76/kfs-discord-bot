@@ -4,9 +4,9 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 		case "boolean":
 			let truthy = ["yes", "y", "true", "enable"];
 			let falsy = ["no", "n", "false", "disable"];
-			if (truthy.some(y => lowerObj == y)) {
+			if (truthy.includes(lowerObj)) {
 				return true;
-			} else if (falsy.some(n => lowerObj == n)) {
+			} else if (falsy.includes(lowerObj)) {
 				return false;
 			} else {
 				return null;
@@ -44,7 +44,7 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			if (!isNaN(num) && num >= params.min && num <= params.max) {return num} else {return null}
 			break;
 		case "oneof":
-			if (params.list.indexOf(lowerObj) != -1) {return lowerObj} else {return null}
+			if (params.list.includes(lowerObj)) {return lowerObj} else {return null}
 			break;
 		case "role":
 			let role = message.mentions.roles.first() || message.guild.roles.get(obj);

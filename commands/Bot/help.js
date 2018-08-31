@@ -29,13 +29,14 @@ class HelpCommand extends Command {
 	async run(bot, message, args, flags) {
 		let command = args[0];
 		if (!command) {
-			let cmds = [];
-			bot.commands.forEach(cmd => cmds.push(cmd.name));
-			message.channel.send(new Discord.RichEmbed()
+			let helpEmbed = new Discord.RichEmbed()
 			.setTitle("All bot commands")
-			.setDescription(cmds.join(", "))
-			.setColor(Math.floor(Math.random() * 16777216))
-			);
+			.setColor(Math.floor(Math.random() * 16777216));
+			for (let i = 0; i < bot.categories.length; i++) {
+				let cmdsInCat = bot.commands.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
+				helpEmbed.addField(bot.categories[i], cmdsInCat.join(", "));
+			}
+			message.channel.send(helpEmbed);
 		} else {
 			let commandFlags = command.flags.map(f => `--${f.name} (-${f.name.charAt(0)})`);
 			let commandPerms = command.perms;
