@@ -1,10 +1,17 @@
 const Discord = require("discord.js");
 
 function setEntries(page, entries, limit) {
-	let maxPage = Math.ceil(entries.length / limit);
+	let maxPage = Math.ceil(entries[0].length / limit);
+	let displayed = [];
 	if (page > maxPage) page = maxPage;
 	if (page < 1) page = 1;
-	let displayed = entries.slice((page - 1) * limit, page * limit);
+	if (limit > 1) {
+		displayed.push(entries[0].slice((page - 1) * limit, page * limit));
+	} else {
+		for (let i = 0; i < entries.length; i++) {
+			displayed.push(entries[i][page-1]);
+		}
+	}
 	return {
 		page: page,
 		maxPage: maxPage,
@@ -12,57 +19,61 @@ function setEntries(page, entries, limit) {
 	}
 }
 
-function paginateOnEdit(sentMessage, page, entryList1, entryList2, limit) {
+function setEmbed(genEmbed, displayed, params) {
+	if (params) {
+		for (let i = 0; i < params.length; i++) {
+			genEmbed[params[i]] = displayed[i];
+		}
+	} else {
+		genEmbed.description = displayed[0].join("\n")
+	}
+	return genEmbed;
+}
+
+function paginateOnEdit(sentMessage, page, entries, limit, params) {
 	if (sentMessage.deleted) return;
-	let displayedList1 = setEntries(page, entryList1, limit);
+	let entryObj = setEntries(page, entries, limit);
+	let displayed = entryObj.entries;
+	
 	let sentEmbed = sentMessage.embeds[0];
 	let embedToEdit = {
 		title: sentEmbed.title,
 		color: sentEmbed.color,
 		footer: {
-			text: `Page ${displayedList1.page} / ${displayedList1.maxPage}`
+			text: `Page ${entryObj.page} / ${entryObj.maxPage}`
 		},
 		fields: []
 	}
 	if (sentEmbed.author) {
 		embedToEdit.author = {
 			name: sentEmbed.author.name,
-			icon_url: sentEmbed.author.iconURL
-		}
+			icon_url: sentEmbed.author.iconURL,
+			url: sentEmbed.author.url
+		};
 	}
-	if (entryList2) {
-		let displayedList2 = setEntries(page, entryList2, limit);
-		let embedFields = sentMessage.embeds[0].fields
-		embedToEdit.fields.push({
-			name: embedFields[0].name,
-			value: displayedList1.entries[0]
-		});
-		embedToEdit.fields.push({
-			name: embedFields[1].name,
-			value: displayedList2.entries[0]
-		})
+	if (params) {
+		for (let i = 0; i < params.length; i++) {
+			embedToEdit[params[i]] = displayed[i];
+		}
 	} else {
-		embedToEdit.description = displayedList1.entries.join("\n");
+		embedToEdit.description = displayed[0].join("\n");
 	}
 	sentMessage.edit("", {embed: embedToEdit})
 }
 
 module.exports = {
-	generateEmbed: (page, entryList1, entryList2, limit, fieldNames) => {
-		let displayedList1 = setEntries(page, entryList1, limit);
-		let paginatedEmbed = new Discord.RichEmbed()
-		.setColor(Math.floor(Math.random() * 16777216))
-		.setFooter(`Page ${displayedList1.page} / ${displayedList1.maxPage}`)
-		if (entryList2) {
-			let displayedList2 = setEntries(page, entryList2, limit);
-			paginatedEmbed.addField(fieldNames[0], displayedList1.entries[0])
-			paginatedEmbed.addField(fieldNames[1], displayedList2.entries[0])
-		} else {
-			paginatedEmbed.setDescription(displayedList1.entries.join("\n"))
+	generateEmbed: (page, entries, limit, params) => {
+		let entryObj = setEntries(page, entries, limit);
+		let genEmbed = {
+			color: Math.floor(Math.random() * 16777216),
+			footer: {
+				text: `Page ${entryObj.page} / ${entryObj.maxPage}`
+			}
 		}
-		return paginatedEmbed;
+		genEmbed = setEmbed(genEmbed, entryObj.entries, params);
+		return genEmbed;
 	},
-	addPgCollector: (message, newMessage, entryList1, entryList2, limit) => {
+	addPgCollector: (message, newMessage, entries, limit, params) => {
 		let emojiList = ["⬅", "⏹", "➡"];
 		for (let i = 0; i < emojiList.length; i++) {
 			setTimeout(() => {
@@ -79,10 +90,10 @@ module.exports = {
 			let page = Number(newMessage.embeds[0].footer.text.match(/\d+/)[0]);
 			let chosen = reaction.emoji.name;
 			if (chosen == "⬅") {
-				paginateOnEdit(pgCollector.message, page - 1, entryList1, entryList2, limit);
+				paginateOnEdit(pgCollector.message, page - 1, entries, limit, params);
 				reaction.remove(message.author.id);
 			} else if (chosen == "➡") {
-				paginateOnEdit(pgCollector.message, page + 1, entryList1, entryList2, limit);
+				paginateOnEdit(pgCollector.message, page + 1, entries, limit, params);
 				reaction.remove(message.author.id);
 			} else if (chosen == "⏹") {
 				pgCollector.stop();

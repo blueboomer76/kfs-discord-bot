@@ -34,14 +34,13 @@ class UsageCommand extends Command {
 
 		let startPage;
 		if (!args[0]) {startPage = 1} else {startPage = args[0]}
-		let entries = storedUsages.map(cmd => `${cmd.command} - used ${cmd.uses} times`);
-		let usageEmbed = paginator.generateEmbed(startPage, entries, null, 20, null);
-		message.channel.send(usageEmbed
-		.setTitle("Most Popular Bot Commands")
-		)
+		let entries = [storedUsages.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
+		let usageEmbed = paginator.generateEmbed(startPage, entries, 20, null)
+		usageEmbed.title = "Most Popular Bot Commands";
+		message.channel.send("", {embed: usageEmbed})
 		.then(newMessage => {
-			if (entries.length > 20) {
-				paginator.addPgCollector(message, newMessage, entries, null, 20);
+			if (entries[0].length > 20) {
+				paginator.addPgCollector(message, newMessage, entries, 20, null)
 			}
 		})
 	}
