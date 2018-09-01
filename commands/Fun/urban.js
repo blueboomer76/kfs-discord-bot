@@ -15,45 +15,70 @@ class UrbanCommand extends Command {
 					type: "string"
 				}
 			],
+			flags: [
+				{
+					name: "page",
+					arg: {
+						type: "number",
+						min: 1,
+						max: 10
+					}
+				}
+			],
 			guildOnly: true,
 			perms: {
 				bot: ["ADD_REACTIONS", "EMBED_LINKS", "MANAGE_MESSAGES"],
 				user: [],
 				level: 0
 			},
-			usage: "urban <term>"
+			usage: "urban <term> [--page <number>]"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
+		let pageFlag = flags.find(f => f.name == "page"), startPage;
+		if (pageFlag) {startPage = pageFlag.args} else {startPage = 1};
 		superagent.get("http://api.urbandictionary.com/v0/define")
 		.query({term: args[0]})
 		.end((err, res) => {
 			if (!err && res.status == 200) {
 				let defs = res.body;
 				if (defs.list.length > 0) {
-					let urbanEntries1 = [];
-					let urbanEntries2 = [];
-					for (const entry of defs.list) {
-						let def = entry.definition;
-						if (def.length > 1000) def = def.slice(0, 1000) + "...";
-						urbanEntries1.push(def);
-
-						let example = entry.example;
-						if (example.length > 1000) {
-							example = example.slice(0, 1000) + "...";
-						} else if (example.length == 0) {
-							example = "No example given";
-						}
-						urbanEntries2.push(example);
-					}
-					let urbanEmbed = paginator.generateEmbed(1, urbanEntries1, urbanEntries2, 1, ["Definition", "Example"])
-					message.channel.send(urbanEmbed
-					.setAuthor("Urban Dictionary - " + args[0], "https://i.imgur.com/nwERwQE.jpg")
-					)
+					let urbanEntries = [
+						defs.list.map(def => {
+							return {
+								name: `Urban Dictionary - ${def.word}`,
+								icon_url: "https://i.imgur.com/nwERwQE.jpg"
+							}
+						}),
+						defs.list.map(def => {
+							let example = "No example given";
+							if (def.example.length > 1000) {
+								example = `${def.example.slice(0, 1000)}...`;
+							} else if (def.example.length > 0) {
+								example = def.example;
+							}
+							return [
+								{
+									name: "Definition",
+									value: def.definition.length > 1000 ? `${def.definition.slice(0, 1000)}...` : def.definition
+								},
+								{
+									name: "Example",
+									value: example
+								},
+								{
+									name: "Rating",
+									value: `👍 ${def.thumbs_up} | 👎 ${def.thumbs_down}`
+								}
+							]
+						})
+					];
+					let urbanEmbed = paginator.generateEmbed(startPage, urbanEntries, 1, ["author", "fields"]);
+					message.channel.send("", {embed: urbanEmbed})
 					.then(newMessage => {
 						if (defs.list[1]) {
-							paginator.addPgCollector(message, newMessage, urbanEntries1, urbanEntries2, 1);
+							paginator.addPgCollector(message, newMessage, urbanEntries, 1, ["author", "fields"]);
 						}
 					})
 				} else {

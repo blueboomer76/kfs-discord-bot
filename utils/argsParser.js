@@ -119,9 +119,16 @@ module.exports = {
 			}
 			let commandFlag = commandFlags[longNameIndex];
 			if (commandFlag.arg) {
-				let toResolve = resolver.resolve(bot, message, flags[i].args.join(" "), commandFlag.arg.type);
+				let flagArg = commandFlag.arg;
+				let params;
+				if (flagArg.type == "number") {
+					params = {min: flagArg.min ? flagArg.min : -Infinity, max: flagArg.max ? flagArg.max : Infinity}
+				} else if (flagArg.type == "oneof") {
+					params = {list: flagArg.allowedValues};
+				}
+				let toResolve = resolver.resolve(bot, message, flags[i].args.join(" "), commandFlag.arg.type, params);
 				if (toResolve == null) {
-					return {error: "userError", message: "Invalid argument in a flag", at: i};
+					return {error: "userError", message: `\`${flags[i].args.slice(0, 1500)}\` is not a valid ${arg.type}`, at: i};
 				}
 				flags[i].args = toResolve;
 			}
