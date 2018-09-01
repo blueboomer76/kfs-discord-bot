@@ -23,7 +23,7 @@ class UsageCommand extends Command {
 			perms: {
 				bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
 				user: [],
-				level: 0,
+				level: 0
 			},
 			usage: "k,usage [page]"
 		});
@@ -35,14 +35,13 @@ class UsageCommand extends Command {
 		let stats = require("../../modules/stats.json");
 		let commandUsage = stats.commandDistrib;
 		commandUsage.sort((a,b) => b.uses - a.uses);
-		let entries = commandUsage.map(cmd => `${cmd.command} - used ${cmd.uses} times`);
-		let usageEmbed = paginator.generateEmbed(startPage, entries, null, 20, null)
-		message.channel.send(usageEmbed
-		.setTitle("Most Popular Commands (Updated every hour)")
-		)
+		let entries = [commandUsage.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
+		let usageEmbed = paginator.generateEmbed(startPage, entries, 20, null)
+		usageEmbed.title = "Most Popular Commands on Kendra";
+		message.channel.send("", {embed: usageEmbed})
 		.then(newMessage => {
-			if (entries.length > 20) {
-				paginator.addPgCollector(message, newMessage, entries, null, 20, null)
+			if (entries[0].length > 20) {
+				paginator.addPgCollector(message, newMessage, entries, 20, null)
 			}
 		})
 	}

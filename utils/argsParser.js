@@ -86,12 +86,20 @@ module.exports = {
 			let commandFlag = commandFlags[flagLongNames.indexOf(flags[i].name)];
 			if (commandFlag.arg) {
 				for (let j = 0; j < flags[i].args.length; j++) {
-					let toResolve = resolver.resolve(bot, message, flags[i].args[j], commandFlag.arg.type);
+					let flagArg = commandFlag.arg;
+					let params;
+					if (flagArg.type == "number") {
+						params = {min: flagArg.min ? flagArg.min : -Infinity, max: flagArg.max ? flagArg.max : Infinity}
+					} else if (flagArg.type == "oneof") {
+						params = {list: flagArg.allowedValues}
+					}
+					let toResolve = resolver.resolve(bot, message, flags[i].args[j], commandFlag.arg.type, params);
 					if (!toResolve) {
-						return {error: "userError", message: "Invalid argument(s) in a flag", at: i}
+						return {error: "userError", message: `\`${flags[i].args[j]}\` is not a valid ${arg.type}`, at: i}
 					}
 					flags[i].args[j] = toResolve;
 				}
+				
 			}
 			parsedFlags.push(flags[i]);
 		}

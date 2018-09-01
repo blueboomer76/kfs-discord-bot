@@ -16,46 +16,71 @@ class UrbanCommand extends Command {
 					type: "string"
 				}
 			],
+			flags: [
+				{
+					name: "page",
+					arg: {
+						num: 1,
+						type: "number",
+						min: 1,
+						max: 10
+					}
+				}
+			],
 			guildOnly: true,
 			perms: {
 				bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
 				user: [],
 				level: 0
 			},
-			usage: "urban <term>"
+			usage: "urban <term> [--page <number>]"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
+		let pageFlag = flags.find(f => f.name == "page"), startPage;
+		if (pageFlag) {startPage = pageFlag.args[0]} else {startPage = 1};
 		superagent.get(`http://api.urbandictionary.com/v0/define`)
 		.query({term: args.join(" ")})
 		.end((err, res) => {
 			if (!err && res.status == 200) {
 				let defs = res.body;
 				if (defs.list.length > 0) {
-					let urbanEntries1 = [];
-					let urbanEntries2 = [];
-					for (const entry of defs.list) {
-						if (entry.definition.length > 1000) {
-							urbanEntries1.push(entry.definition.slice(0,1000) + "...");
-						} else {
-							urbanEntries1.push(entry.definition);
-						}
-						if (entry.example.length > 1000) {
-							urbanEntries2.push(entry.example.slice(0,1000) + "...");
-						} else if (entry.example.length > 0) {
-							urbanEntries2.push(entry.example);
-						} else {
-							urbanEntries2.push("No example given")
-						}
-					}
-					let urbanEmbed = paginator.generateEmbed(1, urbanEntries1, urbanEntries2, 1, ["Definition", "Example"])
-					message.channel.send(urbanEmbed
-					.setAuthor("Urban Dictionary - " + args.join(" "), "https://i.imgur.com/nwERwQE.jpg")
-					)
+					let urbanEntries = [
+						defs.list.map(def => {
+							return {
+								name: `Urban Dictionary - ${def.word}`,
+								icon_url: "https://i.imgur.com/nwERwQE.jpg"
+							}
+						}),
+						defs.list.map(def => {
+							let example = "No example given";
+							if (def.example.length > 1000) {
+								example = `${def.example.slice(0,1000)}...`
+							} else if (def.example.length > 0) {
+								example = def.example
+							}
+							return [
+								{
+									name: "Definition",
+									value: def.definition.length > 1000 ? `${def.definition.slice(0,1000)}...` : def.definition
+								},
+								{
+									name: "Example",
+									value: def.example
+								},
+								{
+									name: "Rating",
+									value: `👍 ${def.thumbs_up} | 👎 ${def.thumbs_down}`
+								}
+							]
+						})
+					];
+					let urbanEmbed = paginator.generateEmbed(startPage, urbanEntries, 1, ["author", "fields"]);
+					message.channel.send("", {embed: urbanEmbed})
 					.then(newMessage => {
 						if (defs.list[1]) {
-							paginator.addPgCollector(message, newMessage, urbanEntries1, urbanEntries2, 1, ["Definition", "Example"])
+							paginator.addPgCollector(message, newMessage, urbanEntries, 1, ["author", "fields"])
 						}
 					})
 				} else {
@@ -66,8 +91,6 @@ class UrbanCommand extends Command {
 			}
 		});
 	}
-	
-	// generateEmbed(page, entries) {}
 }
 
 module.exports = UrbanCommand;

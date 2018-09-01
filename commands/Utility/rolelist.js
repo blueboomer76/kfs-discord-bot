@@ -25,23 +25,20 @@ class RoleListCommand extends Command {
 				user: [],
 				level: 0,
 			},
-			usage: "k,rolelist [page]"
+			usage: "rolelist [page]"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
 		let startPage;
 		if (!args[0]) {startPage = 1;} else {startPage = args[0];}
-		let roles = message.guild.roles.array();
-		let entries = [];
-		for (const role of roles) {entries.push(role.name);}
-		let roleListEmbed = paginator.generateEmbed(startPage, entries, null, 20, null)
-		message.channel.send(roleListEmbed
-		.setTitle("List of roles - " + message.guild.name)
-		)
+		let entries = [message.guild.roles.array().map(role => role.name)];
+		let roleListEmbed = paginator.generateEmbed(startPage, entries, 20, null)
+		roleListEmbed.title = `List of roles - ${message.guild.name}`
+		message.channel.send("", {embed: roleListEmbed})
 		.then(newMessage => {
-			if (entries.length > 20) {
-				paginator.addPgCollector(message, newMessage, entries, null, 20, null)
+			if (entries[0].length > 20) {
+				paginator.addPgCollector(message, newMessage, entries, 20, null)
 			}
 		})
 	}
