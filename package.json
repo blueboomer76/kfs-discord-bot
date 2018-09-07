@@ -1,11 +1,14 @@
 {
   "name": "kfs-discord-bot",
-  "version": "0.3.11",
+  "version": "1.2.0",
   "description": "A multipurpose Discord bot for utility, fun, and more",
   "main": "index.js",
   "dependencies": {
     "discord.js": "^11.3.2",
-    "superagent": "^3.8.3"
+    "ffmpeg-binaries": "^4.0.0",
+    "node-opus": "^0.3.0",
+    "superagent": "^3.8.3",
+    "ytdl-core": "*"
   },
   "devDependencies": {},
   "scripts": {
