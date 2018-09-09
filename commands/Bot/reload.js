@@ -35,9 +35,14 @@ class ReloadCommand extends Command {
 			let command = new CommandClass();
 			command.category = category;
 			bot.commands.set(commandName, command);
+			if (command.aliases.length > 0) {
+				for (const alias of command.aliases) { 
+					bot.aliases.set(alias, command.name);
+				}
+			}
 			message.channel.send(`The command ${commandName} was reloaded.`);
 		} catch(err) {
-			message.channel.send("An error has occurred: ```javascript " + err + "```");
+			message.channel.send(`An error has occurred: \`${err}\``);
 		}
 	}
 }

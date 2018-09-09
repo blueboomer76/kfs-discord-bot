@@ -54,12 +54,6 @@ class UrbanCommand extends Command {
 							}
 						}),
 						defs.list.map(def => {
-							let example = "No example given";
-							if (def.example.length > 1000) {
-								example = `${def.example.slice(0,1000)}...`
-							} else if (def.example.length > 0) {
-								example = def.example
-							}
 							return [
 								{
 									name: "Definition",
@@ -67,11 +61,17 @@ class UrbanCommand extends Command {
 								},
 								{
 									name: "Example",
-									value: def.example
+									value: def.example.length > 0 ? (def.example.length < 1000 ? def.example : `${def.example.slice(0,1000)}...`) : "No example given"
+								},
+								{
+									name: "By",
+									value: def.author,
+									inline: true
 								},
 								{
 									name: "Rating",
-									value: `👍 ${def.thumbs_up} | 👎 ${def.thumbs_down}`
+									value: `👍 ${def.thumbs_up} | 👎 ${def.thumbs_down}`,
+									inline: true
 								}
 							]
 						})

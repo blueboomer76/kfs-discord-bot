@@ -7,7 +7,7 @@ module.exports = async (bot, message) => {
 	bot.cache.stats.messageCurrentTotal++;
 	if (message.author.bot) return;
 	if (!message.content.startsWith(config.prefix) && message.mentions.users.first() != bot.user) {
-		if (bot.cache.phone.channels.length > 1 && bot.cache.phone.channels.indexOf(message.channel.id) != -1) {
+		if (bot.cache.phone.channels.length > 1 && bot.cache.phone.channels.includes(message.channel.id)) {
 			bot.handlePhoneMessage(message);
 		}
 	} else {
@@ -90,8 +90,7 @@ module.exports = async (bot, message) => {
 					"Watch out, seems like we might get a speeding ticket at this rate!",
 					"You have to wait before using the command again...",
 					"You're calling me a bit too fast, I am getting dizzy!",
-					"Don't be so greedy!",
-					"I want to do this, but please halt first.",
+					"I am busy, try again after a bit",
 					"Hang in there before using this command again..."
 				];
 				let cdSuffix = "";

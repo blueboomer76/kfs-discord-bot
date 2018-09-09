@@ -22,7 +22,7 @@ module.exports = {
 			}
 			if (!args[i]) {
 				if (!arg.optional) {
-					return {error: "userError", message: arg.errorMsg, at: i}
+					return {error: "userError", message: arg.errorMsg || `Missing argument ${i}`}
 				} else {
 					parsedArgs.push(null);
 					continue;

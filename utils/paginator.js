@@ -9,7 +9,7 @@ function setEntries(page, entries, limit) {
 		if (limit > 1) {
 			displayed.push(entries[i].slice((page - 1) * limit, page * limit));
 		} else {
-			displayed.push(entries[i][page]);
+			displayed.push(entries[i][page-1]);
 		}
 	}
 	return {

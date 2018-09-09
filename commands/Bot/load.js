@@ -25,7 +25,7 @@ class LoadCommand extends Command {
 				user: [],
 				level: 7
 			},
-			usage: "load <command>"
+			usage: "load <category> <command>"
 		});
 	}
 	
@@ -39,7 +39,7 @@ class LoadCommand extends Command {
 			bot.commands.set(commandName, command);
 			message.channel.send(`The command ${commandName} was loaded.`);
 		} catch(err) {
-			message.channel.send("A problem has occurred: ```javascript " + err + "```");
+			message.channel.send(`A problem has occurred: \`${err}\``);
 		}
 	}
 }

@@ -56,25 +56,25 @@ class KendraBot extends Client {
 				{
 					name: "Bot Support",
 					validate: message => {
-						return this.supportIds.indexOf(message.author.id) != -1;
+						return this.supportIds.includes(message.author.id);
 					}
 				},
 				{
 					name: "Bot Moderator",
 					validate: message => {
-						return this.moderatorIds.indexOf(message.author.id) != -1;
+						return this.moderatorIds.includes(message.author.id);
 					}
 				},
 				{
 					name: "Bot Admin",
 					validate: message => {
-						return this.adminIds.indexOf(message.author.id) != -1;
+						return this.adminIds.includes(message.author.id);
 					}
 				},
 				{
-					name: "Owner",
+					name: "Bot Owner",
 					validate: message => {
-						return this.ownerIds.indexOf(message.author.id) != -1;
+						return this.ownerIds.includes(message.author.id);
 					}
 				}
 			],

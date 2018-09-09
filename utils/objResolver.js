@@ -45,7 +45,7 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			return member;
 			break;
 		case "number":
-			if (!isNaN(obj) && obj >= params.min && obj <= params.max) {return Number(obj)} else {return null}
+			if (!isNaN(obj) && obj >= params.min && obj <= params.max) {return Math.floor(obj)} else {return null}
 			break;
 		case "oneof":
 			if (params.list.includes(obj)) {return obj} else {return null}; 
