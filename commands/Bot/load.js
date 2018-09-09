@@ -42,7 +42,7 @@ class LoadCommand extends Command {
 			}
 			message.channel.send(`The command ${commandName} was loaded.`);
 		} catch(err) {
-			message.channel.send("A problem has occurred: ```javascript" + "\n" + err + "```");
+			message.channel.send(`A problem has occurred: \`${err}\``);
 		}
 	}
 }
