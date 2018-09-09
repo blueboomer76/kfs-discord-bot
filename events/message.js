@@ -7,7 +7,7 @@ module.exports = async (bot, message) => {
 	if (message.author.bot) return;
 	let mentionMatch = message.content.match(bot.mentionPrefix);
 	if (!message.content.startsWith(config.prefix) && !mentionMatch) {
-		if (bot.cache.phone.channels.length > 1 && bot.cache.phone.channels.indexOf(message.channel.id) != -1) {
+		if (bot.cache.phone.channels.length > 1 && bot.cache.phone.channels.includes(message.channel.id)) {
 			if (message.guild && !message.channel.permissionsFor(bot.user).has(["VIEW_CHANNEL", "SEND_MESSAGES"])) return;
 			bot.handlePhoneMessage(message);
 		}

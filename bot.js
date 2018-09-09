@@ -60,25 +60,25 @@ class KFSDiscordBot extends Client {
 				{
 					name: "Bot Support",
 					validate: message => {
-						return this.supportIDs.indexOf(message.author.id) != -1;
+						return this.supportIDs.includes(message.author.id);
 					}
 				},
 				{
 					name: "Bot Moderator",
 					validate: message => {
-						return this.moderatorIDs.indexOf(message.author.id) != -1;
+						return this.moderatorIDs.includes(message.author.id);
 					}
 				},
 				{
 					name: "Bot Admin",
 					validate: message => {
-						return this.adminIDs.indexOf(message.author.id) != -1;
+						return this.adminIDs.includes(message.author.id);
 					}
 				},
 				{
-					name: "Owner",
+					name: "Bot Owner",
 					validate: message => {
-						return this.ownerIDs.indexOf(message.author.id) != -1;
+						return this.ownerIDs.includes(message.author.id);
 					}
 				}
 			],

@@ -23,13 +23,14 @@ class PlayCommand extends Command {
 	}
 
 	async run(bot, message, args, flags) {
-		if (!message.member.voiceChannel) return message.channel.send("You are not in a voice channel! Join one first.");
-		if (!message.member.voiceChannel.permissionsFor(bot.user).has("CONNECT")) return message.channel.send("I need the `CONNECT` permission in your voice channel to play audio.");
+		let mvChannel = message.member.voiceChannel;
+		if (!mvChannel) return message.channel.send("You are not in a voice channel! Join one first.");
+		if (!mvChannel.permissionsFor(bot.user).has("CONNECT")) return message.channel.send("I need the `CONNECT` permission in your voice channel to play audio.");
 
 		let gvConnection = message.guild.voiceConnection;
 		let cmdErr;
 		if (!gvConnection) {
-			await message.member.voiceChannel.join()
+			await mvChannel.join()
 			.then(connection => {
 				gvConnection = connection;
 				message.channel.send("Successfully joined the voice channel!");
@@ -38,7 +39,6 @@ class PlayCommand extends Command {
 			.catch(() => cmdErr = true)
 		}
 		if (cmdErr) return message.channel.send("Failed to connect to the voice channel.");
-
 		if (gvConnection.dispatcher) return message.channel.send("There is already something playing in this channel.");
 
 		let stream;

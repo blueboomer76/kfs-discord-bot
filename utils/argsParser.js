@@ -49,7 +49,7 @@ module.exports = {
 			}
 			if (!args[i]) {
 				if (!arg.optional) {
-					return {error: "userError", message: arg.errorMsg, at: i}
+					return {error: "userError", message: arg.errorMsg || `Missing argument ${i}`}
 				} else {
 					parsedArgs.push(null);
 					continue;
@@ -128,7 +128,7 @@ module.exports = {
 				}
 				let toResolve = resolver.resolve(bot, message, flags[i].args.join(" "), commandFlag.arg.type, params);
 				if (toResolve == null) {
-					return {error: "userError", message: `\`${flags[i].args.slice(0, 1500)}\` is not a valid ${arg.type}`, at: i};
+					return {error: "userError", message: `\`${flags[i].args.slice(0, 1500)}\` is not a valid ${arg.type}`};
 				}
 				flags[i].args = toResolve;
 			}
