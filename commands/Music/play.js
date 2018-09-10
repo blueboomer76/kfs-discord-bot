@@ -8,8 +8,18 @@ class PlayCommand extends Command {
 			description: "Play some audio",
 			args: [
 				{
+					errorMsg: "Please provide the audio that you want to play.",
 					num: Infinity,
 					type: "string"
+				}
+			],
+			flags: [
+				{
+					name: "seek",
+					arg: {
+						type: "number",
+						min: 0
+					}
 				}
 			],
 			guildOnly: true,
@@ -39,6 +49,9 @@ class PlayCommand extends Command {
 		}
 		if (cmdErr) return message.channel.send("Failed to connect to the voice channel.");
 		if (gvConnection.dispatcher) return message.channel.send("There is already something playing in this channel.");
+		if (mvChannel.id != gvConnection.channel.id) {
+			return message.channel.send("You need to be in the same voice channel as me to play audio.")
+		}
 		
 		let stream;
 		try {
@@ -48,8 +61,13 @@ class PlayCommand extends Command {
 		}
 		if (cmdErr) return message.channel.send("Invalid YouTube URL was provided.");
 		
-		const dispatcher = gvConnection.playStream(stream);
-		dispatcher.on("end", () => message.channel.send("The audio has finished."))
+		let seekFlag = flags.find(f => f.name == "seek");
+		const dispatcher = gvConnection.playStream(stream, {
+			seek: seekFlag ? seekFlag.args : 0
+		});
+		dispatcher.on("end", reason => {
+			if (!reason) message.channel.send("The audio has finished.");
+		})
 	}
 }
 
