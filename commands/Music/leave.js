@@ -27,7 +27,7 @@ class LeaveCommand extends Command {
 		}
 
 		await gvConnection.disconnect();
-		message.channel.send("I have left the voice channel.");
+		message.react("✅");
 	}
 }
 

@@ -42,31 +42,59 @@ class PlayCommand extends Command {
 			await mvChannel.join()
 			.then(connection => {
 				gvConnection = connection;
+				gvConnection.nowPlaying = null;
+				gvConnection.queue = [];
 				message.channel.send("Successfully joined the voice channel!");
-				setTimeout(() => {gvConnection.disconnect()}, 3600000);
 			})
 			.catch(() => cmdErr = true)
 		}
 		if (cmdErr) return message.channel.send("Failed to connect to the voice channel.");
-		if (gvConnection.dispatcher) return message.channel.send("There is already something playing in this channel.");
 		if (mvChannel.id != gvConnection.channel.id) {
 			return message.channel.send("You need to be in the same voice channel as me to play audio.")
 		}
 		
-		let stream;
-		try {
-			stream = ytdl(args[0], {filter: "audioonly"});
-		} catch(err) {
-			cmdErr = true;
+		if (gvConnection.queue.includes(args[0])) {
+			return message.channel.send("That audio is already in the queue.")
 		}
+		try {ytdl(args[0])} catch(err) {cmdErr = true;}
 		if (cmdErr) return message.channel.send("Invalid YouTube URL was provided.");
 		
-		let seekFlag = flags.find(f => f.name == "seek");
-		const dispatcher = gvConnection.playStream(stream, {
-			seek: seekFlag ? seekFlag.args : 0
-		});
-		dispatcher.on("end", reason => {
-			if (!reason) message.channel.send("The audio has finished.");
+		if (!gvConnection.nowPlaying) {
+			gvConnection.nowPlaying = args[0];
+			let seekFlag = flags.find(f => f.name == "seek");
+			let seek = seekFlag ? seekFlag.args : 0;
+			this.playQueue(message, seek);
+			message.channel.send("That audio is now playing.")
+		} else {
+			if (gvConnection.queue.length < 10) {
+				gvConnection.queue.push(args[0]);
+				message.channel.send("That audio has been added to the queue.")
+			} else {
+				message.channel.send("The maximum queue limit has been reached. No more audio can be queued.");
+			}
+		}
+	}
+	
+	playQueue(msg, seek) {
+		let gvConnection = msg.guild.voiceConnection;
+		let stream = ytdl(gvConnection.nowPlaying, {filter: "audioonly"});
+		gvConnection.playStream(stream, {seek: seek});
+		this.addDispatcherEvent(msg);
+	}
+	
+	addDispatcherEvent(msg) {
+		let gvConnection = msg.guild.voiceConnection;
+		gvConnection.dispatcher.on("speaking", value => {
+			if (value == false && gvConnection && gvConnection.dispatcher && !gvConnection.dispatcher.paused) {
+				if (gvConnection.queue.length == 0) {
+					gvConnection.nowPlaying = null;
+					msg.channel.send("The queue has concluded.");
+				} else {
+					gvConnection.nowPlaying = gvConnection.queue.shift();
+					this.playQueue(msg, 0);
+					msg.channel.send(`Now playing: \`${gvConnection.nowPlaying}\``)
+				}
+			}
 		})
 	}
 }

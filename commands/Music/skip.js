@@ -1,21 +1,11 @@
 const Command = require("../../structures/command.js");
 
-class VolumeCommand extends Command {
+class SkipCommand extends Command {
 	constructor() {
 		super({
-			name: "volume",
-			description: "Sets the volume of actively playing audio",
-			aliases: ["vol"],
-			args: [
-				{
-					num: 1,
-					type: "number",
-					min: 1,
-					max: 100
-				}
-			],
-			guildOnly: true,
-			usage: "volume <1-100>"
+			name: "skip",
+			description: "Skips the current audio track",
+			guildOnly: true
 		});
 	}
 	
@@ -27,15 +17,15 @@ class VolumeCommand extends Command {
 			if (!mvChannel) {
 				return message.channel.send("You are not in a voice channel. (Overrides with server owner or `MANAGE_GUILD` permission)")
 			} else if (mvChannel.id != gvConnection.channel.id) {
-				return message.channel.send("You need to be in the same voice channel as me to set the audio volume. (Overrides with server owner or `MANAGE_GUILD` permission)")
+				return message.channel.send("You need to be in the same voice channel as me to skip the current audio. (Overrides with server owner or `MANAGE_GUILD` permission)")
 			}
 		} else if (!gvConnection.dispatcher) {
-			return message.channel.send("Cannot set volume: no audio is playing");
+			return message.channel.send("Cannot skip: no audio is playing");
 		}
 		
-		gvConnection.dispatcher.setVolume(args[0] / 100);
-		message.channel.send(`🔉 Volume of audio has been set to **${args[0]}/100**`);
+		gvConnection.dispatcher.end();
+		message.react("⏩");
 	}
 }
 
-module.exports = VolumeCommand;
+module.exports = SkipCommand;
