@@ -21,17 +21,16 @@ class VolumeCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let send = message.channel.send;
 		let gvConnection = bot.voiceConnections.get(message.guild.id);
-		if (!gvConnection) return send("I am not in a voice channel in this server!")
-		if (!message.member.voiceChannel) return send("You are not in a voice channel")
+		if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
+		if (!message.member.voiceChannel) return message.channel.send("You are not in a voice channel")
 		if (message.member.voiceChannel != gvConnection.channel) {
 			return message.channel.send("You need to be in the same voice channel as me to set the volume.")
 		}
-		if (!gvConnection.dispatcher) return send("Cannot set volume: there is no music playing");
+		if (!gvConnection.dispatcher) return message.channel.send("Cannot set volume: there is no music playing");
 		
 		gvConnection.dispatcher.setVolume(args[0] / 100);
-		message.channel.send(`Volume of music has been set to **${args[0]}/100**`);
+		message.channel.send(`🔉 Volume of music has been set to **${args[0]}/100**`);
 	}
 }
 

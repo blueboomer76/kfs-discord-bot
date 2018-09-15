@@ -13,11 +13,11 @@ class LeaveCommand extends Command {
 	async run(bot, message, args, flags) {
 		let gvConnection = bot.voiceConnections.get(message.guild.id);
 		if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-		if (message.member.voiceChannel == gvConnection.channel || message.member == message.guild.owner) {
+		if (message.member.voiceChannel == gvConnection.channel || message.member.hasPermission("MANAGE_SERVER")) {
 			await gvConnection.disconnect();
-			message.channel.send("I have left the voice channel.");
+			message.react("✅");
 		} else {
-			message.channel.send("This action cannot be done unless you are the server owner or are in the same voice channel as I am.")
+			message.channel.send("This action cannot be performed unless you are in the same voice channel as me or have the `Manage Server` permission.")
 		}
 	}
 }
