@@ -23,8 +23,10 @@ class StopCommand extends Command {
 			return message.channel.send("Cannot stop: no audio is playing");
 		}
 
+		gvConnection.nowPlaying = null;
+		gvConnection.queue = [];
 		gvConnection.dispatcher.end();
-		message.channel.send("Successfully stopped the audio")
+		message.react("⏹");
 	}
 }
 
