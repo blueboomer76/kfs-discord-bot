@@ -1,15 +1,23 @@
 {
   "name": "kendrabot",
-  "version": "0.3.11",
-  "description": "Multipurpose bot",
+  "version": "1.2.8",
+  "description": "Multipurpose bot for utility, fun, and more",
   "main": "index.js",
   "dependencies": {
-    "discord.js": "^11.3.2",
-    "superagent": "^3.8.3"
+    "cheerio": "^1.0.0-rc.2",
+    "discord.js": "^11.4.2",
+    "ffmpeg-binaries": "^4.0.0",
+    "googleapis": "^33.0.0",
+    "moment": "^2.22.2",
+    "node-opus": "file:../GitHub Repos/node-opus",
+    "npm": "^6.4.0",
+    "request": "^2.88.0",
+    "ytdl-core": "^0.25.2"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "test": "echo \"No test command \""
   },
   "repository": {
     "type": "git",
@@ -20,5 +28,8 @@
   "bugs": {
     "url": "https://github.com/blueboomer76/kendraBot/issues"
   },
-  "homepage": "https://github.com/blueboomer76/kendraBot#readme"
+  "homepage": "https://github.com/blueboomer76/kendraBot#readme",
+  "engines": {
+    "node": ">=8"
+  }
 }
