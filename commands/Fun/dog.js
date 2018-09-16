@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../../structures/command.js");
-const superagent = require("superagent");
+const request = require("request");
 
 class DogCommand extends Command {
 	constructor() {
@@ -22,15 +22,17 @@ class DogCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let {body} = await superagent
-		.get("https://random.dog/woof.json");
-  
-		message.channel.send(new Discord.RichEmbed()
-		.setTitle("Here's your random dog!")
-		.setColor(Math.floor(Math.random() * 16777216))
-		.setFooter("From random.dog")
-		.setImage(body.url)
-		);
+		request.get("http://random.dog/woof.json", (err, res) => {
+			if (err) return message.channel.send(`Could not request to random.dog: ${err.message}`);
+			if (!res) return message.channel.send("No response was received from random.dog.");
+			if (res.statusCode >= 400) return message.channel.send(`The request to random.dog failed with status code ${res.statusCode} (${res.statusMessage})`);
+			message.channel.send(new Discord.RichEmbed()
+			.setTitle("Here's your random dog!")
+			.setColor(Math.floor(Math.random() * 16777216))
+			.setFooter("From random.dog")
+			.setImage(JSON.parse(res.body).url)
+			);
+		})
 	}
 }
 
