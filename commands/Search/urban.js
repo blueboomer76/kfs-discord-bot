@@ -47,7 +47,7 @@ class UrbanCommand extends Command {
 			if (error) return message.channel.send(`Failed to retrieve from the Urban Dictionary. (status code ${response.statusCode})`)
 			let defs = JSON.parse(body);
 			if (defs.list.length > 0) {
-				let urbanEntries = [
+				let entries = [
 					defs.list.map(def => {
 						return {
 							name: `Urban Dictionary - ${def.word}`,
@@ -71,19 +71,19 @@ class UrbanCommand extends Command {
 							},
 							{
 								name: "Rating",
-								value: `👍 ${def.thumbs_up} | 👎 ${def.thumbs_down}`,
+								value: `👍 ${def.thumbs_up} / 👎 ${def.thumbs_down}`,
 								inline: true
 							}
 						]
 					})
 				];
-				let urbanEmbed = paginator.generateEmbed(startPage, urbanEntries, 1, ["author", "fields"]);
-				message.channel.send("", {embed: urbanEmbed})
-				.then(newMessage => {
-					if (defs.list[1]) {
-						paginator.addPgCollector(message, newMessage, urbanEntries, 1, ["author", "fields"])
-					}
-				})
+				let urbanEmbed = {};
+				paginator.paginate(message, urbanEmbed, entries, {
+					limit: 1,
+					numbered: false,
+					page: startPage,
+					params: ["author", "fields"]
+				});
 			} else {
 				message.channel.send("No definition found for that term.")
 			}

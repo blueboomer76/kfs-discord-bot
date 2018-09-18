@@ -30,20 +30,18 @@ class UsageCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let startPage;
-		if (!args[0]) {startPage = 1;} else {startPage = args[0];}
-		let stats = require("../../modules/stats.json");
-		let commandUsage = stats.commandDistrib;
+		let commandUsage = require("../../modules/stats.json").commandDistrib;
 		commandUsage.sort((a,b) => b.uses - a.uses);
 		let entries = [commandUsage.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
-		let usageEmbed = paginator.generateEmbed(startPage, entries, 20, null)
-		usageEmbed.title = "Most Popular Commands on Kendra";
-		message.channel.send("", {embed: usageEmbed})
-		.then(newMessage => {
-			if (entries[0].length > 20) {
-				paginator.addPgCollector(message, newMessage, entries, 20, null)
-			}
-		})
+		let usageEmbed = {
+			title: "Most Popular Commands on Kendra"
+		};
+		paginator.paginate(message, usageEmbed, entries, {
+			limit: 20,
+			numbered: true,
+			page: args[0] ? args[0] : 1,
+			params: null
+		});
 	}
 }
 

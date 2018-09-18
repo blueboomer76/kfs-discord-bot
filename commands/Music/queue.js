@@ -37,16 +37,17 @@ class QueueCommand extends Command {
 		
 		let startPage = args[0] ? args[0] : 1;
 		let entries, i = 0;
-		entries = [queue.map(e => {i++; return `${i}. ${e.url}`})];
+		entries = [queue.map(e => `${i}. ${e.url}`)];
 		entries[0][0] = `Now playing: ${gvConnection.nowPlaying.url}\n\n**Next up:**\n` + entries[0][0];
-		let queueEmbed = paginator.generateEmbed(startPage, entries, 5, null)
-		queueEmbed.title = `Music Queue - ${message.guild.name}`
-		message.channel.send("", {embed: queueEmbed})
-		.then(newMessage => {
-			if (entries[0].length > 5) {
-				paginator.addPgCollector(message, newMessage, entries, 5, null)
-			}
-		})
+		let queueEmbed = {
+			title: `Music Queue - ${message.guild.name}`
+		};
+		paginator.paginate(message, queueEmbed, entries, {
+			limit: 5,
+			numbered: true,
+			page: args[0] ? args[0] : 1,
+			params: null
+		});
 	}
 }
 
