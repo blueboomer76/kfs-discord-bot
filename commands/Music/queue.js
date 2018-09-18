@@ -34,22 +34,22 @@ class QueueCommand extends Command {
 		let queue = gvConnection.queue;
 		if (!gvConnection.nowPlaying) return message.channel.send("There is no audio in the queue.");
 		
-		let entries = [queue.map((e, i) => `${i+1}. ${e}`)];
+		let entries = [queue];
 		if (queue.length > 0) {
 			entries[0][0] = `Now playing: ${gvConnection.nowPlaying}\n\n**Next up:**\n` + entries[0][0];
 		} else {
 			entries[0][0] = `Now playing: ${gvConnection.nowPlaying}`;
 		}
 		
-		let startPage = args[0] ? args[0] : 1;
-		let queueEmbed = paginator.generateEmbed(startPage, entries, 5, null);
-		queueEmbed.title = `Audio Queue - ${message.guild.name}`;
-		message.channel.send("", {embed: queueEmbed})
-		.then(newMessage => {
-			if (entries[0].length > 5) {
-				paginator.addPgCollector(message, newMessage, entries, 5, null);
-			}
-		})
+		let queueEmbed = {
+			title: `Music Queue - ${message.guild.name}`
+		};
+		paginator.paginate(message, queueEmbed, entries, {
+			limit: 5,
+			numbered: true,
+			page: args[0] ? args[0] : 1,
+			params: null
+		});
 	}
 }
 

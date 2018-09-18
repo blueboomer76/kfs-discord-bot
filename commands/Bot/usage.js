@@ -32,17 +32,16 @@ class UsageCommand extends Command {
 		let storedUsages = require("../../modules/stats.json").commandUsages;
 		storedUsages.sort((a, b) => b.uses - a.uses);
 
-		let startPage;
-		if (!args[0]) {startPage = 1} else {startPage = args[0]}
 		let entries = [storedUsages.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
-		let usageEmbed = paginator.generateEmbed(startPage, entries, 20, null)
-		usageEmbed.title = "Most Popular Bot Commands";
-		message.channel.send("", {embed: usageEmbed})
-		.then(newMessage => {
-			if (entries[0].length > 20) {
-				paginator.addPgCollector(message, newMessage, entries, 20, null)
-			}
-		})
+		let usageEmbed = {
+			title: "Most Popular Bot Commands"
+		};
+		paginator.paginate(message, usageEmbed, entries, {
+			limit: 20,
+			numbered: true,
+			page: args[0] ? args[0] : 1,
+			params: null
+		});
 	}
 }
 
