@@ -31,7 +31,8 @@ class HelpCommand extends Command {
 		if (!command) {
 			let helpEmbed = new Discord.RichEmbed()
 			.setTitle("All the commands for this bot")
-			.setColor(Math.floor(Math.random() * 16777216));
+			.setColor(Math.floor(Math.random() * 16777216))
+			.setFooter(`Total commands: ${bot.commands.size}`);
 			for (let i = 0; i < bot.categories.length; i++) {
 				let cmdsInCat = bot.commands.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
 				helpEmbed.addField(bot.categories[i], Array.from(cmdsInCat).join(", "));

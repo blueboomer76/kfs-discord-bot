@@ -10,7 +10,7 @@ class ChannelInfoCommand extends Command {
 			aliases: ["channel"],
 			args: [
 				{
-					num: 1,
+					num: Infinity,
 					optional: true,
 					type: "channel"
 				}

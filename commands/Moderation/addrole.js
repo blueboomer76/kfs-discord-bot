@@ -51,6 +51,7 @@ class AddRoleCommand extends Command {
 	async run(bot, message, args, flags) {
 		let member = args[0];
 		let role = args[1];
+		if (role.comparePositionTo(message.guild.member(bot.user).highestRole) >= 0) return message.channel.send("I cannot add that role because it is higher than my role.")
 		await member.addRole(role)
 		.then(message.channel.send(`✅ Role **${role.name}** has been added to **${member.user.tag}**.`))
 		.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))

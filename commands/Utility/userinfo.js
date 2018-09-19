@@ -57,19 +57,22 @@ class UserInfoCommand extends Command {
 			userPresence += ` (playing ${memPresence.game.name})`
 		}
 		
-		message.channel.send(new Discord.RichEmbed()
+		let userEmbed = new Discord.RichEmbed()
 		.setTitle(`User Info - ${member.user.tag}`)
-		.setColor(member.displayColor)
 		.setThumbnail(member.user.avatarURL)
 		.setFooter(`ID: ${member.id}`)
 		.addField("Account created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
 		.addField("Joined this server at", `${joinedDate.toUTCString()} (${functions.getDuration(joinedDate)})`)
+		.addField("Status", userPresence)
 		.addField("Nickname", member.nickname ? member.nickname : "None")
 		.addField("Bot user", member.user.bot ? "Yes" : "No")
-		.addField("Status", userPresence)
 		.addField("Member #", joinTimes.indexOf(member.joinedTimestamp) + 1)
-		.addField(`Roles - ${userRoles.length}`, userRoles.length == 0 ? "None" : userRoles.join(", "))
-		);
+		.addField(`Roles - ${userRoles.length}`, userRoles.length == 0 ? "None" : userRoles.join(", "));
+		
+		if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
+			userEmbed.setColor(member.displayColor);
+		}
+		message.channel.send(userEmbed);
 	}
 }
 

@@ -31,9 +31,11 @@ class StatsCommand extends Command {
 		let textChannelCount = bot.channels.filter(chnl => chnl.type == "text").size;
 		let voiceChannelCount = bot.channels.filter(chnl => chnl.type == "voice").size;
 		let categoryCount = bot.channels.filter(chnl => chnl.type == "category").size;
-		let sessionMessages = bot.cache.stats.messageCurrentTotal + bot.cache.stats.messageSessionTotal
+		let sessionMessages = bot.cache.stats.messageCurrentTotal + bot.cache.stats.messageSessionTotal;
 		let totalMessages = stats.messageTotal + bot.cache.stats.messageCurrentTotal;
-		let commandCurrentTotal = 1;
+		let sessionCalls = bot.cache.stats.callCurrentTotal + bot.cache.stats.callSessionTotal
+		let totalCalls = stats.callTotal + bot.cache.stats.callCurrentTotal;
+		let commandCurrentTotal = bot.cache.stats.commandCurrentTotal;
 		for (let i = 0; i < bot.cache.stats.commandUsage.length; i++) {
 			commandCurrentTotal += bot.cache.stats.commandUsage[i].uses;
 		}
@@ -64,6 +66,10 @@ class StatsCommand extends Command {
 		.addField("Messages Seen",
 		`Session: ${sessionMessages.toLocaleString()} (${(1000 * sessionMessages / (Number(new Date()) - bot.readyTimestamp)).toFixed(2)}/sec)` + `\n` +
 		`Total: ${totalMessages.toLocaleString()} (${(1000 * totalMessages / stats.duration).toFixed(2)}/sec)`
+		, true)
+		.addField("Phone Calls Made",
+		`Session: ${sessionCalls.toLocaleString()} (${(3600000 * sessionCalls / (Number(new Date()) - bot.readyTimestamp)).toFixed(2)}/hr)` + `\n` +
+		`Total: ${totalCalls.toLocaleString()} (${(3600000 * totalCalls / stats.duration).toFixed(2)}/hr)`
 		, true)
 		.addField("Commands",
 		`Session: ${sessionCommands.toLocaleString()} (${(60000 * sessionCommands / (Number(new Date()) - bot.readyTimestamp)).toFixed(2)}/min)` + `\n` +

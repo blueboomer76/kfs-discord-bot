@@ -24,6 +24,24 @@ class ServerInfoCommand extends Command {
 		let guild = message.guild;
 		let checkDate = new Date();
 		let createdDate = new Date(guild.createdTimestamp);
+		let guildVerif;
+		let botCount = guild.members.filter(mem => mem.user.bot).size;
+		switch (guild.verificationLevel) {
+			case 0:
+				guildVerif = "None";
+				break;
+			case 1:
+				guildVerif = "Low (verified email)";
+				break;
+			case 2:
+				guildVerif = "Medium (registered for 5 mins)";
+				break;
+			case 3:
+				guildVerif = "High (member for 10 mins)";
+				break;
+			case 4:
+				guildVerif = "Very High (verified phone)";
+		}
 		message.channel.send(new Discord.RichEmbed()
 		.setTitle(`Server Info - ${guild.name}`)
 		.setColor(Math.floor(Math.random() * 16777216))
@@ -32,11 +50,11 @@ class ServerInfoCommand extends Command {
 		.setTimestamp(message.createdAt)
 		.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
 		.addField("Owner", `${guild.owner.user.tag} \`(ID ${guild.ownerID})\``)
-		.addField("Region", guild.region)
-		.addField("Verification Level", guild.verificationLevel)
-		.addField("Explicit Filter Level", guild.explicitContentFilter)
+		.addField("Region", guild.region, true)
+		.addField("Verification", guildVerif, true)
+		.addField("Explicit Filter", guild.explicitContentFilter == 0 ? "None" : (guild.explicitContentFilter == 1 ? "Low" : "High"), true)
 		.addField(`Members [${guild.memberCount} total]`,
-		`${guild.presences.size} Online\n${guild.members.filter(mem => mem.user.bot).size} Bots`,
+		`${guild.presences.size} Online (${(guild.presences.size / guild.memberCount * 100).toFixed(1)}%)\n${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,
 		true)
 		.addField(`Roles [${guild.roles.size} total]`, "`k,rolelist` to see all roles", true)
 		.addField(`Channels [${guild.channels.size} total]`,

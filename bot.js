@@ -13,6 +13,7 @@ class KendraBot extends Client {
 		this.commands = new Collection();
 		this.aliases = new Collection();
 		this.categories = [];
+		this.prefix = config.prefix;
 		this.cache = {
 			permLevels: [
 				{
@@ -86,12 +87,17 @@ class KendraBot extends Client {
 				lastCheck: Number(new Date()),
 				messageCurrentTotal: 0,
 				messageSessionTotal: 0,
+				callCurrentTotal: 0,
+				callSessionTotal: 0,
+				commandCurrentTotal: 0,
 				commandSessionTotal: 0,
 				commandUsage: []
 			},
 			usage: []
 		};
-		this.ideaWebhook = new WebhookClient("477953968455155714", config.ideaWebhookToken);
+		if (config.ideaWebhook) {
+			this.ideaWebhook = new WebhookClient(config.ideaWebhook.id, config.ideaWebhook.token);
+		}
 	}
 	
 	loadCommands() {
@@ -157,7 +163,7 @@ class KendraBot extends Client {
 			stats.messageTotal += stats2.messageCurrentTotal;
 			let distrib = stats.commandDistrib;
 			let usageCache = stats2.commandUsage;
-			let commandCurrentTotal = 0;
+			let commandCurrentTotal = stats2.commandCurrentTotal;
 			for (let i = 0; i < usageCache.length; i++) {
 				let cmdIndex = distrib.findIndex(u => u.command == usageCache[i].command)
 				if (cmdIndex != -1) {
@@ -174,6 +180,9 @@ class KendraBot extends Client {
 			fs.writeFile("modules/stats.json", JSON.stringify(stats), err => {if (err) throw err;});
 			stats2.messageSessionTotal += stats2.messageCurrentTotal;
 			stats2.messageCurrentTotal = 0;
+			stats2.callSessionTotal += stats2.callCurrentTotal;
+			stats2.callCurrentTotal = 0;
+			stats2.commandCurrentTotal = 0;
 			stats2.commandSessionTotal += commandCurrentTotal;
 			stats2.lastCheck = Number(new Date());
 			stats2.commandUsage = [];
@@ -198,7 +207,7 @@ class KendraBot extends Client {
 				phoneCache.channels = [];
 			}
 		} else {
-			let phoneMsg = "⏰ The phone call has timed out due to inactivity."
+			let phoneMsg = "☎️ The phone call has timed out due to inactivity."
 			this.channels.get(phoneCache.channels[0]).send(phoneMsg);
 			this.channels.get(phoneCache.channels[1]).send(phoneMsg);
 			phoneCache.channels = [];

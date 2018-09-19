@@ -5,7 +5,7 @@ const cdChecker = require("../modules/cooldownChecker.js");
 
 module.exports = async (bot, message) => {
 	bot.cache.stats.messageCurrentTotal++;
-	if (message.author.bot) return;
+	if (message.author.bot || !message.channel.permissionsFor(bot.user).has("SEND_MESSAGES")) return;
 	if (!message.content.startsWith(config.prefix) && message.mentions.users.first() != bot.user) {
 		if (bot.cache.phone.channels.length > 1 && bot.cache.phone.channels.includes(message.channel.id)) {
 			bot.handlePhoneMessage(message);

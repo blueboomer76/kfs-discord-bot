@@ -54,6 +54,8 @@ class RemoveRoleCommand extends Command {
 		if (!member.roles.find("name", args[1].name)) {
 			return message.channel.send("That member does not have the role you provided.");
 		}
+		if (role.comparePositionTo(message.guild.member(bot.user).highestRole) >= 0) return message.channel.send("I cannot remove that role because it is higher than my role.")
+			
 		await member.removeRole(role)
 		.then(message.channel.send(`✅ Role **${role.name}** has been removed from **${member.user.tag}**.`))
 		.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))

@@ -61,7 +61,7 @@ function checkReaction(collector, limit) {
 module.exports.paginate = (message, genEmbed, entries, options) => {
 	if (options.numbered) {
 		let i = 0;
-		entries = entries.map(e => {i++; return `${i}. ${e}`})
+		entries[0] = entries[0].map(e => {i++; return `${i}. ${e}`})
 	}
 	let entryObj = setEntries(entries, options);
 	genEmbed.color = Math.floor(Math.random() * 16777216)
