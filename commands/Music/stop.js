@@ -4,8 +4,7 @@ class StopCommand extends Command {
 	constructor() {
 		super({
 			name: "stop",
-			description: "Stops actively playing audio",
-			guildOnly: true
+			description: "Stops actively playing audio"
 		});
 	}
 	

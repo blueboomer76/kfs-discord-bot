@@ -6,6 +6,7 @@ class SuggestCommand extends Command {
 			name: "suggest",
 			description: "Suggest new features or report problems",
 			aliases: ["feedback", "complain", "report"],
+			allowDMs: true,
 			args: [
 				{
 					errorMsg: "You must provide a suggestion or problem to send.",

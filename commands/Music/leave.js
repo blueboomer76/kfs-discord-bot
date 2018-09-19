@@ -4,8 +4,7 @@ class LeaveCommand extends Command {
 	constructor() {
 		super({
 			name: "leave",
-			description: "Have the bot leave the voice channel it is in",
-			guildOnly: true
+			description: "Have the bot leave the voice channel it is in"
 		});
 	}
 

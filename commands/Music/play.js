@@ -16,13 +16,13 @@ class PlayCommand extends Command {
 			flags: [
 				{
 					name: "seek",
+					desc: "The time to seek to in the music",
 					arg: {
 						type: "number",
 						min: 0
 					}
 				}
 			],
-			guildOnly: true,
 			perms: {
 				bot: ["CONNECT", "SPEAK"],
 				user: [],

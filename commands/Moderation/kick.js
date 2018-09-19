@@ -15,7 +15,6 @@ class KickCommand extends Command {
 				time: 20000,
 				type: "user"
 			},
-			guildOnly: true,
 			perms: {
 				bot: ["KICK_MEMBERS"],
 				user: ["KICK_MEMBERS"],

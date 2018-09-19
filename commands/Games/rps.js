@@ -13,7 +13,6 @@ class RPSCommand extends Command {
 					allowedValues: ["rock", "paper", "scissors"]
 				}
 			],
-			guildOnly: true,
 			usage: "rps <rock | paper | scissors>"
 		});
 	}

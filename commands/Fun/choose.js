@@ -13,7 +13,6 @@ class ChooseCommand extends Command {
 					type: "string"
 				}
 			],
-			guildOnly: true,
 			usage: "choose <choices...>"
 		});
 	}

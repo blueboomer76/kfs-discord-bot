@@ -21,7 +21,6 @@ class AddRoleCommand extends Command {
 				time: 20000,
 				type: "user"
 			},
-			guildOnly: true,
 			perms: {
 				bot: ["MANAGE_ROLES"],
 				user: ["MANAGE_ROLES"],

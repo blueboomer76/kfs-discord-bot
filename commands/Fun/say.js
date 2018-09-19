@@ -14,10 +14,10 @@ class SayCommand extends Command {
 			],
 			flags: [
 				{
-					name: "embed"
+					name: "embed",
+					desc: "Embeds the message"
 				}
 			],
-			guildOnly: true,
 			perms: {
 				bot: ["MANAGE_MESSAGES"],
 				user: [],

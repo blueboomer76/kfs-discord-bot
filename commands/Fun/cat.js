@@ -12,7 +12,6 @@ class CatCommand extends Command {
 				time: 15000,
 				type: "channel"
 			},
-			guildOnly: true,
 			perms: {
 				bot: ["EMBED_LINKS"],
 				user: [],

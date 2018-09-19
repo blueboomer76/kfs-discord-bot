@@ -7,6 +7,7 @@ class UsageCommand extends Command {
 			name: "usage",
 			description: "Find out which commands from the bot are used most often",
 			aliases: ["popular", "mostused"],
+			allowDMs: true,
 			args: [
 				{
 					num: 1,
@@ -33,10 +34,7 @@ class UsageCommand extends Command {
 		storedUsages.sort((a, b) => b.uses - a.uses);
 
 		let entries = [storedUsages.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
-		let usageEmbed = {
-			title: "Most Popular Bot Commands"
-		};
-		paginator.paginate(message, usageEmbed, entries, {
+		paginator.paginate(message, {title: "Most Popular Bot Commands"}, entries, {
 			limit: 20,
 			numbered: true,
 			page: args[0] ? args[0] : 1,
