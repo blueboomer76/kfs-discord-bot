@@ -17,6 +17,7 @@ class PlayCommand extends Command {
 			flags: [
 				{
 					name: "seek",
+					desc: "The time to seek to in the music",
 					arg: {
 						num: 1,
 						type: "number",
@@ -24,7 +25,6 @@ class PlayCommand extends Command {
 					}
 				}
 			],
-			guildOnly: true,
 			perms: {
 				bot: ["CONNECT"],
 				user: [],
@@ -37,8 +37,9 @@ class PlayCommand extends Command {
 	async run(bot, message, args, flags) {
 		if (!message.member.voiceChannel) return message.channel.send("You are not in a voice channel! Join one first.");
 		
+		let gvConnection = message.guild.voiceConnection;
 		let stream, cmdErr;
-		if (!message.guild.voiceConnection) {
+		if (!gvConnection) {
 			await message.member.voiceChannel.join()
 			.then(connection => {
 				connection.nowPlaying = {};
@@ -49,7 +50,6 @@ class PlayCommand extends Command {
 		}
 		if (cmdErr) return message.channel.send("Failed to connect to the voice channel.");
 		
-		let gvConnection = message.guild.voiceConnection;
 		if (message.member.voiceChannel != gvConnection.channel) {
 			return message.channel.send("You need to be in the same voice channel as me to play music.")
 		}

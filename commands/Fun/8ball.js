@@ -12,8 +12,7 @@ class EightBallCommand extends Command {
 					num: Infinity,
 					type: "string"
 				}
-			],
-			guildOnly: true
+			]
 		});
 	}
 	

@@ -22,7 +22,6 @@ class SetNicknameCommand extends Command {
 				time: 20000,
 				type: "user"
 			},
-			guildOnly: true,
 			perms: {
 				bot: ["MANAGE_NICKNAMES"],
 				user: ["MANAGE_NICKNAMES"],

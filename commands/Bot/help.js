@@ -6,6 +6,7 @@ class HelpCommand extends Command {
 		super({
 			name: "help",
 			description: "Get help for a command, or see all commands available.",
+			allowDMs: true,
 			args: [
 				{
 					num: 1,
@@ -14,7 +15,7 @@ class HelpCommand extends Command {
 				}
 			],
 			cooldown: {
-				time: 10000,
+				time: 8000,
 				type: "user"
 			},
 			perms: {

@@ -5,13 +5,12 @@ class ResumeCommand extends Command {
 	constructor() {
 		super({
 			name: "resume",
-			description: "Resumes music",
-			guildOnly: true,
+			description: "Resumes music"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
-		let gvConnection = bot.voiceConnections.get(message.guild.id);
+		let gvConnection = message.guild.voiceConnection;
 		if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
 		if (!message.member.voiceChannel) return message.channel.send("You are not in a voice channel")
 		if (message.member.voiceChannel != gvConnection.channel) {
@@ -24,7 +23,7 @@ class ResumeCommand extends Command {
 		}
 		
 		gvConnection.dispatcher.resume();
-		message.channel.send("Successfully resumed currently playing music")
+		message.react("▶");
 	}
 }
 

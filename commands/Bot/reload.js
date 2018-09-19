@@ -6,6 +6,7 @@ class ReloadCommand extends Command {
 		super({
 			name: "reload",
 			description: "Reload a command. It must be a command that is already loaded",
+			allowDMs: true,
 			args: [
 				{
 					num: 1,
@@ -16,6 +17,7 @@ class ReloadCommand extends Command {
 				time: 0,
 				type: "user"
 			},
+			hidden: true,
 			perms: {
 				bot: [],
 				user: [],

@@ -8,6 +8,7 @@ class UsageCommand extends Command {
 			name: "usage",
 			description: "Find out which commands on Kendra are used most often",
 			aliases: ["popular", "mostused"],
+			allowDMs: true,
 			args: [
 				{
 					num: 1,
@@ -33,10 +34,7 @@ class UsageCommand extends Command {
 		let commandUsage = require("../../modules/stats.json").commandDistrib;
 		commandUsage.sort((a,b) => b.uses - a.uses);
 		let entries = [commandUsage.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
-		let usageEmbed = {
-			title: "Most Popular Commands on Kendra"
-		};
-		paginator.paginate(message, usageEmbed, entries, {
+		paginator.paginate(message, {title: "Most Popular Bot Commands"}, entries, {
 			limit: 20,
 			numbered: true,
 			page: args[0] ? args[0] : 1,

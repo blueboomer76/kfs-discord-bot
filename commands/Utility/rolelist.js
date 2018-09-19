@@ -31,10 +31,7 @@ class RoleListCommand extends Command {
 	
 	async run(bot, message, args, flags) {
 		let entries = [message.guild.roles.array().map(role => role.name)];
-		let roleListEmbed = {
-			title: `List of roles - ${message.guild.name}`
-		};
-		paginator.paginate(message, roleListEmbed, entries, {
+		paginator.paginate(message, {title: `List of roles - ${message.guild.name}`}, entries, {
 			limit: 20,
 			numbered: false,
 			page: args[0] ? args[0] : 1,

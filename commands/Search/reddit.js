@@ -7,7 +7,7 @@ class RedditCommand extends Command {
 	constructor() {
 		super({
 			name: "reddit",
-			description: "Get posts from Reddit, from all subreddits or a single one",
+			description: "Get top posts from Reddit, from all subreddits or a single one",
 			args: [
 				{
 					num: Infinity,
@@ -15,12 +15,12 @@ class RedditCommand extends Command {
 					type: "string"
 				}
 			],
-			guildOnly: true,
 			perms: {
 				bot: ["EMBED_LINKS"],
 				user: [],
 				level: 0
 			},
+			startTyping: true,
 			usage: "reddit [subreddit]"
 		});
 	}
@@ -28,11 +28,10 @@ class RedditCommand extends Command {
 	async run(bot, message, args, flags) {
 		let url = "https://reddit.com";
 		if (args[0]) url += `/r/${args[0].replace(/\/?(R|r)\//, "")}`;
-		request(url, (error, response, body) => {
-			if (response.statusCode == 404) return message.channel.send("That subreddit doesn't exist!")
-			if (error) {return message.channel.send(`Failed to retrieve from Reddit. (status code ${response.statusCode})`)}
-			let list = [], olist;
-			const $ = cheerio.load(body);
+		request.get(url, (err, res) => {
+			if (res.statusCode == 404) return message.channel.send("That subreddit doesn't exist!")
+			if (err) {return message.channel.send(`Failed to retrieve from Reddit. (status code ${response.statusCode})`)}
+			const $ = cheerio.load(res.body);
 			
 			let subredditArray;
 			if (!args[0]) {
@@ -43,7 +42,7 @@ class RedditCommand extends Command {
 				})
 			}
 			
-			console.log($("[data-click-id='body'] h2").toArray()[0])
+			// console.log($("[data-click-id='body'] h2").toArray()[0])
 			
 			let voteArray = $("[style='color:#1A1A1B']").toArray().map(e => {return e.children[0].data});
 			let titleElements = $("[data-click-id='body'] h2").toArray();

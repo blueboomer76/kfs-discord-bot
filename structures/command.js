@@ -6,11 +6,14 @@ class Command {
 		this.name = props.name;
 		this.description = props.description || "No description provided";
 		this.aliases = props.aliases || [];
+		this.allowDMs = props.allowDMs || false;
 		this.args = [];
 		this.cooldown = props.cooldown || {time: 15000, type: "user"}
 		this.flags = [];
-		this.guildOnly = props.guildOnly || false;
+		this.guildOnly = props.guildOnly || false; // depreciated; will be replaced by allowDMs
+		this.hidden = props.hidden || false;
 		this.perms = props.perms || {bot: [], user: [], level: 0};
+		this.startTyping = props.startTyping || false;
 		this.usage = props.usage || this.name;
 		
 		if (props.args) {

@@ -14,7 +14,8 @@ class SayCommand extends Command {
 			],
 			flags: [
 				{
-					name: "embed"
+					name: "embed",
+					desc: "Embeds the message"
 				}
 			],
 			perms: {

@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../../structures/command.js");
-const functions = require("../../modules/functions.js");
+const {getDuration} = require("../../modules/functions.js");
 
 class ChannelInfoCommand extends Command {
 	constructor() {
@@ -19,7 +19,6 @@ class ChannelInfoCommand extends Command {
 				time: 15000,
 				type: "channel"
 			},
-			guildOnly: true,
 			perms: {
 				bot: ["EMBED_LINKS"],
 				user: [],
@@ -30,16 +29,22 @@ class ChannelInfoCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let channel = args[0];
-		if (!args[0]) channel = message.channel;
+		let channel = args[0] ? args[0] : message.channel;
 		let createdDate = new Date(channel.createdTimestamp);
-		message.channel.send(new Discord.RichEmbed()
+		let channelEmbed = new Discord.RichEmbed()
 		.setTitle(`Channel Info - ${channel.name}`)
 		.setColor(Math.floor(Math.random() * 16777216))
 		.setFooter(`ID: ${channel.id}`)
-		.addField("Channel created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
-		.addField("Channel type", channel.type)
-		);
+		.addField("Channel created at", `${createdDate.toUTCString()} (${getDuration(new Date(channel.createdTimestamp))})`)
+		.addField("Channel type", channel.type);
+		.addField("Accessible to everyone", channel.permissionOverwrites.size == 0 ? "Yes" : "No")
+		
+		if (channel.type == "text") {
+			channelEmbed.addField("Topic", channel.topic)
+		};
+		
+		message.channel.send(channelEmbed);
+		
 		/*
 			Others found:
 			Can be accessed by everyone, disabled command(s) & features

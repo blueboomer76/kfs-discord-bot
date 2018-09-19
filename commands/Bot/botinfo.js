@@ -8,8 +8,9 @@ class BotInfoCommand extends Command {
 			name: "botinfo",
 			description: "Get general info about the bot",
 			aliases: ["about", "bot", "info"],
+			allowDMs: true,
 			cooldown: {
-				time: 30000,
+				time: 60000,
 				type: "guild"
 			},
 			perms: {

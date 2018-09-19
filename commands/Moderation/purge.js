@@ -21,10 +21,16 @@ class PurgeCommand extends Command {
 			},
 			flags: [
 				{
-					name: "bots"
+					name: "bots",
+					desc: "Messages from bots"
+				},
+				{
+					name: "embeds",
+					desc: "Messages containing embeds"
 				},
 				{
 					name: "text",
+					desc: "Messages containing given text",
 					arg: {
 						num: Infinity,
 						type: "string"
@@ -32,19 +38,19 @@ class PurgeCommand extends Command {
 				},
 				{
 					name: "user",
+					desc: "Messages from a user",
 					arg: {
 						num: 1,
 						type: "member"
 					}
 				}
 			],
-			guildOnly: true,
 			perms: {
 				bot: ["MANAGE_MESSAGES"],
 				user: ["MANAGE_MESSAGES"],
 				level: 1
 			},
-			usage: "purge <1-100> [--user <user>] [--text <text>] [--bots]"
+			usage: "purge <1-100> [--user <user>] [--text <text>] [--bots] [--embeds]"
 		});
 	}
 	
@@ -55,17 +61,20 @@ class PurgeCommand extends Command {
 			await message.channel.fetchMessages({"limit": toDelete})
 			.then(messages => {
 				toDelete = messages;
-				let userFlag = flags.find(f => f.name == "user");
-				if (userFlag) {
-					toDelete = toDelete.filter(msg => msg.member == userFlag.args[0]);
-				}
-				let botsFlag = flags.find(f => f.name == "bots");
-				if (botsFlag) {
-					toDelete = toDelete.filter(msg => msg.author.bot);
-				}
-				let textFlag = flags.find(f => f.name == "text");
-				if (textFlag) {
-					toDelete = toDelete.filter(msg => msg.content.includes(textFlag.args[0]));
+				for (let i = 0; i < flags.length; i++) {
+					switch (flags[i].name) {
+						case "bots":
+							toDelete = toDelete.filter(msg => msg.author.bot);
+							break;
+						case "embeds":
+							toDelete = toDelete.filter(msg => msg.embeds[0]);
+							break;
+						case "text":
+							toDelete = toDelete.filter(msg => msg.content.includes(flags[i].args[0]));
+							break;
+						case "user":
+							toDelete = toDelete.filter(msg => msg.member == flags[i].args[0]);
+					}
 				}
 				if (!toDelete.get(message.id)) {toDelete.set(message.id, message)};
 			})

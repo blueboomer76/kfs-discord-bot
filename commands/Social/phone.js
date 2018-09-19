@@ -10,8 +10,7 @@ class PhoneCommand extends Command {
 			cooldown: {
 				time: 20000,
 				type: "channel"
-			},
-			guildOnly: true
+			}
 		});
 	}
 	

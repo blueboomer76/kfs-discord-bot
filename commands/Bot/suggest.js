@@ -5,8 +5,9 @@ class SuggestCommand extends Command {
 	constructor() {
 		super({
 			name: "suggest",
-			aliases: ["feedback", "complain", "report"],
 			description: "Suggest new features for the bot, or report problems",
+			aliases: ["feedback", "complain", "report"],
+			allowDMs: true,
 			args: [
 				{
 					errorMsg: "You must provide a suggestion or problem to send to the official bot server.",

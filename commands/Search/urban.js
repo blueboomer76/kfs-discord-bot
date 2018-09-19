@@ -19,6 +19,7 @@ class UrbanCommand extends Command {
 			flags: [
 				{
 					name: "page",
+					desc: "The page to go to",
 					arg: {
 						num: 1,
 						type: "number",
@@ -27,25 +28,23 @@ class UrbanCommand extends Command {
 					}
 				}
 			],
-			guildOnly: true,
 			perms: {
 				bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
 				user: [],
 				level: 0
 			},
+			startTyping: true,
 			usage: "urban <term> [--page <number>]"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
-		let pageFlag = flags.find(f => f.name == "page"), startPage;
-		if (pageFlag) {startPage = pageFlag.args[0]} else {startPage = 1};
-		request({
+		request.get({
 			url: `http://api.urbandictionary.com/v0/define`,
 			qs: {term: args.join(" ")}
-		}, (error, response, body) => {
-			if (error) return message.channel.send(`Failed to retrieve from the Urban Dictionary. (status code ${response.statusCode})`)
-			let defs = JSON.parse(body);
+		}, (err, res) => {
+			if (err) return message.channel.send(`Failed to retrieve from the Urban Dictionary. (status code ${response.statusCode})`)
+			let defs = JSON.parse(res.body);
 			if (defs.list.length > 0) {
 				let entries = [
 					defs.list.map(def => {
@@ -77,11 +76,11 @@ class UrbanCommand extends Command {
 						]
 					})
 				];
-				let urbanEmbed = {};
-				paginator.paginate(message, urbanEmbed, entries, {
+				let pageFlag = flags.find(f => f.name == "page"), startPage;
+				paginator.paginate(message, {}, entries, {
 					limit: 1,
 					numbered: false,
-					page: startPage,
+					page: pageFlag ? pageFlag.args[0] : 1,
 					params: ["author", "fields"]
 				});
 			} else {

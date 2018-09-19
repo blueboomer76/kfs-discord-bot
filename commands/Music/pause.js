@@ -6,12 +6,11 @@ class PauseCommand extends Command {
 		super({
 			name: "pause",
 			description: "Pauses actively playing music",
-			guildOnly: true,
 		});
 	}
 	
 	async run(bot, message, args, flags) {
-		let gvConnection = bot.voiceConnections.get(message.guild.id);
+		let gvConnection = message.guild.voiceConnection;
 		if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
 		if (!message.member.voiceChannel) return message.channel.send("You are not in a voice channel")
 		if (message.member.voiceChannel != gvConnection.channel) {

@@ -6,6 +6,7 @@ class EvalCommand extends Command {
 		super({
 			name: "eval",
 			description: "Evaluate JavaScript code",
+			allowDMs: true,
 			args: [
 				{
 					num: Infinity,
@@ -19,8 +20,10 @@ class EvalCommand extends Command {
 			flags: [
 				{
 					name: "console"
+					desc: "Puts the result in the console"
 				}
 			],
+			hidden: true,
 			perms: {
 				bot: ["EMBED_LINKS"],
 				user: [],

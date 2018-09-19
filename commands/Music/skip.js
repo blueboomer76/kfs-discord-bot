@@ -5,8 +5,7 @@ class SkipCommand extends Command {
 	constructor() {
 		super({
 			name: "skip",
-			description: "Skips the current music track",
-			guildOnly: true
+			description: "Skips the current music track"
 		});
 	}
 	

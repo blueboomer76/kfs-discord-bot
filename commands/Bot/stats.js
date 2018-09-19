@@ -10,6 +10,7 @@ class StatsCommand extends Command {
 			name: "stats",
 			description: "Get detailed stats for the Kendra bot",
 			aliases: ["botstats"],
+			allowDMs: true,
 			cooldown: {
 				time: 120000,
 				type: "guild"
@@ -18,7 +19,8 @@ class StatsCommand extends Command {
 				bot: ["EMBED_LINKS"],
 				user: [],
 				level: 0
-			}
+			},
+			startTyping: true
 		});
 	}
 	

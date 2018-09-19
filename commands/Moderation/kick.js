@@ -19,13 +19,13 @@ class KickCommand extends Command {
 			flags: [
 				{
 					name: "reason",
+					desc: "Reason to put in the audit log",
 					arg: {
 						num: 1,
 						type: "string"
 					}
 				}
 			],
-			guildOnly: true,
 			perms: {
 				bot: ["KICK_MEMBERS"],
 				user: ["KICK_MEMBERS"],

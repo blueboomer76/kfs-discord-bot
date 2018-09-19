@@ -19,13 +19,13 @@ class BanCommand extends Command {
 			flags: [
 				{
 					name: "reason",
+					desc: "Reason to put in the audit log",
 					arg: {
 						num: 1,
 						type: "string"
 					}
 				}
 			],
-			guildOnly: true,
 			perms: {
 				bot: ["BAN_MEMBERS"],
 				user: ["BAN_MEMBERS"],

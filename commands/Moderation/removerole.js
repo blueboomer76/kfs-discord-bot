@@ -25,6 +25,7 @@ class RemoveRoleCommand extends Command {
 			flags: [
 				{
 					name: "role",
+					desc: "Role to remove",
 					arg: {
 						num: 1,
 						type: "role"
@@ -32,13 +33,13 @@ class RemoveRoleCommand extends Command {
 				},
 				{
 					name: "user",
+					desc: "User to remove the role from",
 					arg: {
 						num: 1,
 						type: "member"
 					}
 				}
 			],
-			guildOnly: true,
 			perms: {
 				bot: ["MANAGE_ROLES"],
 				user: ["MANAGE_ROLES"],

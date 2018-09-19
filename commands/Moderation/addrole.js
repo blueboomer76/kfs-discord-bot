@@ -25,6 +25,7 @@ class AddRoleCommand extends Command {
 			flags: [
 				{
 					name: "role",
+					desc: "Role to give",
 					arg: {
 						num: 1,
 						type: "role"
@@ -32,13 +33,13 @@ class AddRoleCommand extends Command {
 				},
 				{
 					name: "user",
+					desc: "User to give the role to",
 					arg: {
 						num: 1,
 						type: "member"
 					}
 				}
 			],
-			guildOnly: true,
 			perms: {
 				bot: ["MANAGE_ROLES"],
 				user: ["MANAGE_ROLES"],

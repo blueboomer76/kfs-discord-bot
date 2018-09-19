@@ -36,13 +36,12 @@ class QueueCommand extends Command {
 		if (queue.length == 0 && !gvConnection.nowPlaying) return message.channel.send("There is no music in the queue.");
 		
 		let startPage = args[0] ? args[0] : 1;
-		let entries, i = 0;
-		entries = [queue.map(e => `${i}. ${e.url}`)];
+		let entries = [queue.map(e => e.url)];
 		entries[0][0] = `Now playing: ${gvConnection.nowPlaying.url}\n\n**Next up:**\n` + entries[0][0];
 		let queueEmbed = {
 			title: `Music Queue - ${message.guild.name}`
 		};
-		paginator.paginate(message, queueEmbed, entries, {
+		paginator.paginate(message, {title: `Music Queue - ${message.guild.name}`}, entries, {
 			limit: 5,
 			numbered: true,
 			page: args[0] ? args[0] : 1,

@@ -6,7 +6,7 @@ class ServerInfoCommand extends Command {
 	constructor() {
 		super({
 			name: "serverinfo",
-			description: "Get info about a role",
+			description: "Get info about this server",
 			aliases: ["guild", "guildinfo", "server"],
 			cooldown: {
 				time: 120000,

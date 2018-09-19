@@ -5,13 +5,12 @@ class LeaveCommand extends Command {
 	constructor() {
 		super({
 			name: "leave",
-			description: "Have the bot leave your voice channel",
-			guildOnly: true
+			description: "Have the bot leave your voice channel"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
-		let gvConnection = bot.voiceConnections.get(message.guild.id);
+		let gvConnection = message.guild.voiceConnection;
 		if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
 		if (message.member.voiceChannel == gvConnection.channel || message.member.hasPermission("MANAGE_SERVER")) {
 			await gvConnection.disconnect();

@@ -6,8 +6,7 @@ class SlotsCommand extends Command {
 		super({
 			name: "slots",
 			description: "Play slots and try to get lucky!",
-			aliases: ["slot"],
-			guildOnly: true
+			aliases: ["slot"]
 		});
 	}
 	

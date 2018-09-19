@@ -7,10 +7,12 @@ class RestartCommand extends Command {
 			name: "restart",
 			description: "Restarts the bot",
 			aliases: ["reboot"],
+			allowDMs: true,
 			cooldown: {
 				time: 0,
 				type: "user"
 			},
+			hidden: true,
 			perms: {
 				bot: [],
 				user: [],

@@ -6,6 +6,7 @@ class ReloadFileCommand extends Command {
 		super({
 			name: "reloadfile",
 			description: "Reload a file.",
+			allowDMs: true,
 			args: [
 				{
 					num: Infinity,
@@ -16,6 +17,7 @@ class ReloadFileCommand extends Command {
 				time: 0,
 				type: "user"
 			},
+			hidden: true,
 			perms: {
 				bot: [],
 				user: [],

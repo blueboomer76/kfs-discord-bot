@@ -19,7 +19,6 @@ class UserInfoCommand extends Command {
 				time: 15000,
 				type: "channel"
 			},
-			guildOnly: true,
 			perms: {
 				bot: ["EMBED_LINKS"],
 				user: [],
@@ -30,8 +29,7 @@ class UserInfoCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let member = args[0];
-		if (!args[0]) member = message.member;
+		let member = args[0] ? args[0] : message.member;
 		
 		let createdDate = new Date(member.user.createdTimestamp);
 		let joinedDate = new Date(member.joinedTimestamp);
