@@ -12,7 +12,6 @@ class ServerInfoCommand extends Command {
 				time: 120000,
 				type: "guild"
 			},
-			guildOnly: true,
 			perms: {
 				bot: ["EMBED_LINKS"],
 				user: [],

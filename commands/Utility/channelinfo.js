@@ -19,7 +19,6 @@ class ChannelInfoCommand extends Command {
 				time: 15000,
 				type: "channel"
 			},
-			guildOnly: true,
 			perms: {
 				bot: ["EMBED_LINKS"],
 				user: [],
@@ -30,8 +29,7 @@ class ChannelInfoCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let channel = args[0];
-		if (!args[0]) channel = message.channel;
+		let channel = args[0] ? args[0] : message.channel;
 		let createdDate = new Date(channel.createdTimestamp);
 		message.channel.send(new Discord.RichEmbed()
 		.setTitle(`Channel Info - ${channel.name}`)

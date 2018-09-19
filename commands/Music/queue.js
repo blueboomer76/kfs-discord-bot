@@ -41,10 +41,7 @@ class QueueCommand extends Command {
 			entries[0][0] = `Now playing: ${gvConnection.nowPlaying}`;
 		}
 		
-		let queueEmbed = {
-			title: `Music Queue - ${message.guild.name}`
-		};
-		paginator.paginate(message, queueEmbed, entries, {
+		paginator.paginate(message, {title: `Music Queue - ${message.guild.name}`}, entries, {
 			limit: 5,
 			numbered: true,
 			page: args[0] ? args[0] : 1,

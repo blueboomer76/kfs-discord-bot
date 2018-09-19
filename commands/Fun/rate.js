@@ -11,7 +11,6 @@ class RateCommand extends Command {
 					type: "string"
 				}
 			],
-			guildOnly: true,
 			usage: "rate <someone or something>"
 		});
 	}

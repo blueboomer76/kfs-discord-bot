@@ -14,7 +14,6 @@ class VolumeCommand extends Command {
 					max: 100
 				}
 			],
-			guildOnly: true,
 			usage: "volume <1-100>"
 		});
 	}

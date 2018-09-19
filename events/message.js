@@ -18,7 +18,7 @@ module.exports = async (bot, message) => {
 		let runCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
 		if (runCommand) {
 			if (message.guild && !message.channel.permissionsFor(bot.user).has("SEND_MESSAGES")) return;
-			if (!message.guild && runCommand.guildOnly) return message.channel.send("This command cannot be used in Direct Messages.")
+			if (!message.guild && !runCommand.allowDMs) return message.channel.send("This command cannot be used in Direct Messages.")
 
 			let requiredPerms = runCommand.perms;
 			let allowed = {state: true, faultMsg: ""};

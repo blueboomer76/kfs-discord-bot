@@ -5,8 +5,7 @@ class FishyCommand extends Command {
 		super({
 			name: "fishy",
 			description: "Catch fish and other objects with a fishing pole!",
-			aliases: ["fish"],
-			guildOnly: true
+			aliases: ["fish"]
 		});
 	}
 	

@@ -5,6 +5,7 @@ class LoadCommand extends Command {
 		super({
 			name: "load",
 			description: "Loads a command",
+			allowDMs: true,
 			args: [
 				{
 					num: 1,
@@ -19,6 +20,7 @@ class LoadCommand extends Command {
 				time: 0,
 				type: "user"
 			},
+			hidden: true,
 			perms: {
 				bot: [],
 				user: [],

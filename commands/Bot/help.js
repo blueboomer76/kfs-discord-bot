@@ -6,6 +6,7 @@ class HelpCommand extends Command {
 		super({
 			name: "help",
 			description: "Get help for a command, or see all commands available.",
+			allowDMs: true,
 			args: [
 				{
 					num: 1,
@@ -14,7 +15,7 @@ class HelpCommand extends Command {
 				}
 			],
 			cooldown: {
-				time: 10000,
+				time: 8000,
 				type: "user"
 			},
 			perms: {
@@ -33,13 +34,17 @@ class HelpCommand extends Command {
 			.setTitle("All bot commands")
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter(`Total commands: ${bot.commands.size}`);
+			let cmds = bot.commands;
+			if (!bot.ownerIDs.includes(message.author.id) && !bot.adminIDs.includes(message.author.id)) {
+				cmds = cmds.filter(cmd => !cmd.hidden);
+			}
 			for (let i = 0; i < bot.categories.length; i++) {
-				let cmdsInCat = bot.commands.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
+				let cmdsInCat = cmds.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
 				helpEmbed.addField(bot.categories[i], cmdsInCat.join(", "));
 			}
 			message.channel.send(helpEmbed);
 		} else {
-			let commandFlags = command.flags.map(f => `--${f.name} (-${f.name.charAt(0)})`);
+			let commandFlags = command.flags.map(f => `\`--${f.name}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`);
 			let commandPerms = command.perms;
 			let permReq = {
 				bot: commandPerms.bot.length > 0 ? commandPerms.bot.join(", ") : "None",
@@ -55,7 +60,7 @@ class HelpCommand extends Command {
 			.addField("Aliases", command.aliases.length > 0 ? command.aliases.join(", ") : "None")
 			.addField("Flags", command.flags.length > 0 ? commandFlags.join("\n") : "None")
 			.addField("Usage", command.usage)
-			.addField("Server Only", command.guildOnly ? "Yes" : "No")
+			.addField("Allows DMs", command.allowDMs ? "Yes" : "No")
 			.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user} (with level ${permReq.level})`)
 			.addField("Cooldown", `${command.cooldown.time / 1000} seconds (per ${command.cooldown.type})`)
 			);

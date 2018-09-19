@@ -4,8 +4,7 @@ class PauseCommand extends Command {
 	constructor() {
 		super({
 			name: "pause",
-			description: "Pauses actively playing audio",
-			guildOnly: true
+			description: "Pauses actively playing audio"
 		});
 	}
 	

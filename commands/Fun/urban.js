@@ -18,6 +18,7 @@ class UrbanCommand extends Command {
 			flags: [
 				{
 					name: "page",
+					desc: "The page to go to",
 					arg: {
 						type: "number",
 						min: 1,
@@ -25,7 +26,6 @@ class UrbanCommand extends Command {
 					}
 				}
 			],
-			guildOnly: true,
 			perms: {
 				bot: ["ADD_REACTIONS", "EMBED_LINKS", "MANAGE_MESSAGES"],
 				user: [],
@@ -36,8 +36,6 @@ class UrbanCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let pageFlag = flags.find(f => f.name == "page"), startPage;
-		if (pageFlag) {startPage = pageFlag.args} else {startPage = 1};
 		request.get({
 			url: "http://api.urbandictionary.com/v0/define",
 			qs: {term: args[0]},
@@ -78,11 +76,11 @@ class UrbanCommand extends Command {
 						]
 					})
 				];
-				let urbanEmbed = {};
-				paginator.paginate(message, urbanEmbed, entries, {
+				let pageFlag = flags.find(f => f.name == "page"), startPage;
+				paginator.paginate(message, {}, entries, {
 					limit: 1,
 					numbered: false,
-					page: startPage,
+					page: pageFlag ? pageFlag.args : 1,
 					params: ["author", "fields"]
 				});
 			} else {

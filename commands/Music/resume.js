@@ -4,8 +4,7 @@ class ResumeCommand extends Command {
 	constructor() {
 		super({
 			name: "resume",
-			description: "Resumes the audio",
-			guildOnly: true
+			description: "Resumes the audio"
 		});
 	}
 	
@@ -26,7 +25,7 @@ class ResumeCommand extends Command {
 		}
 		
 		gvConnection.dispatcher.resume();
-		message.channel.send("Successfully resumed the audio")
+		message.react("▶");
 	}
 }
 

@@ -5,6 +5,7 @@ class PingCommand extends Command {
 		super({
 			name: "ping",
 			description: "Get bot ping and latency",
+			allowDMs: true,
 			cooldown: {
 				time: 15000,
 				type: "channel"

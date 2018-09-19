@@ -1,6 +1,7 @@
 class Flag {
 	constructor(props) {
 		this.name = props.name;
+		this.desc = props.desc || "";
 		this.allowArray = props.allowArray || false;
 		if (props.arg) this.arg = new FlagArgument(props.arg);
 	}

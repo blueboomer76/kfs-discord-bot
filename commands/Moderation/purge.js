@@ -20,28 +20,34 @@ class PurgeCommand extends Command {
 			},
 			flags: [
 				{
-					name: "bots"
+					name: "bots",
+					desc: "Messages from bots"
+				},
+				{
+					name: "embeds",
+					desc: "Messages containing embeds"
 				},
 				{
 					name: "text",
+					desc: "Messages containing given text",
 					arg: {
 						type: "string"
 					}
 				},
 				{
 					name: "user",
+					desc: "Messages from a user",
 					arg: {
 						type: "member"
 					}
 				}
 			],
-			guildOnly: true,
 			perms: {
 				bot: ["MANAGE_MESSAGES"],
 				user: ["MANAGE_MESSAGES"],
 				level: 1
 			},
-			usage: "purge <1-99> [--user <user>] [--text <text>] [--bots]"
+			usage: "purge <1-99> [--user <user>] [--text <text>] [--bots] [--embeds]"
 		});
 	}
 	
@@ -52,16 +58,22 @@ class PurgeCommand extends Command {
 			await message.channel.fetchMessages({"limit": args[0]})
 			.then(messages => {
 				toDelete = messages;
-				let userFlag = flags.find(f => f.name == "user");
-				if (userFlag) toDelete = toDelete.filter(msg => msg.author.id == userFlag.args.id);
-
-				let botsFlag = flags.find(f => f.name == "bots");
-				if (botsFlag) toDelete = toDelete.filter(msg => msg.author.bot);
-
-				let textFlag = flags.find(f => f.name == "text");
-				if (textFlag) toDelete = toDelete.filter(msg => msg.content.includes(textFlag.args));
-
-				if (!toDelete.get(message.id)) toDelete.set(message.id, message);
+				for (let i = 0; i < flags.length; i++) {
+					switch (flags[i].name) {
+						case "bots":
+							toDelete = toDelete.filter(msg => msg.author.bot);
+							break;
+						case "embeds":
+							toDelete = toDelete.filter(msg => msg.embeds[0]);
+							break;
+						case "text":
+							toDelete = toDelete.filter(msg => msg.content.includes(flags[i].args));
+							break;
+						case "user":
+							toDelete = toDelete.filter(msg => msg.author.id == flags[i].args.id);
+					}
+				}
+				if (!toDelete.get(message.id)) {toDelete.set(message.id, message)};
 			})
 			.catch(err => {
 				message.channel.send("Error occurred while trying to fetch messages: `" + err + "`")

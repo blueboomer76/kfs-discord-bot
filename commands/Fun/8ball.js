@@ -12,7 +12,6 @@ class EightBallCommand extends Command {
 					type: "string"
 				}
 			],
-			guildOnly: true,
 			usage: "8ball <question>"
 		});
 	}

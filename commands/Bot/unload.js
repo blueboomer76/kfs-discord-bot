@@ -5,6 +5,7 @@ class UnloadCommand extends Command {
 		super({
 			name: "unload",
 			description: "Unloads a command. Some commands cannot be unloaded.",
+			allowDMs: true,
 			args: [
 				{
 					num: 1,
@@ -15,6 +16,7 @@ class UnloadCommand extends Command {
 				time: 0,
 				type: "user"
 			},
+			hidden: true,
 			perms: {
 				bot: [],
 				user: [],

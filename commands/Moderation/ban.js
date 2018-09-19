@@ -15,7 +15,6 @@ class BanCommand extends Command {
 				time: 25000,
 				type: "user"
 			},
-			guildOnly: true,
 			perms: {
 				bot: ["BAN_MEMBERS"],
 				user: ["BAN_MEMBERS"],

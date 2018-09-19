@@ -18,7 +18,6 @@ class AvatarCommand extends Command {
 				time: 15000,
 				type: "channel"
 			},
-			guildOnly: true,
 			usage: "avatar [user]"
 		});
 	}
@@ -28,6 +27,7 @@ class AvatarCommand extends Command {
 		if (!member) member = message.member;
 		message.channel.send(new Discord.RichEmbed()
 		.setTitle(`Avatar - ${member.user.tag}`)
+		.setDescription(`Avatar URL: ${member.user.avatarURL}`)
 		.setColor(Math.floor(Math.random() * 16777216))
 		.setImage(member.user.avatarURL)
 		);

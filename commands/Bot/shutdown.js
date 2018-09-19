@@ -5,10 +5,12 @@ class ShutdownCommand extends Command {
 		super({
 			name: "shutdown",
 			description: "Shuts down the bot",
+			allowDMs: true,
 			cooldown: {
 				time: 0,
 				type: "user"
 			},
+			hidden: true,
 			perms: {
 				bot: [],
 				user: [],
