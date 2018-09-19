@@ -22,6 +22,7 @@ class PhoneCommand extends Command {
 			if (phoneCache.channels.length == 1) {
 				message.react("☎");
 			} else {
+				bot.cache.stats.callCurrentTotal++;
 				phoneCache.callExpires = Number(new Date()) + 600000;
 				message.channel.send("☎ A phone connection has started! Greet the other side!");
 				if (phoneCache.channels.length == 2) {

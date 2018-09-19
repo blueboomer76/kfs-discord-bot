@@ -6,6 +6,7 @@ try {
 	storedStats = require("./modules/stats.json");
 	if (isNaN(parseInt(storedStats.duration))) storedStats.duration = 0;
 	if (isNaN(parseInt(storedStats.commandTotal))) storedStats.commandTotal = 0;
+	if (isNaN(parseInt(storedStats.callTotal))) storedStats.callTotal = 0;
 	if (isNaN(parseInt(storedStats.messageTotal))) storedStats.messageTotal = 0;
 	try {
 		storedStats.commandUsages = storedStats.commandUsages.filter(entry => {
@@ -18,6 +19,7 @@ try {
 	storedStats = {
 		duration: 0,
 		commandTotal: 0,
+		callTotal: 0,
 		messageTotal: 0,
 		commandUsages: []
 	}

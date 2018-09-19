@@ -13,6 +13,7 @@ class KFSDiscordBot extends Client {
 		this.commands = new Collection();
 		this.aliases = new Collection();
 		this.categories = [];
+		this.prefix = config.prefix;
 		this.cache = {
 			permLevels: [
 				{
@@ -87,7 +88,10 @@ class KFSDiscordBot extends Client {
 			phone: {channels: [], msgCount: 0, callExpires: 0},
 			recentCommands: [],
 			stats: {
+				commandCurrentTotal: 0,
 				commandSessionTotal: 0,
+				callCurrentTotal: 0,
+				callSessionTotal: 0,
 				messageCurrentTotal: 0,
 				messageSessionTotal: 0,
 				commandUsages: [],
@@ -152,7 +156,7 @@ class KFSDiscordBot extends Client {
 		})
 	}
 	
-	logStats() {
+	async logStats() {
 		delete require.cache[require.resolve("./modules/stats.json")];
 
 		fs.readFile("modules/stats.json", {encoding: "utf8"}, (err, data) => {
@@ -164,7 +168,7 @@ class KFSDiscordBot extends Client {
 
 			let storedUsages = storedStats.commandUsages;
 			let cachedUsages = cachedStats.commandUsages;
-			let commandCurrentTotal = 0;
+			let commandCurrentTotal = cachedStats.commandCurrentTotal;
 			for (let i = 0; i < cachedUsages.length; i++) {
 				let cmdIndex = storedUsages.findIndex(u => u.command == cachedUsages[i].command);
 				if (cmdIndex != -1) {
@@ -178,11 +182,15 @@ class KFSDiscordBot extends Client {
 				commandCurrentTotal += cachedUsages[i].uses;
 			}
 			storedStats.commandTotal += commandCurrentTotal;
+			storedStats.callTotal += cachedStats.callCurrentTotal;
 			storedStats.messageTotal += cachedStats.messageCurrentTotal;
 
 			fs.writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {if (err) throw err});
 
 			cachedStats.commandSessionTotal += commandCurrentTotal;
+			cachedStats.commandCurrentTotal = 0;
+			cachedStats.callSessionTotal += cachedStats.callCurrentTotal;
+			cachedStats.callCurrentTotal = 0;
 			cachedStats.messageSessionTotal += cachedStats.messageCurrentTotal;
 			cachedStats.messageCurrentTotal = 0;
 			cachedStats.commandUsages = [];
@@ -208,7 +216,7 @@ class KFSDiscordBot extends Client {
 				phoneCache.channels = [];
 			}
 		} else {
-			let phoneMsg = "⏰ The phone call has timed out due to inactivity."
+			let phoneMsg = "☎️ The phone call has timed out due to inactivity."
 			this.channels.get(phoneCache.channels[0]).send(phoneMsg);
 			this.channels.get(phoneCache.channels[1]).send(phoneMsg);
 			phoneCache.channels = [];

@@ -51,9 +51,8 @@ class UserInfoCommand extends Command {
 		let joinTimes = message.guild.members.map(mem => mem.joinedTimestamp);
 		joinTimes.sort((a, b) => a - b);
 
-		message.channel.send(new Discord.RichEmbed()
+		let userEmbed = new Discord.RichEmbed()
 		.setTitle(`User Info - ${member.user.tag}`)
-		.setColor(member.displayColor)
 		.setFooter(`ID: ${member.id}`)
 		.setThumbnail(member.user.avatarURL)
 		.addField("Account created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
@@ -63,7 +62,11 @@ class UserInfoCommand extends Command {
 		.addField("Nickname", member.nickname || "None")
 		.addField("Member #", joinTimes.indexOf(member.joinedTimestamp) + 1)
 		.addField(`Roles - ${member.roles.size}`, member.roles.array().join(", "))
-		);
+
+		if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
+			userEmbed.setColor(member.displayColor);
+		}
+		message.channel.send(userEmbed);
 	}
 }
 
