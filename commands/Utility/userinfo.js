@@ -53,9 +53,8 @@ class UserInfoCommand extends Command {
 		let roleList = member.roles.map(r => r.name).join(", ");
 		if (roleList.length > 1000) roleList = roleList.slice(0, 1000) + "...";
 
-		message.channel.send(new Discord.RichEmbed()
+		let userEmbed = new Discord.RichEmbed()
 		.setTitle(`User Info - ${member.user.tag}`)
-		.setColor(member.displayColor)
 		.setFooter(`ID: ${member.id}`)
 		.setThumbnail(member.user.avatarURL)
 		.addField("Account created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
@@ -65,7 +64,11 @@ class UserInfoCommand extends Command {
 		.addField("Nickname", member.nickname || "None")
 		.addField("Member #", joinTimes.indexOf(member.joinedTimestamp) + 1)
 		.addField(`Roles - ${member.roles.size}`, roleList)
-		);
+
+		if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
+			userEmbed.setColor(member.displayColor);
+		}
+		message.channel.send(userEmbed);
 	}
 }
 
