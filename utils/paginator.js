@@ -45,6 +45,7 @@ function paginateOnEdit(sentMessage, entries, options) {
 		fields: []
 	}
 	if (sentEmbed.author) {embedToEdit.author = sentEmbed.author}
+	if (sentEmbed.thumbnail) {embedToEdit.thumbnail = sentEmbed.author}
 	embedToEdit = setEmbed(embedToEdit, entryObj.entries, options.params);
 	sentMessage.edit("", {embed: embedToEdit})
 }

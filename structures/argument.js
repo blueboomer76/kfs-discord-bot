@@ -2,7 +2,7 @@ class Argument {
 	constructor(props) {
 		this.allowQuotes = props.allowQuotes || false;
 		this.defaultValue = props.defaultValue || null;
-		this.errorMessage = props.errorMessage || "Not enough arguments provided";
+		this.errorMsg = props.errMsg || "Not enough arguments provided";
 		this.num = props.num || 1;
 		this.parseSeperately = props.parseSeperately || false;
 		this.optional = props.optional || false;

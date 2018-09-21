@@ -5,19 +5,20 @@ const cdChecker = require("../modules/cooldownChecker.js");
 
 module.exports = async (bot, message) => {
 	bot.cache.stats.messageCurrentTotal++;
-	if (message.author.bot || !message.channel.permissionsFor(bot.user).has("SEND_MESSAGES")) return;
+	if (message.author.bot) return;
 	if (!message.content.startsWith(config.prefix) && message.mentions.users.first() != bot.user) {
 		if (bot.cache.phone.channels.length > 1 && bot.cache.phone.channels.includes(message.channel.id)) {
 			bot.handlePhoneMessage(message);
 		}
 	} else {
-		let prefixSliceAmt;
-		prefixSliceAmt = message.mentions.users.first() == bot.user ? 21 : config.prefix.length;
+		if (!message.channel.permissionsFor(bot.user).has("SEND_MESSAGES")) return;
+		let prefixSliceAmt = message.mentions.users.first() == bot.user ? 21 : config.prefix.length;
 		let args = message.content.slice(prefixSliceAmt).trim().split(/ +/g);
 		let command = args.shift().toLowerCase();
 		let runCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
 		if (runCommand) {
-			if (!message.guild && runCommand.guildOnly) return message.channel.send("This command cannot be used in Direct Messages.")
+			if (!message.guild && (runCommand.guildOnly == true || runCommand.allowDMs == false)) return message.channel.send("This command cannot be used in Direct Messages.")
+			// runCommand.guildOnly is depreciated and will be replaced by runCommand.allowDMs
 			let requiredPerms = runCommand.perms;
 			if (requiredPerms && message.channel.type != "dm" && (requiredPerms.bot.length > 0 || requiredPerms.user.length > 0 || requiredPerms.level > 0)) {
 				let allowed = {state: true, faultMsg: ""};
@@ -58,6 +59,7 @@ module.exports = async (bot, message) => {
 			let cdCheck = cdChecker.check(bot, message, runCommand.name);
 			let cdInfo = runCommand.cooldown;
 			if (cdCheck == true) {
+				if (runCommand.startTyping) message.channel.startTyping();
 				let flags = [];
 				if (runCommand.flags) {
 					let parsedFlags = argParser.parseFlags(bot, message, args, runCommand.flags);
@@ -74,6 +76,7 @@ module.exports = async (bot, message) => {
 				.catch(err => {
 					message.channel.send("🤷 An error occurred while trying to run this command because: ```javascript" + "\n" + err.stack + "```Come to the official server to discuss this bug.")
 				});
+				if (runCommand.startTyping) message.channel.stopTyping();
 				if (cdInfo.time != 0) {cdChecker.addCooldown(bot, message, runCommand.name)};
 				let commandUsage = bot.cache.stats.commandUsage.find(u => u.command == runCommand.name);
 				if (commandUsage) {

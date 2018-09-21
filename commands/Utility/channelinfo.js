@@ -36,11 +36,11 @@ class ChannelInfoCommand extends Command {
 		.setColor(Math.floor(Math.random() * 16777216))
 		.setFooter(`ID: ${channel.id}`)
 		.addField("Channel created at", `${createdDate.toUTCString()} (${getDuration(new Date(channel.createdTimestamp))})`)
-		.addField("Channel type", channel.type);
-		.addField("Accessible to everyone", channel.permissionOverwrites.size == 0 ? "Yes" : "No")
+		.addField("Channel type", channel.type)
+		.addField("Has permission overwrites", channel.permissionOverwrites.size == 0 ? "No" : "Yes")
 		
 		if (channel.type == "text") {
-			channelEmbed.addField("Topic", channel.topic)
+			channelEmbed.addField("Topic", channel.topic.length == 0 ? "No topic set" : channel.topic)
 		};
 		
 		message.channel.send(channelEmbed);

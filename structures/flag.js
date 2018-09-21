@@ -8,6 +8,7 @@ class Flag {
 
 class FlagArgument {
 	constructor(props) {
+		this.desc = props.desc || "";
 		this.num = props.num || 1;
 		this.optional = props.optional || false;
 		this.type = props.type;

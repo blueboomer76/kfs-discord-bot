@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../../structures/command.js");
+const paginator = require("../../utils/paginator.js");
 const request = require("request");
 const cheerio = require("cheerio");
 
@@ -15,6 +16,10 @@ class RedditCommand extends Command {
 					type: "string"
 				}
 			],
+			cooldown: {
+				time: 15000,
+				type: "channel"
+			},
 			perms: {
 				bot: ["EMBED_LINKS"],
 				user: [],
@@ -30,7 +35,7 @@ class RedditCommand extends Command {
 		if (args[0]) url += `/r/${args[0].replace(/\/?(R|r)\//, "")}`;
 		request.get(url, (err, res) => {
 			if (res.statusCode == 404) return message.channel.send("That subreddit doesn't exist!")
-			if (err) {return message.channel.send(`Failed to retrieve from Reddit. (status code ${response.statusCode})`)}
+			if (err) {return message.channel.send(`Failed to retrieve from Reddit. (status code ${res.statusCode})`)}
 			const $ = cheerio.load(res.body);
 			
 			let subredditArray;
@@ -42,25 +47,31 @@ class RedditCommand extends Command {
 				})
 			}
 			
-			// console.log($("[data-click-id='body'] h2").toArray()[0])
+			let voteArray = $("[data-click-id='upvote'] + div").toArray().map(e => {return e.children[0].data});
 			
-			let voteArray = $("[style='color:#1A1A1B']").toArray().map(e => {return e.children[0].data});
 			let titleElements = $("[data-click-id='body'] h2").toArray();
 			let titleArray = titleElements.map(e => {return e.children[0].data});
 			let linkArray = titleElements.map(e => {return `https://reddit.com${e.parent.attribs.href}`});
 			
-			let displayed = [];
-			for (let i = 0; i < 5; i++) {
-				let toDisplay = `${i+1}. [${titleArray[i]}](${linkArray[i]})`;
+			let displayed = [], entries = [[]];
+			for (let i = 0; i < titleArray.length; i++) {
+				let toDisplay = `[${titleArray[i]}](${linkArray[i]})`;
 				if (!args[0]) {toDisplay += ` (${subredditArray[i]})`}
-				displayed.push(toDisplay + `\n - Votes: ${voteArray[2*i]}`);
+				entries[0].push(toDisplay + `\n - Votes: ${voteArray[2*i]}`);
 			}
+			entries[0] = entries[0].slice($(".Post .icon-sticky").length)
 			
-			message.channel.send(new Discord.RichEmbed()
-			.setTitle(args[0] ? `Reddit - r/${args[0]}` : "Reddit - all subreddits")
-			.setColor(16728064)
-			.setDescription(displayed.join("\n"))
-			)
+			paginator.paginate(message, {
+				title: args[0] ? `Reddit - r/${args[0]}` : "Reddit - all subreddits",
+				thumbnail: {
+					url: "https://www.redditstatic.com/new-icon.png"
+				}
+			}, entries, {
+				limit: 5,
+				numbered: true,
+				page: 1,
+				params: null
+			});
 		})
 	}
 }

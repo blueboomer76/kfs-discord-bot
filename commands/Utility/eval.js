@@ -19,7 +19,7 @@ class EvalCommand extends Command {
 			},
 			flags: [
 				{
-					name: "console"
+					name: "console",
 					desc: "Puts the result in the console"
 				}
 			],

@@ -27,7 +27,7 @@ function getCdByType(bot, message, command) {
 	} else if (cdType == "channel") {
 		return message.channel.id
 	} else if (cdType == "guild") {
-		return message.guild.id
+		if (message.guild) {return message.guild.id} else {return message.author.id};
 	} else {
 		throw new Error("Cooldown type must either be user, channel, or guild.")
 	}
