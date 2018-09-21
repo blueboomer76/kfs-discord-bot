@@ -32,7 +32,7 @@ class CreateChannelCommand extends Command {
 
 		message.guild.createChannel(channelName, {type: "text"})
 		.then(() => message.channel.send(`✅ The text channel **${channelName}** has been created.`))
-		.catch(() => message.channel.send("Could not create the channel."))
+		.catch(err => message.channel.send("An error has occurred while trying to create the channel: `" + err + "`"))
 	}
 }
 

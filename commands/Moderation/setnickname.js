@@ -35,11 +35,14 @@ class SetNicknameCommand extends Command {
 		let newNick = args[1];
 		if (member.id == message.author.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself or the bot.");
 		if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-			return message.channel.send("Cannot set nickname: your highest role must be higher than the user's highest role");
+			return message.channel.send("Cannot set nickname: your highest role must be higher than the user's highest role (overrides with server owner)");
+		} else if (member.highestRole.comparePositionTo(message.guild.member(bot.user).highestRole) >= 0) {
+			return message.channel.send("Cannot set nickname: the bot's highest role must be higher than the user's highest role");
 		}
+
 		member.setNickname(newNick)
 		.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been set to **${newNick}**.`))
-		.catch(() => message.channel.send("Could not set the new nickname for the user."))
+		.catch(err => message.channel.send("An error has occurred while trying to set the nickname: `" + err + "`"))
 	}
 };
 

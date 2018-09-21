@@ -33,7 +33,7 @@ class HelpCommand extends Command {
 			let helpEmbed = new Discord.RichEmbed()
 			.setTitle("All bot commands")
 			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`Total commands: ${bot.commands.size}`);
+			.setFooter(`Use \`help <command>\` to get help for a command | Total commands: ${bot.commands.size}`);
 			let cmds = bot.commands;
 			if (!bot.ownerIDs.includes(message.author.id) && !bot.adminIDs.includes(message.author.id)) {
 				cmds = cmds.filter(cmd => !cmd.hidden);
@@ -53,7 +53,7 @@ class HelpCommand extends Command {
 			};
 
 			message.channel.send(new Discord.RichEmbed()
-			.setTitle("Help - " + command.name)
+			.setTitle(`Help - ${command.name}`)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.addField("Category", command.category)
 			.addField("Description", command.description)

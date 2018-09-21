@@ -85,7 +85,7 @@ class PurgeCommand extends Command {
 		.then(messages => {
 			message.channel.send(`Deleted ${messages.size - 1} messages from the channel!`).then(m => m.delete(7500))
 		})
-		.catch(() => message.channel.send("Could not purge the messages."))
+		.catch(err => message.channel.send("An error has occurred while trying to purge the messages: `" + err + "`"))
 	}
 }
 

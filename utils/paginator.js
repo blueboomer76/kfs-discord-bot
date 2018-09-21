@@ -51,6 +51,11 @@ function paginateOnEdit(sentMessage, entries, options) {
 			url: sentEmbed.author.url
 		};
 	}
+	if (sentEmbed.thumbnail) {
+		embedToEdit.thumbnail = {
+			url: sentEmbed.thumbnail.url
+		};
+	}
 	embedToEdit = setEmbed(embedToEdit, entryObj.entries, options.params);
 	sentMessage.edit("", {embed: embedToEdit})
 }
