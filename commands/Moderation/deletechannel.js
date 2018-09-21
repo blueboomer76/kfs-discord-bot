@@ -44,7 +44,7 @@ class DeleteChannelCommand extends Command {
 
 		channel.delete()
 		.then(() => message.channel.send(`✅ The channel **${channel.name}** has been deleted.`))
-		.catch(() => message.channel.send("Could not delete the channel."))
+		.catch(err => message.channel.send("An error has occurred while trying to delete the channel: `" + err + "`"))
 	}
 }
 

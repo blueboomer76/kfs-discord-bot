@@ -31,13 +31,19 @@ class ChannelInfoCommand extends Command {
 	async run(bot, message, args, flags) {
 		let channel = args[0] ? args[0] : message.channel;
 		let createdDate = new Date(channel.createdTimestamp);
-		message.channel.send(new Discord.RichEmbed()
+		let channelEmbed = new Discord.RichEmbed()
 		.setTitle(`Channel Info - ${channel.name}`)
 		.setColor(Math.floor(Math.random() * 16777216))
 		.setFooter(`ID: ${channel.id}`)
 		.addField("Channel created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
 		.addField("Channel type", channel.type)
-		);
+		.addField("Has permission overwrites", channel.permissionOverwrites.size == 0 ? "No" : "Yes")
+		if (channel.type == "text") {
+			channelEmbed.addField("Topic", channel.topic ? channel.topic : "No topic set");
+		}
+
+		message.channel.send(channelEmbed);
+
 		/*
 			Others found:
 			Can be accessed by everyone, disabled command(s) & features

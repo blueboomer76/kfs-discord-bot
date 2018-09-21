@@ -79,6 +79,10 @@ module.exports = async (bot, message) => {
 				}
 				cdChecker.addCooldown(bot, message, runCommand.name);
 			}
+			if (runCommand.startTyping) {
+				message.channel.startTyping();
+				setTimeout(() => message.channel.stopTyping(), 10000);
+			}
 			let flags = [];
 			if (runCommand.flags.length > 0) {
 				let parsedFlags = argParser.parseFlags(bot, message, args, runCommand.flags);
