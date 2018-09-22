@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../../structures/command.js");
-const functions = require("../../modules/functions.js");
+const {getDuration} = require("../../modules/functions.js");
 
 class UserInfoCommand extends Command {
 	constructor() {
@@ -53,8 +53,8 @@ class UserInfoCommand extends Command {
 		.setTitle(`User Info - ${member.user.tag}`)
 		.setFooter(`ID: ${member.id}`)
 		.setThumbnail(member.user.avatarURL)
-		.addField("Account created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
-		.addField("Joined this server at", `${joinedDate.toUTCString()} (${functions.getDuration(joinedDate)})`)
+		.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+		.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`)
 		.addField("Status", presence)
 		.addField("Bot user", member.user.bot ? "Yes" : "No")
 		.addField("Nickname", member.nickname || "None")

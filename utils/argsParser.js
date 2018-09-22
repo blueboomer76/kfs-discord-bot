@@ -30,6 +30,41 @@ function parseArgQuotes(args, findAll) {
 	return args;
 }
 
+function checkArgs(bot, message, args, cmdArg) {
+	let arg = cmdArg, params;
+	if (arg.type == "number") {
+		params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity}
+	} else if (arg.type == "oneof") {
+		params = {list: arg.allowedValues}
+	}
+	let toResolve = resolver.resolve(bot, message, args, arg.type, params);
+	if (toResolve == null) {
+		let argErrorMsg = `\`${args.slice(0, 1500)}\` is not a valid ${arg.type}`;
+		if (arg.type == "number") {
+			argErrorMsg += "\nThe argument must be a number that is "
+			if (arg.min && arg.max) {
+				argErrorMsg += `in between ${params.min} and ${params.max}`;
+			} else if (arg.min) {
+				argErrorMsg += `greater than or equal to ${params.min}`;
+			} else {
+				argErrorMsg += `less than or equal to ${params.max}`;
+			}
+		} else if (arg.type == "oneof") {
+			argErrorMsg = `\nThe argument must be one of these values: ${params.list.join(", ")}`;
+		}
+		return {error: true, message: argErrorMsg};
+	}
+	if (arg.type == "member" && toResolve.length > 1) {
+		let endMsg = "";
+		if (toResolve.length > 20) endMsg += `...and ${toResolve.length - 20} more`;
+		return {
+			error: "Multiple members found",
+			message: `These members were matched:\n` + "```" + toResolve.slice(0, 20).map(mem => mem.user.tag).join("\n") + "```" + endMsg
+		}
+	}
+	return toResolve;
+}
+
 module.exports = {
 	parseArgs: (bot, message, args, commandArgs) => {
 		if (!commandArgs) return args;
@@ -49,23 +84,20 @@ module.exports = {
 			}
 			if (!args[i]) {
 				if (!arg.optional) {
-					return {error: "userError", message: arg.errorMsg || `Missing argument ${i}`}
+					let neededType = arg.type == "oneof" ? "value" : arg.type;
+					return {error: `Missing argument ${i+1}`, message: `A valid ${neededType} must be provided.`}
 				} else {
 					parsedArgs.push(null);
 					continue;
 				}
 			}
-			let toResolve, params;
-			if (arg.type == "number") {
-				params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity}
-			} else if (arg.type == "oneof") {
-				params = {list: arg.allowedValues};
+			let parsedArg = checkArgs(bot, message, args[i], arg);
+			if (parsedArg.error) {
+				if (parsedArg.error == true) parsedArg.error = `Argument ${i+1} error`;
+				return parsedArg;
 			}
-			toResolve = resolver.resolve(bot, message, args[i], arg.type, params)
-			if (toResolve == null) {
-				return {error: "userError", message: `\`${args[i].slice(0, 1500)}\` is not a valid ${arg.type}`}
-			}
-			parsedArgs.push(toResolve);
+			args[i] = parsedArg;
+			parsedArgs.push(parsedArg);
 		}
 		return parsedArgs;
 	},
@@ -119,18 +151,20 @@ module.exports = {
 			}
 			let commandFlag = commandFlags[longNameIndex];
 			if (commandFlag.arg) {
-				let flagArg = commandFlag.arg;
-				let params;
-				if (flagArg.type == "number") {
-					params = {min: flagArg.min ? flagArg.min : -Infinity, max: flagArg.max ? flagArg.max : Infinity}
-				} else if (flagArg.type == "oneof") {
-					params = {list: flagArg.allowedValues};
+				let flagArgToCheck = flags[i].args.join(" ");
+				if (flagArgToCheck.length == 0) {
+					let neededType = commandFlag.arg.type == "oneof" ? "value" : commandFlag.arg.type;
+					return {
+						error: `Missing flag argument at flag name ${commandFlag.name}`,
+						message: `A valid ${neededType} must be provided.`
+					}
 				}
-				let toResolve = resolver.resolve(bot, message, flags[i].args.join(" "), commandFlag.arg.type, params);
-				if (toResolve == null) {
-					return {error: "userError", message: `\`${flags[i].args.slice(0, 1500)}\` is not a valid ${arg.type}`};
+				let parsedFlagArg = checkArgs(bot, message, flagArgToCheck, commandFlag.arg);
+				if (parsedFlagArg.error) {
+					if (parsedFlagArg.error == true) parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`;
+					return parsedFlagArg;
 				}
-				flags[i].args = toResolve;
+				flags[i].args = parsedFlagArg;
 			}
 			parsedFlags.push(flags[i]);
 		}

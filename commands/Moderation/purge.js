@@ -83,7 +83,7 @@ class PurgeCommand extends Command {
 		if (errorStatus) return;
 		message.channel.bulkDelete(toDelete, true)
 		.then(messages => {
-			message.channel.send(`Deleted ${messages.size - 1} messages from the channel!`).then(m => m.delete(7500))
+			message.channel.send(`🗑 Deleted ${messages.size - 1} messages from the channel!`).then(m => m.delete(7500))
 		})
 		.catch(err => message.channel.send("An error has occurred while trying to purge the messages: `" + err + "`"))
 	}

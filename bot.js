@@ -1,4 +1,5 @@
 const {Client, Collection, WebhookClient} = require("discord.js");
+const {capitalize} = require("./modules/functions.js");
 const config = require("./config.json");
 const fs = require("fs");
 
@@ -113,7 +114,7 @@ class KFSDiscordBot extends Client {
 						if (err2) return;
 						let cmdFiles = files2.filter(f => f.split(".").pop() == "js");
 						if (cmdFiles.length != 0) {
-							let category = subdir.charAt(0).toUpperCase() + subdir.slice(1).toLowerCase();
+							let category = capitalize(subdir);
 							this.categories.push(category);
 							for (const cmd of cmdFiles) {
 								let CommandClass = require(`./commands/${subdir}/${cmd}`);

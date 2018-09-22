@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../../structures/command.js");
-const functions = require("../../modules/functions.js");
+const {getDuration} = require("../../modules/functions.js");
 
 class ServerInfoCommand extends Command {
 	constructor() {
@@ -50,7 +50,7 @@ class ServerInfoCommand extends Command {
 		.setFooter(`ID: ${guild.id} | Server data as of`)
 		.setThumbnail(guild.iconURL)
 		.setTimestamp(message.createdAt)
-		.addField("Created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
+		.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
 		.addField("Owner", `${guild.owner.user.tag} \`(ID ${guild.owner.id})\``)
 		.addField("Region", guild.region, true)
 		.addField("Verification", guildVerif, true)

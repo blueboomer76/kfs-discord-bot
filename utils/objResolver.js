@@ -22,8 +22,7 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			if (command) {return command} else {return null}
 			break;
 		case "member":
-			let member;
-			let memberRegex = /<@!?\d{17,19}>/;
+			let member, memberRegex = /<@!?\d{17,19}>/, list;
 			let guildMembers = message.guild.members;
 			if (memberRegex.test(obj)) {
 				let memberRegex2 = /\d+/;
@@ -31,13 +30,16 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			} else {
 				member = guildMembers.get(obj);
 			}
-			if (!member) {
-				member = guildMembers.find(mem => mem.user.tag.toLowerCase().includes(lowerObj));
-				if (!member) member = guildMembers.find(mem => mem.user.username.toLowerCase().includes(lowerObj));
-				if (!member) member = guildMembers.find(mem => mem.displayName.toLowerCase().includes(lowerObj));
-				if (!member) return null;
+			if (member) {
+				return [member];
+			} else {
+				list = guildMembers.array().filter(mem => {
+					return mem.user.tag.toLowerCase().includes(lowerObj) ||
+					mem.user.username.toLowerCase().includes(lowerObj) ||
+					mem.displayName.toLowerCase().includes(lowerObj)
+				});
 			}
-			return member;
+			if (list.length > 0) {return list} else {return null}
 			break;
 		case "number":
 			let num = Math.floor(obj);

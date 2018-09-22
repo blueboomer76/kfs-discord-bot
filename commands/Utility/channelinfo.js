@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../../structures/command.js");
-const functions = require("../../modules/functions.js");
+const {capitalize, getDuration} = require("../../modules/functions.js");
 
 class ChannelInfoCommand extends Command {
 	constructor() {
@@ -35,19 +35,19 @@ class ChannelInfoCommand extends Command {
 		.setTitle(`Channel Info - ${channel.name}`)
 		.setColor(Math.floor(Math.random() * 16777216))
 		.setFooter(`ID: ${channel.id}`)
-		.addField("Channel created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
-		.addField("Channel type", channel.type)
-		.addField("Has permission overwrites", channel.permissionOverwrites.size == 0 ? "No" : "Yes")
+		.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+		.addField("Type", capitalize(channel.type), true)
+		.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
+		.addField("Has permission overwrites", channel.permissionOverwrites.size == 0 ? "No" : "Yes", true)
+		
 		if (channel.type == "text") {
 			channelEmbed.addField("Topic", channel.topic ? channel.topic : "No topic set");
+		} else if (channel.type == "voice") {
+			channelEmbed.addField("User Limit", channel.userLimit == 0 ? "No limit" : channel.userLimit, true)
+			.addField("Bitrate", `${channel.bitrate} bits`, true)
 		}
 
 		message.channel.send(channelEmbed);
-
-		/*
-			Others found:
-			Can be accessed by everyone, disabled command(s) & features
-		*/
 	}
 }
 
