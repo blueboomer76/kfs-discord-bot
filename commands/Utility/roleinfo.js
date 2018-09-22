@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../../structures/command.js");
-const functions = require("../../modules/functions.js");
+const {getDuration} = require("../../modules/functions.js");
 
 class RoleInfoCommand extends Command {
 	constructor() {
@@ -34,15 +34,15 @@ class RoleInfoCommand extends Command {
 		.setTitle(`Role Info - ${role.name}`)
 		.setColor(role.color)
 		.setFooter(`ID: ${role.id}`)
-		.addField("Role created at", `${new Date(role.createdTimestamp).toUTCString()} (${functions.getDuration(createdDate)})`)
+		.addField("Role created at", `${new Date(role.createdTimestamp).toUTCString()} (${getDuration(createdDate)})`)
 		.addField("Color", role.hexColor)
 		.addField(`Members in Role [${role.members.size} total]`,
 		`${role.members.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
 		true)
-		.addField("Position from top", `${message.guild.roles.size - role.position + 1} / ${message.guild.roles.size}`)
-		.addField("Displays separately (hoisted)", role.hoist)
-		.addField("Mentionable", role.mentionable)
-		.addField("Managed", role.managed)
+		.addField("Position from top", `${message.guild.roles.size - role.position + 2} / ${message.guild.roles.size}`)
+		.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No")
+		.addField("Mentionable", role.mentionable ? "Yes" : "No")
+		.addField("Managed", role.managed ? "Yes" : "No")
 		);
 	}
 }

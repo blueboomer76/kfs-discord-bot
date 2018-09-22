@@ -1,6 +1,7 @@
 class Flag {
 	constructor(props) {
 		this.name = props.name;
+		this.desc = props.desc || "";
 		this.allowArray = props.allowArray || false;
 		if (props.arg) this.arg = new FlagArgument(props.arg);
 	}
@@ -8,7 +9,6 @@ class Flag {
 
 class FlagArgument {
 	constructor(props) {
-		this.desc = props.desc || "";
 		this.num = props.num || 1;
 		this.optional = props.optional || false;
 		this.type = props.type;

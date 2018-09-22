@@ -38,14 +38,15 @@ function paginateOnEdit(sentMessage, entries, options) {
 	let sentEmbed = sentMessage.embeds[0];
 	let embedToEdit = {
 		title: sentEmbed.title,
+		author: sentEmbed.author ? sentEmbed.author : undefined,
 		color: sentEmbed.color,
 		footer: {
 			text: `Page ${entryObj.page} / ${entryObj.maxPage}`
 		},
+		thumbnail: {},
 		fields: []
 	}
-	if (sentEmbed.author) {embedToEdit.author = sentEmbed.author}
-	if (sentEmbed.thumbnail) {embedToEdit.thumbnail = sentEmbed.author}
+	if (sentEmbed.thumbnail && sentEmbed.thumbnail.url) {embedToEdit.thumbnail.url = sentEmbed.thumbnail.url}
 	embedToEdit = setEmbed(embedToEdit, entryObj.entries, options.params);
 	sentMessage.edit("", {embed: embedToEdit})
 }

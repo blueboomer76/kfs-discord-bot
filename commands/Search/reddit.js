@@ -50,8 +50,15 @@ class RedditCommand extends Command {
 			let voteArray = $("[data-click-id='upvote'] + div").toArray().map(e => {return e.children[0].data});
 			
 			let titleElements = $("[data-click-id='body'] h2").toArray();
+			if (args[0] != "random") {
+				titleElements = titleElements.filter(e => {
+					return e.parent.attribs.href.toLowerCase().startsWith(`/r/${args[0].toLowerCase()}`)
+				});
+			}
 			let titleArray = titleElements.map(e => {return e.children[0].data});
 			let linkArray = titleElements.map(e => {return `https://reddit.com${e.parent.attribs.href}`});
+			
+			if (titleArray.length == 0) return message.channel.send("Either this reddit is invite-only or there were no posts found.")
 			
 			let displayed = [], entries = [[]];
 			for (let i = 0; i < titleArray.length; i++) {
@@ -61,8 +68,16 @@ class RedditCommand extends Command {
 			}
 			entries[0] = entries[0].slice($(".Post .icon-sticky").length)
 			
+			let embedTitle = "Reddit - ";
+			if (args[0] == "random") {
+				embedTitle += "Random subreddit!";
+			} else if (args[0]) {
+				embedTitle += `r/${args[0]}`;
+			} else {
+				embedTitle += "All subreddits"
+			}
 			paginator.paginate(message, {
-				title: args[0] ? `Reddit - r/${args[0]}` : "Reddit - all subreddits",
+				title: embedTitle,
 				thumbnail: {
 					url: "https://www.redditstatic.com/new-icon.png"
 				}

@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../../structures/command.js");
-const {getDuration} = require("../../modules/functions.js");
+const {capitalize, getDuration} = require("../../modules/functions.js");
 
 class ChannelInfoCommand extends Command {
 	constructor() {
@@ -31,24 +31,26 @@ class ChannelInfoCommand extends Command {
 	async run(bot, message, args, flags) {
 		let channel = args[0] ? args[0] : message.channel;
 		let createdDate = new Date(channel.createdTimestamp);
+		let channelPosition = channel.type == "category" ? channel.position : channel.calculatedPosition;
 		let channelEmbed = new Discord.RichEmbed()
 		.setTitle(`Channel Info - ${channel.name}`)
 		.setColor(Math.floor(Math.random() * 16777216))
 		.setFooter(`ID: ${channel.id}`)
-		.addField("Channel created at", `${createdDate.toUTCString()} (${getDuration(new Date(channel.createdTimestamp))})`)
-		.addField("Channel type", channel.type)
-		.addField("Has permission overwrites", channel.permissionOverwrites.size == 0 ? "No" : "Yes")
+		.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+		.addField("Type", capitalize(channel.type), true)
+		.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
+		.addField("Has permission overwrites", channel.permissionOverwrites.size == 0 ? "No" : "Yes", true)
 		
 		if (channel.type == "text") {
-			channelEmbed.addField("Topic", channel.topic.length == 0 ? "No topic set" : channel.topic)
-		};
+			channelEmbed.addField("Topic", channel.topic && channel.topic.length > 0 ? channel.topic : "No topic set")
+		} else if (channel.type == "voice") {
+			channelEmbed.addField("Limit", channel.userLimit == 0 ? "No limit" : channel.userLimit, true)
+			.addField("Bitrate", `${channel.bitrate} bits`, true)
+		}
 		
 		message.channel.send(channelEmbed);
 		
-		/*
-			Others found:
-			Can be accessed by everyone, disabled command(s) & features
-		*/
+		// Others found: Disabled command(s) & features
 	}
 }
 

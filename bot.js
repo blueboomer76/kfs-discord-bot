@@ -176,6 +176,7 @@ class KendraBot extends Client {
 				}
 				commandCurrentTotal += usageCache[i].uses;
 			}
+			stats.callTotal += stats2.callCurrentTotal;
 			stats.commandTotal += commandCurrentTotal;
 			fs.writeFile("modules/stats.json", JSON.stringify(stats), err => {if (err) throw err;});
 			stats2.messageSessionTotal += stats2.messageCurrentTotal;

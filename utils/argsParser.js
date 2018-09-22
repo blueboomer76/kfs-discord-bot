@@ -22,23 +22,24 @@ module.exports = {
 			}
 			if (!args[i]) {
 				if (!arg.optional) {
-					return {error: "userError", message: arg.errorMsg || `Missing argument ${i}`}
+					let neededType = arg.type == "oneof" ? "value" : arg.type;
+					return {error: `Missing argument ${i+1}`, message: `A valid ${neededType} must be provided.`}
 				} else {
 					parsedArgs.push(null);
 					continue;
 				}
 			};
-			let toResolve, params;
-			if (arg.type == "number") {
-				params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity}
-			} else if (arg.type == "oneof") {
-				params = {list: arg.allowedValues}
+			let parsedArg = checkArgs(bot, message, args[i], arg);
+			if (parsedArg.error) {
+				if (arg.type == "member") {
+					parsedArg.error = `Multiple members found`;
+				} else {
+					parsedArg.error = `Argument ${i+1} error`;
+				}
+				return parsedArg;
 			}
-			toResolve = resolver.resolve(bot, message, args[i], arg.type, params)
-			if (!toResolve) {
-				return {error: "userError", message: `\`${args[i]}\` is not a valid ${arg.type}`}
-			}
-			parsedArgs.push(toResolve);
+			args[i] = parsedArg;
+			parsedArgs.push(parsedArg);
 		}
 		return parsedArgs;
 	},
@@ -86,20 +87,13 @@ module.exports = {
 			let commandFlag = commandFlags[flagLongNames.indexOf(flags[i].name)];
 			if (commandFlag.arg) {
 				for (let j = 0; j < flags[i].args.length; j++) {
-					let flagArg = commandFlag.arg;
-					let params;
-					if (flagArg.type == "number") {
-						params = {min: flagArg.min ? flagArg.min : -Infinity, max: flagArg.max ? flagArg.max : Infinity}
-					} else if (flagArg.type == "oneof") {
-						params = {list: flagArg.allowedValues}
-					}
-					let toResolve = resolver.resolve(bot, message, flags[i].args[j], commandFlag.arg.type, params);
-					if (!toResolve) {
-						return {error: "userError", message: `\`${flags[i].args[j]}\` is not a valid ${arg.type}`, at: i}
-					}
-					flags[i].args[j] = toResolve;
+					let parsedFlagArg = checkArgs(bot, message, flags[i].args[j], commandFlag.arg);
+					if (parsedFlagArg.error) {
+						parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`
+						return parsedFlagArg;
+					};
+					flags[i].args[j] = parsedFlagArg;
 				}
-				
 			}
 			parsedFlags.push(flags[i]);
 		}
@@ -136,4 +130,42 @@ function parseArgQuotes(args, findAll) {
 		}
 	}
 	return args;
+}
+
+function checkArgs(bot, message, args, cmdArg) {
+	let arg = cmdArg, params;
+	if (arg.type == "number") {
+		params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity}
+	} else if (arg.type == "oneof") {
+		params = {list: arg.allowedValues}
+	}
+	let toResolve = resolver.resolve(bot, message, args, arg.type, params);
+	if (!toResolve) {
+		let argErrorMsg = `\`${args}\` is not a valid ${arg.type}\n`;
+		if (arg.type == "number") {
+			argErrorMsg += "The argument must be a number that is "
+			if (params.min && params.max) {
+				argErrorMsg += `in between ${params.min} and ${params.max}`
+			} else if (params.min) {
+				argErrorMsg += `greater than ${params.min}`
+			} else {
+				argErrorMsg += `less than ${params.min}`
+			}
+		} else if (arg.type == "oneof") {
+			argErrorMsg = `The argument must be one of these values: ${params.list.join(", ")}`
+		}
+		return {error: true, message: argErrorMsg};
+	}
+	if (arg.type == "member" && toResolve.length > 1) {
+		let endMsg = "";
+		if (toResolve.length > 20) {
+			endMsg += `...and ${toResolve.length - 20} more`
+		}
+		return {
+			error: true,
+			message: `These members were matched:\n` +
+			"```" + toResolve.slice(0,20).map(mem => mem.user.tag).join("\n") + "```" + endMsg
+		}
+	}
+	return toResolve;
 }

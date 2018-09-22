@@ -68,16 +68,32 @@ module.exports = async (bot, message) => {
 				}
 				args = argParser.parseArgs(bot, message, args, runCommand.args);
 				if (flags.error) {
-					return message.channel.send(flags.message);
+					return message.channel.send(`⚠ **${flags.error}**:\n${flags.message}`);
 				} else if (args.error) {
-					return message.channel.send(args.message);
+					return message.channel.send(`⚠ **${args.error}**:\n${args.message}`);
 				}
-				runCommand.run(bot, message, args, flags)
-				.catch(err => {
+				try {
+					runCommand.run(bot, message, args, flags)
+				} catch(err) {
 					message.channel.send("🤷 An error occurred while trying to run this command because: ```javascript" + "\n" + err.stack + "```Come to the official server to discuss this bug.")
-				});
+				};
 				if (runCommand.startTyping) message.channel.stopTyping();
 				if (cdInfo.time != 0) {cdChecker.addCooldown(bot, message, runCommand.name)};
+				/*
+				This is the code if owners are to be ignored.
+				
+				if (bot.ownerIds.includes(message.author.id)) {
+					let commandUsage = bot.cache.stats.commandUsage.find(u => u.command == runCommand.name);
+					if (commandUsage) {
+						commandUsage.uses++;
+					} else {
+						bot.cache.stats.commandUsage.push({
+							command: runCommand.name,
+							uses: 1
+						})
+					};
+				}
+				*/
 				let commandUsage = bot.cache.stats.commandUsage.find(u => u.command == runCommand.name);
 				if (commandUsage) {
 					commandUsage.uses++;
@@ -88,6 +104,7 @@ module.exports = async (bot, message) => {
 					})
 				};
 			} else {
+				if (cdCheck == false) return;
 				let cdMessages = [
 					"You're calling me fast enough that I'm getting dizzy!",
 					"Watch out, seems like we might get a speeding ticket at this rate!",

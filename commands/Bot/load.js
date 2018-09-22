@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../../structures/command.js");
+const {capitalize} = require("../../modules/functions.js");
 
 class LoadCommand extends Command {
 	constructor() {
@@ -32,7 +33,7 @@ class LoadCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let category = args[0];
+		let category = capitalize(args[0]);
 		let commandName = args[1];
 		try {
 			let CommandClass = require(`../${category}/${commandName}.js`);

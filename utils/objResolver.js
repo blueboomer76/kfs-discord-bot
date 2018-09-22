@@ -27,8 +27,7 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			// Coming soon
 			break;
 		case "member":
-			let member;
-			let memberRegex = /<@!?\d+>/;
+			let member, memberRegex = /<@!?\d+>/, list;
 			let guildMembers = message.guild.members;
 			if (memberRegex.test(obj)) {
 				let memberRegex2 = /\d+/;
@@ -36,13 +35,20 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			} else {
 				member = guildMembers.get(obj);
 			}
-			if (!member) {
-				let search = guildMembers.find(mem => mem.user.tag.toLowerCase().includes(obj.toLowerCase()));
-				if (!search) search = guildMembers.find(mem => mem.user.username.toLowerCase().includes(obj.toLowerCase()));
-				if (!search) search = guildMembers.find(mem => mem.displayName.toLowerCase().includes(obj.toLowerCase()));
-				if (!search) {return null;} else {member = search;}
+			if (member) {
+				return member;
+			} else {
+				list = guildMembers.array().filter(mem => {
+					return mem.user.tag.toLowerCase().includes(obj.toLowerCase()) ||
+					mem.user.username.toLowerCase().includes(obj.toLowerCase()) ||
+					mem.displayName.toLowerCase().includes(obj.toLowerCase())
+				});
 			}
-			return member;
+			if (list.length > 0) {
+				if (list.length == 1) {return list[0]} else {return list}
+			} else {
+				return null
+			}; 
 			break;
 		case "number":
 			if (!isNaN(obj) && obj >= params.min && obj <= params.max) {return Math.floor(obj)} else {return null}

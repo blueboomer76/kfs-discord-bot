@@ -1,10 +1,12 @@
 module.exports = {
 	check: (bot, message, command) => {
-		let checkIndex = findCooldown(bot, getCdByType(bot, message, command), command);
-		if (checkIndex == -1) {
+		let checkedCd = findCooldown(bot, getCdByType(bot, message, command), command);
+		if (!checkedCd) {
 			return true;
+		} else if (checkedCd.notified == true) {
+			return false;
 		} else {
-			let cdDif = bot.cache.recentCommands[checkIndex].resets - Number(new Date());
+			let cdDif = checkedCd.resets - Number(new Date());
 			return (cdDif / 1000).toFixed(1);
 		}
 	},
@@ -14,7 +16,8 @@ module.exports = {
 		bot.cache.recentCommands.push({
 			id: cdId,
 			command: command,
-			resets: Number(new Date()) + cdTime
+			resets: Number(new Date()) + cdTime,
+			notified: false
 		})
 		setTimeout(removeCooldown, cdTime, bot, cdId, command);
 	}
@@ -34,8 +37,8 @@ function getCdByType(bot, message, command) {
 }
 
 function findCooldown(bot, id, command) {
-	let cdIndex = bot.cache.recentCommands.findIndex(cd => cd.id == id && cd.command == command);
-	return cdIndex;
+	let cd = bot.cache.recentCommands.find(cd => cd.id == id && cd.command == command);
+	return cd;
 }
 
 function removeCooldown(bot, id, command) {

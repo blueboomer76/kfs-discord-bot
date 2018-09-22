@@ -33,13 +33,18 @@ class HelpCommand extends Command {
 			let helpEmbed = new Discord.RichEmbed()
 			.setTitle("All the commands for this bot")
 			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`Total commands: ${bot.commands.size}`);
+			.setFooter(`Use k,help <command> to get help for a command | Total commands: ${bot.commands.size}`);
+			let cmds = bot.commands;
+			if (!bot.ownerIds.includes(message.author.id) && !bot.botAdminIds.includes(message.author.id)) {
+				cmds = cmds.filter(cmd => !cmd.hidden);
+			}
 			for (let i = 0; i < bot.categories.length; i++) {
-				let cmdsInCat = bot.commands.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
+				let cmdsInCat = cmds.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
 				helpEmbed.addField(bot.categories[i], Array.from(cmdsInCat).join(", "));
 			}
 			message.channel.send(helpEmbed);
 		} else {
+			let commandFlags = command.flags.map(f => `\`--${f.name}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`);
 			let commandPerms = command.perms;
 			let permReq = {
 				bot: commandPerms.bot.length > 0 ? commandPerms.bot.join(", ") : "None",
@@ -47,13 +52,13 @@ class HelpCommand extends Command {
 				level: bot.cache.permLevels[commandPerms.level].name
 			};
 			message.channel.send(new Discord.RichEmbed()
-			.setTitle("Help - " + command.name)
+			.setTitle(`Help - ${command.name}`)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.addField("Category", command.category)
 			.addField("Description", command.description)
 			.addField("Usage", command.usage)
 			.addField("Aliases", command.aliases.length > 0 ? command.aliases.join(", ") : "None")
-			.addField("Guild Only", command.guildOnly ? "Yes" : "No")
+			.addField("Flags", command.flags.length > 0 ? commandFlags.join("\n") : "None")
 			.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user} (with level ${permReq.level})`)
 			.addField("Cooldown", `${command.cooldown.time / 1000} seconds (per ${command.cooldown.type})`)
 			);
