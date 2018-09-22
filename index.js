@@ -1,6 +1,10 @@
 const KFSDiscordBot = require("./bot.js");
 const {token} = require("./config.json");
 
+if (parseFloat(process.versions.node) < 8) {
+	throw new Error("Incompatible Node version (Node version 8 or higher needed)");
+}
+
 let storedStats;
 try {
 	storedStats = require("./modules/stats.json");
@@ -43,6 +47,7 @@ bot.loadEvents();
 process.on("uncaughtException", err => {
 	console.error(`[Exception] ${new Date()}:`)
 	console.error(err.stack);
+	if (!bot.user) process.exit(1);
 });
 
 process.on("unhandledRejection", (reason, promise) => {

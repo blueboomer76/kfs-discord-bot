@@ -59,7 +59,9 @@ module.exports = async (bot, message) => {
 			let cdInfo = runCommand.cooldown;
 			if (cdInfo.time != 0) {
 				let cdCheck = cdChecker.check(bot, message, runCommand.name);
-				if (cdCheck != true) {
+				if (cdCheck == false) {
+					return;
+				} else if (cdCheck != true) {
 					let cdMessages = [
 						"You're calling me fast enough that I'm getting dizzy!",
 						"You have to wait before using the command again...",
@@ -86,15 +88,15 @@ module.exports = async (bot, message) => {
 			let flags = [];
 			if (runCommand.flags.length > 0) {
 				let parsedFlags = argParser.parseFlags(bot, message, args, runCommand.flags);
-				if (flags.error) {
-					return message.channel.send(flags.message);
+				if (parsedFlags.error) {
+					return message.channel.send(`⚠ **${parsedFlags.error}**:\n${parsedFlags.message}`);
 				}
 				flags = parsedFlags.flags;
 				args = parsedFlags.newArgs;
 			}
 			args = argParser.parseArgs(bot, message, args, runCommand.args);
 			if (args.error) {
-				return message.channel.send(args.message);
+				return message.channel.send(`⚠ **${args.error}**:\n${args.message}`);
 			}
 			runCommand.run(bot, message, args, flags).catch(err => {
 				let e = err;
@@ -102,6 +104,23 @@ module.exports = async (bot, message) => {
 				if (e && e.length > 1500) e = e.slice(0, 1500) + "...";
 				message.channel.send("An error has occurred while running the command:```javascript" + "\n" + e + "```");
 			});
+			/*
+				This is the code if owners are to be ignored.
+				
+				if (!bot.ownerIDs.includes(message.author.id)) {
+					let commandUsage = bot.cache.stats.commandUsages.find(u => u.command == runCommand.name);
+					if (commandUsage) {
+						commandUsage.uses++;
+					} else {
+						bot.cache.stats.commandUsages.push({
+							command: runCommand.name,
+							uses: 1
+						})
+					}
+				} else {
+					bot.cache.stats.commandCurrentTotal++;
+				}
+			*/
 			let commandUsage = bot.cache.stats.commandUsages.find(u => u.command == runCommand.name);
 			if (commandUsage) {
 				commandUsage.uses++;

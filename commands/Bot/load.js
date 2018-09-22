@@ -1,4 +1,5 @@
 const Command = require("../../structures/command.js");
+const {capitalize} = require("../../modules/functions.js");
 
 class LoadCommand extends Command {
 	constructor() {
@@ -31,7 +32,7 @@ class LoadCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let category = args[0].charAt(0).toUpperCase() + args[0].slice(1).toLowerCase();
+		let category = capitalize(args[0]);
 		let commandName = args[1].toLowerCase();
 		try {
 			delete require.cache[require.resolve(`../${category}/${commandName}.js`)];

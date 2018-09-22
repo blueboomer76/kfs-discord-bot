@@ -28,8 +28,12 @@ class ReloadFileCommand extends Command {
 	
 	async run(bot, message, args, flags) {
 		try {
-			delete require.cache[require.resolve(`../../${args[0]}`)];
-			message.channel.send(`The file ${args[0]} was reloaded and its require.cache has been cleared.`);
+			let res = delete require.cache[require.resolve(`../../${args[0]}`)];
+			if (res) {
+				message.channel.send(`The file ${args[0]} was reloaded and its require.cache has been cleared.`);
+			} else {
+				message.channel.send("Failed to reload that file.");
+			}
 		} catch (err) {
 			message.channel.send(`Couldn't reload file: \`${err}\``);
 		}
