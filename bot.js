@@ -97,7 +97,8 @@ class KFSDiscordBot extends Client {
 				messageSessionTotal: 0,
 				commandUsages: [],
 				lastCheck: Number(new Date())
-			}
+			},
+			statusNum: 0
 		};
 		if (config.ideaWebhookID && config.ideaWebhookToken) {
 			this.ideaWebhook = new WebhookClient(config.ideaWebhookID, config.ideaWebhookToken);
