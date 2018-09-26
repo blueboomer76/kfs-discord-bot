@@ -32,7 +32,7 @@ function setEmbed(genEmbed, displayed, params) {
 }
 
 function paginateOnEdit(sentMessage, entries, options) {
-	if (!sentMessage) return;
+	if (sentMessage.deleted) return;
 	let entryObj = setEntries(entries, options);
 	
 	let sentEmbed = sentMessage.embeds[0];
@@ -103,7 +103,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 					pgCollector.stop();
 				}
 			})
-			pgCollector.on("end", () => {newMessage.clearReactions();})
+			pgCollector.on("end", () => {if (!newMessage.deleted) newMessage.clearReactions();})
 			setTimeout(checkReaction, 30000, pgCollector, options.reactTimeLimit ? options.reactTimeLimit : 30000);
 		}
 	})

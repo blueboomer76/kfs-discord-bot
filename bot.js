@@ -93,6 +93,7 @@ class KendraBot extends Client {
 				commandSessionTotal: 0,
 				commandUsage: []
 			},
+			statusNum: 0,
 			usage: []
 		};
 		if (config.ideaWebhook) {
@@ -108,9 +109,9 @@ class KendraBot extends Client {
 				for (const subdir of subdirs) {
 					fs.readdir(`./commands/${subdir}`, (err, files) => {
 						if (err) throw err;
-						this.categories.push(subdir);
 						let cmdFiles = files.filter(f => f.split(".").pop() == "js");
 						if (cmdFiles.length != 0) {
+							this.categories.push(subdir);
 							for (const cmd of cmdFiles) {
 								let CommandClass = require(`./commands/${subdir}/${cmd}`);
 								let command = new CommandClass();

@@ -87,6 +87,13 @@ module.exports = {
 			let commandFlag = commandFlags[flagLongNames.indexOf(flags[i].name)];
 			if (commandFlag.arg) {
 				for (let j = 0; j < flags[i].args.length; j++) {
+					if (!flags[i].args[j]) {
+						let neededType = commandFlag.arg.type == "oneof" ? "value" : commandFlag.arg.type;
+						return {
+							error: `Missing flag argument at flag name ${commandFlag.name}`,
+							message: `A valid ${neededType} must be provided.`
+						}
+					}
 					let parsedFlagArg = checkArgs(bot, message, flags[i].args[j], commandFlag.arg);
 					if (parsedFlagArg.error) {
 						parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`

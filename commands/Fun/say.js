@@ -28,9 +28,8 @@ class SayCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		message.delete();
-		let embedFlag = flags.find(f => f.name == "embed")
-		if (embedFlag) {
+		await message.channel.bulkDelete([message.id]);
+		if (flags.find(f => f.name == "embed")) {
 			message.channel.send(new Discord.RichEmbed()
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setDescription(args[0])

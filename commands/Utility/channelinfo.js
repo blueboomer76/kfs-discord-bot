@@ -39,7 +39,7 @@ class ChannelInfoCommand extends Command {
 		.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
 		.addField("Type", capitalize(channel.type), true)
 		.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
-		.addField("Has permission overwrites", channel.permissionOverwrites.size == 0 ? "No" : "Yes", true)
+		.addField("Accessible to everyone", channel.permissionsFor(message.guild.id).has("READ_MESSAGES") ? "Yes" : "No", true)
 		
 		if (channel.type == "text") {
 			channelEmbed.addField("Topic", channel.topic && channel.topic.length > 0 ? channel.topic : "No topic set")

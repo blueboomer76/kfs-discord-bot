@@ -10,7 +10,6 @@ class Command {
 		this.args = [];
 		this.cooldown = props.cooldown || {time: 15000, type: "user"}
 		this.flags = [];
-		this.guildOnly = props.guildOnly || false; // depreciated; will be replaced by allowDMs
 		this.hidden = props.hidden || false;
 		this.perms = props.perms || {bot: [], user: [], level: 0};
 		this.startTyping = props.startTyping || false;

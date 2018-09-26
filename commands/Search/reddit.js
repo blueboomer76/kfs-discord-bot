@@ -35,38 +35,39 @@ class RedditCommand extends Command {
 		if (args[0]) url += `/r/${args[0].replace(/\/?(R|r)\//, "")}`;
 		request.get(url, (err, res) => {
 			if (res.statusCode == 404) return message.channel.send("That subreddit doesn't exist!")
-			if (err) {return message.channel.send(`Failed to retrieve from Reddit. (status code ${res.statusCode})`)}
+			if (err || res.statusCode >= 400) {return message.channel.send(`Failed to retrieve from Reddit. (status code ${res.statusCode})`)}
 			const $ = cheerio.load(res.body);
+			
+			let postElements = $(".Post:not(:has(span:contains('promoted'), .icon-sticky))")
 			
 			let subredditArray;
 			if (!args[0]) {
-				subredditArray = $("[data-click-id]").toArray().filter(e => {
-					return e.children[0].data && e.children[0].data.startsWith("r/")
-				}).map(e => {
-					return e.children[0].data;
-				})
+				subredditArray = postElements.map((i, e) => {
+					let subreddit = $(e).find("[data-click-id='subreddit']").attr("href");
+					return subreddit.slice(1, subreddit.length - 1);
+				}).toArray()
 			}
 			
-			let voteArray = $("[data-click-id='upvote'] + div").toArray().map(e => {return e.children[0].data});
-			
-			let titleElements = $("[data-click-id='body'] h2").toArray();
-			if (args[0] != "random") {
-				titleElements = titleElements.filter(e => {
-					return e.parent.attribs.href.toLowerCase().startsWith(`/r/${args[0].toLowerCase()}`)
-				});
-			}
-			let titleArray = titleElements.map(e => {return e.children[0].data});
-			let linkArray = titleElements.map(e => {return `https://reddit.com${e.parent.attribs.href}`});
-			
-			if (titleArray.length == 0) return message.channel.send("Either this reddit is invite-only or there were no posts found.")
-			
-			let displayed = [], entries = [[]];
+			let titleArray = postElements.map((i, e) => {
+				let dispTitle = $(e).find("h2").text();
+				return dispTitle.length > 250 ? `dispTitle.slice(0,250)...` : dispTitle;
+			}).toArray();
+			let linkArray = postElements.map((i, e) => {
+				return $(e).find("a[data-click-id='body']").attr("href")
+			}).toArray();
+			let voteArray = postElements.map((i, e) => {
+				return $(e).find("[data-click-id='upvote']").next().html()
+			}).toArray();
+			let commentArray = postElements.map((i, e) => {
+				return $(e).find("[data-click-id='comments'] span").text().replace(/comments?/, "")
+			}).toArray();
+
+			let entries = [[]];
 			for (let i = 0; i < titleArray.length; i++) {
-				let toDisplay = `[${titleArray[i]}](${linkArray[i]})`;
+				let toDisplay = `[${titleArray[i]}](https://reddit.com${linkArray[i]})`;
 				if (!args[0]) {toDisplay += ` (${subredditArray[i]})`}
-				entries[0].push(toDisplay + `\n - Votes: ${voteArray[2*i]}`);
+				entries[0].push(toDisplay + `\n - 👍 ${voteArray[i]} | 💬 ${commentArray[i]}`);
 			}
-			entries[0] = entries[0].slice($(".Post .icon-sticky").length)
 			
 			let embedTitle = "Reddit - ";
 			if (args[0] == "random") {

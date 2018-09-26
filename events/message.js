@@ -17,8 +17,7 @@ module.exports = async (bot, message) => {
 		let command = args.shift().toLowerCase();
 		let runCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
 		if (runCommand) {
-			if (!message.guild && (runCommand.guildOnly == true || runCommand.allowDMs == false)) return message.channel.send("This command cannot be used in Direct Messages.")
-			// runCommand.guildOnly is depreciated and will be replaced by runCommand.allowDMs
+			if (!message.guild && !runCommand.allowDMs) return message.channel.send("This command cannot be used in Direct Messages.")
 			let requiredPerms = runCommand.perms;
 			if (requiredPerms && message.channel.type != "dm" && (requiredPerms.bot.length > 0 || requiredPerms.user.length > 0 || requiredPerms.level > 0)) {
 				let allowed = {state: true, faultMsg: ""};
@@ -60,29 +59,28 @@ module.exports = async (bot, message) => {
 			let cdInfo = runCommand.cooldown;
 			if (cdCheck == true) {
 				if (runCommand.startTyping) message.channel.startTyping();
+				setTimeout(() => message.channel.stopTyping(), 10000)
 				let flags = [];
 				if (runCommand.flags) {
 					let parsedFlags = argParser.parseFlags(bot, message, args, runCommand.flags);
+					if (parsedFlags.error) {
+						return message.channel.send(`⚠ **${parsedFlags.error}**:\n${parsedFlags.message}\n*The correct usage is:* \`${runCommand.usage}\``);
+					}
 					flags = parsedFlags.flags;
 					args = parsedFlags.newArgs;
 				}
 				args = argParser.parseArgs(bot, message, args, runCommand.args);
-				if (flags.error) {
-					return message.channel.send(`⚠ **${flags.error}**:\n${flags.message}`);
-				} else if (args.error) {
-					return message.channel.send(`⚠ **${args.error}**:\n${args.message}`);
+				if (args.error) {
+					return message.channel.send(`⚠ **${args.error}**:\n${args.message}\n*The correct usage is:* \`${runCommand.usage}\``);
 				}
-				try {
-					runCommand.run(bot, message, args, flags)
-				} catch(err) {
-					message.channel.send("🤷 An error occurred while trying to run this command because: ```javascript" + "\n" + err.stack + "```Come to the official server to discuss this bug.")
-				};
+				runCommand.run(bot, message, args, flags)
+				.catch(err => message.channel.send("🤷 An error occurred while trying to run this command because: ```javascript" + "\n" + err.stack + "```Come to the official server to discuss this bug."))
 				if (runCommand.startTyping) message.channel.stopTyping();
 				if (cdInfo.time != 0) {cdChecker.addCooldown(bot, message, runCommand.name)};
 				/*
 				This is the code if owners are to be ignored.
 				
-				if (bot.ownerIds.includes(message.author.id)) {
+				if (!bot.ownerIds.includes(message.author.id)) {
 					let commandUsage = bot.cache.stats.commandUsage.find(u => u.command == runCommand.name);
 					if (commandUsage) {
 						commandUsage.uses++;

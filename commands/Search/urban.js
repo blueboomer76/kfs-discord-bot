@@ -43,16 +43,11 @@ class UrbanCommand extends Command {
 			url: `http://api.urbandictionary.com/v0/define`,
 			qs: {term: args.join(" ")}
 		}, (err, res) => {
-			if (err) return message.channel.send(`Failed to retrieve from the Urban Dictionary. (status code ${response.statusCode})`)
+			if (err) return message.channel.send(`Failed to retrieve from the Urban Dictionary. (status code ${res.statusCode})`)
 			let defs = JSON.parse(res.body);
 			if (defs.list.length > 0) {
 				let entries = [
-					defs.list.map(def => {
-						return {
-							name: `Urban Dictionary - ${def.word}`,
-							icon_url: "https://i.imgur.com/nwERwQE.jpg"
-						}
-					}),
+					defs.list.map(def => `Urban Dictionary - ${def.word}`),
 					defs.list.map(def => {
 						return [
 							{
@@ -76,12 +71,16 @@ class UrbanCommand extends Command {
 						]
 					})
 				];
-				let pageFlag = flags.find(f => f.name == "page"), startPage;
-				paginator.paginate(message, {}, entries, {
+				let pageFlag = flags.find(f => f.name == "page");
+				paginator.paginate(message, {
+					thumbnail: {
+						url: "https://i.imgur.com/nwERwQE.jpg"
+					}
+				}, entries, {
 					limit: 1,
 					numbered: false,
 					page: pageFlag ? pageFlag.args[0] : 1,
-					params: ["author", "fields"]
+					params: ["title", "fields"]
 				});
 			} else {
 				message.channel.send("No definition found for that term.")
