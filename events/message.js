@@ -87,14 +87,14 @@ module.exports = async (bot, message) => {
 			if (runCommand.flags.length > 0) {
 				let parsedFlags = argParser.parseFlags(bot, message, args, runCommand.flags);
 				if (parsedFlags.error) {
-					return message.channel.send(`⚠ **${parsedFlags.error}**:\n${parsedFlags.message}`);
+					return message.channel.send(`⚠ **${parsedFlags.error}**:\n${parsedFlags.message}\n*The correct usage is:* \`${runCommand.usage}\``);
 				}
 				flags = parsedFlags.flags;
 				args = parsedFlags.newArgs;
 			}
 			args = argParser.parseArgs(bot, message, args, runCommand.args);
 			if (args.error) {
-				return message.channel.send(`⚠ **${args.error}**:\n${args.message}`);
+				return message.channel.send(`⚠ **${args.error}**:\n${args.message}\n*The correct usage is:* \`${runCommand.usage}\``);
 			}
 			runCommand.run(bot, message, args, flags).catch(err => {
 				let e = err;

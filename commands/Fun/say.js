@@ -29,8 +29,7 @@ class SayCommand extends Command {
 	
 	async run(bot, message, args, flags) {
 		message.delete();
-		let embedFlag = flags.find(f => f.name == "embed")
-		if (embedFlag) {
+		if (flags.find(f => f.name == "embed")) {
 			if (!message.guild.member(bot.user).hasPermission("EMBED_LINKS")) return message.channel.send("To post an embed, the bot requires the `EMBED_LINKS` permission.")
 			message.channel.send(new Discord.RichEmbed()
 			.setColor(Math.floor(Math.random() * 16777216))
