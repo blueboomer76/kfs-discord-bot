@@ -29,7 +29,7 @@ class UnloadCommand extends Command {
 	async run(bot, message, args, flags) {
 		let command = args[0];
 		let commandName = command.name;
-		if (command.category == "Bot" || commandName == "eval") return message.channel.send("That command is not unloadable.");
+		if (command.category == "Core" || commandName == "eval") return message.channel.send("That command is not unloadable.");
 		delete require.cache[require.resolve(`../${command.category}/${commandName}.js`)];
 		bot.commands.delete(commandName);
 		message.channel.send(`The command ${commandName} was unloaded.`);
