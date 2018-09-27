@@ -30,7 +30,7 @@ class BotInfoCommand extends Command {
 		.addField("Library", `Discord.js v${packageInfo.dependencies["discord.js"].slice(1)}`, true)
 		.addField("Bot Version", `${packageInfo.version}`, true)
 		.addField("Stats", `${bot.cache.guildCount} Servers\n${bot.cache.userCount} Users`, true)
-		.addField("Bot Invite", "[Go!](https://discordapp.com/api/oauth2/authorize?client_id=429807759144386572&permissions=403041398&scope=bot)", true)
+		.addField("Bot Invite", `[Go!](https://discordapp.com/api/oauth2/authorize?client_id=${bot.user.id}&permissions=403041398&scope=bot)`, true)
 		.addField("Kendra's server", "[Go!](https://discord.gg/yB8TvWU)", true)
 		.addField("Upvote this bot", "[Go!](https://discordbots.org/bots/429807759144386572)", true)
 		);
