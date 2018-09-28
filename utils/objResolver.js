@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 
 module.exports.resolve = (bot, message, obj, type, params) => {
+	let list;
 	switch (type) {
 		case "boolean":
 			let truthy = ["yes", "y", "true", "enable"];
@@ -12,9 +13,21 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			} else {return null}
 			break;
 		case "channel":
-			let channel = message.mentions.channels.first() || message.guild.channels.get(obj);
-			if (!channel) channel = message.guild.channels.find(chnl => chnl.name.toLowerCase().includes(obj.toLowerCase()));
-			if (channel) {return channel} else {return null}
+			let channel, channelRegex = /<#\d+>/;
+			let guildChannels = message.guild.channels;
+			if (channelRegex.test(obj)) {
+				return [guildChannels.get(obj.match(/\d+/)[0])];
+			} else {
+				channel = guildChannels.get(obj);
+			}
+			if (channel) {
+				return [channel];
+			} else {
+				list = guildChannels.array().filter(chnl => {
+					return chnl.name.toLowerCase().includes(obj.toLowerCase())
+				});
+			}
+			if (list.length > 0) {return list} else {return null}; 
 			break;
 		case "command":
 			let command = bot.commands.get(obj) || bot.commands.get(bot.aliases.get(obj))
@@ -27,16 +40,15 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			// Coming soon
 			break;
 		case "member":
-			let member, memberRegex = /<@!?\d+>/, list;
+			let member, memberRegex = /<@!?\d+>/;
 			let guildMembers = message.guild.members;
 			if (memberRegex.test(obj)) {
-				let memberRegex2 = /\d+/;
-				member = guildMembers.get(obj.match(memberRegex2)[0]);
+				return [guildMembers.get(obj.match(/\d+/)[0])];
 			} else {
 				member = guildMembers.get(obj);
 			}
 			if (member) {
-				return member;
+				return [member];
 			} else {
 				list = guildMembers.array().filter(mem => {
 					return mem.user.tag.toLowerCase().includes(obj.toLowerCase()) ||
@@ -44,11 +56,7 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 					mem.displayName.toLowerCase().includes(obj.toLowerCase())
 				});
 			}
-			if (list.length > 0) {
-				if (list.length == 1) {return list[0]} else {return list}
-			} else {
-				return null
-			}; 
+			if (list.length > 0) {return list} else {return null}; 
 			break;
 		case "number":
 			if (!isNaN(obj) && obj >= params.min && obj <= params.max) {return Math.floor(obj)} else {return null}
@@ -60,9 +68,21 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			// Coming soon
 			break;
 		case "role":
-			let role = message.mentions.roles.first() || message.guild.roles.get(obj);
-			if (!role) role = message.guild.roles.find(role => role.name.toLowerCase().includes(obj.toLowerCase()));
-			if (role) {return role} else {return null}
+			let role, roleRegex = /<@&\d+>/;
+			let guildRoles = message.guild.roles;
+			if (roleRegex.test(obj)) {
+				return [guildRoles.get(obj.match(/\d+/)[0])];
+			} else {
+				role = guildRoles.get(obj);
+			}
+			if (role) {
+				return [role];
+			} else {
+				list = guildRoles.array().filter(role => {
+					return role.name.toLowerCase().includes(obj.toLowerCase())
+				});
+			}
+			if (list.length > 0) {return list} else {return null}; 
 			break;
 		case "string":
 			return obj.toString();

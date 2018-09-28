@@ -31,11 +31,7 @@ module.exports = {
 			};
 			let parsedArg = checkArgs(bot, message, args[i], arg);
 			if (parsedArg.error) {
-				if (arg.type == "member") {
-					parsedArg.error = `Multiple members found`;
-				} else {
-					parsedArg.error = `Argument ${i+1} error`;
-				}
+				if (parsedArg.error == true) parsedArg.error = `Argument ${i+1} error`;
 				return parsedArg;
 			}
 			args[i] = parsedArg;
@@ -163,15 +159,23 @@ function checkArgs(bot, message, args, cmdArg) {
 		}
 		return {error: true, message: argErrorMsg};
 	}
-	if (arg.type == "member" && toResolve.length > 1) {
-		let endMsg = "";
-		if (toResolve.length > 20) {
-			endMsg += `...and ${toResolve.length - 20} more`
-		}
-		return {
-			error: true,
-			message: `These members were matched:\n` +
-			"```" + toResolve.slice(0,20).map(mem => mem.user.tag).join("\n") + "```" + endMsg
+	if (arg.type == "channel" || arg.type == "member" || arg.type == "role") {
+		if (toResolve.length == 1) {
+			return toResolve[0];
+		} else {
+			let endMsg = "", list = toResolve.slice(0,20);
+			if (toResolve.length > 20) endMsg += `...and ${toResolve.length - 20} more.`
+			if (arg.type == "channel") {
+				list = list.map(chnl => chnl.name);
+			} else if (arg.type == "member") {
+				list = list.map(mem => mem.user.tag);
+			} else {
+				list = list.map(role => role.name);
+			}
+			return {
+				error: `Multiple ${arg.type}s found`,
+				message: `These ${arg.type}s were matched:\n\`\`\`${list.join("\n")}\`\`\`${endMsg}`
+			}
 		}
 	}
 	return toResolve;
