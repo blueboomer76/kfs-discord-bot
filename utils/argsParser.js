@@ -54,12 +54,23 @@ function checkArgs(bot, message, args, cmdArg) {
 		}
 		return {error: true, message: argErrorMsg};
 	}
-	if (arg.type == "member" && toResolve.length > 1) {
-		let endMsg = "";
-		if (toResolve.length > 20) endMsg += `...and ${toResolve.length - 20} more`;
-		return {
-			error: "Multiple members found",
-			message: `These members were matched:\n` + "```" + toResolve.slice(0, 20).map(mem => mem.user.tag).join("\n") + "```" + endMsg
+	if (arg.type == "channel" || arg.type == "member" || arg.type == "role") {
+		if (toResolve.length == 1) {
+			return toResolve[0];
+		} else {
+			let endMsg = "", list = toResolve.slice(0, 20);
+			if (toResolve.length > 20) endMsg = `...and ${toResolve.length - 20} more.`;
+			if (arg.type == "channel") {
+				list = list.map(chnl => chnl.name);
+			} else if (arg.type == "member") {
+				list = list.map(mem => mem.user.tag);
+			} else {
+				list = list.map(role => role.name);
+			}
+			return {
+				error: `Multiple ${arg.type}s found`,
+				message: `These ${arg.type}s were matched:\n` + "```" + list.join("\n") + "```" + endMsg
+			}
 		}
 	}
 	return toResolve;

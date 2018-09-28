@@ -85,32 +85,47 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 		if (entries[0].length > options.limit) {
 			newMessage.lastReactionTime = Number(new Date());
 			let emojiList = ["⬅", "⏹", "➡"];
+			if (Math.ceil(entries[0].length / options.limit) > 5) emojiList.push("🔢")
 			for (let i = 0; i < emojiList.length; i++) {
 				setTimeout(() => {
 					newMessage.react(emojiList[i]).catch(err => {console.log(err)})
 				}, i * 1000);
 			}
 			const pgCollector = newMessage.createReactionCollector((reaction, user) => 
-				user.id == message.author.id && (
-				reaction.emoji.name == "⬅" ||
-				reaction.emoji.name == "⏹" ||
-				reaction.emoji.name == "➡"
-			))
-			pgCollector.on("collect", reaction => {
+				user.id == message.author.id && emojiList.includes(reaction.emoji.name)
+			)
+			pgCollector.on("collect", async reaction => {
 				pgCollector.lastReactionTime = Number(new Date());
 				let page = Number(newMessage.embeds[0].footer.text.match(/\d+/)[0]);
-				let chosen = reaction.emoji.name;
-				if (chosen == "⬅") {
-					options.page = page - 1;
-					paginateOnEdit(pgCollector.message, entries, options);
-					reaction.remove(message.author.id);
-				} else if (chosen == "➡") {
-					options.page = page + 1;
-					paginateOnEdit(pgCollector.message, entries, options);
-					reaction.remove(message.author.id);
-				} else if (chosen == "⏹") {
-					pgCollector.stop();
-					newMessage.delete();
+				switch (reaction.emoji.name) {
+					case "⬅":
+						options.page = page - 1;
+						paginateOnEdit(pgCollector.message, entries, options);
+						reaction.remove(message.author.id);
+						break;
+					case "➡":
+						options.page = page + 1;
+						paginateOnEdit(pgCollector.message, entries, options);
+						reaction.remove(message.author.id);
+						break;
+					case "⏹":
+						pgCollector.stop();
+						newMessage.delete();
+						break;
+					case "🔢":
+						let newMessage2 = await message.channel.send("What page do you want to go to?");
+						reaction.remove(message.author.id);
+						message.channel.awaitMessages(msg => msg.author.id == message.author.id && !isNaN(msg.content), {
+							max: 1,
+							time: 30000,
+							errors: ["time"]
+						})
+						.then(collected => {
+							options.page = parseInt(collected.array()[0].content);
+							paginateOnEdit(pgCollector.message, entries, options);
+							if (!newMessage2.deleted) newMessage2.delete();
+						})
+						.catch(() => {})
 				}
 			})
 			pgCollector.on("end", reactions => {
