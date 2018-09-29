@@ -5,7 +5,7 @@ class DeleteChannelCommand extends Command {
 		super({
 			name: "deletechannel",
 			description: "Deletes a channel",
-			aliases: ["delch", "delchannel"],
+			aliases: ["delch", "delchannel", "deletech"],
 			args: [
 				{
 					num: Infinity,
@@ -31,7 +31,7 @@ class DeleteChannelCommand extends Command {
 		let cmdErr;
 		if (Number(new Date()) - channel.createdTimestamp > 1000 * 86400 * 180) {
 			let code = Math.floor(Math.random() * 100000).toString();
-			if (code.length < 5) {while (code.length < 5) {code = "0" + code;}}
+			if (code.length < 5) {while (code.length < 5) {code = `0${code}`;}}
 			message.channel.send(`You are about to delete the channel **${channel.name}**, which is more than 180 days old. Type \`${code}\` to proceed. This operation will time out in 30 seconds.`)
 			await message.channel.awaitMessages(msg => msg.author.id == message.author.id && msg.content == code, {
 				max: 1,

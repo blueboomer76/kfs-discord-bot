@@ -7,7 +7,7 @@ class PhoneCommand extends Command {
 			description: "Chat with other servers on the phone!",
 			aliases: ["telephone"],
 			cooldown: {
-				time: 30000,
+				time: 60000,
 				type: "channel"
 			}
 		});

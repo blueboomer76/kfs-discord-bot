@@ -130,7 +130,7 @@ class KFSDiscordBot extends Client {
 							}
 							console.log(`${cmdFiles.length} files have been loaded in the category ${subdir}.`);
 						} else {
-							console.log(`No commands found in the category ${subdir}`);
+							console.log(`No commands found in the category ${subdir}.`);
 						}
 					})
 				}
@@ -153,7 +153,7 @@ class KFSDiscordBot extends Client {
 				}
 				console.log(`${evFiles.length} events have been loaded.`);
 			} else {
-				throw new Error("No events were found!");
+				throw new Error("No events found");
 			}
 		})
 	}
