@@ -49,7 +49,7 @@ class EvalCommand extends Command {
 			message.react("✅");
 		} else {
 			let evalDate = new Date();
-			if ((result != undefined || result != null) && result.length > 500) {result = result.slice(0,500) + "..."};
+			if ((result != undefined || result != null) && result.length > 1000) {result = `${result.toString().slice(0,1000)}...`};
 			message.channel.send(new Discord.RichEmbed()
 			.setTitle("discord.js Evaluator")
 			.setColor(Math.floor(Math.random() * 16777216))

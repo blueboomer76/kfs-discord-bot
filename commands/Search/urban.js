@@ -43,17 +43,14 @@ class UrbanCommand extends Command {
 			url: `http://api.urbandictionary.com/v0/define`,
 			qs: {term: args.join(" ")}
 		}, (err, res) => {
-			if (err) return message.channel.send(`Failed to retrieve from the Urban Dictionary. (status code ${res.statusCode})`)
+			if (err || res.statusCode >= 400) return message.channel.send(`Failed to retrieve from the Urban Dictionary. (status code ${res.statusCode})`)
 			let defs = JSON.parse(res.body);
 			if (defs.list.length > 0) {
 				let entries = [
 					defs.list.map(def => `Urban Dictionary - ${def.word}`),
+					defs.list.map(def => def.definition.length < 2000 ? def.definition : `${def.definition.slice(0,2000)}...`),
 					defs.list.map(def => {
 						return [
-							{
-								name: "Definition",
-								value: def.definition.length > 1000 ? `${def.definition.slice(0,1000)}...` : def.definition
-							},
 							{
 								name: "Example",
 								value: def.example.length > 0 ? (def.example.length < 1000 ? def.example : `${def.example.slice(0,1000)}...`) : "No example given"
@@ -73,14 +70,12 @@ class UrbanCommand extends Command {
 				];
 				let pageFlag = flags.find(f => f.name == "page");
 				paginator.paginate(message, {
-					thumbnail: {
-						url: "https://i.imgur.com/nwERwQE.jpg"
-					}
+					thumbnail: {url: "https://i.imgur.com/Bg54V46.png"}
 				}, entries, {
 					limit: 1,
 					numbered: false,
 					page: pageFlag ? pageFlag.args[0] : 1,
-					params: ["title", "fields"]
+					params: ["title", "description", "fields"]
 				});
 			} else {
 				message.channel.send("No definition found for that term.")

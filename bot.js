@@ -125,12 +125,12 @@ class KendraBot extends Client {
 							}
 							console.log(`${cmdFiles.length} files have been loaded in the category ${subdir}.`);
 						} else {
-							console.log(`No commands found in the category ${subdir}`);
+							console.log(`No commands found in the category ${subdir}.`);
 						}
 					})
 				}
 			} else {
-				throw "No category folders found";
+				throw new Error("No category folders found");
 			}
 		})
 	}
@@ -148,7 +148,7 @@ class KendraBot extends Client {
 				}
 				console.log(`${evFiles.length} events have been loaded.`);
 			} else {
-				throw "No events were found!"
+				throw new Error("No events found");
 			}
 		})
 	}

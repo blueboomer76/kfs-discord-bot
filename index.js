@@ -19,7 +19,7 @@ bot.loadEvents();
 
 process.on("uncaughtException", err => {
 	console.error(`[Exception]\n${new Date()}\n${err.stack}`);
-	if (!bot.guilds) process.exit(2);
+	if (!bot.user) process.exit(2);
 });
 
 process.on("unhandledRejection", (err, promise) => {

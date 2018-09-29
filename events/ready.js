@@ -5,6 +5,7 @@ const request = require("request");
 
 module.exports = async bot => {
 	console.log(`Bot started successfully on ${new Date()}`);
+	bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
 	bot.user.setActivity(`k,help | with you in ${bot.guilds.size} servers`);
 	bot.cache.guildCount = bot.guilds.size;
 	bot.cache.userCount = bot.users.size;
