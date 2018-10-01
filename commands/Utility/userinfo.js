@@ -46,8 +46,13 @@ class UserInfoCommand extends Command {
 		}
 		if (rawPresence.game) presence += ` (playing ${rawPresence.game.name})`;
 
-		let joinTimes = message.guild.members.map(mem => mem.joinedTimestamp);
-		joinTimes.sort((a, b) => a - b);
+		let guildMemArray = message.guild.members.array();
+		guildMemArray.sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
+		let joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp), nearbyMems = [];
+		for (let i = joinPos - 2; i < joinPos + 3; i++) {
+			if (i < 0 || i >= message.guild.memberCount) continue;
+			nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
+		}
 		let roleList = member.roles.map(r => r.name).join(", ");
 		if (roleList.length > 1000) roleList = roleList.slice(0, 1000) + "...";
 
@@ -57,10 +62,11 @@ class UserInfoCommand extends Command {
 		.setThumbnail(member.user.avatarURL)
 		.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
 		.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`)
-		.addField("Status", presence)
-		.addField("Bot user", member.user.bot ? "Yes" : "No")
-		.addField("Nickname", member.nickname || "None")
-		.addField("Member #", joinTimes.indexOf(member.joinedTimestamp) + 1)
+		.addField("Status", presence, true)
+		.addField("Bot user", member.user.bot ? "Yes" : "No", true)
+		.addField("Nickname", member.nickname || "None", true)
+		.addField("Member #", joinPos + 1, true)
+		.addField("Join order", nearbyMems.join(" > "))
 		.addField(`Roles - ${member.roles.size}`, roleList)
 
 		if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {

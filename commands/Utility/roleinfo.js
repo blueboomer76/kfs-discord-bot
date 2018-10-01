@@ -28,8 +28,15 @@ class RoleInfoCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let role = args[0];
+		let role = args[0], rolePos = role.calculatedPosition;
+
 		let createdDate = new Date(role.createdTimestamp);
+		let guildRoles = message.guild.roles, nearbyRoles = [];
+		for (let i = rolePos + 2; i > rolePos - 3; i--) {
+			if (i < 0 || i >= guildRoles.size) continue;
+			let roleName = guildRoles.find(r => r.calculatedPosition == i).name;
+			nearbyRoles.push(i == rolePos ? `**${roleName}**` : roleName);
+		}
 
 		message.channel.send(new Discord.RichEmbed()
 		.setTitle(`Role Info - ${role.name}`)
@@ -39,11 +46,12 @@ class RoleInfoCommand extends Command {
 		.addField(`Members in Role [${role.members.size} total]`,
 		`${role.members.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
 		true)
-		.addField("Color", role.hexColor)
-		.addField("Position from top", `${message.guild.roles.size - role.calculatedPosition} / ${message.guild.roles.size}`)
-		.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No")
-		.addField("Mentionable", role.mentionable ? "Yes" : "No")
-		.addField("Managed", role.managed ? "Yes" : "No")
+		.addField("Color", role.hexColor, true)
+		.addField("Position from top", `${guildRoles.size - rolePos} / ${guildRoles.size}`, true)
+		.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No", true)
+		.addField("Mentionable", role.mentionable ? "Yes" : "No", true)
+		.addField("Managed", role.managed ? "Yes" : "No", true)
+		.addField("Role order", nearbyRoles.join(" > "))
 		);
 	}
 }
