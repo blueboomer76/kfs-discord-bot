@@ -20,20 +20,28 @@ class RoleListCommand extends Command {
 				time: 30000,
 				type: "guild"
 			},
+			flags: [
+				{
+					name: "ordered",
+					desc: "Whether the list should be ordered according to position"
+				},
+			],
 			perms: {
 				bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
 				user: [],
 				level: 0
 			},
-			usage: "rolelist [page]"
+			usage: "rolelist [page] [--sorted]"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
-		let entries = [message.guild.roles.array().map(role => role.name)];
-		paginator.paginate(message, {title: `List of roles - ${message.guild.name}`}, entries, {
+		let entries = message.guild.roles.array();
+		let orderedFlag = flags.find(f => f.name == "sorted");
+		if (orderedFlag) entries.sort((a,b) => b.position - a.position);	
+		paginator.paginate(message, {title: `List of roles - ${message.guild.name}`}, [entries.map(role => role.name)], {
 			limit: 20,
-			numbered: false,
+			numbered: orderedFlag ? true : false,
 			page: args[0] ? args[0] : 1,
 			params: null
 		});

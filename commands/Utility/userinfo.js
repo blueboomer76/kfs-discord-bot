@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../../structures/command.js");
-const functions = require("../../modules/functions.js");
+const {getDuration} = require("../../modules/functions.js");
 
 class UserInfoCommand extends Command {
 	constructor() {
@@ -38,8 +38,14 @@ class UserInfoCommand extends Command {
 		userRoles.splice(userRoles.findIndex(role => role.name == "@everyone"), 1);
 		userRoles = userRoles.map(role => role.name);
 		
-		let joinTimes = message.guild.members.map(mem => mem.joinedTimestamp);
-		joinTimes.sort((a,b) => a-b);
+		let guildMemArray = message.guild.members.array();
+		guildMemArray.sort((a,b) => a.joinedTimestamp - b.joinedTimestamp);
+		
+		let joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp), nearbyMems = [];
+		for (let i = joinPos + 2; i > joinPos - 3; i--) {
+			if (i < 0 || i >= message.guild.memberCount) continue;
+			nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
+		}
 		
 		let memPresence = member.presence, userPresence;
 		if (memPresence.status == "online") {
@@ -59,12 +65,13 @@ class UserInfoCommand extends Command {
 		.setTitle(`User Info - ${member.user.tag}`)
 		.setThumbnail(member.user.avatarURL)
 		.setFooter(`ID: ${member.id}`)
-		.addField("Account created at", `${createdDate.toUTCString()} (${functions.getDuration(createdDate)})`)
-		.addField("Joined this server at", `${joinedDate.toUTCString()} (${functions.getDuration(joinedDate)})`)
-		.addField("Status", userPresence)
-		.addField("Nickname", member.nickname ? member.nickname : "None")
-		.addField("Bot user", member.user.bot ? "Yes" : "No")
-		.addField("Member #", joinTimes.indexOf(member.joinedTimestamp) + 1)
+		.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+		.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`)
+		.addField("Status", userPresence, true)
+		.addField("Nickname", member.nickname ? member.nickname : "None", true)
+		.addField("Bot user", member.user.bot ? "Yes" : "No", true)
+		.addField("Member #", joinPos + 1, true)
+		.addField("Join order", `${nearbyMems.join(" > ")}`)
 		.addField(`Roles - ${userRoles.length}`, userRoles.length == 0 ? "None" : userRoles.join(", "));
 		
 		if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
