@@ -166,11 +166,11 @@ function checkArgs(bot, message, args, cmdArg) {
 			let endMsg = "", list = toResolve.slice(0,20);
 			if (toResolve.length > 20) endMsg += `...and ${toResolve.length - 20} more.`
 			if (arg.type == "channel") {
-				list = list.map(chnl => chnl.name);
+				list = list.map(chnl => `${chnl.name} (${chnl.id})`);
 			} else if (arg.type == "member") {
-				list = list.map(mem => mem.user.tag);
+				list = list.map(mem => `${mem.user.tag} (${mem.user.id})`);
 			} else {
-				list = list.map(role => role.name);
+				list = list.map(role => `${role.name} (${role.id})`);
 			}
 			return {
 				error: `Multiple ${arg.type}s found`,

@@ -53,7 +53,7 @@ function paginateOnEdit(sentMessage, entries, options) {
 
 function checkReaction(collector, limit) {
 	let dif = Number(new Date()) - collector.lastReactionTime;
-	if (dif < limit) {
+	if (dif < limit - 500) {
 		setTimeout(checkReaction, dif, collector, limit);
 	} else {
 		collector.stop();
@@ -76,8 +76,9 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 		if (entries[0].length > options.limit) {
 			newMessage.lastReactionTime = Number(new Date());
 			let emojiList = ["⬅", "⏹", "➡"];
-			if (Math.ceil(entries[0].length / options.limit) > 5) emojiList.push("🔢")
+			if (Math.ceil(entries[0].length / options.limit) > 5) emojiList.push("🔢");
 			for (let i = 0; i < emojiList.length; i++) {
+				if (i == 1 && options.noStop) continue;
 				setTimeout(() => {
 					newMessage.react(emojiList[i]).catch(err => {console.log(err)})
 				}, i * 1000);

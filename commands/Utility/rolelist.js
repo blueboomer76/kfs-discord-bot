@@ -31,13 +31,13 @@ class RoleListCommand extends Command {
 				user: [],
 				level: 0
 			},
-			usage: "rolelist [page] [--sorted]"
+			usage: "rolelist [page] [--ordered]"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
 		let entries = message.guild.roles.array();
-		let orderedFlag = flags.find(f => f.name == "sorted");
+		let orderedFlag = flags.find(f => f.name == "ordered");
 		if (orderedFlag) entries.sort((a,b) => b.position - a.position);	
 		paginator.paginate(message, {title: `List of roles - ${message.guild.name}`}, [entries.map(role => role.name)], {
 			limit: 20,

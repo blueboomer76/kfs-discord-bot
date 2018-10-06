@@ -34,29 +34,27 @@ class EvalCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let result, beginEvalDate, endEvalDate;
+		let res, beginEval, endEval;
 		try {
-			beginEvalDate = Number(new Date());
-			result = eval(args[0]);
-			endEvalDate = Number(new Date());
+			beginEval = Number(new Date());
+			res = eval(args[0]);
+			endEval = Number(new Date());
 		} catch (err) {
-			endEvalDate = Number(new Date());
-			result = err
+			endEval = Number(new Date());
+			res = `${err.stack.split("    ", 3).join("    ")}    ...`;
 		};
-		let consoleFlag = flags.find(f => f.name == "console")
-		if (consoleFlag) {
-			console.log(result);
-			message.react("✅");
-		} else {
-			let evalDate = new Date();
-			if ((result != undefined || result != null) && result.length > 1000) {result = `${result.toString().slice(0,1000)}...`};
+		if (flags.find(f => f.name == "console")) {console.log(res); message.react("✅")} else {
+			let toEval = args[0].length < 1000 ? args[0] : args[0].slice(0,1000);
+			if (res != undefined && res != null && res.toString().length > 1000) {
+				res = `${res.toString().slice(0,1000)}...`
+			};
 			message.channel.send(new Discord.RichEmbed()
 			.setTitle("discord.js Evaluator")
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setTimestamp(message.createdAt)
-			.setFooter(`Execution took: ${endEvalDate - beginEvalDate}ms`)
-			.addField("Your code", "```javascript" + "\n" + args[0] + "```")
-			.addField("Result", "```javascript" + "\n" + result + "```")
+			.setFooter(`Execution took: ${endEval - beginEval}ms`)
+			.addField("Your code", "```javascript" + "\n" + toEval + "```")
+			.addField("Result", "```javascript" + "\n" + res + "```")
 			);
 		}
 	}
