@@ -24,7 +24,7 @@ class StatsCommand extends Command {
 	
 	async run(bot, message, args, flags) {
 		let storedStats = require("../../modules/stats.json");
-		let processUptime = process.uptime();
+		let processUptime = process.uptime() * 1000;
 		let duration = storedStats.duration + (Number(new Date()) - bot.cache.stats.lastCheck);
 
 		let beginEval = new Date();
@@ -70,16 +70,16 @@ class StatsCommand extends Command {
 		`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
 		, true)
 		.addField("Commands",
-		`Session: ${sessionCommands.toLocaleString()} (${(60 * sessionCommands / processUptime).toFixed(2)}/min)` + "\n" +
-		`Total: ${totalCommands.toLocaleString()} (${(60000 * totalCommands / duration).toFixed(2)}/min)`
+		`Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, processUptime)})` + "\n" +
+		`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, duration)})`
 		, true)
 		.addField("Phone Connections",
-		`Session: ${sessionCalls.toLocaleString()} (${(3600 * sessionCalls / processUptime).toFixed(2)}/hr)` + "\n" +
-		`Total: ${totalCalls.toLocaleString()} (${(3600000 * totalCalls / duration).toFixed(2)}/hr)`
+		`Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, processUptime)})` + "\n" +
+		`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, duration)})`
 		, true)
 		.addField("Messages Seen",
-		`Session: ${sessionMessages.toLocaleString()} (${(sessionMessages / processUptime).toFixed(2)}/sec)` + "\n" +
-		`Total: ${totalMessages.toLocaleString()} (${(1000 * totalMessages / duration).toFixed(2)}/sec)`
+		`Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, processUptime)})` + "\n" +
+		`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, duration)})`
 		, true)
 		)
 	}
@@ -96,6 +96,19 @@ class StatsCommand extends Command {
 		Queue Size
 		Being the only bot in a server
 	*/
+
+	setRate(amount, duration) {
+		let amtPerDay = amount / duration * 8.64e+7;
+		if (amtPerDay > 43200) {
+			return `${(amtPerDay/86400).toFixed(2)}/sec`;
+		} else if (amtPerDay > 720) {
+			return `${(amtPerDay/1440).toFixed(2)}/min`;
+		} else if (amtPerDay > 12) {
+			return `${(amtPerDay/24).toFixed(2)}/hr`;
+		} else {
+			return `${amtPerDay.toFixed(2)}/day`;
+		}
+	}
 }
 
 module.exports = StatsCommand;

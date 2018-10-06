@@ -18,20 +18,25 @@ class HelpCommand extends Command {
 				time: 8000,
 				type: "user"
 			},
+			flags: [
+				{
+					name: "dm",
+					desc: "Sends the help message to DMs instead"
+				},
+			],
 			perms: {
 				bot: ["EMBED_LINKS"],
 				user: [],
 				level: 0
 			},
-			usage: "help [command]"
+			usage: "help [command] [--dm]"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
-		let command = args[0];
+		let command = args[0], helpEmbed = new Discord.RichEmbed();
 		if (!command) {
-			let helpEmbed = new Discord.RichEmbed()
-			.setTitle("All bot commands")
+			helpEmbed.setTitle("All bot commands")
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter(`Use \`help <command>\` to get help for a command | Total commands: ${bot.commands.size}`);
 			let cmds = bot.commands;
@@ -42,7 +47,6 @@ class HelpCommand extends Command {
 				let cmdsInCat = cmds.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
 				helpEmbed.addField(bot.categories[i], cmdsInCat.join(", "));
 			}
-			message.channel.send(helpEmbed);
 		} else {
 			let commandFlags = command.flags.map(f => `\`--${f.name}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`);
 			let commandPerms = command.perms;
@@ -52,18 +56,23 @@ class HelpCommand extends Command {
 				level: bot.cache.permLevels[commandPerms.level].name
 			};
 
-			message.channel.send(new Discord.RichEmbed()
-			.setTitle(`Help - ${command.name}`)
+			helpEmbed.setTitle(`Help - ${command.name}`)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.addField("Category", command.category)
 			.addField("Description", command.description)
 			.addField("Aliases", command.aliases.length > 0 ? command.aliases.join(", ") : "None")
 			.addField("Flags", command.flags.length > 0 ? commandFlags.join("\n") : "None")
 			.addField("Usage", command.usage)
+			.addField("Examples", command.examples.length > 0 ? command.examples.join("\n") : "No examples provided")
 			.addField("Allows DMs", command.allowDMs ? "Yes" : "No")
 			.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user} (with level ${permReq.level})`)
-			.addField("Cooldown", `${command.cooldown.time / 1000} seconds (per ${command.cooldown.type})`)
-			);
+			.addField("Cooldown", `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}`)
+		}
+		if (flags.find(f => f.name == "dm")) {
+			message.member.send(helpEmbed)
+			.catch(() => message.channel.send("Failed to send a help message as a DM. Check your settings and try again."));
+		} else {
+			message.channel.send(helpEmbed);
 		}
 	}
 }
