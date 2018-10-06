@@ -66,16 +66,16 @@ class StatsCommand extends Command {
 		`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
 		, true)
 		.addField("Messages Seen",
-		`Session: ${sessionMessages.toLocaleString()} (${(1000 * sessionMessages / (Number(new Date()) - bot.readyTimestamp)).toFixed(2)}/sec)` + `\n` +
-		`Total: ${totalMessages.toLocaleString()} (${(1000 * totalMessages / stats.duration).toFixed(2)}/sec)`
+		`Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, Number(new Date()) - bot.readyTimestamp)})` + `\n` +
+		`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, stats.duration)})`
 		, true)
 		.addField("Phone Calls Made",
-		`Session: ${sessionCalls.toLocaleString()} (${(3600000 * sessionCalls / (Number(new Date()) - bot.readyTimestamp)).toFixed(2)}/hr)` + `\n` +
-		`Total: ${totalCalls.toLocaleString()} (${(3600000 * totalCalls / stats.duration).toFixed(2)}/hr)`
+		`Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, Number(new Date()) - bot.readyTimestamp)})` + `\n` +
+		`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, stats.duration)})`
 		, true)
 		.addField("Commands",
-		`Session: ${sessionCommands.toLocaleString()} (${(60000 * sessionCommands / (Number(new Date()) - bot.readyTimestamp)).toFixed(2)}/min)` + `\n` +
-		`Total: ${totalCommands.toLocaleString()} (${(60000 * totalCommands / stats.duration).toFixed(2)}/min)`
+		`Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, Number(new Date()) - bot.readyTimestamp)})` + "\n" +
+		`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, stats.duration)})`
 		, true)
 		)
 	}
@@ -92,6 +92,19 @@ class StatsCommand extends Command {
 		Queue Size
 		Being the only bot in a server
 	*/
+	
+	setRate(amount, duration) {
+		let amtPerDay = amount / duration * 8.64e+7;
+		if (amtPerDay > 43200) {
+			return `${(amtPerDay/86400).toFixed(2)}/sec`;
+		} else if (amtPerDay > 720) {
+			return `${(amtPerDay/1440).toFixed(2)}/min`;
+		} else if (amtPerDay > 12) {
+			return `${(amtPerDay/24).toFixed(2)}/hr`;
+		} else {
+			return `${amtPerDay.toFixed(2)}/day`;
+		}		
+	}
 }
 
 module.exports = StatsCommand;

@@ -8,10 +8,11 @@ class Command {
 		this.aliases = props.aliases || [];
 		this.allowDMs = props.allowDMs || false;
 		this.args = [];
-		this.cooldown = props.cooldown || {time: 15000, type: "user"}
+		this.cooldown = props.cooldown || {time: 15000, type: "user"};
+		this.examples = props.examples || [];
 		this.flags = [];
 		this.hidden = props.hidden || false;
-		this.perms = props.perms || {bot: [], user: [], level: 0};
+		this.perms = props.perms || {bot: [], user: [], role: null, level: 0};
 		this.startTyping = props.startTyping || false;
 		this.usage = props.usage || this.name;
 		
@@ -30,7 +31,7 @@ class Command {
 	}
 	
 	async run() {
-		throw "The command " + this.name + " does not have a run() method!"
+		throw `The command ${this.name} does not have a run() method!`
 	}
 }
 

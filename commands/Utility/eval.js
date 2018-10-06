@@ -43,7 +43,11 @@ class EvalCommand extends Command {
 			endEval = Number(new Date());
 			res = `${err.stack.split("    ", 3).join("    ")}    ...`;
 		};
-		if (flags.find(f => f.name == "console")) {console.log(res); message.react("✅")} else {
+		if (flags.find(f => f.name == "console")) {
+			if (typeof res == "function") res = res.toString();
+			console.log(res);
+			message.react("✅");
+		} else {
 			let toEval = args[0].length < 1000 ? args[0] : args[0].slice(0,1000);
 			if (res != undefined && res != null && res.toString().length > 1000) {
 				res = `${res.toString().slice(0,1000)}...`

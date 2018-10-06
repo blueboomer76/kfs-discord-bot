@@ -36,6 +36,7 @@ class UsageCommand extends Command {
 		let entries = [commandUsage.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
 		paginator.paginate(message, {title: "Most Popular Bot Commands"}, entries, {
 			limit: 20,
+			noStop: true,
 			numbered: true,
 			page: args[0] ? args[0] : 1,
 			params: null
