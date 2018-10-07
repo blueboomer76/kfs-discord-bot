@@ -17,44 +17,51 @@ module.exports = async (bot, message) => {
 		let command = args.shift().toLowerCase();
 		let runCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
 		if (!runCommand) return;
+		
+		// Check things before performing the command
 		if (!message.guild && !runCommand.allowDMs) return message.channel.send("This command cannot be used in Direct Messages.")
-		let requiredPerms = runCommand.perms;
-		if (requiredPerms && message.channel.type != "dm" && (requiredPerms.bot.length > 0 || requiredPerms.user.length > 0 || requiredPerms.level > 0)) {
-			let allowed = {state: true, faultMsg: ""};
-			if (requiredPerms.user.length > 0) {
-				for (const perm of requiredPerms.user) {
-					if (!message.member.hasPermission(perm)) {
-						allowed.state = false;
-						allowed.faultMsg += "You need these permissions to run this command:\n" + requiredPerms.user.join(", ");
-						break;
-					}
-				}
-			}
-			if (requiredPerms.level > 0) {
-				let permLevels = bot.cache.permLevels;
-				let userLevel = 0;
-				for (let i = 0; i < permLevels.length; i++) {
-					if (permLevels[i].validate(message)) userLevel = i;
-				}
-				if ((requiredPerms.level == 2 || requiredPerms.level > 3) && userLevel < requiredPerms.level) {
-					allowed.state = false;
-					let faultDesc = permLevels[requiredPerms.level].desc ? permLevels[requiredPerms.level].desc : "";
-					allowed.faultMsg += "\nYou need this permission level to run this command:\n" + bot.cache.permLevels[requiredPerms.level].name + " (" + faultDesc + ")";
-				}
-			}
+		
+		let requiredPerms = runCommand.perms, userPermsAllowed = true, roleAllowed = true, faultMsg = "";
+		if (message.guild) {
 			if (requiredPerms.bot.length > 0) {
 				for (const perm of requiredPerms.bot) {
-					if (!message.guild.member(bot.user).hasPermission(perm)) {
-						allowed.state = false;
-						allowed.faultMsg += "\nI need these permissions to run this command:\n" + requiredPerms.bot.join(", ")
+					if (!message.guild.me.hasPermission(perm)) {
+						faultMsg += `I need these permissions to run this command:\n${requiredPerms.bot.join(", ")}`
 						break;
 					}
 				}
 			}
-			if (!allowed.state) {
-				return message.channel.send(allowed.faultMsg)
+			if (requiredPerms.user.length > 0) {
+				for (const perm of requiredPerms.user) {
+					if (!message.member.hasPermission(perm)) {userPermsAllowed = false;}
+				}
+			}
+			if (requiredPerms.role) {
+				if (!message.member.roles.find(role => role.name == requiredPerms.role)) {roleAllowed = false;}
+			}
+			if (!userPermsAllowed || !roleAllowed) {
+				if (!userPermsAllowed && !roleAllowed) {
+					faultMsg += `You need these permissions or a role named **${requiredPerms.role}** to run this command:\n${requiredPerms.user.join(", ")}`
+				} else if (!userPermsAllowed) {
+					faultMsg += `You need these permissions to run this command:\n${requiredPerms.user.join(", ")}`
+				} else {
+					faultMsg += `You need a role named **${requiredPerms.role}** to run this command.`
+				}
 			}
 		};
+		if (requiredPerms.level > 0) {
+			let permLevels = bot.permLevels;
+			let userLevel = 0;
+			for (let i = 0; i < permLevels.length; i++) {
+				if (permLevels[i].validate(message)) userLevel = i;
+			}
+			if (userLevel < requiredPerms.level) {
+				let faultDesc = permLevels[requiredPerms.level].desc ? permLevels[requiredPerms.level].desc : "";
+				faultMsg += `\nYou need this permission level to run this command:\n${bot.permLevels[requiredPerms.level].name} (${faultDesc})`;
+			}
+		}
+		if (faultMsg.length > 0) return message.channel.send(faultMsg);
+		
 		let cdCheck = cdChecker.check(bot, message, runCommand.name);
 		let cdInfo = runCommand.cooldown;
 		if (cdCheck == true) {

@@ -21,7 +21,7 @@ class ReloadFileCommand extends Command {
 			perms: {
 				bot: [],
 				user: [],
-				level: 8
+				level: 5
 			},
 			usage: "reloadfile <file path>"
 		});

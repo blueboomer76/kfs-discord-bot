@@ -16,7 +16,7 @@ class RestartCommand extends Command {
 			perms: {
 				bot: [],
 				user: [],
-				level: 7
+				level: 4
 			}
 		});
 	}

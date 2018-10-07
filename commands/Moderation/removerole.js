@@ -43,19 +43,18 @@ class RemoveRoleCommand extends Command {
 			perms: {
 				bot: ["MANAGE_ROLES"],
 				user: ["MANAGE_ROLES"],
-				level: 1
+				level: 0
 			},
 			usage: "removerole <user> <role>"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
-		let member = args[0];
-		let role = args[1];
+		let member = args[0], role = args[1];
 		if (!member.roles.find("name", args[1].name)) {
 			return message.channel.send("That member does not have the role you provided.");
 		}
-		if (role.comparePositionTo(message.guild.member(bot.user).highestRole) >= 0) return message.channel.send("I cannot remove that role because it is higher than my role.")
+		if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return message.channel.send("I cannot remove that role because its position is at or higher than mine.")
 			
 		await member.removeRole(role)
 		.then(message.channel.send(`✅ Role **${role.name}** has been removed from **${member.user.tag}**.`))

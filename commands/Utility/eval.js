@@ -27,7 +27,7 @@ class EvalCommand extends Command {
 			perms: {
 				bot: ["EMBED_LINKS"],
 				user: [],
-				level: 8,
+				level: 5
 			},
 			usage: "eval <code>"
 		});

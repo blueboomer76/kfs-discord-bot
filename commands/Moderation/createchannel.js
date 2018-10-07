@@ -20,7 +20,7 @@ class CreateChannelCommand extends Command {
 			perms: {
 				bot: ["MANAGE_CHANNELS"],
 				user: ["MANAGE_CHANNELS"],
-				level: 1
+				level: 0
 			},
 			usage: "createchannel <name>"
 		});

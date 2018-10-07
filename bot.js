@@ -14,71 +14,43 @@ class KendraBot extends Client {
 		this.aliases = new Collection();
 		this.categories = [];
 		this.prefix = config.prefix;
-		this.cache = {
-			permLevels: [
-				{
-					name: "User",
-					validate: () => {return true;}
-				},
-				{
-					name: "Moderator",
-					validate: message => {
-						let nameRegex = /Moderator|Mod/i
-						let role = message.guild.roles.find(r => nameRegex.test(r.name))
-						if (role && message.member.roles.has(role.id)) return true;
-						return false;
-					}
-				},
-				{
-					name: "Server Bot Moderator",
-					desc: "Have a role named `Kendra Bot Commander`",
-					validate: message => {
-						let role = message.guild.roles.find(r => r.name == "Kendra Bot Commander")
-						if (role && message.member.roles.has(role.id)) return true;
-						return false;
-					}
-				},
-				{
-					name: "Administrator",
-					validate: message => {
-						let nameRegex = /Administrator|Admin/i
-						let role = message.guild.roles.find(r => nameRegex.test(r.name))
-						if (role && message.member.roles.has(role.id)) return true;
-						if (message.member.hasPermission("MANAGE_SERVER")) return true;
-						return false;
-					}
-				},
-				{
-					name: "Server Owner",
-					validate: message => {
-						return message.guild.owner.user.id == message.author.id;
-					}
-				},
-				{
-					name: "Bot Support",
-					validate: message => {
-						return this.supportIds.includes(message.author.id);
-					}
-				},
-				{
-					name: "Bot Moderator",
-					validate: message => {
-						return this.moderatorIds.includes(message.author.id);
-					}
-				},
-				{
-					name: "Bot Admin",
-					validate: message => {
-						return this.adminIds.includes(message.author.id);
-					}
-				},
-				{
-					name: "Bot Owner",
-					validate: message => {
-						return this.ownerIds.includes(message.author.id);
-					}
+		this.permLevels = [
+			{
+				name: "User",
+				validate: () => {return true}
+			},
+			{
+				name: "Server Owner",
+				validate: message => {
+					return message.guild.owner.user.id == message.author.id;
 				}
-			],
+			},
+			{
+				name: "Bot Support",
+				validate: message => {
+					return this.supportIds.includes(message.author.id);
+				}
+			},
+			{
+				name: "Bot Moderator",
+				validate: message => {
+					return this.moderatorIds.includes(message.author.id);
+				}
+			},
+			{
+				name: "Bot Admin",
+				validate: message => {
+					return this.adminIds.includes(message.author.id);
+				}
+			},
+			{
+				name: "Bot Owner",
+				validate: message => {
+					return this.ownerIds.includes(message.author.id);
+				}
+			}
+		];
+		this.cache = {
 			guildCount: 0,
 			userCount: 0,
 			phone: {channels: [], msgCount: 0, expiresAt: 0},

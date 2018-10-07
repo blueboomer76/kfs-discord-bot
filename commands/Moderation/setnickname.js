@@ -25,7 +25,7 @@ class SetNicknameCommand extends Command {
 			perms: {
 				bot: ["MANAGE_NICKNAMES"],
 				user: ["MANAGE_NICKNAMES"],
-				level: 1
+				level: 0
 			},
 			usage: "setnickname <user> <new nick>"
 		});

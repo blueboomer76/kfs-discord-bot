@@ -29,15 +29,15 @@ class KickCommand extends Command {
 			perms: {
 				bot: ["KICK_MEMBERS"],
 				user: ["KICK_MEMBERS"],
-				level: 1
+				level: 0
 			},
 			usage: "kick <user>"
 		});
 	}
 	
 	async run(bot, message, args, flags) {
-		let member = args[0];
-		await member.kick()
+		let member = args[0], reasonFlag = flags.find(f => f.name == "reason");
+		await member.kick(reasonFlag ? reasonFlag.args[0] : null)
 		.then(message.channel.send(`✅ The user **${member.user.tag}** was kicked from the guild.`))
 		.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
 	}
