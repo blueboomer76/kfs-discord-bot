@@ -24,7 +24,7 @@ class AddRoleCommand extends Command {
 			perms: {
 				bot: ["MANAGE_ROLES"],
 				user: ["MANAGE_ROLES"],
-				level: 1
+				level: 0
 			},
 			usage: "addrole <user> <role>"
 		});
@@ -37,7 +37,7 @@ class AddRoleCommand extends Command {
 		if (member.roles.get(role.id)) return message.channel.send("The user already has that role.");
 		if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
 			return message.channel.send("Cannot add role: your highest role must be higher than the role to add (overrides with server owner)");
-		} else if (role.comparePositionTo(message.guild.member(bot.user).highestRole) >= 0) {
+		} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
 			return message.channel.send("Cannot add role: the bot's highest role must be higher than the role to add");
 		} else if (role.managed) {
 			return message.channel.send("Integrated or managed roles cannot be added to a user.");

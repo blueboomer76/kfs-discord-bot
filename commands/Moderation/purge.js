@@ -45,7 +45,7 @@ class PurgeCommand extends Command {
 			perms: {
 				bot: ["MANAGE_MESSAGES"],
 				user: ["MANAGE_MESSAGES"],
-				level: 1
+				level: 0
 			},
 			usage: "purge <1-99> [--user <user>] [--text <text>] [--bots] [--embeds]"
 		});

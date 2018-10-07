@@ -24,7 +24,7 @@ class SetNicknameCommand extends Command {
 			perms: {
 				bot: ["MANAGE_NICKNAMES"],
 				user: ["MANAGE_NICKNAMES"],
-				level: 1
+				level: 0
 			},
 			usage: "setnickname <user> <new nickname>"
 		});
@@ -36,7 +36,7 @@ class SetNicknameCommand extends Command {
 		if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself, the server owner, or the bot.");
 		if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
 			return message.channel.send("Cannot set nickname: your highest role must be higher than the user's highest role (overrides with server owner)");
-		} else if (member.highestRole.comparePositionTo(message.guild.member(bot.user).highestRole) >= 0) {
+		} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
 			return message.channel.send("Cannot set nickname: the bot's highest role must be higher than the user's highest role");
 		}
 
