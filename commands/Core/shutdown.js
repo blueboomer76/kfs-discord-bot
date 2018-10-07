@@ -14,7 +14,7 @@ class ShutdownCommand extends Command {
 			perms: {
 				bot: [],
 				user: [],
-				level: 7
+				level: 4
 			}
 		});
 	}

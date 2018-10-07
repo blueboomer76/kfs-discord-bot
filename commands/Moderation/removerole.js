@@ -24,7 +24,7 @@ class RemoveRoleCommand extends Command {
 			perms: {
 				bot: ["MANAGE_ROLES"],
 				user: ["MANAGE_ROLES"],
-				level: 1
+				level: 0
 			},
 			usage: "removerole <user> <role>"
 		});
@@ -37,7 +37,7 @@ class RemoveRoleCommand extends Command {
 		if (!member.roles.has(role.id)) return message.channel.send("The user does not have that role.");
 		if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
 			return message.channel.send("Cannot remove role: your highest role must be higher than the role to remove (overrides with server owner)");
-		} else if (role.comparePositionTo(message.guild.member(bot.user).highestRole) >= 0) {
+		} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
 			return message.channel.send("Cannot remove role: the bot's highest role must be higher than the role to remove");
 		} else if (role.managed) {
 			return message.channel.send("Integrated or managed roles cannot be removed from a user.");

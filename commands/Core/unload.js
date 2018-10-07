@@ -20,7 +20,7 @@ class UnloadCommand extends Command {
 			perms: {
 				bot: [],
 				user: [],
-				level: 7
+				level: 5
 			},
 			usage: "unload <command>"
 		});

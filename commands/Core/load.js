@@ -25,7 +25,7 @@ class LoadCommand extends Command {
 			perms: {
 				bot: [],
 				user: [],
-				level: 7
+				level: 4
 			},
 			usage: "load <category> <command>"
 		});

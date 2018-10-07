@@ -53,7 +53,7 @@ class HelpCommand extends Command {
 			let permReq = {
 				bot: commandPerms.bot.length > 0 ? commandPerms.bot.join(", ") : "None",
 				user: commandPerms.user.length > 0 ? commandPerms.user.join(", ") : "None",
-				level: bot.cache.permLevels[commandPerms.level].name
+				level: bot.permLevels[commandPerms.level].name
 			};
 
 			helpEmbed.setTitle(`Help - ${command.name}`)

@@ -15,75 +15,44 @@ class KFSDiscordBot extends Client {
 		this.aliases = new Collection();
 		this.categories = [];
 		this.prefix = config.prefix;
-		this.cache = {
-			permLevels: [
-				{
-					name: "User",
-					validate: () => {return true;}
-				},
-				{
-					name: "Moderator",
-					validate: message => {
-						if (!message.guild) return false;
-						let nameRegex = /Moderator|Mod/i;
-						let role = message.guild.roles.find(r => nameRegex.test(r.name))
-						if (role && message.member.roles.has(role.id)) return true;
-						return false;
-					}
-				},
-				{
-					name: "Server Bot Moderator",
-					desc: "Have a role named `Bot Commander`",
-					validate: message => {
-						if (!message.guild) return false;
-						let role = message.guild.roles.find(r => r.name == "Bot Commander");
-						if (role && message.member.roles.has(role.id)) return true;
-						return false;
-					}
-				},
-				{
-					name: "Administrator",
-					validate: message => {
-						if (!message.guild) return false;
-						let nameRegex = /Administrator|Admin/i;
-						let role = message.guild.roles.find(r => nameRegex.test(r.name))
-						if (role && message.member.roles.has(role.id)) return true;
-						if (message.member.hasPermission("MANAGE_GUILD")) return true;
-						return false;
-					}
-				},
-				{
-					name: "Server Owner",
-					validate: message => {
-						if (!message.guild) return false;
-						return message.guild.owner.user.id == message.author.id;
-					}
-				},
-				{
-					name: "Bot Support",
-					validate: message => {
-						return this.supportIDs.includes(message.author.id);
-					}
-				},
-				{
-					name: "Bot Moderator",
-					validate: message => {
-						return this.moderatorIDs.includes(message.author.id);
-					}
-				},
-				{
-					name: "Bot Admin",
-					validate: message => {
-						return this.adminIDs.includes(message.author.id);
-					}
-				},
-				{
-					name: "Bot Owner",
-					validate: message => {
-						return this.ownerIDs.includes(message.author.id);
-					}
+		this.permLevels = [
+			{
+				name: "User",
+				validate: () => {return true}
+			},
+			{
+				name: "Server Owner",
+				validate: message => {
+					if (!message.guild) return false;
+					return message.guild.owner.user.id == message.author.id;
 				}
-			],
+			},
+			{
+				name: "Bot Support",
+				validate: message => {
+					return this.supportIDs.includes(message.author.id);
+				}
+			},
+			{
+				name: "Bot Moderator",
+				validate: message => {
+					return this.moderatorIDs.includes(message.author.id);
+				}
+			},
+			{
+				name: "Bot Admin",
+				validate: message => {
+					return this.adminIDs.includes(message.author.id);
+				}
+			},
+			{
+				name: "Bot Owner",
+				validate: message => {
+					return this.ownerIDs.includes(message.author.id);
+				}
+			}
+		];
+		this.cache = {
 			guildCount: 0,
 			userCount: 0,
 			phone: {channels: [], msgCount: 0, callExpires: 0},
