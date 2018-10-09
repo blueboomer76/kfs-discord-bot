@@ -21,10 +21,20 @@ class ServerInfoCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let guild = message.guild;
+		let guild = message.guild, guildMembers;
+		if (!guild.large) {
+			guildMembers = guild.members;
+		} else {
+			await guild.fetchMembers()
+			.then(g => {guildMembers = g.members})
+			.catch(err => {
+				console.error(`Failed to fetch members: ${err}`)
+				guildMembers = guild.members;
+			})
+		}
 
-		let createdDate = new Date(guild.createdTimestamp);
-		let guildVerif;
+		let createdDate = new Date(guild.createdTimestamp),
+			guildVerif;
 		switch (guild.verificationLevel) {
 			case 0:
 				guildVerif = "None";
@@ -41,8 +51,8 @@ class ServerInfoCommand extends Command {
 			case 4:
 				guildVerif = "Very High (verified phone)";
 		}
-		let onlineCount = guild.presences.filter(p => p.status != "offline").size
-		let botCount = guild.members.filter(mem => mem.user.bot).size;
+		let onlineCount = guild.presences.filter(p => p.status != "offline").size,
+			botCount = guildMembers.filter(mem => mem.user.bot).size;
 
 		message.channel.send(new Discord.RichEmbed()
 		.setTitle(`Server Info - ${guild.name}`)

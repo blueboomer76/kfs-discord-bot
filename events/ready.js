@@ -14,8 +14,7 @@ module.exports = async bot => {
 		bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
 		setInterval(() => {
 			let newBotGame;
-			let statusNum = bot.cache.statusNum;
-			switch (statusNum) {
+			switch (bot.cache.statusNum) {
 				case 0:
 					newBotGame = `with ${bot.cache.userCount} users`;
 					bot.cache.statusNum++;
