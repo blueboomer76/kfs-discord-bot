@@ -31,6 +31,21 @@ class RoleInfoCommand extends Command {
 		let role = args[0], rolePos = role.calculatedPosition;
 
 		let createdDate = new Date(role.createdTimestamp);
+
+		let roleMembers;
+		if (!message.guild.large) {
+			roleMembers = role.members;
+		} else {
+			await message.guild.fetchMembers()
+			.then(g => {
+				roleMembers = g.members.filter(mem => mem.roles.has(role.id));
+			})
+			.catch(err => {
+				console.log(`Failed to fetch members: ${err}`)
+				roleMembers = role.members;
+			})
+		}
+
 		let guildRoles = message.guild.roles, nearbyRoles = [];
 		for (let i = rolePos + 2; i > rolePos - 3; i--) {
 			if (i < 0 || i >= guildRoles.size) continue;
@@ -43,8 +58,8 @@ class RoleInfoCommand extends Command {
 		.setColor(role.color)
 		.setFooter(`ID: ${role.id}`)
 		.addField("Role created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
-		.addField(`Members in Role [${role.members.size} total]`,
-		`${role.members.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
+		.addField(`Members in Role [${roleMembers.size} total]`,
+		`${roleMembers.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
 		true)
 		.addField("Color", role.hexColor, true)
 		.addField("Position from top", `${guildRoles.size - rolePos} / ${guildRoles.size}`, true)

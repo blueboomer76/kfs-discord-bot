@@ -30,10 +30,10 @@ class UserInfoCommand extends Command {
 	
 	async run(bot, message, args, flags) {
 		let member = args[0] ? args[0] : message.member;
-		
+
 		let createdDate = new Date(member.user.createdTimestamp);
 		let joinedDate = new Date(member.joinedTimestamp);
-		
+
 		let rawPresence = member.presence, presence;
 		if (rawPresence.status == "online") {
 			presence = "Online";
@@ -46,7 +46,19 @@ class UserInfoCommand extends Command {
 		}
 		if (rawPresence.game) presence += ` (playing ${rawPresence.game.name})`;
 
-		let guildMemArray = message.guild.members.array();
+		let guildMembers;
+		if (!message.guild.large) {
+			guildMembers = message.guild.members;
+		} else {
+			await message.guild.fetchMembers()
+			.then(g => guildMembers = g.members)
+			.catch(err => {
+				console.log(`Failed to fetch members: ${err}`)
+				guildMembers = message.guild.members;
+			})
+		}
+
+		let guildMemArray = guildMembers.array();
 		guildMemArray.sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
 		let joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp), nearbyMems = [];
 		for (let i = joinPos - 2; i < joinPos + 3; i++) {
