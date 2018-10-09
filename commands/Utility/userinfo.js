@@ -29,20 +29,29 @@ class UserInfoCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let member = args[0] ? args[0] : message.member;
+		let member = args[0] ? args[0] : message.member, guildMembers, userRoles = member.roles.array();
 		
-		let createdDate = new Date(member.user.createdTimestamp);
-		let joinedDate = new Date(member.joinedTimestamp);
-		
-		let userRoles = member.roles.array();
 		userRoles.splice(userRoles.findIndex(role => role.name == "@everyone"), 1);
 		userRoles = userRoles.map(role => role.name);
 		
-		let guildMemArray = message.guild.members.array();
+		if (!message.guild.large) {
+			guildMembers = message.guild.members;
+		} else {
+			await message.guild.fetchMembers()
+			.then(g => {
+				guildMembers = g.members;
+			})
+			.catch(err => {
+				console.log(`Failed to fetch members: ${err}`)
+				guildMembers = message.guild.members;
+			})
+		}
+		
+		let guildMemArray = guildMembers.array();
 		guildMemArray.sort((a,b) => a.joinedTimestamp - b.joinedTimestamp);
 		
 		let joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp), nearbyMems = [];
-		for (let i = joinPos + 2; i > joinPos - 3; i--) {
+		for (let i = joinPos - 2; i < joinPos + 3; i++) {
 			if (i < 0 || i >= message.guild.memberCount) continue;
 			nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
 		}
@@ -60,6 +69,9 @@ class UserInfoCommand extends Command {
 		if (memPresence.game) {
 			userPresence += ` (playing ${memPresence.game.name})`
 		}
+		
+		let createdDate = new Date(member.user.createdTimestamp);
+		let joinedDate = new Date(member.joinedTimestamp);
 		
 		let userEmbed = new Discord.RichEmbed()
 		.setTitle(`User Info - ${member.user.tag}`)

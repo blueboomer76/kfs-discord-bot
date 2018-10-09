@@ -24,12 +24,13 @@ class AvatarCommand extends Command {
 	
 	async run(bot, message, args, flags) {
 		let member = args[0];
+		let avatarURL = member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
 		if (!member) member = message.member;
 		message.channel.send(new Discord.RichEmbed()
 		.setTitle(`Avatar - ${member.user.tag}`)
 		.setColor(Math.floor(Math.random() * 16777216))
-		.setDescription(`Avatar URL: ${member.user.avatarURL}`)
-		.setImage(member.user.avatarURL)
+		.setDescription(`Avatar URL: ${avatarURL}`)
+		.setImage(avatarURL)
 		);
 	}
 }

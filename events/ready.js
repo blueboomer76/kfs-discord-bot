@@ -11,8 +11,7 @@ module.exports = async bot => {
 	bot.cache.userCount = bot.users.size;
 	setInterval(() => {
 		let newBotGame = `with you in ${bot.cache.guildCount} servers`;
-		let statusNum = bot.cache.statusNum;
-		switch (statusNum) {
+		switch (bot.cache.statusNum) {
 			case 0:
 				newBotGame = `with ${bot.cache.userCount} users`;
 				bot.cache.statusNum++;
@@ -26,7 +25,7 @@ module.exports = async bot => {
 				bot.cache.statusNum++;
 				break;
 			case 3:
-				statusNum = 0;
+				bot.cache.statusNum = 0;
 		}
 		bot.user.setActivity(`k,help | ${newBotGame}`);
 	}, 1000*120)
