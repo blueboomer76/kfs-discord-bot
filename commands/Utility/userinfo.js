@@ -66,16 +66,14 @@ class UserInfoCommand extends Command {
 		} else {
 			userPresence = "Offline";
 		}
-		if (memPresence.game) {
-			userPresence += ` (playing ${memPresence.game.name})`
-		}
+		if (memPresence.game) userPresence += ` (playing ${memPresence.game.name})`
 		
 		let createdDate = new Date(member.user.createdTimestamp);
 		let joinedDate = new Date(member.joinedTimestamp);
 		
 		let userEmbed = new Discord.RichEmbed()
 		.setTitle(`User Info - ${member.user.tag}`)
-		.setThumbnail(member.user.avatarURL)
+		.setThumbnail(member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`)
 		.setFooter(`ID: ${member.id}`)
 		.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
 		.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`)

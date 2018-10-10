@@ -29,27 +29,30 @@ class MemeCommand extends Command {
 			let postElements = $(".Post:not(:has(span:contains('promoted')))");
 			
 			let titleArray = postElements.map((i, e) => {
-				return $(e).find("h2").text()
-			}).toArray();
-			let linkArray = postElements.map((i, e) => {
-				return $(e).find("[data-click-id='body']").attr("href")
-			}).toArray();
-			let imageArray = postElements.map((i, e) => {
-				return $(e).find("[data-click-id='media'] img").attr("src")
-			}).toArray();
-			let voteArray = postElements.map((i, e) => {
-				return $(e).find("[data-click-id='upvote']").next().html()
-			}).toArray();
-			let commentArray = postElements.map((i, e) => {
-				return $(e).find("[data-click-id='comments'] span").text().replace(/comments?/, "")
-			}).toArray();
+					return $(e).find("h2").text()
+				}).toArray(),
+				authorArray = postElements.map((i, e) => {
+					return $(e).find("a[href^='/user/']").text()
+				}).toArray(),
+				linkArray = postElements.map((i, e) => {
+					return $(e).find("[data-click-id='body']").attr("href")
+				}).toArray(),
+				imageArray = postElements.map((i, e) => {
+					return $(e).find("[data-click-id='media'] img").attr("src")
+				}).toArray(),
+				voteArray = postElements.map((i, e) => {
+					return $(e).find("[data-click-id='upvote']").next().html()
+				}).toArray(),
+				commentArray = postElements.map((i, e) => {
+					return $(e).find("[data-click-id='comments'] span").text().replace(/ comments?/, "")
+				}).toArray();
 			
 			let rand = Math.floor(Math.random() * titleArray.length);
 			message.channel.send(new Discord.RichEmbed()
 			.setTitle(`${titleArray[rand]}`)
 			.setURL(`https://reddit.com${linkArray[rand]}`)
 			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`👍 ${voteArray[rand]} | 💬 ${commentArray[rand]}`)
+			.setFooter(`👍 ${voteArray[rand]} | 💬 ${commentArray[rand]} | ${authorArray[rand]}`)
 			.setImage(imageArray[rand])
 			)
 		})

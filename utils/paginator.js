@@ -109,15 +109,22 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 						await message.channel.send("What page do you want to go to?")
 						.then(msg2 => {newMessage2 = msg2})
 						reaction.remove(message.author.id);
-						message.channel.awaitMessages(msg => msg.author.id == message.author.id && parseInt(msg.content) != NaN, {
+						message.channel.awaitMessages(msg => msg.author.id == message.author.id, {
 							max: 1,
 							time: 30000,
 							errors: ["time"]
 						})
 						.then(collected => {
-							options.page = parseInt(collected.array()[0].content);
-							paginateOnEdit(pgCollector.message, entries, options);
-							if (!newMessage2.deleted) newMessage2.delete()
+							let cMsg = collected.array()[0], goToPage = parseInt(cMsg.content);
+							if (goToPage != NaN) {
+								options.page = goToPage;
+								paginateOnEdit(pgCollector.message, entries, options);
+								
+								let toDelete = [];
+								if (!newMessage2.deleted) toDelete.push(newMessage2.id)
+								if (!cMsg.deleted) toDelete.push(cMsg.id)
+								if (toDelete.length > 0) message.channel.bulkDelete(toDelete);
+							}
 						})
 						.catch(() => {})
 				}

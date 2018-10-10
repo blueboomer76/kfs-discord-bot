@@ -24,7 +24,7 @@ process.on("uncaughtException", err => {
 
 process.on("unhandledRejection", (err, promise) => {
 	console.log(`At ${new Date()}:`)
-	console.debug(promise);
+	console.error(promise);
 });
 
 bot.login(token);

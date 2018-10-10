@@ -38,45 +38,53 @@ class RedditCommand extends Command {
 			if (err || res.statusCode >= 400) {return message.channel.send(`Failed to retrieve from Reddit. (status code ${res.statusCode})`)}
 			const $ = cheerio.load(res.body);
 			
-			let postElements = $(".Post:not(:has(span:contains('promoted'), .icon-sticky))")
+			let viewAll = false;
+			if (!args[0] || args[0] == "all" || args[0] == "popular") viewAll = true;
 			
-			let subredditArray;
-			if (args[0] == "all" || !args[0]) {
+			let postElements = $(".Post:not(:has(span:contains('promoted'), .icon-sticky))"), subredditArray;
+			if (viewAll) {
 				subredditArray = postElements.map((i, e) => {
 					let subreddit = $(e).find("[data-click-id='subreddit']").attr("href");
 					return subreddit.slice(1, subreddit.length - 1);
-				}).toArray()
+				}).toArray();
 			}
 			
 			let titleArray = postElements.map((i, e) => {
-				let dispTitle = $(e).find("h2").text();
-				return dispTitle.length > 250 ? `${dispTitle.slice(0,250)}...` : dispTitle;
-			}).toArray();
-			let linkArray = postElements.map((i, e) => {
-				return $(e).find("a[data-click-id='body']").attr("href")
-			}).toArray();
-			let voteArray = postElements.map((i, e) => {
-				return $(e).find("[data-click-id='upvote']").next().html()
-			}).toArray();
-			let commentArray = postElements.map((i, e) => {
-				return $(e).find("[data-click-id='comments'] span").text().replace(/ comments?/, "").replace("comment", 0)
-			}).toArray();
+					let dispTitle = $(e).find("h2").text();
+					return dispTitle.length < 200 ? dispTitle : `${dispTitle.slice(0,200)}...`
+				}).toArray(),
+				authorArray = postElements.map((i, e) => {
+					return $(e).find("a[href^='/user/']").text()
+				}).toArray(),
+				timeArray = postElements.map((i, e) => {
+					return $(e).find("[data-click-id='timestamp']").text()
+				}).toArray(),
+				linkArray = postElements.map((i, e) => {
+					return $(e).find("a[data-click-id='body']").attr("href")
+				}).toArray(),
+				voteArray = postElements.map((i, e) => {
+					return $(e).find("[data-click-id='upvote']").next().html()
+				}).toArray(),
+				commentArray = postElements.map((i, e) => {
+					return $(e).find("[data-click-id='comments'] span").text().replace(/ comments?/, "").replace("comment", 0)
+				}).toArray();
 
 			let entries = [[]];
 			for (let i = 0; i < titleArray.length; i++) {
 				let toDisplay = `[${titleArray[i]}](https://reddit.com${linkArray[i]})`;
-				if (!args[0]) {toDisplay += ` (${subredditArray[i]})`}
-				entries[0].push(toDisplay + `\n - 👍 ${voteArray[i]} | 💬 ${commentArray[i]}`);
+				if (viewAll) toDisplay += ` (${subredditArray[i]})`
+				entries[0].push(toDisplay + `\n - 👍 ${voteArray[i]} | 💬 ${commentArray[i]} | ${authorArray[i]} | ${timeArray[i]}`);
 			}
 			
 			let embedTitle = "Reddit - ";
 			if (args[0] == "random") {
 				embedTitle += "Random subreddit!";
-			} else if (args[0] == "all" || !args[0]) {
+			} else if (viewAll) {
 				embedTitle += "All subreddits"
 			} else {
 				embedTitle += `r/${args[0]}`;
 			}
+			
 			paginator.paginate(message, {
 				title: embedTitle,
 				thumbnail: {
@@ -84,6 +92,7 @@ class RedditCommand extends Command {
 				}
 			}, entries, {
 				limit: 5,
+				noStop: viewAll ? true : false,
 				numbered: true,
 				page: 1,
 				params: null

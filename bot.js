@@ -1,5 +1,6 @@
 const {Client, Collection, WebhookClient} = require("discord.js");
 const fs = require("fs");
+const request = require("request");
 const config = require("./config.json");
 
 class KendraBot extends Client {
@@ -65,7 +66,10 @@ class KendraBot extends Client {
 				commandSessionTotal: 0,
 				commandUsage: []
 			},
-			statusNum: 0,
+			status: {
+				randomIters: 0,
+				pos: 0
+			},
 			usage: []
 		};
 		if (config.ideaWebhook) {
@@ -156,11 +160,45 @@ class KendraBot extends Client {
 			stats2.messageCurrentTotal = 0;
 			stats2.callSessionTotal += stats2.callCurrentTotal;
 			stats2.callCurrentTotal = 0;
-			stats2.commandCurrentTotal = 0;
 			stats2.commandSessionTotal += commandCurrentTotal;
+			stats2.commandCurrentTotal = 0;
 			stats2.lastCheck = Number(new Date());
 			stats2.commandUsage = [];
 		}, 1000);
+	}
+	
+	async postBotsDiscordPwStats() {
+		request.post({
+			url: `https://bots.discord.pw/api/bots/${this.user.id}/stats`,
+			headers: {
+				"Authorization": config.botsDiscordPwToken
+			},
+			body: {"server_count": this.guilds.size},
+			json: true
+		}, (err, res) => {
+			if (!err) {
+				console.log("Stats successfully posted to bots.discord.pw")
+			} else {
+				console.log(`Failed to post to bots.discord.pw:\n${err}`)
+			}
+		})
+	}
+	
+	async postDiscordBotsOrgStats() {
+		request.post({
+			url: `https://discordbots.org/api/bots/${this.user.id}/stats`,
+			headers: {
+				"Authorization": config.discordBotsOrgToken
+			},
+			body: {"server_count": this.guilds.size},
+			json: true
+		}, (err, res) => {
+			if (!err) {
+				console.log("Stats successfully posted to discordbots.org")
+			} else {
+				console.log(`Failed to post to discordbots.org:\n${err}`)
+			}
+		})
 	}
 	
 	async handlePhoneMessage(message) {
