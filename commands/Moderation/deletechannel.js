@@ -33,14 +33,18 @@ class DeleteChannelCommand extends Command {
 			let code = Math.floor(Math.random() * 100000).toString();
 			if (code.length < 5) {while (code.length < 5) {code = `0${code}`;}}
 			message.channel.send(`You are about to delete the channel **${channel.name}**, which is more than 180 days old. Type \`${code}\` to proceed. This operation will time out in 30 seconds.`)
-			await message.channel.awaitMessages(msg => msg.author.id == message.author.id && msg.content == code, {
+			await message.channel.awaitMessages(msg => msg.author.id == message.author.id, {
 				max: 1,
 				time: 30000,
 				errors: ["time"]
 			})
-			.catch(() => {cmdErr = true;})
+			.then(collected => {
+				if (collected.array()[0].content != code) cmdErr = "You provided an invalid response, cancelling the operation.";
+			})
+			.catch(() => {cmdErr = "Operation has timed out after 30 seconds."})
+			
+			if (cmdErr) return message.channel.send(cmdErr);
 		}
-		if (cmdErr) return message.channel.send("Operation has timed out.");
 
 		channel.delete()
 		.then(() => message.channel.send(`✅ The channel **${channel.name}** has been deleted.`))

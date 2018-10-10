@@ -71,7 +71,7 @@ class UserInfoCommand extends Command {
 		let userEmbed = new Discord.RichEmbed()
 		.setTitle(`User Info - ${member.user.tag}`)
 		.setFooter(`ID: ${member.id}`)
-		.setThumbnail(member.user.avatarURL)
+		.setThumbnail(member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`)
 		.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
 		.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`)
 		.addField("Status", presence, true)

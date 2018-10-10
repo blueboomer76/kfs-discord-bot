@@ -122,9 +122,14 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 							errors: ["time"]
 						})
 						.then(collected => {
-							options.page = parseInt(collected.array()[0].content);
+							let cMsg = collected.array()[0], goToPage = parseInt(cMsg.content);
+							options.page = goToPage;
 							paginateOnEdit(pgCollector.message, entries, options);
-							if (!newMessage2.deleted) newMessage2.delete();
+							
+							let toDelete = [];
+							if (!newMessage2.deleted) toDelete.push(newMessage2.id)
+							if (!cMsg.deleted) toDelete.push(cMsg.id)
+							if (toDelete.length > 0) message.channel.bulkDelete(toDelete);
 						})
 						.catch(() => {})
 				}

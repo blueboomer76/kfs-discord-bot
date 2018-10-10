@@ -2,6 +2,7 @@ const {Client, Collection, WebhookClient} = require("discord.js");
 const {capitalize} = require("./modules/functions.js");
 const config = require("./config.json");
 const fs = require("fs");
+const request = require("request");
 
 class KFSDiscordBot extends Client {
 	constructor(options) {
@@ -67,7 +68,7 @@ class KFSDiscordBot extends Client {
 				commandUsages: [],
 				lastCheck: Number(new Date())
 			},
-			statusNum: 0
+			status: {randomIters: 0, pos: 0}
 		};
 		if (config.ideaWebhookID && config.ideaWebhookToken) {
 			this.ideaWebhook = new WebhookClient(config.ideaWebhookID, config.ideaWebhookToken);
@@ -169,7 +170,49 @@ class KFSDiscordBot extends Client {
 		});
 	}
 
-	handlePhoneMessage(message) {
+	async postBotsDiscordPwStats() {
+		request.post({
+			url: `https://bots.discord.pw/api/bots/${this.user.id}/stats`,
+			headers: {
+				"Authorization": config.botsDiscordPwToken
+			},
+			body: {"server_count": this.guilds.size},
+			json: true
+		}, (err, res) => {
+			if (err) {
+				console.log(`[Stats Posting] Could not request to bots.discord.pw: ${err.message}`);
+			} else if (!res) {
+				console.log("[Stats Posting] No response was received from bots.discord.pw.");
+			} else if (res.statusCode >= 400) {
+				console.log(`[Stats Posting] The request to bots.discord.pw failed with status code ${res.statusCode} (${res.statusMessage})`);
+			} else {
+				console.log("[Stats Posting] Stats successfully posted to bots.discord.pw");
+			}
+		})
+	}
+	
+	async postDiscordBotsOrgStats() {
+		request.post({
+			url: `https://discordbots.org/api/bots/${this.user.id}/stats`,
+			headers: {
+				"Authorization": config.discordBotsOrgToken
+			},
+			body: {"server_count": this.guilds.size},
+			json: true
+		}, (err, res) => {
+			if (err) {
+				console.log(`[Stats Posting] Could not request to discordbots.org: ${err.message}`);
+			} else if (!res) {
+				console.log("[Stats Posting] No response was received from discordbots.org.");
+			} else if (res.statusCode >= 400) {
+				console.log(`[Stats Posting] The request to discordbots.org failed with status code ${res.statusCode} (${res.statusMessage})`);
+			} else {
+				console.log("[Stats Posting] Stats successfully posted to discordbots.org");
+			}
+		})
+	}
+
+	async handlePhoneMessage(message) {
 		let phoneCache = this.cache.phone;
 		let ch0 = phoneCache.channels[0];
 		let ch1 = phoneCache.channels[1];
