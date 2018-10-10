@@ -65,11 +65,11 @@ class UserInfoCommand extends Command {
 			if (i < 0 || i >= message.guild.memberCount) continue;
 			nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
 		}
-
+		
 		let userEmbed = new Discord.RichEmbed()
 		.setTitle(`User Info - ${member.user.tag}`)
 		.setFooter(`ID: ${member.id}`)
-		.setThumbnail(member.user.avatarURL)
+		.setThumbnail(member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`)
 		.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
 		.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`)
 		.addField("Status", presence, true)
