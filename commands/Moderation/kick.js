@@ -1,39 +1,52 @@
-module.exports.run = async (bot, message, args) => {
-	if (!message.member.hasPermission("KICK_MEMBERS")) return message.channel.send("You don't have the required permission `KICK_MEMBERS` to run this command!")
-	if (args.length == 0) return message.channel.send("You need to provide a user to kick.")
-	var kMem;
-	var mention = message.mentions.users.first();
-	if (mention) {
-		kMem = message.guild.member(mention);
-	} else {
-		kMem = message.guild.members.get(args[0]);
+const Command = require("../../structures/command.js");
+
+class KickCommand extends Command {
+	constructor() {
+		super({
+			name: "kick",
+			description: "Kicks a user from this server",
+			args: [
+				{
+					num: Infinity,
+					type: "member"
+				}
+			],
+			cooldown: {
+				time: 20000,
+				type: "user"
+			},
+			flags: [
+				{
+					name: "reason",
+					desc: "Reason to put in the audit log",
+					arg: {
+						type: "string"
+					}
+				}
+			],
+			perms: {
+				bot: ["KICK_MEMBERS"],
+				user: ["KICK_MEMBERS"],
+				level: 0
+			},
+			usage: "kick <user> [--reason <reason>]"
+		});
 	}
-	if (!kMem) return message.channel.send("No users were found! A valid user mention or ID is needed.");
-	if (kMem.id == message.author.id || kMem.id == bot.user.id) return message.channel.send("This command cannot be used on yourself or the bot.");
-	if (message.author.id != message.guild.owner.id && kMem.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-		return message.channel.send("Cannot kick: your highest role must be higher than the user's highest role");
+	
+	async run(bot, message, args, flags) {
+		let member = args[0];
+		if (member.id == message.author.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself or the bot.");
+		if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
+			return message.channel.send("Cannot kick: your highest role must be higher than the user's highest role (overrides with server owner)");
+		} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
+			return message.channel.send("Cannot kick: the bot's highest role must be higher than the user's highest role");
+		}
+
+		let reasonFlag = flags.find(f => f.name == "reason");
+		member.kick(reasonFlag ? reasonFlag.args : null)
+		.then(() => message.channel.send(`✅ The user **${member.user.tag}** was kicked from the server.`))
+		.catch(err => message.channel.send("An error has occurred while trying to kick the user: `" + err + "`"))
 	}
-	kMem.kick()
-	.then(() => message.channel.send(`The user ${kMem.user.tag} was kicked from the server.`))
-	.catch(() => message.channel.send("Could not kick the user from the server."))
 }
 
-module.exports.config = {
-	"aliases": null,
-	"cooldown": {
-		"waitTime": 15000,
-		"type": "user"
-	},
-	"guildOnly": true,
-	"perms": {
-		"level": 2,
-		"reqPerms": "KICK_MEMBERS"
-	}
-}
-
-module.exports.help = {
-	"name": "kick",
-	"category": "Moderation",
-	"description": "Kicks a user from this server",
-	"usage": "kick <user>"
-}
+module.exports = KickCommand;
