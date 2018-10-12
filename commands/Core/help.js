@@ -40,7 +40,7 @@ class HelpCommand extends Command {
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter(`Use k,help <command> to get help for a command | Total commands: ${bot.commands.size}`);
 			let cmds = bot.commands;
-			if (!bot.ownerIds.includes(message.author.id) && !bot.botAdminIds.includes(message.author.id)) {
+			if (!bot.ownerIds.includes(message.author.id) && !bot.adminIds.includes(message.author.id)) {
 				cmds = cmds.filter(cmd => !cmd.hidden);
 			}
 			for (let i = 0; i < bot.categories.length; i++) {

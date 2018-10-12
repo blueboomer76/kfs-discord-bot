@@ -15,8 +15,7 @@ class PhoneCommand extends Command {
 	}
 	
 	async run(bot, message, args, flags) {
-		let phoneMsg, phoneMsg0;
-		let phoneCache = bot.cache.phone;
+		let phoneMsg, phoneMsg0,phoneCache = bot.cache.phone;
 		if (!phoneCache.channels.includes(message.channel.id)) {
 			phoneCache.channels.push(message.channel.id);
 			if (phoneCache.channels.length == 1) {
@@ -38,7 +37,7 @@ class PhoneCommand extends Command {
 				phoneMsg = "There was no response from the phone, hanging it up.";
 			} else {
 				let affected = 0;
-				if (message.channel.id == phoneCache.channels[0]) {affected = 1};
+				if (message.channel.id == phoneCache.channels[0]) affected = 1;
 				phoneMsg = "You have hung up the phone.";
 				bot.channels.get(phoneCache.channels[affected]).send("☎ The other side hung up the phone.");
 			}
