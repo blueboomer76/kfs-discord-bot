@@ -1,0 +1,27 @@
+{
+	"token": "<your bot token>",
+	"botsDiscordPwToken": "[bots.discord.pw token]",
+	"discordBotsOrgToken": "[discordbots.org token]",
+	"ideaWebhookID": "[webhook ID]",
+	"ideaWebhookToken": "[webhook token]",
+	"prefix": "k,",
+	"ownerIDs": [
+		"<array of owner IDs>"
+	],
+	"adminIDs": [],
+	"botModIDs": [],
+	"moderatorIDs": [],
+	"supportIDs": [],
+	"customCooldownMessages": [
+		"You're calling me fast enough that I'm getting dizzy!",
+		"You have to wait before using the command again...",
+		"You're calling me a bit too fast, I am getting dizzy!",
+		"I am busy, try again after a bit",
+		"Hang in there before using this command again..."
+	],
+	"customStatusMessages": [
+		"with over 45 commands",
+		"enjoying with you",
+		"with cuteness."
+	]
+}

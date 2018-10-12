@@ -1,9 +1,10 @@
 {
   "name": "kfs-discord-bot",
-  "version": "1.2.8",
+  "version": "1.2.25",
   "description": "A multipurpose Discord bot for utility, fun, and more",
   "main": "index.js",
   "dependencies": {
+    "canvas": "^2.0.0-alpha.17",
     "cheerio": "^1.0.0-rc.2",
     "discord.js": "^11.3.2",
     "ffmpeg-binaries": "^4.0.0",
