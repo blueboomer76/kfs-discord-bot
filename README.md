@@ -8,36 +8,13 @@ This is an **actively developed bot** that not only has fun, moderation, utility
 
 ## How to Install
 
-*Note: You need to have Node.js installed before you can start the bot*
+*Note: You need to have Node.js 8 or newer installed before you can start the bot*
 
 1. Install a program that can clone GitHub repositories, such as Git Bash for Windows
-2. Open the program and run `git clone` with this repository's clone URL
+2. Run `git clone` with this repository's clone URL
 3. Open the Command Prompt and run `cd ../path/to/directory` or similar if necessary to move the directory to the kfs-discord-bot repository.
-4. Create a file `config.json` and include the following, substituting the required values:
-```json
-{
-	"token": "<your bot token>",
-	"ownerIDs": [
-		"<array of owner IDs>"
-	],
-	"adminIDs": [
-		"<array of admin IDs>"
-	],
-	"botModIDs": [
-		"<array of bot moderator IDs>"
-	],
-	"moderatorIDs": [
-		"<array of moderator IDs>"
-	],
-	"supportIDs": [
-		"<array of support IDs>"
-	],
-	"prefix": "<your prefix>",
-	"ideaWebhookID": "<suggestions webhook ID>",
-	"ideaWebhookToken": "<suggestions webhook token>"
-}
-```
-5. Install all dependencies with `npm install <package>` as shown in `package.json`.
+4. Rename the file `config.example.json` to `config.json` and replace everything in brackets (`<`, `>`, `[`, or `]`) with the correct values. Required values (with `<` and `>`) are needed for the bot to work, and optional values (with `[` and `]`) can use `null` in place of the value.
+5. Run `npm install` to install the dependencies
 6. Run `node index.js`
 
 ## References
