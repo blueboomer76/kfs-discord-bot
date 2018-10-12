@@ -1,30 +1,61 @@
 const Discord = require("discord.js");
+const Command = require("../../structures/command.js");
 
-module.exports.run = async (bot, message, args) => {
-	if (!message.member.hasPermission("BAN_MEMBERS")) return message.reply("You don't have the required permission `BAN_MEMBERS` to run this command!")
-	let bUser = message.mentions.users.first() || message.guild.members.get(args[0]);
-	if (!bUser) return message.reply("Please mention a valid user or provide a valid ID!")
-	await bUser.ban()
-	.then(message.channel.send(`The user ${bUser.tag} was banned from the guild.`))
-	.catch(err => message.channel.send("Oops! An error occurred: ```" + err + "```"))
-}
-
-module.exports.config = {
-	"aliases": null,
-	"cooldown": {
-		"waitTime": 15000,
-		"type": "user"
-	},
-	"guildOnly": true,
-	"perms": {
-		"level": 3,
-		"reqPerms": "BAN_MEMBERS"
+class BanCommand extends Command {
+	constructor() {
+		super({
+			name: "ban",
+			description: "Bans a user. It will be logged if a modlog channel was set",
+			args: [
+				{
+					num: Infinity,
+					type: "member"
+				},
+			],
+			cooldown: {
+				time: 25000,
+				type: "user"
+			},
+			flags: [
+				{
+					name: "days",
+					desc: "Number of days to delete messages",
+					arg: {
+						num: 1,
+						type: "number",
+						min: 0,
+						max: 14
+					}
+				},
+				{
+					name: "reason",
+					desc: "Reason to put in the audit log",
+					arg: {
+						num: 1,
+						type: "string"
+					}
+				}
+			],
+			perms: {
+				bot: ["BAN_MEMBERS"],
+				user: ["BAN_MEMBERS"],
+				level: 0
+			},
+			usage: "ban <user>"
+		});
+	}
+	
+	async run(bot, message, args, flags) {
+		let member = args[0],
+			daysFlag = flags.find(f => f.name == "days"),
+			reasonFlag = flags.find(f => f.name == "reason");
+		await member.ban({
+			days: daysFlag ? daysFlag.args[0] : 0,
+			reason: reasonFlag ? reasonFlag.args[0] : null
+		})
+		.then(message.channel.send(`✅ The user **${member.user.tag}** was banned from the guild.`))
+		.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
 	}
 }
 
-module.exports.help = {
-	"name": "ban",
-	"category": "Moderation",
-	"description": "Bans a member. It will be logged if a modlog channel was set",
-	"usage": "k,ban <user>"
-}
+module.exports = BanCommand;

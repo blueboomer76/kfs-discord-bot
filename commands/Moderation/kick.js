@@ -1,30 +1,46 @@
 const Discord = require("discord.js");
+const Command = require("../../structures/command.js");
 
-module.exports.run = async (bot, message, args) => {
-	if (!message.member.hasPermission("KICK_MEMBERS")) return message.reply("You don't have the required permission `KICK_MEMBERS` to run this command!")
-	let kUser = message.mentions.users.first() || message.guild.members.get(args[0]);
-	if (!kUser) return message.reply("Please mention a valid user or provide a valid ID!")
-	await kUser.kick()
-	.then(message.channel.send(`The user ${kUser.tag} was kicked from the guild.`))
-	.catch(err => message.channel.send("Oops! An error occurred: ```" + err + "```"))
-}
-
-module.exports.config = {
-	"aliases": null,
-	"cooldown": {
-		"waitTime": 15000,
-		"type": "user"
-	},
-	"guildOnly": true,
-	"perms": {
-		"level": 2,
-		"reqPerms": "KICK_MEMBERS"
+class KickCommand extends Command {
+	constructor() {
+		super({
+			name: "kick",
+			description: "Kicks a member. It will be logged if a modlog channel was set",
+			args: [
+				{
+					num: Infinity,
+					type: "member"
+				}
+			],
+			cooldown: {
+				time: 20000,
+				type: "user"
+			},
+			flags: [
+				{
+					name: "reason",
+					desc: "Reason to put in the audit log",
+					arg: {
+						num: 1,
+						type: "string"
+					}
+				}
+			],
+			perms: {
+				bot: ["KICK_MEMBERS"],
+				user: ["KICK_MEMBERS"],
+				level: 0
+			},
+			usage: "kick <user>"
+		});
+	}
+	
+	async run(bot, message, args, flags) {
+		let member = args[0], reasonFlag = flags.find(f => f.name == "reason");
+		await member.kick(reasonFlag ? reasonFlag.args[0] : null)
+		.then(message.channel.send(`✅ The user **${member.user.tag}** was kicked from the guild.`))
+		.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
 	}
 }
 
-module.exports.help = {
-	"name": "kick",
-	"category": "Moderation",
-	"description": "Kicks a member. It will be logged if a modlog channel was set",
-	"usage": "k,kick <user>"
-}
+module.exports = KickCommand;

@@ -1,0 +1,32 @@
+{
+	"token": "<your bot token>",
+	"botsDiscordPwToken": "<bots.discord.pw token>",
+	"discordBotsOrgToken": "<discordbots.org token>",
+	"ideaWebhook": {
+		"id": "<webhook id>",
+		"token": "<webhook token>"
+	},
+	"prefix": "k,",
+	"ownerIds": [
+		"<owner id>",
+		"<another owner id>"
+	],
+	"adminIds": [],
+	"botModIds": [],
+	"moderatorIds": [],
+	"supportIds": [],
+	"customCooldownMessages": [
+		"You're calling me fast enough that I'm getting dizzy!",
+		"Watch out, seems like we might get a speeding ticket at this rate!",
+		"You have to wait before using the command again...",
+		"You're calling me a bit too fast, I am getting dizzy!",
+		"I am busy, try again after a bit",
+		"Hang in there before using this command again..."
+	],
+	"customStatusMessages": [
+		"with over 45 commands",
+		"enjoying with you",
+		"with cuteness."
+	],
+	"trackOwnerCommands": true
+}
