@@ -2,6 +2,7 @@ const {Client, Collection, WebhookClient} = require("discord.js");
 const fs = require("fs");
 const request = require("request");
 const config = require("./config.json");
+const {capitalize} = require("./modules/functions.js");
 
 class KendraBot extends Client {
 	constructor(options) {
@@ -80,33 +81,30 @@ class KendraBot extends Client {
 	loadCommands() {
 		fs.readdir("./commands/", (err, files) => {
 			if (err) throw err;
-			const subdirs = files;
-			if (subdirs.length > 0) {
-				for (const subdir of subdirs) {
-					fs.readdir(`./commands/${subdir}`, (err, files) => {
-						if (err) throw err;
-						let cmdFiles = files.filter(f => f.split(".").pop() == "js");
-						if (cmdFiles.length != 0) {
-							this.categories.push(subdir);
-							for (const cmd of cmdFiles) {
-								let CommandClass = require(`./commands/${subdir}/${cmd}`);
-								let command = new CommandClass();
-								command.category = subdir;
-								this.commands.set(command.name, command);
-								if (command.aliases.length > 0) {
-									for (const alias of command.aliases) { 
-										this.aliases.set(alias, command.name);
-									}
+			let cmdFiles = files.filter(f => f.split(".").pop() == "js").map(f => f.split(".").shift());
+			if (cmdFiles.length != 0) {
+				for (let category of cmdFiles) {
+					category = capitalize(category);
+					this.categories.push(category);
+					let commandClasses = require(`./commands/${category}`);
+					if (commandClasses.length > 0) {
+						for (const CommandClass of commandClasses) {
+							let command = new CommandClass();
+							command.category = category;
+							this.commands.set(command.name, command);
+							if (command.aliases.length > 0) {
+								for (const alias of command.aliases) { 
+									this.aliases.set(alias, command.name);
 								}
 							}
-							console.log(`${cmdFiles.length} files have been loaded in the category ${subdir}.`);
-						} else {
-							console.log(`No commands found in the category ${subdir}.`);
 						}
-					})
+						console.log(`${commandClasses.length} commands have been loaded in the category ${category}.`);
+					} else {
+						console.log(`No commands found in the category ${category}.`);
+					}
 				}
 			} else {
-				throw new Error("No category folders found");
+				throw new Error("No command files or commands found")
 			}
 		})
 	}
