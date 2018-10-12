@@ -76,36 +76,33 @@ class KFSDiscordBot extends Client {
 	}
 	
 	loadCommands() {
-		fs.readdir("./commands/", (err1, files1) => {
-			if (err1) throw err1;
-			const subdirs = files1;
-			if (subdirs.length > 0) {
-				for (const subdir of subdirs) {
-					fs.readdir(`./commands/${subdir}`, (err2, files2) => {
-						if (err2) return;
-						let cmdFiles = files2.filter(f => f.split(".").pop() == "js");
-						if (cmdFiles.length != 0) {
-							let category = capitalize(subdir);
-							this.categories.push(category);
-							for (const cmd of cmdFiles) {
-								let CommandClass = require(`./commands/${subdir}/${cmd}`);
-								let command = new CommandClass();
-								command.category = category;
-								this.commands.set(command.name, command);
-								if (command.aliases.length > 0) {
-									for (const alias of command.aliases) { 
-										this.aliases.set(alias, command.name);
-									}
+		fs.readdir("./commands/", (err, files) => {
+			if (err) throw err;
+			let cmdFiles = files.filter(f => f.split(".").pop() == "js");
+			if (cmdFiles.length > 0) {
+				for (const fileName of cmdFiles) {
+					let rawCategory = fileName.split(".").shift();
+					let category = capitalize(rawCategory);
+					this.categories.push(category);
+					let commandClasses = require(`./commands/${fileName}`);
+					if (commandClasses.length > 0) {
+						for (const CommandClass of commandClasses) {
+							let command = new CommandClass();
+							command.category = category;
+							this.commands.set(command.name, command);
+							if (command.aliases.length > 0) {
+								for (const alias of command.aliases) { 
+									this.aliases.set(alias, command.name);
 								}
 							}
-							console.log(`${cmdFiles.length} files have been loaded in the category ${subdir}.`);
-						} else {
-							console.log(`No commands found in the category ${subdir}.`);
 						}
-					})
+						console.log(`${commandClasses.length} commands have been loaded in the category ${category}.`);
+					} else {
+						console.log(`No commands found in the category ${category}.`);
+					}
 				}
 			} else {
-				throw new Error("No category folders found");
+				throw new Error("No command files or commands found");
 			}
 		})
 	}
