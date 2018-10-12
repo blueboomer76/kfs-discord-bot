@@ -11,6 +11,9 @@ package-lock.json
 # For starting the bot
 start-bot.bat
 
+# Stats JSON file
+stats.json
+
 # Test directory and command
 test/
 test.js
