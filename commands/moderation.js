@@ -1,4 +1,5 @@
 const Command = require("../structures/command.js");
+const promptor = require("../modules/codePromptor.js");
 
 module.exports = [
 	class AddRoleCommand extends Command {
@@ -32,10 +33,9 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0];
-			let role = args[1];
+			let member = args[0], role = args[1];
 			if (member.id == message.author.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself or the bot.");
-			if (member.roles.get(role.id)) return message.channel.send("The user already has that role.");
+			if (member.roles.get(role.id)) return message.channel.send("That user already has the role you provided.");
 			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
 				return message.channel.send("Cannot add role: your highest role must be higher than the role to add (overrides with server owner)");
 			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
@@ -92,16 +92,19 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0];
+			let member = args[0],
+				daysFlag = flags.find(f => f.name == "days"),
+				reasonFlag = flags.find(f => f.name == "reason");
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself, the server owner, or the bot.");
 			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
 				return message.channel.send("Cannot ban: your highest role must be higher than the user's highest role (overrides with server owner)");
 			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
 				return message.channel.send("Cannot ban: the bot's highest role must be higher than the user's highest role");
 			}
-	
-			let daysFlag = flags.find(f => f.name == "days"),
-				reasonFlag = flags.find(f => f.name == "reason");
+
+			let cmdErr = await promptor.prompt(message, `You are about to ban the user **${member.user.tag}** from this server.`);
+			if (cmdErr) return message.channel.send(cmdErr);
+
 			member.ban({
 				days: daysFlag ? daysFlag.args : 0,
 				reason: reasonFlag ? reasonFlag.args : null
@@ -169,25 +172,9 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let channel = args[0];
-	
-			let cmdErr;
-			if (Number(new Date()) - channel.createdTimestamp > 1000 * 86400 * 180) {
-				let code = Math.floor(Math.random() * 100000).toString();
-				if (code.length < 5) {while (code.length < 5) {code = `0${code}`;}}
-				message.channel.send(`You are about to delete the channel **${channel.name}**, which is more than 180 days old. Type \`${code}\` to proceed. This operation will time out in 30 seconds.`)
-				await message.channel.awaitMessages(msg => msg.author.id == message.author.id, {
-					max: 1,
-					time: 30000,
-					errors: ["time"]
-				})
-				.then(collected => {
-					if (collected.array()[0].content != code) cmdErr = "You provided an invalid response, cancelling the operation.";
-				})
-				.catch(() => {cmdErr = "Operation has timed out after 30 seconds."})
-				
-				if (cmdErr) return message.channel.send(cmdErr);
-			}
-	
+			let cmdErr = await promptor.prompt(message, `You are about to delete the channel **${channel.name}**, which is more than 180 days old.`)
+			if (cmdErr) return message.channel.send(cmdErr);
+			
 			channel.delete()
 			.then(() => message.channel.send(`✅ The channel **${channel.name}** has been deleted.`))
 			.catch(err => message.channel.send("An error has occurred while trying to delete the channel: `" + err + "`"))
@@ -227,15 +214,18 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0];
+			let member = args[0],
+				reasonFlag = flags.find(f => f.name == "reason");
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself, the server owner, or the bot.");
 			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
 				return message.channel.send("Cannot kick: your highest role must be higher than the user's highest role (overrides with server owner)");
 			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
 				return message.channel.send("Cannot kick: the bot's highest role must be higher than the user's highest role");
 			}
-	
-			let reasonFlag = flags.find(f => f.name == "reason");
+
+			let cmdErr = await promptor.prompt(message, `You are about to kick the user **${member.user.tag}** from this server.`)
+			if (cmdErr) return message.channel.send(cmdErr);
+
 			member.kick(reasonFlag ? reasonFlag.args : null)
 			.then(() => message.channel.send(`✅ The user **${member.user.tag}** was kicked from the server.`))
 			.catch(err => message.channel.send("An error has occurred while trying to kick the user: `" + err + "`"))
@@ -360,8 +350,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0];
-			let role = args[1];
+			let member = args[0], role = args[1];
 			if (member.id == message.author.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself or the bot.");
 			if (!member.roles.has(role.id)) return message.channel.send("The user does not have that role.");
 			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
@@ -408,8 +397,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0];
-			let newNick = args[1];
+			let member = args[0], newNick = args[1];
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself, the server owner, or the bot.");
 			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
 				return message.channel.send("Cannot set nickname: your highest role must be higher than the user's highest role (overrides with server owner)");

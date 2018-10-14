@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../structures/command.js");
-const {capitalize, getDuration} = require("../modules/functions.js");
+const {capitalize, getDuration, parsePerm} = require("../modules/functions.js");
 const paginator = require("../utils/paginator.js");
 const {version} = require("../package.json");
 
@@ -89,9 +89,10 @@ module.exports = [
 				let commandFlags = command.flags.map(f => `\`--${f.name}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`);
 				let commandPerms = command.perms;
 				let permReq = {
-					bot: commandPerms.bot.length > 0 ? commandPerms.bot.join(", ") : "None",
-					user: commandPerms.user.length > 0 ? commandPerms.user.join(", ") : "None",
-					level: bot.permLevels[commandPerms.level].name
+					bot: commandPerms.bot.length > 0 ? commandPerms.bot.map(p => parsePerm(p)).join(", ") : "None",
+					user: commandPerms.user.length > 0 ? commandPerms.user.map(p => parsePerm(p)).join(", ") : "None",
+					role: commandPerms.role ? `\nRequires having a role named ${commandPerms.role}.` : "",
+					level: commandPerms.level > 0 ? `\nRequires being ${bot.permLevels[commandPerms.level].name}.` : ""
 				};
 
 				helpEmbed.setTitle(`Help - ${command.name}`)
@@ -103,7 +104,7 @@ module.exports = [
 				.addField("Usage", command.usage)
 				.addField("Examples", command.examples.length > 0 ? command.examples.join("\n") : "No examples provided")
 				.addField("Allows DMs", command.allowDMs ? "Yes" : "No")
-				.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user} (with level ${permReq.level})`)
+				.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`)
 				.addField("Cooldown", `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}`)
 			}
 			if (flags.find(f => f.name == "dm")) {
@@ -206,15 +207,16 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let phoneMsg, phoneMsg0;
-			let phoneCache = bot.cache.phone;
+			let phoneMsg, phoneMsg0, phoneCache = bot.cache.phone;
 			if (!phoneCache.channels.includes(message.channel.id)) {
 				phoneCache.channels.push(message.channel.id);
 				if (phoneCache.channels.length == 1) {
 					message.react("☎");
 				} else {
 					bot.cache.stats.callCurrentTotal++;
-					phoneCache.callExpires = Number(new Date()) + 600000;
+					phoneCache.lastMsgTime = Number(new Date());
+					setTimeout(() => {bot.checkPhone()}, 1000*600);
+					
 					message.channel.send("☎ A phone connection has started! Greet the other side!");
 					if (phoneCache.channels.length == 2) {
 						phoneMsg0 = "The other side has picked up the phone! Greet the other side!";
@@ -252,8 +254,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const m = await message.channel.send("Ping?");
-			m.edit(":ping_pong: **Pong!**" + "\n" + "Latency: " + (m.createdTimestamp - message.createdTimestamp) + "ms" + "\n" + "API Latency: " + Math.round(bot.ping) + "ms")
+			const msg = await message.channel.send("Ping?");
+			msg.edit(`🏓 **Pong!**\nLatency: ${msg.createdTimestamp - message.createdTimestamp}ms\nAPI Latency: ${Math.round(bot.ping)}ms`)
 		}
 	},
 	class ReloadCommand extends Command {

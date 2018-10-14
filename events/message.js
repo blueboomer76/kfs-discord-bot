@@ -1,4 +1,5 @@
 const cdChecker = require("../modules/cooldownChecker.js");
+const {parsePerm} = require("../modules/functions.js");
 const argParser = require("../utils/argsParser.js");
 const config = require("../config.json");
 
@@ -22,17 +23,18 @@ module.exports = async (bot, message) => {
 		if (message.guild && !message.channel.permissionsFor(bot.user).has(["VIEW_CHANNEL", "SEND_MESSAGES"])) return;
 		if (!message.guild && !runCommand.allowDMs) return message.channel.send("This command cannot be used in Direct Messages.")
 
-		let requiredPerms = runCommand.perms, userPermsAllowed = true, roleAllowed = true, faultMsg = "";
+		let requiredPerms = runCommand.perms, userPermsAllowed = null, roleAllowed = null, faultMsg = "";
 		if (message.guild) {
 			if (requiredPerms.bot.length > 0) {
 				for (const perm of requiredPerms.bot) {
 					if (!message.channel.permissionsFor(bot.user).has(perm)) {
-						faultMsg += `I need these permissions to run this command:\n${requiredPerms.bot.join(", ")}`
+						faultMsg += `I need these permissions to run this command:\n${requiredPerms.bot.map(p => parsePerm(p)).join(", ")}`
 						break;
 					}
 				}
 			}
 			if (requiredPerms.user.length > 0) {
+				userPermsAllowed = true;
 				for (const perm of requiredPerms.user) {
 					if (!message.channel.permissionsFor(message.author).has(perm)) {
 						userPermsAllowed = false;
@@ -40,15 +42,19 @@ module.exports = async (bot, message) => {
 					}
 				}
 			}
-			if (requiredPerms.role && message.author.id != message.guild.owner.id && !message.member.roles.find(role => role.name == requiredPerms.role)) {roleAllowed = false;}
-			if (!userPermsAllowed || !roleAllowed) {
-				if (!userPermsAllowed && !roleAllowed) {
-					faultMsg += `You need these permissions or a role named **${requiredPerms.role}** to run this command:\n${requiredPerms.user.join(", ")}`
-				} else if (!userPermsAllowed) {
-					faultMsg += `You need these permissions to run this command:\n${requiredPerms.user.join(", ")}`
+			if (requiredPerms.role) {
+				if (message.author.id == message.guild.owner.id || message.member.roles.find(role => role.name.toLowerCase() == requiredPerms.role.toLowerCase())) {
+					roleAllowed = true;
 				} else {
-					faultMsg += `You need to be the server owner or have a role named **${requiredPerms.role}** to run this command.`
+					roleAllowed = false;
 				}
+			}
+			if (userPermsAllowed == false && roleAllowed == null) {
+				faultMsg += `\nYou need these permissions to run this command:\n${requiredPerms.user.map(p => parsePerm(p)).join(", ")}`
+			} else if (userPermsAllowed == false && roleAllowed == false) {
+				faultMsg += `\nYou need to have these permissions, be the server owner, or have a role named **${requiredPerms.role}** to run this command:\n${requiredPerms.user.map(p => parsePerm(p)).join(", ")}`
+			} else if (userPermsAllowed == null && roleAllowed == false) {
+				faultMsg += `\nYou need to be the server owner or have a role named **${requiredPerms.role}** to run this command.`
 			}
 		}
 		if (requiredPerms.level > 0) {
@@ -58,41 +64,19 @@ module.exports = async (bot, message) => {
 				if (permLevels[i].validate(message)) userLevel = i;
 			}
 			if (userLevel < requiredPerms.level) {
-				let faultDesc = permLevels[requiredPerms.level].desc ? permLevels[requiredPerms.level].desc : "";
-				faultMsg += `\nYou need this permission level to run this command:\n${bot.permLevels[requiredPerms.level].name} (${faultDesc})`;
+				let faultDesc = permLevels[requiredPerms.level].desc ? ` (${permLevels[requiredPerms.level].desc})` : "";
+				faultMsg += `\nYou need to be a ${bot.permLevels[requiredPerms.level].name} to run this command${faultDesc}`;
 			}
 		}
 		if (faultMsg.length > 0) return message.channel.send(faultMsg);
-		
-		let cdInfo = runCommand.cooldown;
-		if (cdInfo.time != 0) {
-			let cdCheck = cdChecker.check(bot, message, runCommand.name);
-			if (cdCheck == false) {
-				return;
-			} else if (cdCheck != true) {
-				let cdMessages = [
-					"You're calling me fast enough that I'm getting dizzy!",
-					"You have to wait before using the command again...",
-					"You're calling me a bit too fast, I am getting dizzy!",
-					"I am busy, try again after a bit",
-					"Hang in there before using this command again..."
-				];
-				let cdSuffix = "";
-				if (message.guild) {
-					if (cdInfo.type == "channel") {
-						cdSuffix = " in this channel";
-					} else if (cdInfo.type == "guild") {
-						cdSuffix = " in this server";
-					}
-				}
-				return message.channel.send(`⛔ **Cooldown:**\n*${cdMessages[Math.floor(Math.random() * cdMessages.length)]}*\nThis command cannot be used again for **${cdCheck} seconds**${cdSuffix}!`)
-			}
-			cdChecker.addCooldown(bot, message, runCommand.name);
-		}
+
+		if (cdChecker.check(bot, message, runCommand.name) == false) return;
+
 		if (runCommand.startTyping) {
 			message.channel.startTyping();
 			setTimeout(() => message.channel.stopTyping(), 10000);
 		}
+
 		let flags = [];
 		if (runCommand.flags.length > 0) {
 			let parsedFlags = argParser.parseFlags(bot, message, args, runCommand.flags);
@@ -107,28 +91,31 @@ module.exports = async (bot, message) => {
 			if (args.error.startsWith("Multiple")) return message.channel.send(`⚠ **${args.error}**\n${args.message}`);
 			return message.channel.send(`⚠ **${args.error}**\n${args.message}\n*The correct usage is:* \`${runCommand.usage}\``);
 		}
-		runCommand.run(bot, message, args, flags).catch(err => {
-			let e = err;
-			if (e && err.stack) e = err.stack;
+
+		runCommand.run(bot, message, args, flags)
+		.catch(err => {
+			let e = err && err.stack ? err.stack : err;
 			if (e && e.length > 1500) e = e.slice(0, 1500) + "...";
-			message.channel.send("An error has occurred while running the command:```javascript" + "\n" + e + "```");
+			message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${e}\`\`\``);
 		});
+		if (runCommand.cooldown.time != 0) cdChecker.addCooldown(bot, message, runCommand.name);
+
 		/*
-			This is the code if owners are to be ignored.
-			
-			if (!bot.ownerIDs.includes(message.author.id)) {
-				let commandUsage = bot.cache.stats.commandUsages.find(u => u.command == runCommand.name);
-				if (commandUsage) {
-					commandUsage.uses++;
-				} else {
-					bot.cache.stats.commandUsages.push({
-						command: runCommand.name,
-						uses: 1
-					})
-				}
+		This is the code if owners are to be ignored.
+		
+		if (!bot.ownerIDs.includes(message.author.id)) {
+			let commandUsage = bot.cache.stats.commandUsages.find(u => u.command == runCommand.name);
+			if (commandUsage) {
+				commandUsage.uses++;
 			} else {
-				bot.cache.stats.commandCurrentTotal++;
+				bot.cache.stats.commandUsages.push({
+					command: runCommand.name,
+					uses: 1
+				})
 			}
+		} else {
+			bot.cache.stats.commandCurrentTotal++;
+		}
 		*/
 		let commandUsage = bot.cache.stats.commandUsages.find(u => u.command == runCommand.name);
 		if (commandUsage) {

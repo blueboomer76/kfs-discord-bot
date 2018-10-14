@@ -56,7 +56,7 @@ class KFSDiscordBot extends Client {
 		this.cache = {
 			guildCount: 0,
 			userCount: 0,
-			phone: {channels: [], msgCount: 0, callExpires: 0},
+			phone: {channels: [], msgCount: 0, lastMsgTime: 0},
 			recentCommands: [],
 			stats: {
 				commandCurrentTotal: 0,
@@ -213,28 +213,33 @@ class KFSDiscordBot extends Client {
 		let phoneCache = this.cache.phone;
 		let ch0 = phoneCache.channels[0];
 		let ch1 = phoneCache.channels[1];
-		if (phoneCache.callExpires > Number(new Date())) {
-			phoneCache.callExpires = Number(new Date()) + 600000;
-			phoneCache.msgCount++;
-			setTimeout(() => {phoneCache.msgCount--;}, 5000);
-			let affected = 0;
-			if (message.channel.id == ch0) {affected = 1};
-			let toSend = message.content.replace(/https?:\/\/\S+\.\S+/gi, "")
-			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
-			if (toSend.length > 1500) toSend = toSend.slice(0, 1500) + "...";
-			this.channels.get(phoneCache.channels[affected]).send(`📞 ${toSend}`);
-			if (phoneCache.msgCount >= 4) {
-				setTimeout(() => {
-					let phoneMsg = "☎ The phone connection was cut off due to possible overload."
-					this.channels.get(ch0).send(phoneMsg);
-					this.channels.get(ch1).send(phoneMsg);
-				}, 5000);
-				phoneCache.channels = [];
-			}
+		phoneCache.lastMsgTime = Number(new Date());
+		phoneCache.msgCount++;
+		setTimeout(() => {phoneCache.msgCount--;}, 5000);
+		let affected = 0;
+		if (message.channel.id == ch0) {affected = 1};
+		let toSend = message.content.replace(/https?:\/\/\S+\.\S+/gi, "")
+		.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
+		if (toSend.length > 1500) toSend = toSend.slice(0, 1500) + "...";
+		this.channels.get(phoneCache.channels[affected]).send(`📞 ${toSend}`);
+		if (phoneCache.msgCount >= 4) {
+			setTimeout(() => {
+				let phoneMsg = "☎ The phone connection was cut off due to possible overload."
+				this.channels.get(ch0).send(phoneMsg);
+				this.channels.get(ch1).send(phoneMsg);
+			}, 5000);
+			phoneCache.channels = [];
+		}
+	}
+	
+	async checkPhone() {
+		let phoneCache = this.cache.phone, dif = Number(new Date()) - phoneCache.lastMsgTime;
+		if (dif < 1000*595) {
+			setTimeout(() => {this.checkPhone()}, dif);
 		} else {
 			let phoneMsg = "⏰ The phone call has timed out due to inactivity."
-			this.channels.get(ch0).send(phoneMsg);
-			this.channels.get(ch1).send(phoneMsg);
+			this.channels.get(phoneCache.channels[0]).send(phoneMsg);
+			this.channels.get(phoneCache.channels[1]).send(phoneMsg);
 			phoneCache.channels = [];
 		}
 	}
