@@ -1,5 +1,6 @@
 ﻿const Discord = require("discord.js");
 const argParser = require("../utils/argsParser.js");
+const {parsePerm} = require("../modules/functions.js");
 const cdChecker = require("../modules/cooldownChecker.js");
 
 module.exports = async (bot, message) => {
@@ -20,33 +21,39 @@ module.exports = async (bot, message) => {
 		
 		// Check things before performing the command
 		if (!message.guild && !runCommand.allowDMs) return message.channel.send("This command cannot be used in Direct Messages.")
-		
-		let requiredPerms = runCommand.perms, userPermsAllowed = true, roleAllowed = true, faultMsg = "";
+			
+		let requiredPerms = runCommand.perms, userPermsAllowed = null, roleAllowed = null, faultMsg = "";
 		if (message.guild) {
 			if (requiredPerms.bot.length > 0) {
 				for (const perm of requiredPerms.bot) {
 					if (!message.guild.me.hasPermission(perm)) {
-						faultMsg += `I need these permissions to run this command:\n${requiredPerms.bot.join(", ")}`
+						faultMsg += `I need these permissions to run this command:\n${requiredPerms.bot.map(p => parsePerm(p)).join(", ")}`
 						break;
 					}
 				}
 			}
 			if (requiredPerms.user.length > 0) {
+				userPermsAllowed = true;
 				for (const perm of requiredPerms.user) {
-					if (!message.member.hasPermission(perm)) {userPermsAllowed = false;}
+					if (!message.member.hasPermission(perm)) {
+						userPermsAllowed = false;
+						break;
+					}
 				}
 			}
 			if (requiredPerms.role) {
-				if (!message.member.roles.find(role => role.name == requiredPerms.role)) {roleAllowed = false;}
-			}
-			if (!userPermsAllowed || !roleAllowed) {
-				if (!userPermsAllowed && !roleAllowed) {
-					faultMsg += `You need these permissions or a role named **${requiredPerms.role}** to run this command:\n${requiredPerms.user.join(", ")}`
-				} else if (!userPermsAllowed) {
-					faultMsg += `You need these permissions to run this command:\n${requiredPerms.user.join(", ")}`
+				if (message.member.roles.find(role => role.name.toLowerCase() == requiredPerms.role.toLowerCase())) {
+					roleAllowed = true;
 				} else {
-					faultMsg += `You need a role named **${requiredPerms.role}** to run this command.`
+					roleAllowed = false;
 				}
+			}
+			if (userPermsAllowed == false && roleAllowed == null) {
+				faultMsg += `\nYou need these permissions to run this command:\n${requiredPerms.user.map(p => parsePerm(p)).join(", ")}`
+			} else if (userPermsAllowed == false && roleAllowed == false) {
+				faultMsg += `\nYou need these permissions or a role named **${requiredPerms.role}** to run this command:\n${requiredPerms.user.map(p => parsePerm(p)).join(", ")}`
+			} else if (userPermsAllowed == null && roleAllowed == false) {
+				faultMsg += `\nYou need a role named **${requiredPerms.role}** to run this command.`
 			}
 		};
 		if (requiredPerms.level > 0) {
@@ -56,52 +63,38 @@ module.exports = async (bot, message) => {
 				if (permLevels[i].validate(message)) userLevel = i;
 			}
 			if (userLevel < requiredPerms.level) {
-				let faultDesc = permLevels[requiredPerms.level].desc ? permLevels[requiredPerms.level].desc : "";
-				faultMsg += `\nYou need this permission level to run this command:\n${bot.permLevels[requiredPerms.level].name} (${faultDesc})`;
+				let faultDesc = permLevels[requiredPerms.level].desc ? ` (${permLevels[requiredPerms.level].desc})` : "";
+				faultMsg += `\nYou need to be a ${bot.permLevels[requiredPerms.level].name} to run this command${faultDesc}`;
 			}
 		}
 		if (faultMsg.length > 0) return message.channel.send(faultMsg);
 		
-		let cdCheck = cdChecker.check(bot, message, runCommand.name);
-		let cdInfo = runCommand.cooldown;
-		if (cdCheck == true) {
-			if (runCommand.startTyping) message.channel.startTyping();
-			setTimeout(() => message.channel.stopTyping(), 10000)
-			let flags = [];
-			if (runCommand.flags) {
-				let parsedFlags = argParser.parseFlags(bot, message, args, runCommand.flags);
-				if (parsedFlags.error) {
-					return message.channel.send(`⚠ **${parsedFlags.error}**:\n${parsedFlags.message}\n*The correct usage is:* \`${runCommand.usage}\``);
-				}
-				flags = parsedFlags.flags;
-				args = parsedFlags.newArgs;
+		if (cdChecker.check(bot, message, runCommand.name) == false) return;
+		
+		if (runCommand.startTyping) message.channel.startTyping();
+		setTimeout(() => message.channel.stopTyping(), 10000)
+		let flags = [];
+		if (runCommand.flags) {
+			let parsedFlags = argParser.parseFlags(bot, message, args, runCommand.flags);
+			if (parsedFlags.error) {
+				return message.channel.send(`⚠ **${parsedFlags.error}**:\n${parsedFlags.message}\n*The correct usage is:* \`${runCommand.usage}\``);
 			}
-			args = argParser.parseArgs(bot, message, args, runCommand.args);
-			if (args.error) {
-				if (args.error.startsWith("Multiple")) return message.channel.send(`⚠ **${args.error}**\n${args.message}`);
-				return message.channel.send(`⚠ **${args.error}**\n${args.message}\n*The correct usage is:* \`${runCommand.usage}\``);
-			}
-			runCommand.run(bot, message, args, flags)
-			.catch(err => message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${err.stack}\`\`\`I am too cute to output this, so come to the official server to discuss this bug.`))
-			if (runCommand.startTyping) message.channel.stopTyping();
-			if (cdInfo.time != 0) {cdChecker.addCooldown(bot, message, runCommand.name)};
-			/*
-			This is the code if owners are to be ignored.
-			
-			if (!bot.ownerIds.includes(message.author.id) && runCommand.name != "help") {
-				let commandUsage = bot.cache.stats.commandUsage.find(u => u.command == runCommand.name);
-				if (commandUsage) {
-					commandUsage.uses++;
-				} else {
-					bot.cache.stats.commandUsage.push({
-						command: runCommand.name,
-						uses: 1
-					})
-				}
-			} else {
-				bot.cache.stats.commandCurrentTotal++;
-			};
-			*/
+			flags = parsedFlags.flags;
+			args = parsedFlags.newArgs;
+		}
+		args = argParser.parseArgs(bot, message, args, runCommand.args);
+		if (args.error) {
+			if (args.error.startsWith("Multiple")) return message.channel.send(`⚠ **${args.error}**\n${args.message}`);
+			return message.channel.send(`⚠ **${args.error}**\n${args.message}\n*The correct usage is:* \`${runCommand.usage}\``);
+		}
+		runCommand.run(bot, message, args, flags)
+		.catch(err => message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${err.stack}\`\`\`I am too cute to output this, so come to the official server to discuss this bug.`))
+		if (runCommand.startTyping) message.channel.stopTyping();
+		if (runCommand.cooldown.time != 0) {cdChecker.addCooldown(bot, message, runCommand.name)};
+		/*
+		This is the code if owners are to be ignored.
+		
+		if (!bot.ownerIds.includes(message.author.id) && runCommand.name != "help") {
 			let commandUsage = bot.cache.stats.commandUsage.find(u => u.command == runCommand.name);
 			if (commandUsage) {
 				commandUsage.uses++;
@@ -110,24 +103,19 @@ module.exports = async (bot, message) => {
 					command: runCommand.name,
 					uses: 1
 				})
-			};
-		} else {
-			if (cdCheck == false) return;
-			let cdMessages = [
-				"You're calling me fast enough that I'm getting dizzy!",
-				"Watch out, seems like we might get a speeding ticket at this rate!",
-				"You have to wait before using the command again...",
-				"You're calling me a bit too fast, I am getting dizzy!",
-				"I am busy, try again after a bit",
-				"Hang in there before using this command again..."
-			];
-			let toSend = `⛔ **Cooldown:**\n*${cdMessages[Math.floor(Math.random() * cdMessages.length)]}*\nThis command cannot be used again for **${cdCheck} seconds**`
-			if (cdInfo.type == "channel") {
-				toSend += " in this channel"
-			} else if (cdInfo.type == "guild") {
-				toSend += " in this guild"
 			}
-			message.channel.send(`${toSend}!`);
-		}
+		} else {
+			bot.cache.stats.commandCurrentTotal++;
+		};
+		*/
+		let commandUsage = bot.cache.stats.commandUsage.find(u => u.command == runCommand.name);
+		if (commandUsage) {
+			commandUsage.uses++;
+		} else {
+			bot.cache.stats.commandUsage.push({
+				command: runCommand.name,
+				uses: 1
+			})
+		};
 	}
 }

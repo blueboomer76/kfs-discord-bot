@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../structures/command.js");
+const promptor = require("../modules/codePromptor.js");
 
 module.exports = [
 	class AddRoleCommand extends Command {
@@ -51,9 +52,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0];
-			let role = args[1];
+			let member = args[0], role = args[1];
 			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return message.channel.send("I cannot add that role because its position is at or higher than mine.")
+			if (member.roles.has(role.id)) return message.channel.send("That member already has the role you provided.")
+				
 			await member.addRole(role)
 			.then(message.channel.send(`✅ Role **${role.name}** has been added to **${member.user.tag}**.`))
 			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
@@ -106,7 +108,13 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			let member = args[0],
 				daysFlag = flags.find(f => f.name == "days"),
-				reasonFlag = flags.find(f => f.name == "reason");
+				reasonFlag = flags.find(f => f.name == "reason"),
+				cmdErr;
+			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return message.channel.send("I cannot ban that member because their highest role is at or higher than mine.")
+				
+			cmdErr = await promptor.prompt(message, `You are about to ban the user **${args[0].user.tag}** from this guild.`);
+			if (cmdErr) return message.channel.send(cmdErr);
+			
 			await member.ban({
 				days: daysFlag ? daysFlag.args[0] : 0,
 				reason: reasonFlag ? reasonFlag.args[0] : null
@@ -175,24 +183,9 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let cmdErr;
-			if (Number(new Date()) - args[0].createdTimestamp > 1.5552e+10) {
-				let code = Math.floor(Math.random() * 100000).toString();
-				if (code.length < 5) {while (code.length < 5) {code = `0${code}`;}}
-				message.channel.send(`You are about to delete the channel **${args[0].name}**, which is more than 180 days old. Type \`${code}\` to proceed. This operation will time out in 30 seconds.`)
-				await message.channel.awaitMessages(msg => msg.author.id == message.author.id, {
-					max: 1,
-					time: 30000,
-					errors: ["time"]
-				})
-				.then(collected => {
-					if (collected.array()[0].content != code) cmdErr = "You provided an invalid response, cancelling the operation."
-				})
-				.catch(() => {cmdErr = "Operation has timed out after 30 seconds."})
-				
-				if (cmdErr) return message.channel.send(cmdErr)
-			}
-
+			let cmdErr = await promptor.prompt(message, `You are about to delete the channel **${args[0].name}**, which is more than 180 days old.`)
+			if (cmdErr) return message.channel.send(cmdErr);
+			
 			await args[0].delete()
 			.then(message.channel.send(`✅ The channel **${args[0].name}** has been deleted.`))
 			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
@@ -233,7 +226,14 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0], reasonFlag = flags.find(f => f.name == "reason");
+			let member = args[0], reasonFlag = flags.find(f => f.name == "reason"),
+				cmdErr;
+			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return message.channel.send("I cannot kick that member because their highest role is at or higher than mine.")
+			
+			cmdErr = await promptor.prompt(message, `You are about to kick the user **${args[0].user.tag}** from this guild.`)
+			
+			if (cmdErr) return message.channel.send(cmdErr);
+			
 			await member.kick(reasonFlag ? reasonFlag.args[0] : null)
 			.then(message.channel.send(`✅ The user **${member.user.tag}** was kicked from the guild.`))
 			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
@@ -324,7 +324,7 @@ module.exports = [
 			if (errorStatus) return;
 			await message.channel.bulkDelete(toDelete, true)
 			.then(messages => {
-				message.channel.send(`ðŸ—‘ Deleted ${messages.size - 1} messages from the channel!`).then(m => m.delete(7500))
+				message.channel.send(`🗑 Deleted ${messages.size - 1} messages from the channel!`).then(m => m.delete(7500))
 			})
 			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
 		}
@@ -379,9 +379,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let member = args[0], role = args[1];
-			if (!member.roles.find("name", args[1].name)) {
-				return message.channel.send("That member does not have the role you provided.");
-			}
+			if (!member.roles.has(args[1].id)) return message.channel.send("That member does not have the role you provided.");
 			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return message.channel.send("I cannot remove that role because its position is at or higher than mine.")
 				
 			await member.removeRole(role)

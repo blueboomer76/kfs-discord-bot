@@ -14,7 +14,8 @@ module.exports = [
 						num: Infinity,
 						type: "string"
 					}
-				]
+				],
+				usage: "8ball <question>"
 			});
 		}
 		
@@ -42,9 +43,9 @@ module.exports = [
 				"Very doubtful"
 			]
 			if (!args[0].match(/ +/g)) {
-				message.channel.send("ðŸŽ± You need to provide an actual question...");
+				message.channel.send("🎱 You need to provide an actual question...");
 			} else {
-				message.channel.send(`ðŸŽ± ${magicmsgs[Math.floor(Math.random() * 20)]}`);
+				message.channel.send(`🎱 ${magicmsgs[Math.floor(Math.random() * 20)]}`);
 			}
 		}
 	},

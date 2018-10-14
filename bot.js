@@ -55,7 +55,7 @@ class KendraBot extends Client {
 		this.cache = {
 			guildCount: 0,
 			userCount: 0,
-			phone: {channels: [], msgCount: 0, expiresAt: 0},
+			phone: {channels: [], msgCount: 0, lastMsgTime: 0},
 			recentCommands: [],
 			stats: {
 				lastCheck: Number(new Date()),
@@ -86,7 +86,7 @@ class KendraBot extends Client {
 				for (let category of cmdFiles) {
 					category = capitalize(category);
 					this.categories.push(category);
-					let commandClasses = require(`./commands/${category}`);
+					let commandClasses = require(`./commands/${category.toLowerCase()}`);
 					if (commandClasses.length > 0) {
 						for (const CommandClass of commandClasses) {
 							let command = new CommandClass();
@@ -201,25 +201,30 @@ class KendraBot extends Client {
 	
 	async handlePhoneMessage(message) {
 		let phoneCache = this.cache.phone;
-		if (phoneCache.callExpires > Number(new Date())) {
-			phoneCache.callExpires = Number(new Date()) + 600000;
-			phoneCache.msgCount++;
-			setTimeout(() => {phoneCache.msgCount--;}, 5000);
-			let affected = 0;
-			if (message.channel.id == phoneCache.channels[0]) {affected = 1};
-			let toSend = message.content.replace(/https?\:\/\/\S+\.\S+/gi, "")
-			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
-			this.channels.get(phoneCache.channels[affected]).send(`📞 ${toSend}`);
-			if (phoneCache.msgCount > 4) {
-				let phoneMsg = "☎️ The phone connection was cut off due to being overloaded."
-				this.channels.get(phoneCache.channels[0]).send(phoneMsg);
-				this.channels.get(phoneCache.channels[1]).send(phoneMsg);
-				phoneCache.channels = [];
-			}
-		} else {
-			let phoneMsg = "☎️ The phone call has timed out due to inactivity."
+		phoneCache.lastMsgTime = Number(new Date());
+		phoneCache.msgCount++;
+		setTimeout(() => {phoneCache.msgCount--;}, 5000);
+		let affected = 0;
+		if (message.channel.id == phoneCache.channels[0]) {affected = 1};
+		let toSend = message.content.replace(/https?\:\/\/\S+\.\S+/gi, "")
+		.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
+		this.channels.get(phoneCache.channels[affected]).send(`📞 ${toSend}`);
+		if (phoneCache.msgCount > 4) {
+			let phoneMsg = "☎️ The phone connection was cut off due to being overloaded."
 			this.channels.get(phoneCache.channels[0]).send(phoneMsg);
 			this.channels.get(phoneCache.channels[1]).send(phoneMsg);
+			phoneCache.channels = [];
+		}
+	}
+	
+	async checkPhone(bot) {
+		let phoneCache = bot.cache.phone, dif = Number(new Date()) - phoneCache.lastMsgTime;
+		if (dif < 1000*595) {
+			setTimeout(this, dif);
+		} else {
+			let phoneMsg = "⏰ The phone call has timed out due to inactivity."
+			bot.channels.get(phoneCache.channels[0]).send(phoneMsg);
+			bot.channels.get(phoneCache.channels[1]).send(phoneMsg);
 			phoneCache.channels = [];
 		}
 	}

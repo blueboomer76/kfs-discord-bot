@@ -1,6 +1,80 @@
 const Discord = require("discord.js");
 const resolver = require("./objResolver.js");
 
+function parseArgQuotes(args, findAll) {
+	let matches1 = args.filter(a => a.match(/^"\S/));
+	let matches2 = args.filter(a => a.match(/\S"$/));
+	if (matches1 && matches2) {
+		let indexes1 = [], indexes2 = [];
+		for (let i = 0; i < matches1.length; i++) {
+			indexes1.push(args.indexOf(matches1[i]));
+		}
+		for (let i = 0; i < matches2.length; i++) {
+			indexes2.push(args.indexOf(matches2[i]));
+		}
+		for (let i = 0; i < matches1.length; i++) {
+			let i2Index = indexes2.find(ind => ind >= indexes1[i])
+			if (i2Index != undefined) {
+				let start = indexes1[i];
+				let end = i2Index + 1;
+				if (i > 0 && indexes2.find(ind => ind >= indexes1[i-1]) == i2Index) continue;
+				let newArg = args.splice(start, end - start).join(" ");
+				args.splice(start, 0, newArg.slice(1, newArg.length - 1));
+				if (!findAll) break;
+			} else {
+				break;
+			}
+		}
+	}
+	return args;
+}
+
+function checkArgs(bot, message, args, cmdArg) {
+	let arg = cmdArg, params;
+	if (arg.type == "number") {
+		params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity}
+	} else if (arg.type == "oneof") {
+		params = {list: arg.allowedValues}
+	}
+	let toResolve = resolver.resolve(bot, message, args, arg.type, params);
+	if (!toResolve) {
+		let argErrorMsg = `\`${args}\` is not a valid ${arg.type}\n`;
+		if (arg.type == "number") {
+			argErrorMsg += "The argument must be a number that is "
+			if (arg.min && arg.max) {
+				argErrorMsg += `in between ${params.min} and ${params.max}`
+			} else if (arg.min) {
+				argErrorMsg += `greater than ${params.min}`
+			} else {
+				argErrorMsg += `less than ${params.min}`
+			}
+		} else if (arg.type == "oneof") {
+			argErrorMsg = `The argument must be one of these values: ${params.list.join(", ")}`
+		}
+		return {error: true, message: argErrorMsg};
+	}
+	if (arg.type == "channel" || arg.type == "member" || arg.type == "role") {
+		if (toResolve.length == 1) {
+			return toResolve[0];
+		} else {
+			let endMsg = "", list = toResolve.slice(0,20);
+			if (toResolve.length > 20) endMsg += `...and ${toResolve.length - 20} more.`
+			if (arg.type == "channel") {
+				list = list.map(chnl => `${chnl.name} (${chnl.id})`);
+			} else if (arg.type == "member") {
+				list = list.map(mem => `${mem.user.tag} (${mem.user.id})`);
+			} else {
+				list = list.map(role => `${role.name} (${role.id})`);
+			}
+			return {
+				error: `Multiple ${arg.type}s found`,
+				message: `These ${arg.type}s were matched:\n\`\`\`${list.join("\n")}\`\`\`${endMsg}`
+			}
+		}
+	}
+	return toResolve;
+}
+
 module.exports = {
 	parseArgs: (bot, message, args, commandArgs) => {
 		if (!commandArgs) return args;
@@ -105,78 +179,4 @@ module.exports = {
 			newArgs: newArgs
 		};
 	}
-}
-
-function parseArgQuotes(args, findAll) {
-	let matches1 = args.filter(a => a.match(/^"[^ ]/));
-	let matches2 = args.filter(a => a.match(/[^ ]"$/));
-	if (matches1 && matches2) {
-		let indexes1 = [], indexes2 = [];
-		for (let i = 0; i < matches1.length; i++) {
-			indexes1.push(args.indexOf(matches1[i]));
-		}
-		for (let i = 0; i < matches2.length; i++) {
-			indexes2.push(args.indexOf(matches2[i]));
-		}
-		for (let i = 0; i < matches1.length; i++) {
-			let i2Index = indexes2.find(ind => ind >= indexes1[i])
-			if (i2Index != undefined) {
-				let start = indexes1[i];
-				let end = i2Index + 1;
-				if (i > 0 && indexes2.find(ind => ind >= indexes1[i-1]) == i2Index) continue;
-				let newArg = args.splice(start, end - start).join(" ");
-				args.splice(start, 0, newArg.slice(1, newArg.length - 1));
-				if (!findAll) break;
-			} else {
-				break;
-			}
-		}
-	}
-	return args;
-}
-
-function checkArgs(bot, message, args, cmdArg) {
-	let arg = cmdArg, params;
-	if (arg.type == "number") {
-		params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity}
-	} else if (arg.type == "oneof") {
-		params = {list: arg.allowedValues}
-	}
-	let toResolve = resolver.resolve(bot, message, args, arg.type, params);
-	if (!toResolve) {
-		let argErrorMsg = `\`${args}\` is not a valid ${arg.type}\n`;
-		if (arg.type == "number") {
-			argErrorMsg += "The argument must be a number that is "
-			if (params.min && params.max) {
-				argErrorMsg += `in between ${params.min} and ${params.max}`
-			} else if (params.min) {
-				argErrorMsg += `greater than ${params.min}`
-			} else {
-				argErrorMsg += `less than ${params.min}`
-			}
-		} else if (arg.type == "oneof") {
-			argErrorMsg = `The argument must be one of these values: ${params.list.join(", ")}`
-		}
-		return {error: true, message: argErrorMsg};
-	}
-	if (arg.type == "channel" || arg.type == "member" || arg.type == "role") {
-		if (toResolve.length == 1) {
-			return toResolve[0];
-		} else {
-			let endMsg = "", list = toResolve.slice(0,20);
-			if (toResolve.length > 20) endMsg += `...and ${toResolve.length - 20} more.`
-			if (arg.type == "channel") {
-				list = list.map(chnl => `${chnl.name} (${chnl.id})`);
-			} else if (arg.type == "member") {
-				list = list.map(mem => `${mem.user.tag} (${mem.user.id})`);
-			} else {
-				list = list.map(role => `${role.name} (${role.id})`);
-			}
-			return {
-				error: `Multiple ${arg.type}s found`,
-				message: `These ${arg.type}s were matched:\n\`\`\`${list.join("\n")}\`\`\`${endMsg}`
-			}
-		}
-	}
-	return toResolve;
 }

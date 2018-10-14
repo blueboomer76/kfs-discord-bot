@@ -121,16 +121,17 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let res, beginEval, endEval;
+			let res, beginEval, endEval, consoleFlag = flags.find(f => f.name == "console");
 			try {
 				beginEval = Number(new Date());
 				res = eval(args[0]);
-				endEval = Number(new Date());
 			} catch (err) {
+				res = err.stack;
+				if (!consoleFlag) res = `${res.split("    ", 3).join("    ")}    ...`;
+			} finally {
 				endEval = Number(new Date());
-				res = `${err.stack.split("    ", 3).join("    ")}    ...`;
-			};
-			if (flags.find(f => f.name == "console")) {
+			}
+			if (consoleFlag) {
 				if (typeof res == "function") res = res.toString();
 				console.log(res);
 				message.react("✅");

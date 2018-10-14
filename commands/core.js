@@ -1,7 +1,7 @@
 const Discord = require("discord.js");
 const Command = require("../structures/command.js");
 const packageInfo = require("../package.json");
-const functions = require("../modules/functions.js");
+const {capitalize, getDuration, parsePerm} = require("../modules/functions.js");
 const stats = require("../modules/stats.json");
 const paginator = require("../utils/paginator.js");
 
@@ -90,9 +90,10 @@ module.exports = [
 				let commandFlags = command.flags.map(f => `\`--${f.name}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`);
 				let commandPerms = command.perms;
 				let permReq = {
-					bot: commandPerms.bot.length > 0 ? commandPerms.bot.join(", ") : "None",
-					user: commandPerms.user.length > 0 ? commandPerms.user.join(", ") : "None",
-					level: bot.cache.permLevels[commandPerms.level].name
+					bot: commandPerms.bot.length > 0 ? commandPerms.bot.map(p => parsePerm(p)).join(", ") : "None",
+					user: commandPerms.user.length > 0 ? commandPerms.user.map(p => parsePerm(p)).join(", ") : "None",
+					role: commandPerms.role ? `\nRequires having a role named ${commandPerms.role}.` : "",
+					level: commandPerms.level > 0 ? `\nRequires being ${bot.permLevels[commandPerms.level].name}.` : ""
 				};
 				helpEmbed.setTitle(`Help - ${command.name}`)
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -102,7 +103,7 @@ module.exports = [
 				.addField("Flags", command.flags.length > 0 ? commandFlags.join("\n") : "None")
 				.addField("Usage", command.usage)
 				.addField("Examples", command.examples.length > 0 ? commandFlags.join("\n") : "No examples provided")
-				.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user} (with level ${permReq.level})`)
+				.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`)
 				.addField("Cooldown", `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}`)
 			}
 			if (flags.find(f => f.name == "dm")) {
@@ -177,7 +178,7 @@ module.exports = [
 			let category = args[0];
 			let commandName = args[1];
 			try {
-				let commandClasses = require(`../${category}.js`);
+				let commandClasses = require(`./${category}.js`);
 				let CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[1]));
 				let command = new CommandClass();
 				command.category = category;
@@ -202,22 +203,24 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let phoneMsg, phoneMsg0,phoneCache = bot.cache.phone;
+			let phoneMsg, phoneMsg0, phoneCache = bot.cache.phone;
 			if (!phoneCache.channels.includes(message.channel.id)) {
 				phoneCache.channels.push(message.channel.id);
 				if (phoneCache.channels.length == 1) {
-					message.react("?")
+					message.react("☎");
 				} else {
 					bot.cache.stats.callCurrentTotal++;
-					phoneCache.callExpires = Number(new Date()) + 600000;
-					message.channel.send("? A phone connection has started! Greet the other side!");
+					phoneCache.lastMsgTime = Number(new Date());
+					setTimeout(bot.checkPhone, 1000*600, bot);
+					
+					message.channel.send("☎ A phone connection has started! Greet the other side!");
 					if (phoneCache.channels.length == 2) {
 						phoneMsg0 = "The other side has picked up the phone! Greet the other side!";
 					} else {
 						phoneMsg0 = "Looks like someone else picked up the phone."
-						bot.channels.get(phoneCache.channels.shift()).send("?? Someone else is now using the phone...");
+						bot.channels.get(phoneCache.channels.shift()).send("☎ Someone else is now using the phone...");
 					}
-					bot.channels.get(phoneCache.channels[0]).send(`?? ${phoneMsg0}`)
+					bot.channels.get(phoneCache.channels[0]).send(`☎ ${phoneMsg0}`)
 				}
 			} else {
 				if (phoneCache.channels.length == 1) {
@@ -226,10 +229,10 @@ module.exports = [
 					let affected = 0;
 					if (message.channel.id == phoneCache.channels[0]) affected = 1;
 					phoneMsg = "You have hung up the phone.";
-					bot.channels.get(phoneCache.channels[affected]).send("? The other side hung up the phone.");
+					bot.channels.get(phoneCache.channels[affected]).send("☎ The other side hung up the phone.");
 				}
 				phoneCache.channels = [];
-				message.channel.send(`?? ${phoneMsg}`);
+				message.channel.send(`☎ ${phoneMsg}`);
 			}
 		}
 	},
@@ -247,8 +250,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const m = await message.channel.send("Ping?");
-			m.edit(":ping_pong: **Pong!**" + "\n" + "Latency: " + (m.createdTimestamp - message.createdTimestamp) + "ms" + "\n" + "API Latency: " + Math.round(bot.ping) + "ms")
+			const msg = await message.channel.send("Ping?");
+			msg.edit(`🏓 **Pong!**\nLatency: ${msg.createdTimestamp - message.createdTimestamp}ms\nAPI Latency: ${Math.round(bot.ping)}ms`)
 		}
 	},
 	class ReloadCommand extends Command {
@@ -283,7 +286,7 @@ module.exports = [
 			let category = command.category;
 			try {
 				delete require.cache[require.resolve(`./${category}.js`)];
-				let commandClasses = require(`../${category}.js`);
+				let commandClasses = require(`./${category}.js`);
 				let CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[0].name));
 				let command = new CommandClass();
 				command.category = category;
@@ -410,11 +413,11 @@ module.exports = [
 			message.channel.send(new Discord.RichEmbed()
 			.setAuthor(`Kendra Bot Stats`, bot.user.avatarURL)
 			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`? Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
+			.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
 			.setTimestamp(message.createdAt)
 			.setDescription("Here's some detailed stats about the Kendra bot!")
 			.addField("Memory Usage", `${(process.memoryUsage().heapUsed / 1048576).toFixed(2)} MB`, true)
-			.addField("Last Restart", functions.getDuration(bot.readyTimestamp), true)
+			.addField("Last Restart", getDuration(bot.readyTimestamp), true)
 			.addField("Servers", 
 			`Total: ${serverCount.toLocaleString()}` + `\n` +
 			`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
@@ -541,8 +544,8 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let command = args[0];
-			if (command.category == "Bot" || command.name == "eval") return message.channel.send("That command is not unloadable.")
-			delete require.cache[require.resolve(`../${command.category}.js`)];
+			if (command.category == "Core" || command.name == "eval") return message.channel.send("That command is not unloadable.")
+			delete require.cache[require.resolve(`./${command.category}.js`)];
 			bot.commands.delete(args[0]);
 			message.channel.send(`The command ${command.name} was unloaded.`);
 		}

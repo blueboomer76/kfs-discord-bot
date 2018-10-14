@@ -1,10 +1,12 @@
 const Discord = require("discord.js");
 
+const capitalize = str => {
+	str = str.toString();
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 module.exports = {
-	capitalize: str => {
-		str = str.toString();
-		return str.charAt(0).toUpperCase() + str.slice(1);
-	},
+	capitalize: capitalize,
 	getDuration: (time1, time2) => {
 		if (!time1) throw new Error("Time 1 is required")
 		if (isNaN(time1)) throw new Error("Time 1 is not a valid timestamp");
@@ -17,7 +19,7 @@ module.exports = {
 		if (Number(time2) > Number(time1)) {endStr = "ago"} else {endStr = "left"}
 		
 		if (timeDif < 60) {
-			baseStr = `${(timeDif * 10).toFixed(1)} seconds`
+			baseStr = `${timeDif.toFixed(1)} seconds`
 		} else if (timeDif < 3600) {
 			baseStr = `${Math.floor(timeDif / 60)} minutes, ${Math.round(timeDif % 60)} seconds`
 		} else if (timeDif < 86400) {
@@ -41,5 +43,8 @@ module.exports = {
 			baseStr = `${Math.round((timeDif - 5256000) / 31536000)} years`
 		}
 		return `${baseStr} ${endStr}`;
+	},
+	parsePerm: perm => {
+		return perm.split("_").map(p => capitalize(p.toLowerCase())).join(" ");
 	}
 }
