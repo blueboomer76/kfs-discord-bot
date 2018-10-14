@@ -274,7 +274,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			message.delete();
 			if (flags.find(f => f.name == "embed")) {
-				if (!message.guild.me.hasPermission("EMBED_LINKS")) return message.channel.send("To post an embed, the bot requires the `EMBED_LINKS` permission.")
+				if (!message.guild.me.hasPermission("EMBED_LINKS")) return message.channel.send("To post an embed, the bot requires the `Embed Links` permission.")
 				message.channel.send(new Discord.RichEmbed()
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setDescription(args[0])

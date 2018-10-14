@@ -1,8 +1,10 @@
+function capitalize(str) {
+	str = str.toString();
+	return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
 module.exports = {
-	capitalize: str => {
-		str = str.toString();
-		return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-	},
+	capitalize: capitalize,
 	getDuration: (time1, time2) => {
 		if (!time1) throw new Error("Time 1 is required")
 		if (isNaN(time1)) throw new Error("Time 1 is not a valid timestamp");
@@ -43,5 +45,8 @@ module.exports = {
 			baseStr = `${Math.round((timeDif - 5256000) / 31536000)} years`
 		}
 		return `${baseStr} ${endStr}`;
+	},
+	parsePerm: perm => {
+		return perm.split("_").map(p => capitalize(p.toLowerCase())).join(" ");
 	}
 }

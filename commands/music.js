@@ -18,9 +18,9 @@ module.exports = [
 			if (message.author.id != message.guild.owner.id) {
 				if (!message.member.hasPermission("MANAGE_GUILD")) {
 					if (!mvChannel) {
-						return message.channel.send("You are not in a voice channel. (Overrides with server owner or `MANAGE_GUILD` permission)")
+						return message.channel.send("You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)")
 					} else if (mvChannel.id != gvConnection.channel.id) {
-						return message.channel.send("You need to be in the same voice channel as me to perform this command. (Overrides with server owner or `MANAGE_GUILD` permission)")
+						return message.channel.send("You need to be in the same voice channel as me to perform this command. (Overrides with server owner or `Manage Server` permission)")
 					}
 				}
 				if (gvConnection.dispatcher) {
@@ -46,9 +46,9 @@ module.exports = [
 			let mvChannel = message.member.voiceChannel;
 			if (message.author.id != message.guild.owner.id && !message.member.hasPermission("MANAGE_GUILD")) {
 				if (!mvChannel) {
-					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `MANAGE_GUILD` permission)")
+					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)")
 				} else if (mvChannel.id != gvConnection.channel.id) {
-					return message.channel.send("You need to be in the same voice channel as me to pause the audio. (Overrides with server owner or `MANAGE_GUILD` permission)")
+					return message.channel.send("You need to be in the same voice channel as me to pause the audio. (Overrides with server owner or `Manage Server` permission)")
 				}
 			} else if (!gvConnection.dispatcher) {
 				return message.channel.send("Cannot pause: no audio is playing");
@@ -219,9 +219,9 @@ module.exports = [
 			let mvChannel = message.member.voiceChannel;
 			if (message.author.id != message.guild.owner.id && !message.member.hasPermission("MANAGE_GUILD")) {
 				if (!mvChannel) {
-					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `MANAGE_GUILD` permission)")
+					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)")
 				} else if (mvChannel.id != gvConnection.channel.id) {
-					return message.channel.send("You need to be in the same voice channel as me to resume the audio. (Overrides with server owner or `MANAGE_GUILD` permission)")
+					return message.channel.send("You need to be in the same voice channel as me to resume the audio. (Overrides with server owner or `Manage Server` permission)")
 				}
 			} else if (!gvConnection.dispatcher) {
 				return message.channel.send("Cannot resume: no audio is playing");
@@ -247,9 +247,9 @@ module.exports = [
 			let mvChannel = message.member.voiceChannel;
 			if (message.author.id != message.guild.owner.id && !message.member.hasPermission("MANAGE_GUILD")) {
 				if (!mvChannel) {
-					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `MANAGE_GUILD` permission)")
+					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)")
 				} else if (mvChannel.id != gvConnection.channel.id) {
-					return message.channel.send("You need to be in the same voice channel as me to skip the current audio. (Overrides with server owner or `MANAGE_GUILD` permission)")
+					return message.channel.send("You need to be in the same voice channel as me to skip the current audio. (Overrides with server owner or `Manage Server` permission)")
 				}
 			} else if (!gvConnection.dispatcher) {
 				return message.channel.send("Cannot skip: no audio is playing");
@@ -273,9 +273,9 @@ module.exports = [
 			let mvChannel = message.member.voiceChannel;
 			if (message.author.id != message.guild.owner.id && !message.member.hasPermission("MANAGE_GUILD")) {
 				if (!mvChannel) {
-					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `MANAGE_GUILD` permission)")
+					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)")
 				} else if (mvChannel.id != gvConnection.channel.id) {
-					return message.channel.send("You need to be in the same voice channel as me to stop the audio. (Overrides with server owner or `MANAGE_GUILD` permission)")
+					return message.channel.send("You need to be in the same voice channel as me to stop the audio. (Overrides with server owner or `Manage Server` permission)")
 				}
 			} else if (!gvConnection.dispatcher) {
 				return message.channel.send("Cannot stop: no audio is playing");
@@ -311,9 +311,9 @@ module.exports = [
 			let mvChannel = message.member.voiceChannel;
 			if (message.author.id != message.guild.owner.id && !message.member.hasPermission("MANAGE_GUILD")) {
 				if (!mvChannel) {
-					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `MANAGE_GUILD` permission)")
+					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)")
 				} else if (mvChannel.id != gvConnection.channel.id) {
-					return message.channel.send("You need to be in the same voice channel as me to set the audio volume. (Overrides with server owner or `MANAGE_GUILD` permission)")
+					return message.channel.send("You need to be in the same voice channel as me to set the audio volume. (Overrides with server owner or `Manage Server` permission)")
 				}
 			} else if (!gvConnection.dispatcher) {
 				return message.channel.send("Cannot set volume: no audio is playing");
