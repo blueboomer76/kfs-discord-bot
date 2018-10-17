@@ -20,6 +20,11 @@ module.exports = [
 					time: 20000,
 					type: "channel"
 				},
+				examples: [
+					"reddit funny",
+					"reddit aww --compact",
+					"reddit gaming --more"
+				],
 				flags: [
 					{
 						name: "compact",
@@ -76,7 +81,7 @@ module.exports = [
 						let postTitle = postData.title.length > 200 ? `${postData.title.slice(0, 200)}...` : postData.title;
 						let postLink = `[${postTitle}](https://reddit.com${postData.permalink})`;
 						if (viewAll) postLink += ` (${postData.subreddit_name_prefixed})`
-						entries[0].push(`${postLink}\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author.replace(/_/g, "\\_")} | ${getDuration(postData.created_utc * 1000)}`);
+						entries[0].push(`${postLink}\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author.replace(/_/g, "\\_")} | ${getDuration(postData.created_utc * 1000, null, true)}`);
 					}
 				}
 				

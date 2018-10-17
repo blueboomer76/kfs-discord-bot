@@ -5,46 +5,64 @@ function capitalize(str) {
 
 module.exports = {
 	capitalize: capitalize,
-	getDuration: (time1, time2) => {
+	getDuration: (time1, time2, simple) => {
 		if (time1 == undefined) throw new Error("Time 1 is required");
 		if (isNaN(time1)) throw new Error("Time 1 is not a valid timestamp");
 		if (time2 != undefined && isNaN(time2)) throw new Error("Time 2 is not a valid timestamp");
 
-		let baseStr, endStr;
 		let date1 = new Date(time1), date2;
 		if (!time2) {date2 = new Date()} else {date2 = new Date(time2)}
 		let ts1 = Number(date1), ts2 = Number(date2);
 
-		let timeDif = Math.abs((ts2 - ts1) / 1000);
-		if (ts2 >= ts1) {endStr = "ago"} else {endStr = "left"}
+		let timeDif = Math.abs((ts2 - ts1) / 1000), suffix = "ago";
+		if (ts1 > ts2) suffix = "left";
 
+		let baseStr1 = "", baseStr2 = "";
 		if (timeDif < 60) {
-			baseStr = `${timeDif.toFixed(1)} seconds`
-		} else if (timeDif < 3600) {
-			baseStr = `${Math.floor(timeDif / 60)} minutes, ${Math.floor(timeDif % 60)} seconds`
-		} else if (timeDif < 86400) {
-			baseStr = `${Math.floor(timeDif / 3600)} hours, ${Math.floor((timeDif % 3600) / 60)} minutes`
-		} else if (timeDif < 2678400) {
-			baseStr = `${Math.floor(timeDif / 86400)} days, ${Math.floor((timeDif % 86400) / 3600)} hours`
+			baseStr1 = `${timeDif.toFixed(1)} seconds`;
 		} else if (timeDif < 3.1536e+9) {
-			let yrDif = date2.getFullYear() - date1.getFullYear();
-			let moDif = date2.getMonth() - date1.getMonth();
-			let dayDif = date2.getDate() - date1.getDate();
-			if ((moDif == 0 && dayDif < 0) || moDif < 0) {yrDif--; moDif += 12;}
-			if (dayDif < 0) {moDif--; dayDif += 30;}
-			if (yrDif == 0) {
-				baseStr = `${moDif} months, ${dayDif} days`
+			if (timeDif < 3600) {
+				baseStr1 = `${Math.floor(timeDif / 60)} minute`;
+				baseStr2 = `${Math.floor(timeDif % 60)} second`;
+			} else if (timeDif < 86400) {
+				baseStr1 = `${Math.floor(timeDif / 3600)} hour`;
+				baseStr2 = `${Math.floor((timeDif % 3600) / 60)} minute`;
+			} else if (timeDif < 2678400) {
+				baseStr1 = `${Math.floor(timeDif / 86400)} day`;
+				baseStr2 = `${Math.floor((timeDif % 86400) / 3600)} hour`;
 			} else {
-				if (dayDif >= 20) {
-					moDif++;
-					if (moDif > 11) {moDif = 0; yrDif++;}
+				let yrDif = date2.getFullYear() - date1.getFullYear(),
+					moDif = date2.getMonth() - date1.getMonth(),
+					dayDif = date2.getDate() - date1.getDate();
+				if ((moDif == 0 && dayDif < 0) || moDif < 0) {yrDif--; moDif += 12;}
+				if (dayDif < 0) {moDif--; dayDif += 30;}
+				if (yrDif == 0) {
+					baseStr1 = `${moDif} month`;
+					baseStr2 = `${dayDif} day`;
+				} else {
+					if (dayDif >= 20) {
+						moDif++;
+						if (moDif > 11) {moDif = 0; yrDif++;}
+					}
+					baseStr1 = `${yrDif} year`;
+					baseStr2 = `${moDif} month`;
 				}
-				baseStr = `${yrDif} years, ${moDif} months`
+			}
+			if (!baseStr1.startsWith("1 ")) baseStr1 += "s";
+			if (!baseStr2.startsWith("1 ")) baseStr2 += "s";
+			if (!simple) {
+				baseStr1 += ",";
+				baseStr2 += " ";
 			}
 		} else {
-			baseStr = `${Math.round((timeDif - 5256000) / 31536000)} years`
+			baseStr1 = `${Math.round((timeDif - 5256000) / 31536000)} years`
 		}
-		return `${baseStr} ${endStr}`;
+		
+		if (simple) {
+			return `${baseStr1} ${suffix}`;
+		} else {
+			return `${baseStr1} ${baseStr2}${suffix}`;
+		}
 	},
 	parsePerm: perm => {
 		return perm.split("_").map(p => capitalize(p.toLowerCase())).join(" ");

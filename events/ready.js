@@ -36,12 +36,17 @@ module.exports = async bot => {
 			}
 			bot.user.setActivity(`${bot.prefix}help | ${newBotGame}`);
 		}, 1000 * 180)
-		setInterval(() => {bot.logStats()}, 1000 * 7200);
-		if (config.botsDiscordPwToken) {
-			setInterval(() => {bot.postBotsDiscordPwStats()}, 1000 * 7200);
-		}
-		if (config.discordBotsOrgToken) {
-			setInterval(() => {bot.postDiscordBotsOrgStats()}, 1000 * 7200);
-		}
+		setInterval(() => {
+			if (Number(new Date()) % (1000*7200) < 1000*3600) {
+				bot.logStats();
+			} else {
+				if (config.botsDiscordPwToken) {
+					bot.postBotsDiscordPwStats();
+				}
+				if (config.discordBotsOrgToken) {
+					bot.postDiscordBotsOrgStats();
+				}
+			}
+		}, 1000 * 3600);
 	}
 };
