@@ -1,8 +1,8 @@
 const Discord = require("discord.js");
 const Command = require("../structures/command.js");
-const paginator = require("../utils/paginator.js");
 const request = require("request");
-const cheerio = require("cheerio");
+const paginator = require("../utils/paginator.js");
+const {getDuration} = require("../modules/functions.js");
 
 module.exports = [
 	class RedditCommand extends Command {
@@ -21,6 +21,16 @@ module.exports = [
 					time: 15000,
 					type: "channel"
 				},
+				flags: [
+					{
+						name: "compact",
+						desc: "Whether to compact the displayed posts"
+					},
+					{
+						name: "more",
+						desc: "Whether to see more posts at a time"
+					}
+				],
 				perms: {
 					bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
 					user: [],
@@ -32,49 +42,41 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let url = "https://reddit.com/r/";
-			if (args[0]) {url += args[0].replace(/^\/?(R|r)\//, "")} else {url += "all"}
-			request.get(url, (err, res) => {
-				if (res.statusCode == 404) return message.channel.send("That subreddit doesn't exist!")
-				if (err || res.statusCode >= 400) {return message.channel.send(`Failed to retrieve from Reddit. (status code ${res.statusCode})`)}
-				const $ = cheerio.load(res.body);
+			let subreddit, compact = false;
+			if (args[0]) {subreddit = args[0].replace(/^\/?(R|r)\//, "")} else {subreddit = "all"};
+			if (flags.find(f => f.name == "compact")) compact = true;
+			let numToDisplay = compact ? 50 : 25;
+			
+			request.get({
+				url: `https://reddit.com/r/${subreddit}/hot.json`,
+				qs: {limit: flags.find(f => f.name == "more") ? numToDisplay * 2 : numToDisplay},
+				json: true
+			}, (err, res) => {
+				if (err || res.statusCode >= 400) return message.channel.send(`Failed to retrieve from Reddit. (status code ${res.statusCode})`)
 				
-				let viewAll = false;
+				let results = res.body.data.children.filter(r => !r.data.stickied);
+				if (!message.channel.nsfw) results = results.filter(r => !r.data.over_18);
+				if (results.length == 0) return message.channel.send("No results found.")
+				
+				let entries = [[]], viewAll = false;
 				if (!args[0] || args[0] == "all" || args[0] == "popular") viewAll = true;
 				
-				let postElements = $(".Post:not(:has(span:contains('promoted'), .icon-sticky))"), subredditArray;
-				if (viewAll) {
-					subredditArray = postElements.map((i, e) => {
-						let subreddit = $(e).find("[data-click-id='subreddit']").attr("href");
-						return subreddit.slice(1, subreddit.length - 1);
-					}).toArray();
-				}
-				
-				let titleArray = postElements.map((i, e) => {
-						let dispTitle = $(e).find("h2").text();
-						return dispTitle.length < 200 ? dispTitle : `${dispTitle.slice(0,200)}...`
-					}).toArray(),
-					authorArray = postElements.map((i, e) => {
-						return $(e).find("a[href^='/user/']").text()
-					}).toArray(),
-					timeArray = postElements.map((i, e) => {
-						return $(e).find("[data-click-id='timestamp']").text()
-					}).toArray(),
-					linkArray = postElements.map((i, e) => {
-						return $(e).find("a[data-click-id='body']").attr("href")
-					}).toArray(),
-					voteArray = postElements.map((i, e) => {
-						return $(e).find("[data-click-id='upvote']").next().html()
-					}).toArray(),
-					commentArray = postElements.map((i, e) => {
-						return $(e).find("[data-click-id='comments'] span").text().replace(/ comments?/, "").replace("comment", 0)
-					}).toArray();
-
-				let entries = [[]];
-				for (let i = 0; i < titleArray.length; i++) {
-					let toDisplay = `[${titleArray[i]}](https://reddit.com${linkArray[i]})`;
-					if (viewAll) toDisplay += ` (${subredditArray[i]})`
-					entries[0].push(toDisplay + `\n - 👍 ${voteArray[i]} | 💬 ${commentArray[i]} | ${authorArray[i]} | ${timeArray[i]}`);
+				if (compact) {
+					for (const post of results) {
+						let postData = post.data;
+						let postTitle = postData.title.length < 150 ? postData.title : `${postData.title.slice(0,150)}...`;
+						let postLink = `[${postTitle}](https://reddit.com${postData.permalink})`;
+						if (viewAll) postLink += ` (${postData.subreddit_name_prefixed})`
+						entries[0].push(postLink);
+					}
+				} else {
+					for (const post of results) {
+						let postData = post.data;
+						let postTitle = postData.title.length < 200 ? postData.title : `${postData.title.slice(0,200)}...`;
+						let postLink = `[${postTitle}](https://reddit.com${postData.permalink})`;
+						if (viewAll) postLink += ` (${postData.subreddit_name_prefixed})`
+						entries[0].push(`${postLink}\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author} | ${getDuration(postData.created_utc * 1000)}`);
+					}
 				}
 				
 				let embedTitle = "Reddit - ";
@@ -92,7 +94,7 @@ module.exports = [
 						url: "https://www.redditstatic.com/new-icon.png"
 					}
 				}, entries, {
-					limit: 5,
+					limit: compact ? 10 : 5,
 					noStop: viewAll ? true : false,
 					numbered: true,
 					page: 1,
