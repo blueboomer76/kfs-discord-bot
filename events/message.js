@@ -94,7 +94,7 @@ module.exports = async (bot, message) => {
 		/*
 		This is the code if owners are to be ignored.
 		
-		if (!bot.ownerIds.includes(message.author.id) && runCommand.name != "help") {
+		if (runCommand.name != "help" && !bot.ownerIds.includes(message.author.id)) {
 			let commandUsage = bot.cache.stats.commandUsage.find(u => u.command == runCommand.name);
 			if (commandUsage) {
 				commandUsage.uses++;

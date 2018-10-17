@@ -16,8 +16,7 @@ module.exports = [
 					bot: ["EMBED_LINKS"],
 					user: [],
 					level: 0
-				},
-				startTyping: true
+				}
 			});
 		}
 		

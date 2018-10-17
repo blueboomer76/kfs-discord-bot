@@ -38,12 +38,17 @@ module.exports = async bot => {
 		bot.cache.guildCount = bot.guilds.size;
 		bot.cache.userCount = bot.users.size;
 	}, 1000*900)
-	setInterval(bot.logStats, 1000*7200)
 	
-	if (config.botsDiscordPwToken) {
-		setInterval(bot.postBotsDiscordPwStats, 1000*7200)
-	}
-	if (config.discordBotsOrgToken) {
-		setInterval(bot.postDiscordBotsOrgStats, 1000*7200)
-	}
+	setInterval(() => {
+		if (new Date() % 1000*7200 < 1000*3600) {
+			bot.logStats();
+		} else {
+			if (config.botsDiscordPwToken) {
+				bot.postBotsDiscordPwStats(bot);
+			}
+			if (config.discordBotsOrgToken) {
+				bot.postDiscordBotsOrgStats(bot);
+			}
+		}
+	}, 1000*3600)
 };

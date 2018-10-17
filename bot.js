@@ -153,7 +153,7 @@ class KendraBot extends Client {
 			}
 			stats.callTotal += stats2.callCurrentTotal;
 			stats.commandTotal += commandCurrentTotal;
-			fs.writeFile("modules/stats.json", JSON.stringify(stats), err => {if (err) throw err;});
+			fs.writeFile("modules/stats.json", JSON.stringify(stats, null, 4), err => {if (err) throw err;});
 			stats2.messageSessionTotal += stats2.messageCurrentTotal;
 			stats2.messageCurrentTotal = 0;
 			stats2.callSessionTotal += stats2.callCurrentTotal;
@@ -165,13 +165,13 @@ class KendraBot extends Client {
 		}, 1000);
 	}
 	
-	async postBotsDiscordPwStats() {
+	async postBotsDiscordPwStats(bot) {
 		request.post({
-			url: `https://bots.discord.pw/api/bots/${this.user.id}/stats`,
+			url: `https://bots.discord.pw/api/bots/${bot.user.id}/stats`,
 			headers: {
 				"Authorization": config.botsDiscordPwToken
 			},
-			body: {"server_count": this.guilds.size},
+			body: {"server_count": bot.guilds.size},
 			json: true
 		}, (err, res) => {
 			if (!err) {
@@ -182,13 +182,13 @@ class KendraBot extends Client {
 		})
 	}
 	
-	async postDiscordBotsOrgStats() {
+	async postDiscordBotsOrgStats(bot) {
 		request.post({
-			url: `https://discordbots.org/api/bots/${this.user.id}/stats`,
+			url: `https://discordbots.org/api/bots/${bot.user.id}/stats`,
 			headers: {
 				"Authorization": config.discordBotsOrgToken
 			},
-			body: {"server_count": this.guilds.size},
+			body: {"server_count": bot.guilds.size},
 			json: true
 		}, (err, res) => {
 			if (!err) {

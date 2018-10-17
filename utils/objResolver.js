@@ -4,8 +4,7 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 	let list;
 	switch (type) {
 		case "boolean":
-			let truthy = ["yes", "y", "true", "enable"];
-			let falsy = ["no", "n", "false", "disable"];
+			let truthy = ["yes", "y", "true", "enable"], falsy = ["no", "n", "false", "disable"];
 			if (truthy.includes(obj)) {
 				return true;
 			} else if (falsy.includes(obj)) {

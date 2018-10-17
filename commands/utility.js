@@ -370,7 +370,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			let member = args[0] ? args[0] : message.member, guildMembers, userRoles = member.roles.array();
 			
-			userRoles.splice(userRoles.findIndex(role => role.name == "@everyone"), 1);
+			userRoles.splice(userRoles.findIndex(role => role.id == message.guild.id), 1);
 			userRoles = userRoles.map(role => role.name);
 			
 			if (!message.guild.large) {

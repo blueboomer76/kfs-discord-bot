@@ -102,7 +102,7 @@ module.exports = [
 				.addField("Aliases", command.aliases.length > 0 ? command.aliases.join(", ") : "None")
 				.addField("Flags", command.flags.length > 0 ? commandFlags.join("\n") : "None")
 				.addField("Usage", command.usage)
-				.addField("Examples", command.examples.length > 0 ? commandFlags.join("\n") : "No examples provided")
+				.addField("Examples", command.examples.length > 0 ? command.examples.join("\n") : "No examples provided")
 				.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`)
 				.addField("Cooldown", `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}`)
 			}
@@ -285,8 +285,8 @@ module.exports = [
 			let commandName = command.name;
 			let category = command.category;
 			try {
-				delete require.cache[require.resolve(`./${category}.js`)];
-				let commandClasses = require(`./${category}.js`);
+				delete require.cache[require.resolve(`./${category.toLowerCase()}.js`)];
+				let commandClasses = require(`./${category.toLowerCase()}.js`);
 				let CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[0].name));
 				let command = new CommandClass();
 				command.category = category;
