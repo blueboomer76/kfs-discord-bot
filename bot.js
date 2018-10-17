@@ -167,13 +167,13 @@ class KFSDiscordBot extends Client {
 		});
 	}
 
-	async postBotsDiscordPwStats(bot) {
+	async postBotsDiscordPwStats() {
 		request.post({
-			url: `https://bots.discord.pw/api/bots/${bot.user.id}/stats`,
+			url: `https://bots.discord.pw/api/bots/${this.user.id}/stats`,
 			headers: {
 				"Authorization": config.botsDiscordPwToken
 			},
-			body: {"server_count": bot.guilds.size},
+			body: {"server_count": this.guilds.size},
 			json: true
 		}, (err, res) => {
 			if (err) {
@@ -188,13 +188,13 @@ class KFSDiscordBot extends Client {
 		})
 	}
 	
-	async postDiscordBotsOrgStats(bot) {
+	async postDiscordBotsOrgStats() {
 		request.post({
-			url: `https://discordbots.org/api/bots/${bot.user.id}/stats`,
+			url: `https://discordbots.org/api/bots/${this.user.id}/stats`,
 			headers: {
 				"Authorization": config.discordBotsOrgToken
 			},
-			body: {"server_count": bot.guilds.size},
+			body: {"server_count": this.guilds.size},
 			json: true
 		}, (err, res) => {
 			if (err) {
