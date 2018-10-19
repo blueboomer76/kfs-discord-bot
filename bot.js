@@ -200,14 +200,15 @@ class KendraBot extends Client {
 	}
 	
 	async handlePhoneMessage(message) {
-		let phoneCache = this.cache.phone;
+		let phoneCache = this.cache.phone,
+			affected = 0,
+			toSend = message.content.replace(/https?\:\/\/\S+\.\S+/gi, "")
+			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
 		phoneCache.lastMsgTime = Number(new Date());
 		phoneCache.msgCount++;
 		setTimeout(() => {phoneCache.msgCount--;}, 5000);
-		let affected = 0;
-		if (message.channel.id == phoneCache.channels[0]) {affected = 1};
-		let toSend = message.content.replace(/https?\:\/\/\S+\.\S+/gi, "")
-		.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
+		if (message.channel.id == phoneCache.channels[0]) affected = 1;
+		
 		this.channels.get(phoneCache.channels[affected]).send(`📞 ${toSend}`);
 		if (phoneCache.msgCount > 4) {
 			let phoneMsg = "☎️ The phone connection was cut off due to being overloaded."
@@ -219,8 +220,8 @@ class KendraBot extends Client {
 	
 	async checkPhone(bot) {
 		let phoneCache = bot.cache.phone, dif = Number(new Date()) - phoneCache.lastMsgTime;
-		if (dif < 1000*595) {
-			setTimeout(this, dif);
+		if (dif < 1000*3595) {
+			setTimeout(bot.checkPhone, dif);
 		} else {
 			let phoneMsg = "⏰ The phone call has timed out due to inactivity."
 			bot.channels.get(phoneCache.channels[0]).send(phoneMsg);

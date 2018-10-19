@@ -29,14 +29,18 @@ module.exports = [
 				if (err || res.statusCode >= 400) return message.channel.send(`Failed to retrieve from Reddit. (status code ${res.statusCode})`)
 				
 				let results = res.body.data.children,
-					postData = results[Math.floor(Math.random() * results.length)].data;
+					postData = results[Math.floor(Math.random() * results.length)].data,
+					imgResolutions = postData.preview.images[0].resolutions,
+					img = imgResolutions.find(r => r.width == 960) ||
+						imgResolutions.find(r => r.width == 640) ||
+						imgResolutions.find(r => r.width == 320);
 				
 				message.channel.send(new Discord.RichEmbed()
-				.setTitle(`${postData.title}`)
-				.setURL(`https://reddit.com${postData.permalink}`)
+				.setTitle(`${postData.title.replace(/&amp;/g, "&")}`)
+				.setURL(`https://redd.it/${postData.id}`)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author}`)
-				.setImage(postData.preview.images[0].resolutions.find(r => r.width == 640 || r.width == 320).url.replace(/&amp;/g, "&"))
+				.setImage(img.url.replace(/&amp;/g, "&"))
 				)
 			})
 		}
