@@ -210,17 +210,18 @@ class KFSDiscordBot extends Client {
 	}
 
 	async handlePhoneMessage(message) {
-		let phoneCache = this.cache.phone;
-		let ch0 = phoneCache.channels[0];
-		let ch1 = phoneCache.channels[1];
+		let phoneCache = this.cache.phone,
+			ch0 = phoneCache.channels[0],
+			ch1 = phoneCache.channels[1],
+			affected = 0,
+			toSend = message.content.replace(/https?:\/\/\S+\.\S+/gi, "")
+			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
 		phoneCache.lastMsgTime = Number(new Date());
 		phoneCache.msgCount++;
 		setTimeout(() => {phoneCache.msgCount--;}, 5000);
-		let affected = 0;
-		if (message.channel.id == ch0) {affected = 1};
-		let toSend = message.content.replace(/https?:\/\/\S+\.\S+/gi, "")
-		.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
+		if (message.channel.id == ch0) affected = 1;
 		if (toSend.length > 1500) toSend = toSend.slice(0, 1500) + "...";
+
 		this.channels.get(phoneCache.channels[affected]).send(`📞 ${toSend}`);
 		if (phoneCache.msgCount >= 4) {
 			setTimeout(() => {
@@ -234,7 +235,7 @@ class KFSDiscordBot extends Client {
 	
 	async checkPhone() {
 		let phoneCache = this.cache.phone, dif = Number(new Date()) - phoneCache.lastMsgTime;
-		if (dif < 1000*595) {
+		if (dif < 1000*3595) {
 			setTimeout(() => {this.checkPhone()}, dif);
 		} else {
 			let phoneMsg = "⏰ The phone call has timed out due to inactivity."

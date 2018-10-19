@@ -28,7 +28,8 @@ module.exports = [
 
 				let results = JSON.parse(res.body).data.children,
 					postData = results[Math.floor(Math.random() * results.length)].data;
-				let imageURL;
+				let title = postData.title.replace(/&amp;/g, "&"),
+					imageURL;
 				if (postData.preview) {
 					postData.preview.images[0].resolutions.forEach(rInfo => {
 						if (rInfo.width <= 960) imageURL = rInfo.url;
@@ -40,7 +41,7 @@ module.exports = [
 				}
 
 				message.channel.send(new Discord.RichEmbed()
-				.setTitle(postData.title.length > 250 ? `${postData.title.slice(0, 250)}...` : postData.title)
+				.setTitle(title.length > 250 ? `${title.slice(0, 250)}...` : title)
 				.setURL(`https://reddit.com${postData.permalink}`)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author}`)

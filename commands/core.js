@@ -215,7 +215,7 @@ module.exports = [
 				} else {
 					bot.cache.stats.callCurrentTotal++;
 					phoneCache.lastMsgTime = Number(new Date());
-					setTimeout(() => {bot.checkPhone()}, 1000*600);
+					setTimeout(() => {bot.checkPhone()}, 1000*3600);
 					
 					message.channel.send("☎ A phone connection has started! Greet the other side!");
 					if (phoneCache.channels.length == 2) {

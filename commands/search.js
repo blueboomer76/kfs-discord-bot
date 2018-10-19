@@ -69,19 +69,22 @@ module.exports = [
 				
 				if (compact) {
 					for (const post of results) {
-						let postData = post.data;
-						let postTitle = postData.title.length > 150 ? `${postData.title.slice(0, 150)}...` : postData.title;
-						let postLink = `[${postTitle}](https://reddit.com${postData.permalink})`;
-						if (viewAll) postLink += ` (${postData.subreddit_name_prefixed})`
-						entries[0].push(postLink);
+						let postData = post.data,
+							postTitle = postData.title.length > 150 ? `${postData.title.slice(0, 150)}...` : postData.title;
+							toDisplay = `[${postTitle.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})`;
+						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`
+						entries[0].push(toDisplay);
 					}
 				} else {
 					for (const post of results) {
-						let postData = post.data;
-						let postTitle = postData.title.length > 200 ? `${postData.title.slice(0, 200)}...` : postData.title;
-						let postLink = `[${postTitle}](https://reddit.com${postData.permalink})`;
-						if (viewAll) postLink += ` (${postData.subreddit_name_prefixed})`
-						entries[0].push(`${postLink}\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author.replace(/_/g, "\\_")} | ${getDuration(postData.created_utc * 1000, null, true)}`);
+						let postData = post.data,
+							postTitle = postData.title.length > 200 ? `${postData.title.slice(0, 200)}...` : postData.title,
+							toDisplay = `[${postTitle.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})`;
+						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`
+						let postFlair = postData.link_flair_text;
+						if (postFlair) toDisplay += ` [${postData.link_flair_text}]`
+
+						entries[0].push(`${toDisplay}\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author.replace(/_/g, "\\_")} | ${getDuration(postData.created_utc * 1000, null, true)}`);
 					}
 				}
 				
