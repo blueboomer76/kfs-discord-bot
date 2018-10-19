@@ -13,14 +13,16 @@ module.exports = async (bot, message) => {
 			bot.handlePhoneMessage(message);
 		}
 	} else {
-		let prefixLength = mentionMatch ? mentionMatch[0].length : config.prefix.length;
-		let args = message.content.slice(prefixLength).trim().split(/ +/g);
-		let command = args.shift().toLowerCase();
-		let runCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
-		if (!runCommand) return;
-
+		let prefixLength = mentionMatch ? mentionMatch[0].length : config.prefix.length,
+			args = message.content.slice(prefixLength).trim().split(/ +/g),
+			command = args.shift().toLowerCase(),
+			runCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
+		
 		// Check things before performing the command
+		if (!runCommand) return;
 		if (message.guild && !message.channel.permissionsFor(bot.user).has("SEND_MESSAGES")) return;
+		if (cdChecker.check(bot, message, runCommand.name) == false) return;
+		if (runCommand.cooldown.time != 0) cdChecker.addCooldown(bot, message, runCommand.name);
 		if (!message.guild && !runCommand.allowDMs) return message.channel.send("This command cannot be used in Direct Messages.")
 
 		let requiredPerms = runCommand.perms, userPermsAllowed = null, roleAllowed = null, faultMsg = "";
@@ -70,8 +72,6 @@ module.exports = async (bot, message) => {
 		}
 		if (faultMsg.length > 0) return message.channel.send(faultMsg);
 
-		if (cdChecker.check(bot, message, runCommand.name) == false) return;
-
 		if (runCommand.startTyping) {
 			message.channel.startTyping();
 			setTimeout(() => message.channel.stopTyping(), 10000);
@@ -97,7 +97,6 @@ module.exports = async (bot, message) => {
 			let e = err && err.stack ? err.stack : err;
 			message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${e}\`\`\``);
 		});
-		if (runCommand.cooldown.time != 0) cdChecker.addCooldown(bot, message, runCommand.name);
 
 		/*
 		This is the code if owners are to be ignored.
