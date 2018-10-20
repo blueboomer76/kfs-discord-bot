@@ -1,6 +1,10 @@
-function capitalize(str) {
+function capitalize(str, capAll) {
 	str = str.toString();
-	return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+	if (capAll) {
+		return str.split(/[ -]/).map(str2 => str2.charAt(0).toUpperCase() + str2.slice(1).toLowerCase()).join(" ");
+	} else {
+		return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+	}
 }
 
 module.exports = {

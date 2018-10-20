@@ -191,17 +191,12 @@ module.exports = [
 			if (!gvConnection.nowPlaying) return message.channel.send("There is no audio in the queue.");
 			
 			let entries = [queue];
-			if (queue.length > 0) {
-				entries[0][0] = `Now playing: ${gvConnection.nowPlaying}\n\n**Next up:**\n` + entries[0][0];
-			} else {
-				entries[0][0] = `Now playing: ${gvConnection.nowPlaying}`;
-			}
-			
 			paginator.paginate(message, {title: `Music Queue - ${message.guild.name}`}, entries, {
 				limit: 5,
 				numbered: true,
 				page: args[0] ? args[0] : 1,
-				params: null
+				params: null,
+				pinnedMsg: `Now playing: ${gvConnection.nowPlaying}\n\n**Next up:**\n`
 			});
 		}
 	},
