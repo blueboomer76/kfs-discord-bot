@@ -1,6 +1,10 @@
-const capitalize = str => {
+const capitalize = (str, capAll) => {
 	str = str.toString();
-	return str.charAt(0).toUpperCase() + str.slice(1);
+	if (capAll) {
+		return str.split(" ").map(str2 => str2.charAt(0).toUpperCase() + str2.slice(1)).join(" ")
+	} else {
+		return str.charAt(0).toUpperCase() + str.slice(1);
+	}
 }
 
 module.exports = {

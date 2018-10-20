@@ -23,7 +23,9 @@ module.exports = async (bot, message) => {
 		if (cdChecker.check(bot, message, runCommand.name) == false) return;
 		if (runCommand.cooldown.time != 0) cdChecker.addCooldown(bot, message, runCommand.name);
 		if (!message.guild && !runCommand.allowDMs) return message.channel.send("This command cannot be used in Direct Messages.")
-			
+		
+		if (message.guild && message.guild.large && !message.member) await message.guild.fetchMember(message.author);
+		
 		let requiredPerms = runCommand.perms, userPermsAllowed = null, roleAllowed = null, faultMsg = "";
 		if (message.guild) {
 			if (requiredPerms.bot.length > 0) {

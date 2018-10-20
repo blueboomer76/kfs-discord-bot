@@ -84,9 +84,9 @@ class KendraBot extends Client {
 			let cmdFiles = files.filter(f => f.split(".").pop() == "js").map(f => f.split(".").shift());
 			if (cmdFiles.length != 0) {
 				for (let category of cmdFiles) {
-					category = capitalize(category);
+					category = capitalize(category.replace(/-/g, " "));
 					this.categories.push(category);
-					let commandClasses = require(`./commands/${category.toLowerCase()}`);
+					let commandClasses = require(`./commands/${category.toLowerCase().replace(/ /g, "-")}`);
 					if (commandClasses.length > 0) {
 						for (const CommandClass of commandClasses) {
 							let command = new CommandClass();

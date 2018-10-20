@@ -152,8 +152,9 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: 1,
-						type: "string"
+						num: Infinity,
+						type: "string",
+						allowQuotes: true
 					},
 					{
 						num: 1,
@@ -178,10 +179,11 @@ module.exports = [
 			let category = args[0];
 			let commandName = args[1];
 			try {
-				let commandClasses = require(`./${category}.js`);
+				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
+				let commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`);
 				let CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[1]));
 				let command = new CommandClass();
-				command.category = category;
+				command.category = capitalize(category, true);
 				bot.commands.set(commandName, command);
 				message.channel.send(`The command ${commandName} was loaded.`);
 			} catch(err) {
@@ -285,8 +287,8 @@ module.exports = [
 			let commandName = command.name;
 			let category = command.category;
 			try {
-				delete require.cache[require.resolve(`./${category.toLowerCase()}.js`)];
-				let commandClasses = require(`./${category.toLowerCase()}.js`);
+				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
+				let commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`);
 				let CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[0].name));
 				let command = new CommandClass();
 				command.category = category;
@@ -545,7 +547,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			let command = args[0];
 			if (command.category == "Core" || command.name == "eval") return message.channel.send("That command is not unloadable.")
-			delete require.cache[require.resolve(`./${command.category}.js`)];
+			delete require.cache[require.resolve(`./${command.category.toLowerCase().replace(/ /g, "-")}.js`)];
 			bot.commands.delete(args[0]);
 			message.channel.send(`The command ${command.name} was unloaded.`);
 		}

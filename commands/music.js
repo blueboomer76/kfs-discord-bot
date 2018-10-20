@@ -83,8 +83,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			if (!message.member.voiceChannel) return message.channel.send("You are not in a voice channel! Join one first.");
 			
-			let gvConnection = message.guild.voiceConnection;
-			let stream, cmdErr;
+			let gvConnection = message.guild.voiceConnection, stream, cmdErr;
 			if (!gvConnection) {
 				await message.member.voiceChannel.join()
 				.then(connection => {
@@ -94,16 +93,16 @@ module.exports = [
 				})
 				.catch(err => cmdErr = true)
 			}
-			if (cmdErr) return message.channel.send("Failed to connect to the voice channel.");
 			
+			// Check for errors
+			if (cmdErr) return message.channel.send("Failed to connect to the voice channel.");
 			if (message.member.voiceChannel != gvConnection.channel) {
 				return message.channel.send("You need to be in the same voice channel as me to play music.")
 			}
-			
+			if (gvConnection.queue.length > 10) return message.channel.send("The maximum queue limit has been reached. No more music can be queued.");
 			if (gvConnection.queue.some(e => e.url == args[0])) {
 				return message.channel.send("That music is already in the queue.")
 			}
-			
 			try {ytdl(args[0])} catch(err) {cmdErr = true;}
 			if (cmdErr) return message.channel.send("You have provided an invalid YouTube URL.");
 			
@@ -114,12 +113,8 @@ module.exports = [
 				this.playQueue(message, seek);
 				message.channel.send("That music is now playing.")
 			} else {
-				if (gvConnection.queue.length < 10) {
-					gvConnection.queue.push({url: args[0]});
-					message.channel.send("That music has been added to the queue.")
-				} else {
-					message.channel.send("The maximum queue limit has been reached. No more music can be queued.");
-				}
+				gvConnection.queue.push({url: args[0]});
+				message.channel.send("That music has been added to the queue.")
 			}
 		}
 		
@@ -180,17 +175,17 @@ module.exports = [
 			let queue = gvConnection.queue;
 			if (queue.length == 0 && !gvConnection.nowPlaying) return message.channel.send("There is no music in the queue.");
 			
-			let startPage = args[0] ? args[0] : 1;
-			let entries = [queue.map(e => e.url)];
-			entries[0][0] = `Now playing: ${gvConnection.nowPlaying.url}\n\n**Next up:**\n` + entries[0][0];
-			let queueEmbed = {
-				title: `Music Queue - ${message.guild.name}`
-			};
+			let startPage = args[0] ? args[0] : 1,
+				entries = [queue.map(e => e.url)],
+				queueEmbed = {
+					title: `Music Queue - ${message.guild.name}`
+				};
 			paginator.paginate(message, {title: `Music Queue - ${message.guild.name}`}, entries, {
 				limit: 5,
 				numbered: true,
 				page: args[0] ? args[0] : 1,
-				params: null
+				params: null,
+				pinnedMsg: `Now playing: ${gvConnection.nowPlaying.url}\n\n**Next up:**\n`
 			});
 		}
 	},
