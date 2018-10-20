@@ -82,7 +82,7 @@ class KFSDiscordBot extends Client {
 			if (cmdFiles.length > 0) {
 				for (const fileName of cmdFiles) {
 					let rawCategory = fileName.split(".").shift();
-					let category = capitalize(rawCategory);
+					let category = capitalize(rawCategory.replace(/-/g, " "));
 					this.categories.push(category);
 					let commandClasses = require(`./commands/${fileName}`);
 					if (commandClasses.length > 0) {
