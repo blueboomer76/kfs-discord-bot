@@ -154,6 +154,36 @@ module.exports = [
 				
 			await message.guild.createChannel(args[0])
 			.then(message.channel.send(`✅ The channel **${args[0]}** has been created.`))
+		}
+	},
+	class CreateRoleCommand extends Command {
+		constructor() {
+			super({
+				name: "createrole",
+				description: "Creates a guild role. It will be logged if a modlog channel was set",
+				aliases: ["crrole"],
+				args: [
+					{
+						num: Infinity,
+						type: "string"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_ROLES"],
+					user: ["MANAGE_ROLES"],
+					level: 0
+				},
+				usage: "createrole <name>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			await message.guild.createRole({name: args[0]})
+			.then(role => message.channel.send(`✅ Role **${role.name}** has been created.`))
 			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
 		}
 	},
