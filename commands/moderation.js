@@ -145,6 +145,38 @@ module.exports = [
 			.catch(err => message.channel.send("An error has occurred while trying to create the channel: `" + err + "`"))
 		}
 	},
+	class CreateRoleCommand extends Command {
+		constructor() {
+			super({
+				name: "createrole",
+				description: "Creates a server role",
+				aliases: ["crrole"],
+				args: [
+					{
+						num: Infinity,
+						type: "string"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_ROLES"],
+					user: ["MANAGE_ROLES"],
+					level: 0
+				},
+				usage: "createrole <name>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			let roleName = args[0];
+			message.guild.createRole({name: roleName})
+			.then(() => message.channel.send(`✅ Role **${roleName}** has been created.`))
+			.catch(err => message.channel.send("An error has occurred while trying to create the role: `" + err + "`"))
+		}
+	},
 	class DeleteChannelCommand extends Command {
 		constructor() {
 			super({
