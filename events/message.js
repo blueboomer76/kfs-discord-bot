@@ -20,7 +20,7 @@ module.exports = async (bot, message) => {
 		// Check things before performing the command
 		if (!runCommand) return;
 		if (message.guild && !message.channel.permissionsFor(bot.user).has("SEND_MESSAGES")) return;
-		if (cdChecker.check(bot, message, runCommand.name) == false) return;
+		if (cdChecker.check(bot, message, runCommand) == false) return;
 		if (runCommand.cooldown.time != 0) cdChecker.addCooldown(bot, message, runCommand.name);
 		if (!message.guild && !runCommand.allowDMs) return message.channel.send("This command cannot be used in Direct Messages.")
 		

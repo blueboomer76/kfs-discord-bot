@@ -38,6 +38,9 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 		case "emoji":
 			// Coming soon
 			break;
+		case "image":
+			const imageRegex = /\.(gif|jpe?g|png)$/i;
+			if (imageRegex.test(obj)) {return obj} else {return null}
 		case "member":
 			let member, memberRegex = /<@!?\d+>/;
 			let guildMembers = message.guild.members;

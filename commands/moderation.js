@@ -153,7 +153,8 @@ module.exports = [
 			if (channelNameRegex.test(args[0])) return message.channel.send("Channel names can only have numbers, lowercase letters, hyphens, or underscores.")
 				
 			await message.guild.createChannel(args[0])
-			.then(message.channel.send(`✅ The channel **${args[0]}** has been created.`))
+			.then(channel => message.channel.send(`✅ The channel **${channel.name}** has been created.`))
+			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
 		}
 	},
 	class CreateRoleCommand extends Command {
