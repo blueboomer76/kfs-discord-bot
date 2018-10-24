@@ -33,6 +33,9 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			let command = bot.commands.get(lowerObj) || bot.commands.get(bot.aliases.get(lowerObj));
 			if (command) {return command} else {return null}
 			break;
+		case "image":
+			const imageRegex = /^https?:\/\/.+\.(gif|jpe?g|png)$/i;
+			if (imageRegex.test(obj)) {return obj} else {return null}
 		case "member":
 			let member, memberRegex = /^<@!?\d{17,19}>$/;
 			let guildMembers = message.guild.members;

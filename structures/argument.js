@@ -1,11 +1,11 @@
 class Argument {
 	constructor(props) {
 		this.allowQuotes = props.allowQuotes || false;
-		this.defaultValue = props.defaultValue || null;
 		this.errorMsg = props.errorMsg || "Not enough arguments provided";
 		this.num = props.num || 1;
-		this.parseSeparately = props.parseSeparately || false;
 		this.optional = props.optional || false;
+		this.parseSeparately = props.parseSeparately || false;
+		this.shiftable = props.shiftable || false;
 		this.type = props.type;
 
 		if (props.min) this.min = props.min;
