@@ -1,6 +1,12 @@
 *Note: Some changes have been compacted into some versions in this changelog. The full changelog is available on the Discord server.*
 
 # 1.X (current)
+## 1.3.4
+- Added more image commands
+
+## 1.3.0
+- Added a new category Text Editing
+
 ## 1.2.26
 - Move commands into category files; `commands` now has no subfolders.
 - Added author to reddit and meme commands; added timestamp to reddit command

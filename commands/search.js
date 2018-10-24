@@ -1,3 +1,4 @@
+const Discord = require("discord.js");
 const Command = require("../structures/command.js");
 const {getDuration} = require("../modules/functions.js");
 const paginator = require("../utils/paginator.js");
@@ -58,6 +59,7 @@ module.exports = [
 				if (err) return message.channel.send(`Could not request to Reddit: ${err.message}`);
 				if (!res) return message.channel.send("No response was received from Reddit.");
 				if (res.statusCode == 404) return message.channel.send("That subreddit doesn't exist!");
+				if (res.statusCode == 403) return message.channel.send("That subreddit is private.");
 				if (res.statusCode >= 400) return message.channel.send(`The request to Reddit failed with status code ${res.statusCode} (${res.statusMessage})`);
 				
 				let results = res.body.data.children.filter(r => !r.data.stickied);
@@ -190,6 +192,59 @@ module.exports = [
 				} else {
 					message.channel.send("No definition found for that term.");
 				}
+			})
+		}
+	},
+	class WikipediaCommand extends Command {
+		constructor() {
+			super({
+				name: "wikipedia",
+				description: "Get the summary of a term from Wikipedia",
+				aliases: ["wiki"],
+				args: [
+					{
+						errorMsg: "You need to provide a term to look up Wikipedia!",
+						num: Infinity,
+						type: "string"
+					}
+				],
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				},
+				usage: "wikipedia <term>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			request.get({
+				url: "https://en.wikipedia.org/w/api.php",
+				qs: {
+					action: "query",
+					exintro: true,
+					explaintext: true,
+					format: "json",
+					prop: "extracts",
+					redirects: true,
+					titles: encodeURIComponent(args[0].replace(/ /g, "_"))
+				},
+				json: true
+			}, (err, res) => {
+				if (err) return message.channel.send(`Could not request to Wikipedia: ${err.message}`);
+				if (!res) return message.channel.send("No response was received from Wikipedia.");
+				if (res.statusCode >= 400) return message.channel.send(`The request to Wikipedia failed with status code ${res.statusCode} (${res.statusMessage})`);
+
+				let result = Object.values(res.body.query.pages)[0];
+				let resultText = result.extract;
+				if (!resultText) return message.channel.send("No Wikipedia article exists for that term. *(Make sure to check capitalization)*");
+
+				message.channel.send(new Discord.RichEmbed()
+				.setTitle(`Wikipedia - ${result.title}`)
+				.setDescription(resultText.length > 2000 ? `${resultText.slice(0, 2000)}...` : resultText)
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
+				);
 			})
 		}
 	}
