@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const Command = require("../structures/command.js");
+const {getRecentImage} = require("../utils/recentImageFetcher.js");
 const Jimp = require("jimp");
 const request = require("request");
 
@@ -9,6 +10,7 @@ module.exports = [
 			super({
 				name: "animeme",
 				description: "Gets an \"animeme\", or simply the combination of anime and memes",
+				aliases: ["animememe", "memeanime"],
 				cooldown: {
 					time: 15000,
 					type: "channel"
@@ -57,11 +59,12 @@ module.exports = [
 				args: [
 					{
 						num: 1,
+						optional: true,
 						type: "image"
 					}
 				],
 				cooldown: {
-					time: 15000,
+					time: 20000,
 					type: "channel"
 				},
 				perms: {
@@ -74,7 +77,13 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			Jimp.read(args[0])
+			let imageURL = args[0], cmdErr;
+			await getRecentImage(message)
+			.then(url => imageURL = url)
+			.catch(err => cmdErr = err)
+			if (cmdErr) return message.channel.send(cmdErr);
+			
+			Jimp.read(imageURL)
 			.then(img => {
 				img.greyscale().getBufferAsync(Jimp.MIME_PNG)
 				.then(imgToSend => {
@@ -102,11 +111,12 @@ module.exports = [
 				args: [
 					{
 						num: 1,
+						optional: true,
 						type: "image"
 					}
 				],
 				cooldown: {
-					time: 15000,
+					time: 20000,
 					type: "channel"
 				},
 				perms: {
@@ -119,7 +129,13 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			Jimp.read(args[0])
+			let imageURL = args[0], cmdErr;
+			await getRecentImage(message)
+			.then(url => imageURL = url)
+			.catch(err => cmdErr = err)
+			if (cmdErr) return message.channel.send(cmdErr);
+			
+			Jimp.read(imageURL)
 			.then(img => {
 				img.invert().getBufferAsync(Jimp.MIME_PNG)
 				.then(imgToSend => {

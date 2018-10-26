@@ -185,6 +185,11 @@ module.exports = [
 				let command = new CommandClass();
 				command.category = capitalize(category, true);
 				bot.commands.set(commandName, command);
+				if (command.aliases.length > 0) {
+					for (const alias of command.aliases) { 
+						bot.aliases.set(alias, command.name);
+					}
+				}
 				message.channel.send(`The command ${commandName} was loaded.`);
 			} catch(err) {
 				message.channel.send(`A problem has occurred: \`${err}\``);

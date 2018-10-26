@@ -52,6 +52,7 @@ module.exports = {
 			}
 			if (!baseStr1.startsWith("1 ")) baseStr1 += "s";
 			if (!baseStr2.startsWith("1 ")) baseStr2 += "s";
+			if (!simple) baseStr1 += ",";
 		} else {
 			baseStr1 = `${Math.round((timeDif - 5256000) / 31536000)} years`
 		}
@@ -59,7 +60,7 @@ module.exports = {
 		if (simple) {
 			return `${baseStr1} ${suffix}`;
 		} else {
-			return `${baseStr1}, ${baseStr2} ${suffix}`;
+			return `${baseStr1} ${baseStr2} ${suffix}`;
 		}
 	},
 	parsePerm: perm => {
