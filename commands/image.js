@@ -1,9 +1,63 @@
 const Discord = require("discord.js");
 const Command = require("../structures/command.js");
+const {getRecentImage} = require("../utils/recentImageFetcher.js");
 const Jimp = require("jimp");
 const request = require("request");
 
 module.exports = [
+	class GrayscaleCommand extends Command {
+		constructor() {
+			super({
+				name: "grayscale",
+				description: "Make an image gray",
+				aliases: ["gray", "grey", "greyscale"],
+				args: [
+					{
+						num: 1,
+						optional: true,
+						type: "image"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "grayscale [image URL]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			let imageURL = args[0], cmdErr;
+			await getRecentImage(message)
+			.then(url => imageURL = url)
+			.catch(err => cmdErr = err)
+			if (cmdErr) return message.channel.send(cmdErr);
+			
+			Jimp.read(imageURL)
+			.then(img => {
+				img.grayscale().getBufferAsync(Jimp.MIME_PNG)
+				.then(imgToSend => {
+					message.channel.send({
+						files: [{
+							attachment: imgToSend,
+							name: "grayscale.png"
+						}]
+					})
+				})
+				.catch(err => {
+					message.channel.send("Failed to generate the image.")
+				})
+			})
+			.catch(err => {
+				message.channel.send("Failed to get image for that URL.")
+			})
+		}
+	},
 	class InvertCommand extends Command {
 		constructor() {
 			super({
@@ -12,11 +66,12 @@ module.exports = [
 				args: [
 					{
 						num: 1,
+						optional: true,
 						type: "image"
 					}
 				],
 				cooldown: {
-					time: 15000,
+					time: 20000,
 					type: "channel"
 				},
 				perms: {
@@ -24,12 +79,18 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "invert <image URL>"
+				usage: "invert [image URL]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			Jimp.read(args[0])
+			let imageURL = args[0], cmdErr;
+			await getRecentImage(message)
+			.then(url => imageURL = url)
+			.catch(err => cmdErr = err)
+			if (cmdErr) return message.channel.send(cmdErr);
+			
+			Jimp.read(imageURL)
 			.then(img => {
 				img.invert().getBufferAsync(Jimp.MIME_PNG)
 				.then(imgToSend => {
