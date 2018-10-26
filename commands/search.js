@@ -222,12 +222,11 @@ module.exports = [
 				url: "https://en.wikipedia.org/w/api.php",
 				qs: {
 					action: "query",
-					exintro: true,
 					explaintext: true,
 					format: "json",
 					prop: "extracts",
 					redirects: true,
-					titles: encodeURIComponent(args[0].replace(/ /g, "_"))
+					titles: args[0].split("|", 1)[0]
 				},
 				json: true
 			}, (err, res) => {
@@ -235,13 +234,23 @@ module.exports = [
 				if (!res) return message.channel.send("No response was received from Wikipedia.");
 				if (res.statusCode >= 400) return message.channel.send(`The request to Wikipedia failed with status code ${res.statusCode} (${res.statusMessage})`);
 
-				let result = Object.values(res.body.query.pages)[0];
-				let resultText = result.extract;
+				let result = Object.values(res.body.query.pages)[0],
+					resultText = result.extract;
 				if (!resultText) return message.channel.send("No Wikipedia article exists for that term. *(Make sure to check capitalization)*");
+				
+				let firstSectionIndex = resultText.indexOf("==");
+				if (firstSectionIndex > 2000) {
+					resultText = `${resultText.slice(0, 2000)}...`
+				} else if (firstSectionIndex > 1000) {
+					resultText = resultText.slice(0, firstSectionIndex);
+				} else {
+					resultText = resultText.slice(0, 1000);
+					if (result.extract.length > 1000) resultText += "...";
+				}
 
 				message.channel.send(new Discord.RichEmbed()
 				.setTitle(`Wikipedia - ${result.title}`)
-				.setDescription(resultText.length > 2000 ? `${resultText.slice(0, 2000)}...` : resultText)
+				.setDescription(resultText)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
 				);
