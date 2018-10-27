@@ -130,10 +130,10 @@ module.exports = [
 			});
 		}
 	},
-	class FlipCommand extends Command {
+	class FlipCoinCommand extends Command {
 		constructor() {
 			super({
-				name: "flip",
+				name: "flipcoin",
 				description: "Flip a coin. You can specify a number of coins to flip",
 				aliases: ["coin"],
 				args: [
@@ -145,7 +145,7 @@ module.exports = [
 						max: 30
 					}
 				],
-				usage: "flip <1-30>"
+				usage: "flipcoin <1-30>"
 			});
 		}
 		

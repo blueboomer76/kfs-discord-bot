@@ -178,6 +178,8 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			let category = args[0];
 			let commandName = args[1];
+			
+			if (bot.commands.get(commandName)) return message.channel.send("A command with that name is already loaded.")
 			try {
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
 				let commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`);

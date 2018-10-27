@@ -39,7 +39,7 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			// Coming soon
 			break;
 		case "image":
-			const imageRegex = /^https?:\/\/\.+(gif|jpe?g|png)$/i;
+			const imageRegex = /^https?:\/\/.+\.(gif|jpe?g|png)$/i;
 			if (imageRegex.test(obj)) {return obj} else {return null}
 		case "member":
 			let member, memberRegex = /<@!?\d+>/;

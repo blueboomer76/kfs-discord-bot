@@ -46,7 +46,7 @@ module.exports = {
 					"Hang in there before using this command again..."
 				];
 				let toSend = `⛔ **Cooldown:**\n*${cdMessages[Math.floor(Math.random() * cdMessages.length)]}*` + "\n" +
-				`This command cannot be used again for **${(checkedCd.resets - Number(new Date())).toFixed(1)} seconds**`
+				`This command cannot be used again for **${((checkedCd.resets - Number(new Date())) / 1000).toFixed(1)} seconds**`
 				if (command.cooldown.type == "channel") {
 					toSend += " in this channel"
 				} else if (command.cooldown.type == "guild") {
