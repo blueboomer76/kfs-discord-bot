@@ -1,10 +1,151 @@
 const Discord = require("discord.js");
 const Command = require("../structures/command.js");
-const {getRecentImage} = require("../utils/recentImageFetcher.js");
+const imageManager = require("../utils/imageManager.js");
 const Jimp = require("jimp");
 const request = require("request");
 
 module.exports = [
+	class BlurCommand extends Command {
+		constructor() {
+			super({
+				name: "blur",
+				description: "Blur an image",
+				args: [
+					{
+						num: 1,
+						optional: true,
+						type: "image"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "channel"
+				},
+				flags: [
+					{
+						name: "level",
+						desc: "The level to blur the image",
+						arg: {
+							type: "number",
+							min: 1,
+							max: 10
+						}
+					}
+				],
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "blur [image URL] [--level <1-10>]"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			let imageURL = args[0], cmdErr;
+			if (!imageURL) {
+				await imageManager.getRecentImage(message)
+				.then(url => imageURL = url)
+				.catch(err => cmdErr = err)
+				if (cmdErr) return message.channel.send(cmdErr);
+			}
+
+			Jimp.read(imageURL)
+			.then(img => {
+				let levelFlag = flags.find(f => f.name == "level");
+				imageManager.postImage(message, img.blur(levelFlag ? levelFlag.args : 2), "blur.png")
+			})
+			.catch(err => {
+				message.channel.send("Failed to get image for that URL.")
+			})
+		}
+	},
+	class FlipCommand extends Command {
+		constructor() {
+			super({
+				name: "flip",
+				description: "Flip an image vertically",
+				args: [
+					{
+						num: 1,
+						optional: true,
+						type: "image"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "flip [image URL]"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			let imageURL = args[0], cmdErr;
+			if (!imageURL) {
+				await imageManager.getRecentImage(message)
+				.then(url => imageURL = url)
+				.catch(err => cmdErr = err)
+				if (cmdErr) return message.channel.send(cmdErr);
+			}
+
+			Jimp.read(imageURL)
+			.then(img => {
+				imageManager.postImage(message, img.mirror(false, true), "flip.png")
+			})
+			.catch(err => {
+				message.channel.send("Failed to get image for that URL.")
+			})
+		}
+	},
+	class FlopCommand extends Command {
+		constructor() {
+			super({
+				name: "flop",
+				description: "Flop an image horizontally",
+				args: [
+					{
+						num: 1,
+						optional: true,
+						type: "image"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "flop [image URL]"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			let imageURL = args[0], cmdErr;
+			if (!imageURL) {
+				await imageManager.getRecentImage(message)
+				.then(url => imageURL = url)
+				.catch(err => cmdErr = err)
+				if (cmdErr) return message.channel.send(cmdErr);
+			}
+
+			Jimp.read(imageURL)
+			.then(img => {
+				imageManager.postImage(message, img.mirror(true, false), "flop.png")
+			})
+			.catch(err => {
+				message.channel.send("Failed to get image for that URL.")
+			})
+		}
+	},
 	class GrayscaleCommand extends Command {
 		constructor() {
 			super({
@@ -33,25 +174,16 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let imageURL = args[0], cmdErr;
-			await getRecentImage(message)
-			.then(url => imageURL = url)
-			.catch(err => cmdErr = err)
-			if (cmdErr) return message.channel.send(cmdErr);
+			if (!imageURL) {
+				await imageManager.getRecentImage(message)
+				.then(url => imageURL = url)
+				.catch(err => cmdErr = err)
+				if (cmdErr) return message.channel.send(cmdErr);
+			}
 			
 			Jimp.read(imageURL)
 			.then(img => {
-				img.grayscale().getBufferAsync(Jimp.MIME_PNG)
-				.then(imgToSend => {
-					message.channel.send({
-						files: [{
-							attachment: imgToSend,
-							name: "grayscale.png"
-						}]
-					})
-				})
-				.catch(err => {
-					message.channel.send("Failed to generate the image.")
-				})
+				imageManager.postImage(message, img.grayscale(), "grayscale.png")
 			})
 			.catch(err => {
 				message.channel.send("Failed to get image for that URL.")
@@ -85,25 +217,16 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let imageURL = args[0], cmdErr;
-			await getRecentImage(message)
-			.then(url => imageURL = url)
-			.catch(err => cmdErr = err)
-			if (cmdErr) return message.channel.send(cmdErr);
+			if (!imageURL) {
+				await imageManager.getRecentImage(message)
+				.then(url => imageURL = url)
+				.catch(err => cmdErr = err)
+				if (cmdErr) return message.channel.send(cmdErr);
+			}
 			
 			Jimp.read(imageURL)
 			.then(img => {
-				img.invert().getBufferAsync(Jimp.MIME_PNG)
-				.then(imgToSend => {
-					message.channel.send({
-						files: [{
-							attachment: imgToSend,
-							name: "invert.png"
-						}]
-					})
-				})
-				.catch(err => {
-					message.channel.send("Failed to generate the image.")
-				})
+				imageManager.postImage(message, img.invert(), "invert.png")
 			})
 			.catch(err => {
 				message.channel.send("Failed to get image for that URL.")
@@ -156,5 +279,92 @@ module.exports = [
 				);
 			})
 		}
-	}
+	},
+	class MirrorCommand extends Command {
+		constructor() {
+			super({
+				name: "mirror",
+				description: "Mirrors a half of an image to the other side",
+				args: [
+					{
+						num: 1,
+						type: "image",
+					},
+					{
+						num: 1,
+						type: "oneof",
+						allowedValues: ["haah", "hooh", "waaw", "woow", "bottom-to-top", "top-to-bottom", "left-to-right", "right-to-left"]
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "mirror <image URL> <[haah | left-to-right] | [hooh | bottom-to-top] | [waaw | right-to-left] | [woow | top-to-bottom]>"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			let imageURL = args[0], type = args[1], cmdErr;
+
+			Jimp.read(imageURL)
+			.then(img => {
+				let imgClone1 = img.clone(),
+					imgClone2 = img.clone(),
+					imgWidth = img.bitmap.width,
+					imgHeight = img.bitmap.height;
+
+				if (type == "haah" || type == "left-to-right") {
+					imgClone1.crop(imgWidth / 2, 0, imgWidth / 2, imgHeight);
+					imgClone2.crop(imgWidth / 2, 0, imgWidth / 2, imgHeight);
+					imgClone2.mirror(true, false);
+
+					new Jimp(imgWidth, imgHeight, (err, img2) => {
+						img2.composite(imgClone1, imgWidth / 2, 0)
+						.composite(imgClone2, 0, 0)
+						imageManager.postImage(message, img2, "mirror-haah.png");
+					})
+					return;
+				} else if (type == "hooh" || type == "bottom-to-top") {
+					imgClone1.crop(0, imgHeight / 2, imgWidth, imgHeight / 2);
+					imgClone2.crop(0, imgHeight / 2, imgWidth, imgHeight / 2);
+					imgClone2.mirror(false, true);
+
+					new Jimp(imgWidth, imgHeight, (err, img2) => {
+						img2.composite(imgClone1, 0, imgHeight / 2)
+						.composite(imgClone2, 0, 0)
+						imageManager.postImage(message, img2, "mirror-hooh.png");
+					})
+				} else if (type == "waaw" || type == "right-to-left") {
+					imgClone1.crop(0, 0, imgWidth / 2, imgHeight);
+					imgClone2.crop(0, 0, imgWidth / 2, imgHeight);
+					imgClone2.mirror(true, false);
+
+					new Jimp(imgWidth, imgHeight, (err, img2) => {
+						img2.composite(imgClone1, 0, 0)
+						.composite(imgClone2, imgWidth / 2, 0)
+						imageManager.postImage(message, img2, "mirror-waaw.png");
+					})
+				} else {
+					imgClone1.crop(0, 0, imgWidth, imgHeight / 2);
+					imgClone2.crop(0, 0, imgWidth, imgHeight / 2);
+					imgClone2.mirror(false, true);
+
+					new Jimp(imgWidth, imgHeight, (err, img2) => {
+						img2.composite(imgClone1, 0, 0)
+						.composite(imgClone2, 0, imgHeight / 2)
+						imageManager.postImage(message, img2, "mirror-woow.png");
+					})
+				}
+			})
+			.catch(err => {
+				message.channel.send("Failed to get image for that URL.")
+			})
+		}
+	},
 ]
