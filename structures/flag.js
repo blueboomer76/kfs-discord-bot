@@ -9,6 +9,7 @@ class Flag {
 
 class FlagArgument {
 	constructor(props) {
+		this.errMsg = props.errMsg || null;
 		this.num = props.num || 1;
 		this.optional = props.optional || false;
 		this.type = props.type;

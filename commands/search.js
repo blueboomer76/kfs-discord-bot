@@ -12,7 +12,7 @@ module.exports = [
 				description: "Get top posts from Reddit, from all subreddits or a single one",
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						optional: true,
 						type: "string"
 					}
@@ -122,8 +122,8 @@ module.exports = [
 				aliases: ["ud", "define"],
 				args: [
 					{
-						errorMsg: "You need to provide a term to look up the Urban Dictionary!",
-						num: Infinity,
+						missingArgMsg: "You need to provide a term to look up the Urban Dictionary!",
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -203,8 +203,8 @@ module.exports = [
 				aliases: ["wiki"],
 				args: [
 					{
-						errorMsg: "You need to provide a term to look up Wikipedia!",
-						num: Infinity,
+						missingArgMsg: "You need to provide a term to look up Wikipedia!",
+						infiniteArgs: true,
 						type: "string"
 					}
 				],

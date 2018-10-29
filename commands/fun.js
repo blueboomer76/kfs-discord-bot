@@ -11,7 +11,7 @@ module.exports = [
 				aliases: ["8b"],
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -89,7 +89,7 @@ module.exports = [
 				args: [
 					{
 						allowQuotes: true,
-						num: Infinity,
+						infiniteArgs: true,
 						parseSeperately: true,
 						type: "string"
 					}
@@ -99,7 +99,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (args.length < 2) return message.channel.send("You need to provide at least two choices for me to pick from!");
+			if (args.length < 2) return message.channel.send("You need to provide at least 2 choices for me to choose from!");
 			message.channel.send(`I choose: ${args[Math.floor(Math.random() * args.length)]}`);
 		}
 	},
@@ -108,16 +108,16 @@ module.exports = [
 			super({
 				name: "coin",
 				description: "Flip a coin. You can specify a number of coins to flip",
+				aliases: ["coinflip", "flipcoin"],
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "number",
 						min: 1,
-						max: 30
+						max: 50
 					}
 				],
-				usage: "coin [1-30]"
+				usage: "coin [1-50]"
 			});
 		}
 	
@@ -177,11 +177,11 @@ module.exports = [
 				args: [
 					{
 						allowQuotes: true,
-						num: Infinity,
+						infiniteArgs: true,
 						type: "member"
 					},
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -210,7 +210,7 @@ module.exports = [
 				description: "Have the bot rate someone or something for you",
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -219,8 +219,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let hash = 0;
-			let memberRegex = /<@!?\d+>/;
+			let hash = 0, memberRegex = /<@!?\d+>/;
 			if (memberRegex.test(args[0])) {
 				let memberRegex2 = /\d+/;
 				let member = message.guild.members.get(args[0].match(memberRegex2)[0])
@@ -251,7 +250,7 @@ module.exports = [
 				description: "Have the bot say something for you",
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],

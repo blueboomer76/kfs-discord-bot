@@ -12,7 +12,6 @@ module.exports = [
 				description: "Blur an image",
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "image"
 					}
@@ -67,7 +66,6 @@ module.exports = [
 				description: "Flip an image horizontally",
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "image"
 					}
@@ -110,7 +108,6 @@ module.exports = [
 				description: "Flop an image vertically",
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "image"
 					}
@@ -154,7 +151,6 @@ module.exports = [
 				aliases: ["grayscale", "grey", "greyscale"],
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "image"
 					}
@@ -197,7 +193,6 @@ module.exports = [
 				description: "Invert the colors of an image",
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "image"
 					}
@@ -287,11 +282,9 @@ module.exports = [
 				description: "Mirrors a half of an image to the other side",
 				args: [
 					{
-						num: 1,
 						type: "image",
 					},
 					{
-						num: 1,
 						type: "oneof",
 						allowedValues: ["haah", "hooh", "waaw", "woow", "bottom-to-top", "top-to-bottom", "left-to-right", "right-to-left"]
 					}

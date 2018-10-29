@@ -33,7 +33,7 @@ module.exports = [
 			.addField("Library", `Discord.js v${Discord.version}`, true)
 			.addField("Bot Version", version, true)
 			.addField("Stats", `${bot.cache.guildCount} Servers\n${bot.cache.userCount} Users`, true)
-			.addField("Bot Invite", "[Go!](https://discordapp.com/oauth2/authorize?client_id=333058410465722368&permissions=405921878&scope=bot)", true)
+			.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
 			.addField("Support Server", "[Go!](https://discord.gg/yB8TvWU)", true)
 			.addField("Upvote this bot", "[Go!](https://discordbots.org/bots/333058410465722368)", true)
 			);
@@ -47,7 +47,6 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "command"
 					}
@@ -79,7 +78,7 @@ module.exports = [
 				.setFooter(`Use \`help <command>\` to get help for a command | Total commands: ${bot.commands.size}`);
 				let cmds = bot.commands;
 				if (!bot.ownerIDs.includes(message.author.id) && !bot.adminIDs.includes(message.author.id)) {
-					cmds = cmds.filter(cmd => !cmd.hidden);
+					cmds = cmds.filter(cmd => !cmd.disabled && !cmd.hidden);
 				}
 				for (let i = 0; i < bot.categories.length; i++) {
 					let cmdsInCat = cmds.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
@@ -138,7 +137,7 @@ module.exports = [
 			.setTitle("Bot References")
 			.setDescription("Exciting! Now you have the chance to spread the love!")
 			.setColor(Math.floor(Math.random() * 16777216))
-			.addField("Bot Invite", "[Go!](https://discordapp.com/oauth2/authorize?client_id=333058410465722368&permissions=405921878&scope=bot)")
+			.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`)
 			.addField("Support Server", "[Go!](https://discord.gg/yB8TvWU)")
 			.addField("Upvote this bot", "[Go!](https://discordbots.org/bots/333058410465722368)")
 			);
@@ -153,11 +152,10 @@ module.exports = [
 				args: [
 					{
 						allowQuotes: true,
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					},
 					{
-						num: 1,
 						type: "string"
 					}
 				],
@@ -269,7 +267,6 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: 1,
 						type: "command"
 					}
 				],
@@ -317,7 +314,7 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -493,8 +490,8 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						errorMsg: "You must provide a suggestion or problem to send.",
-						num: Infinity,
+						missingArgMsg: "You must provide a suggestion or problem to send.",
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -544,7 +541,6 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: 1,
 						type: "command"
 					}
 				],
@@ -580,7 +576,6 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "number",
 						min: 1
