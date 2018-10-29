@@ -67,8 +67,8 @@ module.exports = [
 				description: "Play some audio",
 				args: [
 					{
-						errorMsg: "Please provide the audio that you want to play.",
-						num: Infinity,
+						missingArgMsg: "Please provide the audio that you want to play.",
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -166,7 +166,6 @@ module.exports = [
 				aliases: ["playlist"],
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "number",
 						min: 1
@@ -291,7 +290,6 @@ module.exports = [
 				aliases: ["vol"],
 				args: [
 					{
-						num: 1,
 						type: "number",
 						min: 1,
 						max: 100

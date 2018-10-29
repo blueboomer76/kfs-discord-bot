@@ -8,7 +8,7 @@ module.exports = [
 				description: "Generates cowsay text",
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -77,7 +77,7 @@ module.exports = [
 				description: "Turns text into emojis",
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -143,7 +143,7 @@ module.exports = [
 				description: "Reverses text",
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],

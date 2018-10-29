@@ -40,17 +40,21 @@ function checkArgs(bot, message, args, cmdArg) {
 	let toResolve = resolver.resolve(bot, message, args, arg.type, params);
 	if (toResolve == null) {
 		let argErrorMsg = `\`${args.slice(0, 1500)}\` is not a valid ${arg.type}`;
-		if (arg.type == "number") {
-			argErrorMsg += "\nThe argument must be a number that is "
-			if (arg.min && arg.max) {
-				argErrorMsg += `in between ${params.min} and ${params.max}`;
-			} else if (arg.min) {
-				argErrorMsg += `greater than or equal to ${params.min}`;
-			} else {
-				argErrorMsg += `less than or equal to ${params.max}`;
+		if (cmdArg.errorMsg) {
+			argErrorMsg = cmdArg.errorMsg;
+		} else {
+			if (arg.type == "number") {
+				argErrorMsg += "\nThe argument must be a number that is "
+				if (arg.min && arg.max) {
+					argErrorMsg += `in between ${params.min} and ${params.max}`;
+				} else if (arg.min) {
+					argErrorMsg += `greater than or equal to ${params.min}`;
+				} else {
+					argErrorMsg += `less than or equal to ${params.max}`;
+				}
+			} else if (arg.type == "oneof") {
+				argErrorMsg = `\nThe argument must be one of these values: ${params.list.join(", ")}`;
 			}
-		} else if (arg.type == "oneof") {
-			argErrorMsg = `\nThe argument must be one of these values: ${params.list.join(", ")}`;
 		}
 		return {error: true, message: argErrorMsg};
 	}
@@ -82,7 +86,7 @@ module.exports = {
 		let parsedArgs = [];
 		for (let i = 0; i < commandArgs.length; i++) {
 			let arg = commandArgs[i];
-			if (arg.num == Infinity) {
+			if (arg.infiniteArgs) {
 				if (arg.allowQuotes) {
 					let findAll = false;
 					if (arg.parseSeparately) findAll = !findAll;
@@ -96,7 +100,10 @@ module.exports = {
 			if (!args[i]) {
 				if (!arg.optional) {
 					let neededType = arg.type == "oneof" ? "value" : arg.type;
-					return {error: `Missing argument ${i+1}`, message: `A valid ${neededType} must be provided.`}
+					return {
+						error: `Missing argument ${i+1}`,
+						message: arg.missingArgMsg ? arg.missingArgMsg : `A valid ${neededType} must be provided.`
+					}
 				} else {
 					parsedArgs.push(null);
 					continue;
@@ -167,12 +174,12 @@ module.exports = {
 					let neededType = commandFlag.arg.type == "oneof" ? "value" : commandFlag.arg.type;
 					return {
 						error: `Missing flag argument at flag name ${commandFlag.name}`,
-						message: `A valid ${neededType} must be provided.`
+						message: commandFlag.arg.errMsg ? commandFlag.arg.errMsg : `A valid ${neededType} must be provided.`
 					}
 				}
 				let parsedFlagArg = checkArgs(bot, message, flagArgToCheck, commandFlag.arg);
 				if (parsedFlagArg.error) {
-					if (parsedFlagArg.error == true) parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`;
+					parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`;
 					return parsedFlagArg;
 				}
 				flags[i].args = parsedFlagArg;

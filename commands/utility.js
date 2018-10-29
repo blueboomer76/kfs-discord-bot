@@ -12,7 +12,7 @@ module.exports = [
 				aliases: ["profilepic", "pfp"],
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						optional: true,
 						type: "member"
 					}
@@ -45,7 +45,7 @@ module.exports = [
 				aliases: ["channel"],
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						optional: true,
 						type: "channel"
 					}
@@ -93,7 +93,7 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -160,7 +160,7 @@ module.exports = [
 				aliases: ["role"],
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "role"
 					}
 				],
@@ -228,7 +228,6 @@ module.exports = [
 				aliases: ["roles"],
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "number",
 						min: 1
@@ -349,7 +348,7 @@ module.exports = [
 				aliases: ["user"],
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						optional: true,
 						type: "member"
 					}

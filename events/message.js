@@ -23,6 +23,7 @@ module.exports = async (bot, message) => {
 		if (message.guild && !message.channel.permissionsFor(bot.user).has(["VIEW_CHANNEL", "SEND_MESSAGES"])) return;
 		if (cdChecker.check(bot, message, runCommand) == false) return;
 		if (runCommand.cooldown.time != 0) cdChecker.addCooldown(bot, message, runCommand.name);
+		if (runCommand.disabled) return message.channel.send("This command is currently disabled.")
 		if (!message.guild && !runCommand.allowDMs) return message.channel.send("This command cannot be used in Direct Messages.")
 
 		if (message.guild && message.guild.large && !message.member) await message.guild.fetchMember(message.author);
@@ -73,11 +74,6 @@ module.exports = async (bot, message) => {
 			}
 		}
 		if (faultMsg.length > 0) return message.channel.send(faultMsg);
-
-		if (runCommand.startTyping) {
-			message.channel.startTyping();
-			setTimeout(() => message.channel.stopTyping(), 10000);
-		}
 
 		let flags = [];
 		if (runCommand.flags.length > 0) {

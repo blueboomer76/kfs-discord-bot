@@ -37,7 +37,6 @@ module.exports = [
 				aliases: ["rockpaperscissors"],
 				args: [
 					{
-						num: 1,
 						type: "oneof",
 						allowedValues: ["rock", "paper", "scissors"]
 					}

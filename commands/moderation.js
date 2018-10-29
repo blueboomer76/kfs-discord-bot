@@ -11,11 +11,11 @@ module.exports = [
 				args: [
 					{
 						allowQuotes: true,
-						num: Infinity,
+						infiniteArgs: true,
 						type: "member"
 					},
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "role"
 					}
 				],
@@ -56,7 +56,7 @@ module.exports = [
 				description: "Bans a user from this server",
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "member"
 					}
 				],
@@ -121,7 +121,6 @@ module.exports = [
 				aliases: ["addch", "addchannel", "createch"],
 				args: [
 					{
-						num: 1,
 						type: "string"
 					},
 				],
@@ -153,7 +152,7 @@ module.exports = [
 				aliases: ["crrole"],
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -185,7 +184,7 @@ module.exports = [
 				aliases: ["delch", "delchannel", "deletech"],
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "channel"
 					},
 				],
@@ -204,8 +203,10 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let channel = args[0];
-			let cmdErr = await promptor.prompt(message, `You are about to delete the channel **${channel.name}**, which is more than 180 days old.`)
-			if (cmdErr) return message.channel.send(cmdErr);
+			if (channel.createdTimestamp + 1.5552e+10 < Number(new Date())) {
+				let cmdErr = await promptor.prompt(message, `You are about to delete the channel **${channel.name}**, which is more than 180 days old.`)
+				if (cmdErr) return message.channel.send(cmdErr);
+			}
 			
 			channel.delete()
 			.then(() => message.channel.send(`✅ The channel **${channel.name}** has been deleted.`))
@@ -219,7 +220,7 @@ module.exports = [
 				description: "Kicks a user from this server",
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "member"
 					}
 				],
@@ -271,7 +272,6 @@ module.exports = [
 				aliases: ["clear", "prune"],
 				args: [
 					{
-						num: 1,
 						type: "number",
 						min: 1,
 						max: 99
@@ -282,6 +282,10 @@ module.exports = [
 					type: "user"
 				},
 				flags: [
+					{
+						name: "attachments",
+						desc: "Messages containing attachments"
+					},
 					{
 						name: "bots",
 						desc: "Messages from bots"
@@ -310,7 +314,7 @@ module.exports = [
 					user: ["MANAGE_MESSAGES"],
 					level: 0
 				},
-				usage: "purge <1-99> [--user <user>] [--text <text>] [--bots] [--embeds]"
+				usage: "purge <1-99> [--user <user>] [--text <text>] [--attachments] [--bots] [--embeds]"
 			});
 		}
 		
@@ -323,6 +327,9 @@ module.exports = [
 					toDelete = messages;
 					for (let i = 0; i < flags.length; i++) {
 						switch (flags[i].name) {
+							case "attachments":
+								toDelete = toDelete.filter(msg => msg.attachments.size > 0);
+								break;
 							case "bots":
 								toDelete = toDelete.filter(msg => msg.author.bot);
 								break;
@@ -346,7 +353,7 @@ module.exports = [
 			if (errorStatus) return;
 			message.channel.bulkDelete(toDelete, true)
 			.then(messages => {
-				message.channel.send(`🗑 Deleted ${messages.size - 1} messages from the channel!`).then(m => m.delete(7500).catch(() => {}))
+				message.channel.send(`🗑 Deleted ${messages.size - 1} messages from this channel!`).then(m => m.delete(7500).catch(() => {}))
 			})
 			.catch(err => message.channel.send("An error has occurred while trying to purge the messages: `" + err + "`"))
 		}
@@ -360,11 +367,11 @@ module.exports = [
 				args: [
 					{
 						allowQuotes: true,
-						num: Infinity,
+						infiniteArgs: true,
 						type: "member"
 					},
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "role"
 					}
 				],
@@ -407,11 +414,11 @@ module.exports = [
 				args: [
 					{
 						allowQuotes: true,
-						num: Infinity,
+						infiniteArgs: true,
 						type: "member"
 					},
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
