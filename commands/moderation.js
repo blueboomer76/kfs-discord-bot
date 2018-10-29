@@ -12,11 +12,11 @@ module.exports = [
 				args: [
 					{
 						allowQuotes: true,
-						num: Infinity,
+						infiniteArgs: true,
 						type: "member"
 					},
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "role"
 					}
 				],
@@ -68,7 +68,7 @@ module.exports = [
 				description: "Bans a user. It will be logged if a modlog channel was set",
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "member"
 					},
 				],
@@ -131,7 +131,6 @@ module.exports = [
 				aliases: ["addch", "addchannel", "createch"],
 				args: [
 					{
-						num: 1,
 						type: "string"
 					},
 				],
@@ -165,7 +164,7 @@ module.exports = [
 				aliases: ["crrole"],
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -196,7 +195,7 @@ module.exports = [
 				aliases: ["delch", "delchannel", "deletech"],
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "channel"
 					},
 				],
@@ -214,11 +213,49 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let cmdErr = await promptor.prompt(message, `You are about to delete the channel **${args[0].name}**, which is more than 180 days old.`)
-			if (cmdErr) return message.channel.send(cmdErr);
+			if (args[0].createdTimestamp + 1.5552e+10 < Number(new Date())) {
+				let cmdErr = await promptor.prompt(message, `You are about to delete the channel **${args[0].name}**, which is more than 180 days old.`)
+				if (cmdErr) return message.channel.send(cmdErr);
+			}
 			
 			await args[0].delete()
 			.then(message.channel.send(`✅ The channel **${args[0].name}** has been deleted.`))
+			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
+		}
+	},
+	class DeleteRoleCommand extends Command {
+		constructor() {
+			super({
+				name: "deleterole",
+				description: "Deletes a role",
+				aliases: ["delr", "delrole", "deleter"],
+				args: [
+					{
+						infiniteArgs: true,
+						type: "role"
+					},
+				],
+				cooldown: {
+					time: 30000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_ROLES"],
+					user: ["MANAGE_ROLES"],
+					level: 0
+				},
+				usage: "deleterole <name>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			if (args[0].members.size > 10 && args[0].members.size > message.guild.memberCount / 10) {
+				let cmdErr = await promptor.prompt(message, `You are about to delete the role **${args[0].name}**, which more than 10% of the members in this server have.`)
+				if (cmdErr) return message.channel.send(cmdErr);
+			}
+			
+			await args[0].delete()
+			.then(message.channel.send(`✅ The role **${args[0].name}** has been deleted.`))
 			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
 		}
 	},
@@ -229,7 +266,7 @@ module.exports = [
 				description: "Kicks a member. It will be logged if a modlog channel was set",
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "member"
 					}
 				],
@@ -278,10 +315,9 @@ module.exports = [
 				aliases: ["clear", "prune"],
 				args: [
 					{
-						num: 1,
 						type: "number",
 						min: 1,
-						max: 100
+						max: 99
 					}
 				],
 				cooldown: {
@@ -289,6 +325,10 @@ module.exports = [
 					type: "user"
 				},
 				flags: [
+					{
+						name: "attachments",
+						desc: "Messages containing attachments"
+					},
 					{
 						name: "bots",
 						desc: "Messages from bots"
@@ -319,7 +359,7 @@ module.exports = [
 					user: ["MANAGE_MESSAGES"],
 					level: 0
 				},
-				usage: "purge <1-100> [--user <user>] [--text <text>] [--bots] [--embeds]"
+				usage: "purge <1-99> [--user <user>] [--text <text>] [--attachments] [--bots] [--embeds]"
 			});
 		}
 		
@@ -332,6 +372,9 @@ module.exports = [
 					toDelete = messages;
 					for (let i = 0; i < flags.length; i++) {
 						switch (flags[i].name) {
+							case "attachments":
+								toDelete = toDelete.filter(msg => msg.attachments.size > 0);
+								break;
 							case "bots":
 								toDelete = toDelete.filter(msg => msg.author.bot);
 								break;
@@ -355,7 +398,7 @@ module.exports = [
 			if (errorStatus) return;
 			await message.channel.bulkDelete(toDelete, true)
 			.then(messages => {
-				message.channel.send(`🗑 Deleted ${messages.size - 1} messages from the channel!`).then(m => m.delete(7500))
+				message.channel.send(`🗑 Deleted ${messages.size - 1} messages from this channel!`).then(m => m.delete(7500))
 			})
 			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
 		}
@@ -369,11 +412,11 @@ module.exports = [
 				args: [
 					{
 						allowQuotes: true,
-						num: Infinity,
+						infiniteArgs: true,
 						type: "member"
 					},
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "role"
 					}
 				],
@@ -427,11 +470,11 @@ module.exports = [
 				args: [
 					{
 						allowQuotes: true,
-						num: Infinity,
+						infiniteArgs: true,
 						type: "member"
 					},
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],

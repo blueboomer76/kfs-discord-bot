@@ -1,9 +1,9 @@
-const Discord = require("discord.js");
-const Command = require("../structures/command.js");
-const packageInfo = require("../package.json");
-const {capitalize, getDuration, parsePerm} = require("../modules/functions.js");
-const stats = require("../modules/stats.json");
-const paginator = require("../utils/paginator.js");
+const Discord = require("discord.js"),
+	Command = require("../structures/command.js"),
+	{capitalize, getDuration, parsePerm} = require("../modules/functions.js"),
+	stats = require("../modules/stats.json"),
+	paginator = require("../utils/paginator.js"),
+	packageInfo = require("../package.json");
 
 module.exports = [
 	class BotInfoCommand extends Command {
@@ -48,7 +48,6 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "command"
 					}
@@ -137,9 +136,9 @@ module.exports = [
 			.setDescription("Exciting, huh? Now you have the chance to spread the love! uwu")
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter("Made by blueboomer#4939")
-			.addField("Bot Invite", "[Go!](https://discordapp.com/api/oauth2/authorize?client_id=429807759144386572&permissions=403041398&scope=bot)")
+			.addField("Bot Invite", `[Go!](https://discordapp.com/api/oauth2/authorize?client_id=${bot.user.id}&permissions=403041398&scope=bot)`)
 			.addField("Kendra's server", "[Go!](https://discord.gg/yB8TvWU)")
-			.addField("Upvote this bot", "[Go!](https://discordbots.org/bots/429807759144386572)")
+			.addField("Upvote this bot", "[Go!](https://discordbots.org/bots/429807759144386572/vote)")
 			.addField("Github", "[Go!](https://github.com/blueboomer76/KendraBot)")
 			);
 		}
@@ -152,12 +151,11 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string",
 						allowQuotes: true
 					},
 					{
-						num: 1,
 						type: "string"
 					}
 				],
@@ -271,7 +269,6 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: 1,
 						type: "command"
 					}
 				],
@@ -319,7 +316,7 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -490,7 +487,7 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						errorMsg: "You must provide a suggestion or problem to send to the official bot server.",
+						missingArgMsg: "You must provide a suggestion or problem to send to the official bot server.",
 						num: Infinity,
 						type: "string"
 					}
@@ -533,7 +530,6 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: 1,
 						type: "command"
 					}
 				],
@@ -568,7 +564,6 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "number",
 						min: 1

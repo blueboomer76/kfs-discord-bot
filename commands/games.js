@@ -51,12 +51,16 @@ module.exports = [
 				toDisplayPlayer = game.player.map(card => `${card.value} ${card.suit}`).join(", "),
 				dealerValue = this.getHandValue(game.dealer),
 				playerValue = this.getHandValue(game.player),
-				mystery = state != "end" ? ", ???" : "";
+				mystery = state == "end" && playerValue <= 21 ? "" : ", ???";
 			
-			toDisplayDealer = `Dealer: ${toDisplayDealer}${mystery} (value ${dealerValue})`;
-			toDisplayPlayer = `Player: ${toDisplayPlayer} (value ${playerValue})`
+			toDisplayDealer = `**Dealer:** ${toDisplayDealer}${mystery} (value ${dealerValue})`;
+			toDisplayPlayer = `**Player:** ${toDisplayPlayer} (value ${playerValue})`
 			
 			if (state == "start") {
+				if (playerValue == 21) {
+					if (game.botMessage.deleted) return;
+					game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\nBLACKJACK!`);
+				}				
 				return `${toDisplayDealer}\n${toDisplayPlayer}\n\n` + 
 				`Type \`stand\` to end your turn, or \`hit\` to draw another card.`
 			} else if (state == "drawing") {
@@ -167,7 +171,6 @@ module.exports = [
 				aliases: ["rockpaperscissors"],
 				args: [
 					{
-						num: 1,
 						type: "oneof",
 						allowedValues: ["rock", "paper", "scissors"]
 					}

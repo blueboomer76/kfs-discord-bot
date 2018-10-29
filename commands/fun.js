@@ -2,6 +2,29 @@ const Discord = require("discord.js");
 const Command = require("../structures/command.js");
 const request = require("request");
 
+const magicmsgs = [
+	"Certainly",
+	"It is decidedly so",
+	"Without a doubt",
+	"Yes, definitely",
+	"You may rely on it",
+	"As I see it, yes",
+	"Most likely",
+	"Outlook good",
+	"Sure",
+	"Signs point to yes",
+	"Reply hazy, try again",
+	"Ask again later",
+	"Better not tell you now",
+	"Cannot predict now",
+	"Concentrate and ask again",
+	"Don't count on it",
+	"My reply is no",
+	"My sources say no",
+	"Outlook not so good",
+	"Very doubtful"
+];
+			
 module.exports = [
 	class EightBallCommand extends Command {
 		constructor() {
@@ -11,7 +34,7 @@ module.exports = [
 				aliases: ["8b"],
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -20,28 +43,6 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let magicmsgs = [
-				"Certainly",
-				"It is decidedly so",
-				"Without a doubt",
-				"Yes, definitely",
-				"You may rely on it",
-				"As I see it, yes",
-				"Most likely",
-				"Outlook good",
-				"Sure",
-				"Signs point to yes",
-				"Reply hazy, try again",
-				"Ask again later",
-				"Better not tell you now",
-				"Cannot predict now",
-				"Concentrate and ask again",
-				"Don't count on it",
-				"My reply is no",
-				"My sources say no",
-				"Outlook not so good",
-				"Very doubtful"
-			]
 			if (!args[0].match(/ +/g)) {
 				message.channel.send("🎱 You need to provide an actual question...");
 			} else {
@@ -87,7 +88,7 @@ module.exports = [
 				args: [
 					{
 						allowQuotes: true,
-						num: Infinity,
+						infiniteArgs: true,
 						parseSeperately: true,
 						type: "string"
 					}
@@ -97,6 +98,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
+			if (args.length < 2) return message.channel.send("You need to provide at least 2 choices for me to choose from!")
 			message.channel.send(`I choose: ${args[Math.floor(Math.random() * args.length)]}`);
 		}
 	},
@@ -135,17 +137,16 @@ module.exports = [
 			super({
 				name: "flipcoin",
 				description: "Flip a coin. You can specify a number of coins to flip",
-				aliases: ["coin"],
+				aliases: ["coin", "coinflip"],
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "number",
 						min: 1,
-						max: 30
+						max: 50
 					}
 				],
-				usage: "flipcoin <1-30>"
+				usage: "flipcoin [1-50]"
 			});
 		}
 		
@@ -173,11 +174,11 @@ module.exports = [
 				args: [
 					{
 						allowQuotes: true,
-						num: Infinity,
+						infiniteArgs: true,
 						type: "member"
 					},
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -202,7 +203,7 @@ module.exports = [
 				aliases: ["opinion", "rate"],
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -211,8 +212,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let hash = 0;
-			let memberRegex = /<@!?\d+>/;
+			let hash = 0, memberRegex = /<@!?\d+>/;
 			if (memberRegex.test(args[0])) {
 				let memberRegex2 = /\d+/;
 				let member = message.guild.members.get(args[0].match(memberRegex2)[0])
@@ -242,7 +242,7 @@ module.exports = [
 				description: "Have the bot say something for you",
 				args: [
 					{
-						num: Infinity,
+						infiniteArgs: true,
 						type: "string"
 					}
 				],

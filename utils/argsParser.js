@@ -1,4 +1,3 @@
-const Discord = require("discord.js");
 const resolver = require("./objResolver.js");
 
 function parseArgQuotes(args, findAll) {
@@ -38,20 +37,28 @@ function checkArgs(bot, message, args, cmdArg) {
 	}
 	let toResolve = resolver.resolve(bot, message, args, arg.type, params);
 	if (!toResolve) {
-		let argErrorMsg = `\`${args}\` is not a valid ${arg.type}\n`;
-		if (arg.type == "number") {
-			argErrorMsg += "The argument must be a number that is "
-			if (arg.min && arg.max) {
-				argErrorMsg += `in between ${params.min} and ${params.max}`
-			} else if (arg.min) {
-				argErrorMsg += `greater than ${params.min}`
+		if (cmdArg.shiftable) {
+			// Coming soon
+		} else {
+			let argErrorMsg = `\`${args}\` is not a valid ${arg.type}\n`
+			if (cmdArg.errorMsg) {
+				argErrorMsg = cmdArg.errorMsg;
 			} else {
-				argErrorMsg += `less than ${params.min}`
+				if (arg.type == "number") {
+					argErrorMsg += "The argument must be a number that is "
+					if (arg.min && arg.max) {
+						argErrorMsg += `in between ${params.min} and ${params.max}`
+					} else if (arg.min) {
+						argErrorMsg += `greater than or equal to ${params.min}`
+					} else {
+						argErrorMsg += `less than or equal to ${params.min}`
+					}
+				} else if (arg.type == "oneof") {
+					argErrorMsg = `The argument must be one of these values: ${params.list.join(", ")}`
+				}
 			}
-		} else if (arg.type == "oneof") {
-			argErrorMsg = `The argument must be one of these values: ${params.list.join(", ")}`
+			return {error: true, message: argErrorMsg};
 		}
-		return {error: true, message: argErrorMsg};
 	}
 	if (arg.type == "channel" || arg.type == "member" || arg.type == "role") {
 		if (toResolve.length == 1) {
@@ -81,7 +88,7 @@ module.exports = {
 		let parsedArgs = [];
 		for (let i = 0; i < commandArgs.length; i++) {
 			let arg = commandArgs[i];
-			if (arg.num == Infinity) {
+			if (arg.num == Infinity || arg.infiniteArgs) {
 				if (arg.allowQuotes) {
 					let findAll = false;
 					if (arg.parseSeperately) findAll = !findAll;
@@ -97,7 +104,9 @@ module.exports = {
 			if (!args[i]) {
 				if (!arg.optional) {
 					let neededType = arg.type == "oneof" ? "value" : arg.type;
-					return {error: `Missing argument ${i+1}`, message: `A valid ${neededType} must be provided.`}
+					return {
+						error: `Missing argument ${i+1}`,
+						message: arg.missingArgMsg ? arg.missingArgMsg : `A valid ${neededType} must be provided.`}
 				} else {
 					parsedArgs.push(null);
 					continue;
@@ -130,7 +139,8 @@ module.exports = {
 			}
 			if (i > 0 && flagIndexes[i] - flagIndexes[i-1] > 1) {
 				flags[i-1].args = args.slice(flagIndexes[i-1] + 1, flagIndexes[i]).join(" ").split(",")
-			} else if (i == flagBases.length - 1 && flagIndexes[i] < args.length - 1) {
+			}
+			if (i == flagBases.length - 1 && flagIndexes[i] < args.length - 1) {
 				flagObj.args = args.slice(flagIndexes[i] + 1).join(" ").split(",")
 			}
 			flags.push(flagObj);
@@ -156,14 +166,14 @@ module.exports = {
 			}
 			let commandFlag = commandFlags[flagLongNames.indexOf(flags[i].name)];
 			if (commandFlag.arg) {
-				for (let j = 0; j < flags[i].args.length; j++) {
-					if (!flags[i].args[j]) {
-						let neededType = commandFlag.arg.type == "oneof" ? "value" : commandFlag.arg.type;
-						return {
-							error: `Missing flag argument at flag name ${commandFlag.name}`,
-							message: `A valid ${neededType} must be provided.`
-						}
+				if (!flags[i].args[0]) {
+					let neededType = commandFlag.arg.type == "oneof" ? "value" : commandFlag.arg.type;
+					return {
+						error: `Missing flag argument at flag name ${commandFlag.name}`,
+						message: commandFlag.arg.errMsg ? commandFlag.arg.errMsg : `A valid ${neededType} must be provided.`
 					}
+				}
+				for (let j = 0; j < flags[i].args.length; j++) {
 					let parsedFlagArg = checkArgs(bot, message, flags[i].args[j], commandFlag.arg);
 					if (parsedFlagArg.error) {
 						parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`

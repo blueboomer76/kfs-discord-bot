@@ -1,8 +1,9 @@
 class Argument {
 	constructor(props) {
 		this.allowQuotes = props.allowQuotes || false;
-		this.errorMsg = props.errMsg || "Not enough arguments provided";
-		this.num = props.num || 1;
+		this.errorMsg = props.argErrorMsg || null;
+		this.missingArgMsg = props.missingArgMsg || null;
+		this.infiniteArgs = props.infiniteArgs || false;
 		this.optional = props.optional || false;
 		this.parseSeperately = props.parseSeperately || false;
 		this.shiftable = props.shiftable || false;

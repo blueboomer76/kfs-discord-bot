@@ -55,7 +55,7 @@ module.exports = [
 				description: "Play music",
 				args: [
 					{
-						errorMsg: "Please provide the music that you want to play.",
+						missingArgMsg: "Please provide the music that you want to play.",
 						num: Infinity,
 						type: "string"
 					}
@@ -76,7 +76,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "play <YouTube url>"
+				usage: "play <YouTube URL>"
 			});
 		}
 		
@@ -150,7 +150,6 @@ module.exports = [
 				aliases: ["playlist"],
 				args: [
 					{
-						num: 1,
 						optional: true,
 						type: "number",
 						min: 1
@@ -266,7 +265,6 @@ module.exports = [
 				aliases: ["vol"],
 				args: [
 					{
-						num: 1,
 						type: "number",
 						min: 1,
 						max: 100

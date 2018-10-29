@@ -22,6 +22,7 @@ module.exports = async (bot, message) => {
 		if (message.guild && !message.channel.permissionsFor(bot.user).has("SEND_MESSAGES")) return;
 		if (cdChecker.check(bot, message, runCommand) == false) return;
 		if (runCommand.cooldown.time != 0) cdChecker.addCooldown(bot, message, runCommand.name);
+		if (runCommand.disabled) return message.channel.send("This command is currently disabled.")
 		if (!message.guild && !runCommand.allowDMs) return message.channel.send("This command cannot be used in Direct Messages.")
 		
 		if (message.guild && message.guild.large && !message.member) await message.guild.fetchMember(message.author);
@@ -73,8 +74,6 @@ module.exports = async (bot, message) => {
 		}
 		if (faultMsg.length > 0) return message.channel.send(faultMsg);
 		
-		if (runCommand.startTyping) message.channel.startTyping();
-		setTimeout(() => message.channel.stopTyping(), 10000)
 		let flags = [];
 		if (runCommand.flags) {
 			let parsedFlags = argParser.parseFlags(bot, message, args, runCommand.flags);
@@ -96,8 +95,6 @@ module.exports = async (bot, message) => {
 		} catch(err) {
 			message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${err.stack}\`\`\`I am too cute to output this, so come to the official server to discuss this bug.`)
 		}
-		
-		if (runCommand.startTyping) message.channel.stopTyping();
 		
 		/*
 		This is the code if owners are to be ignored.

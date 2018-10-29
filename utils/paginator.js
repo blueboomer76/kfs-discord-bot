@@ -20,17 +20,17 @@ function setEntries(entries, options) {
 	}
 }
 
-function setEmbed(genEmbed, displayed, params, pinnedMsg) {
-	if (params) {
-		for (let i = 0; i < params.length; i++) {
-			genEmbed[params[i]] = displayed[i];
+function setEmbed(genEmbed, displayed, options) {
+	if (options.params) {
+		for (let i = 0; i < options.params.length; i++) {
+			genEmbed[options.params[i]] = displayed[i];
 		}
 	} else {
-		genEmbed.description = displayed[0].join("\n")
+		genEmbed.description = displayed[0].join(options.newLineAfterEntry ? "\n\n" : "\n");
 	}
-	if (pinnedMsg) {
+	if (options.pinnedMsg) {
 		if (!genEmbed.description) genEmbed.description = "";
-		genEmbed.description = pinnedMsg + "\n\n" + genEmbed.description;
+		genEmbed.description = options.pinnedMsg + "\n\n" + genEmbed.description;
 	}
 	return genEmbed;
 }
@@ -50,8 +50,8 @@ function paginateOnEdit(sentMessage, entries, options) {
 		thumbnail: {},
 		fields: []
 	}
-	if (sentEmbed.thumbnail && sentEmbed.thumbnail.url) {embedToEdit.thumbnail.url = sentEmbed.thumbnail.url}
-	embedToEdit = setEmbed(embedToEdit, entryObj.entries, options.params, options.pinnedMsg);
+	if (sentEmbed.thumbnail && sentEmbed.thumbnail.url) embedToEdit.thumbnail.url = sentEmbed.thumbnail.url;
+	embedToEdit = setEmbed(embedToEdit, entryObj.entries, options);
 	sentMessage.edit("", {embed: embedToEdit})
 }
 
@@ -74,7 +74,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 	genEmbed.footer = {
 		text: `Page ${entryObj.page} / ${entryObj.maxPage}`
 	}
-	genEmbed = setEmbed(genEmbed, entryObj.entries, options.params, options.pinnedMsg);
+	genEmbed = setEmbed(genEmbed, entryObj.entries, options);
 	
 	message.channel.send("", {embed: genEmbed})
 	.then(newMessage => {
