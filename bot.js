@@ -56,6 +56,7 @@ class KFSDiscordBot extends Client {
 		this.cache = {
 			guildCount: 0,
 			userCount: 0,
+			channelCount: 0,
 			phone: {channels: [], msgCount: 0, lastMsgTime: 0},
 			recentCommands: [],
 			stats: {

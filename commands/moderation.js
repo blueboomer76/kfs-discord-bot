@@ -70,7 +70,7 @@ module.exports = [
 						desc: "Number of days to delete messages",
 						arg: {
 							type: "number",
-							min: 0,
+							min: 1,
 							max: 7
 						}
 					},
@@ -87,7 +87,7 @@ module.exports = [
 					user: ["BAN_MEMBERS"],
 					level: 0
 				},
-				usage: "ban <user> [--days <0-7>] [--reason <reason>]"
+				usage: "ban <user> [--days <1-7>] [--reason <reason>]"
 			});
 		}
 		
@@ -211,6 +211,51 @@ module.exports = [
 			channel.delete()
 			.then(() => message.channel.send(`✅ The channel **${channel.name}** has been deleted.`))
 			.catch(err => message.channel.send("An error has occurred while trying to delete the channel: `" + err + "`"))
+		}
+	},
+	class DeleteRoleCommand extends Command {
+		constructor() {
+			super({
+				name: "deleterole",
+				description: "Deletes a role",
+				aliases: ["delr", "delrole", "deleter"],
+				args: [
+					{
+						infiniteArgs: true,
+						type: "role"
+					},
+				],
+				cooldown: {
+					time: 30000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_ROLES"],
+					user: ["MANAGE_ROLES"],
+					level: 0
+				},
+				usage: "deleterole <name>"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			let role = args[0];
+			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
+				return message.channel.send("Cannot delete role: your highest role must be higher than the role to remove");
+			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
+				return message.channel.send("Cannot delete role: the bot's highest role must be higher than the role to remove");
+			} else if (role.managed) {
+				return message.channel.send("Integrated or managed roles cannot be deleted with this command.");
+			}
+
+			if (role.members.size > 10 && role.members.size > message.guild.memberCount / 10) {
+				let cmdErr = await promptor.prompt(message, `You are about to delete the role **${role.name}**, which more than 10% of the members in this server have.`)
+				if (cmdErr) return message.channel.send(cmdErr);
+			}
+
+			role.delete()
+			.then(() => message.channel.send(`✅ The role **${role.name}** has been deleted.`))
+			.catch(err => message.channel.send("An error has occurred while trying to delete the role: `" + err + "`"))
 		}
 	},
 	class KickCommand extends Command {
@@ -403,6 +448,46 @@ module.exports = [
 			member.removeRole(role)
 			.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from the user **${member.user.tag}**.`))
 			.catch(err => message.channel.send("An error has occurred while trying to remove the role: `" + err + "`"))
+		}
+	},
+	class ResetNicknameCommand extends Command {
+		constructor() {
+			super({
+				name: "resetnickname",
+				description: "Remove a user's nickname",
+				aliases: ["removenick", "removenickname", "resetnick"],
+				args: [
+					{
+						infiniteArgs: true,
+						type: "member"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_NICKNAMES"],
+					user: ["MANAGE_NICKNAMES"],
+					level: 0
+				},
+				usage: "resetnickname <user>"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			let member = args[0];
+			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself, the server owner, or the bot.");
+			if (!member.nickname) return message.channel.send("The user does not have a nickname in this server.");
+			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
+				return message.channel.send("Cannot reset nickname: your highest role must be higher than the user's highest role");
+			} else if (member.highestRole.comparePositionTo(message.guild.member(bot.user).highestRole) >= 0) {
+				return message.channel.send("Cannot reset nickname: the bot's highest role must be higher than the user's highest role");
+			}
+
+			member.setNickname("")
+			.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been reset.`))
+			.catch(err => message.channel.send("An error has occurred while trying to reset the nickname: `" + err + "`"))
 		}
 	},
 	class SetNicknameCommand extends Command {

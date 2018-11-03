@@ -108,11 +108,14 @@ module.exports = [
 				})
 				.catch(() => cmdErr = true)
 			}
+
+			// Check for errors
 			if (cmdErr) return message.channel.send("Failed to connect to the voice channel.");
 			if (mvChannel.id != gvConnection.channel.id) {
 				return message.channel.send("You need to be in the same voice channel as me to play audio.")
 			}
 
+			if (gvConnection.queue.length > 10) return message.channel.send("The maximum queue limit has been reached. No more audio can be queued.");
 			if (gvConnection.queue.includes(args[0])) {
 				return message.channel.send("That audio is already in the queue.")
 			}
@@ -126,12 +129,8 @@ module.exports = [
 				this.playQueue(message, seek);
 				message.channel.send("That audio is now playing.")
 			} else {
-				if (gvConnection.queue.length < 10) {
-					gvConnection.queue.push(args[0]);
-					message.channel.send("That audio has been added to the queue.")
-				} else {
-					message.channel.send("The maximum queue limit has been reached. No more audio can be queued.");
-				}
+				gvConnection.queue.push(args[0]);
+				message.channel.send("That audio has been added to the queue.")
 			}
 		}
 
