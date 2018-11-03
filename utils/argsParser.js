@@ -1,5 +1,7 @@
 const resolver = require("./objResolver.js");
 
+const listableTypes = ["channel", "emoji", "member", "role"];
+
 function parseArgQuotes(args, findAll) {
 	let beginMatches = args.filter(a => a.match(/^"\S/));
 	let endMatches = args.filter(a => a.match(/\S"$/));
@@ -32,11 +34,14 @@ function parseArgQuotes(args, findAll) {
 
 function checkArgs(bot, message, args, cmdArg) {
 	let arg = cmdArg, params;
-	if (arg.type == "number") {
+	if (arg.type == "function") {
+		params = {testFunction: arg.testFunction}
+	} else if (arg.type == "number") {
 		params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity}
 	} else if (arg.type == "oneof") {
 		params = {list: arg.allowedValues}
 	}
+	
 	let toResolve = resolver.resolve(bot, message, args, arg.type, params);
 	if (toResolve == null) {
 		let argErrorMsg = `\`${args.slice(0, 1500)}\` is not a valid ${arg.type}`;
@@ -58,18 +63,20 @@ function checkArgs(bot, message, args, cmdArg) {
 		}
 		return {error: true, message: argErrorMsg};
 	}
-	if (arg.type == "channel" || arg.type == "member" || arg.type == "role") {
+	if (listableTypes.includes(arg.type)) {
 		if (toResolve.length == 1) {
 			return toResolve[0];
 		} else {
 			let endMsg = "", list = toResolve.slice(0, 20);
 			if (toResolve.length > 20) endMsg = `...and ${toResolve.length - 20} more.`;
 			if (arg.type == "channel") {
-				list = list.map(chnl => chnl.name);
+				list = list.map(chnl => `${chnl.name} (${chnl.id})`);
+			} else if (arg.type == "emoji") {
+				list = list.map(emoji => `${emoji.name} (${emoji.id})`);
 			} else if (arg.type == "member") {
-				list = list.map(mem => mem.user.tag);
+				list = list.map(mem => `${mem.user.tag} (${mem.user.id})`);
 			} else {
-				list = list.map(role => role.name);
+				list = list.map(role => `${role.name} (${role.id})`);
 			}
 			return {
 				error: `Multiple ${arg.type}s found`,
@@ -88,9 +95,7 @@ module.exports = {
 			let arg = commandArgs[i];
 			if (arg.infiniteArgs) {
 				if (arg.allowQuotes) {
-					let findAll = false;
-					if (arg.parseSeperately) findAll = !findAll;
-					let newArgs = parseArgQuotes(args.slice(i), findAll);
+					let findAll = arg.parseSeperately ? true : false, newArgs = parseArgQuotes(args.slice(i), findAll);
 					args = args.slice(0, i).concat(newArgs);
 					if (arg.parseSeperately) return parsedArgs.concat(newArgs);
 				} else {
@@ -121,10 +126,11 @@ module.exports = {
 	},
 	parseFlags: (bot, message, args, commandFlags) => {
 		// 1. Get flags
-		let flags = [];
-		let flagIndexes = [];
-		let flagRegex = /^(-[a-z](?![a-z])|(-{2}|—)[a-z]{2})/i;
-		let flagBases = args.filter(a => flagRegex.test(a));
+		let flags = [],
+			flagIndexes = [],
+			flagRegex = /^(-[a-z](?![a-z])|(-{2}|—)[a-z]{2})/i,
+			flagBases = args.filter(a => flagRegex.test(a));
+
 		for (let i = 0; i < flagBases.length; i++) {
 			flagIndexes.push(args.indexOf(flagBases[i]));
 			let flagObj = {method: "short", name: "", args: []};

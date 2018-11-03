@@ -256,5 +256,70 @@ module.exports = [
 				);
 			})
 		}
+	},
+	class XKCDCommand extends Command {
+		constructor() {
+			super({
+				name: "xkcd",
+				description: "Get a comic from XKCD",
+				args: [
+					{
+						errorMsg: "Please provide \"random\", a number greater than 0, or supply no arguments.",
+						optional: true,
+						type: "function",
+						testFunction: obj => {return obj.toLowerCase() == "random" || parseInt(obj) >= 1}
+					}
+				],
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				},
+				usage: "xkcd [<number> | random]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			if (args[0]) args[0] = args[0].toLowerCase();
+			request.get("https://xkcd.com/info.0.json", (err, res) => {
+				if (err) return message.channel.send(`Could not request to XKCD: ${err.message}`);
+				if (!res) return message.channel.send("No response was received from XKCD.");
+				if (res.statusCode >= 400) return message.channel.send(`The request to XKCD failed with status code ${res.statusCode} (${res.statusMessage})`);
+				
+				let currComic = JSON.parse(res.body);
+				
+				if (args[0] == "random" || parseInt(args[0]) > 0) {
+					let comicNum;
+					if (args[0] == "random") {
+						comicNum = Math.ceil(Math.random() * currComic.num);
+					} else {
+						let chosenComicNum = parseInt(args[0]);
+						if (chosenComicNum > currComic.num) return message.channel.send("Invalid comic number provided.");
+						comicNum = chosenComicNum;
+					}
+					request.get(`https://xkcd.com/${comicNum}/info.0.json`, (err2, res2) => {
+						if (err2 || !res2 || res2.statusCode >= 400) {
+							this.postComic(message, currComic, "Current ", true)
+							return;
+						}
+						let chosenComic = JSON.parse(res2.body);
+						this.postComic(message, chosenComic, args[0] == "random" ? "Random " : "")
+					})
+				} else {
+					this.postComic(message, currComic, "Current ")
+				}
+			})
+		}
+		
+		postComic(message, comic, titlePrefix, isFallback) {
+			let xkcdEmbed = new Discord.RichEmbed()
+			.setTitle(`${titlePrefix}XKCD Comic - ${comic.title} (#${comic.num})`)
+			.setDescription(comic.alt)
+			.setColor(Math.floor(Math.random() * 16777216))
+			.setImage(comic.img)
+			
+			if (isFallback) xkcdEmbed.description = `*Failed to retrieve from XKCD, defaulting to the current one.*\n\n${comic.alt}`
+			message.channel.send(xkcdEmbed);
+		}
 	}
 ];

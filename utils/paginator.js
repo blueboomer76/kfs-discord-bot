@@ -1,9 +1,9 @@
 const Discord = require("discord.js");
 
 function setEntries(entries, options) {
-	let limit = options.limit, page = options.page;
-	let maxPage = Math.ceil(entries[0].length / limit);
-	let displayed = [];
+	const limit = options.limit, maxPage = Math.ceil(entries[0].length / limit);
+	let page = options.page, displayed = [];
+		
 	if (page > maxPage) page = maxPage;
 	if (page < 1) page = 1;
 	if (limit > 1) {
@@ -13,6 +13,7 @@ function setEntries(entries, options) {
 			displayed.push(entries[i][page-1]);
 		}
 	}
+	
 	return {
 		page: page,
 		maxPage: maxPage,
@@ -37,9 +38,8 @@ function setEmbed(genEmbed, displayed, options) {
 
 function paginateOnEdit(sentMessage, entries, options) {
 	if (sentMessage.deleted) return;
-	let entryObj = setEntries(entries, options);
 	
-	let sentEmbed = sentMessage.embeds[0];
+	const entryObj = setEntries(entries, options), sentEmbed = sentMessage.embeds[0];
 	let embedToEdit = {
 		title: sentEmbed.title,
 		color: sentEmbed.color,
@@ -61,23 +61,36 @@ function paginateOnEdit(sentMessage, entries, options) {
 		};
 	}
 	embedToEdit = setEmbed(embedToEdit, entryObj.entries, options);
+	
 	sentMessage.edit("", {embed: embedToEdit})
 }
 
 function checkReaction(collector, limit) {
-	let dif = Number(new Date()) - collector.lastReactionTime;
-	if (dif < limit) {
+	const dif = Number(new Date()) - collector.lastReactionTime;
+	if (dif < limit - 1000) {
 		setTimeout(checkReaction, dif, collector, limit);
 	} else {
 		collector.stop();
 	}
 }
 
+/*
+	Paginator options:
+	- limit
+	- newLineAfterEntry
+	- noStop
+	- numbered
+	- page
+	- params
+	- pinnedMsg
+	- reactTimeLimit
+*/
+
 module.exports.paginate = (message, genEmbed, entries, options) => {
 	if (options.numbered) {
 		entries[0] = entries[0].map((e, i) => `${i+1}. ${e}`);
 	}
-	let entryObj = setEntries(entries, options);
+	const entryObj = setEntries(entries, options);
 	genEmbed.color = Math.floor(Math.random() * 16777216)
 	genEmbed.footer = {
 		text: `Page ${entryObj.page} / ${entryObj.maxPage}`
@@ -96,6 +109,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 					newMessage.react(emojiList[i]).catch(err => {console.log(err)})
 				}, i * 1000);
 			}
+			
 			const pgCollector = newMessage.createReactionCollector((reaction, user) => 
 				user.id == message.author.id && emojiList.includes(reaction.emoji.name)
 			)
@@ -126,7 +140,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 							errors: ["time"]
 						})
 						.then(collected => {
-							let cMsg = collected.array()[0], goToPage = parseInt(cMsg.content);
+							const cMsg = collected.array()[0], goToPage = parseInt(cMsg.content);
 							options.page = goToPage;
 							paginateOnEdit(pgCollector.message, entries, options);
 							

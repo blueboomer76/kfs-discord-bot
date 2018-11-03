@@ -85,6 +85,45 @@ module.exports = [
 			message.channel.send(channelEmbed);
 		}
 	},
+	class EmojiCommand extends Command {
+		constructor() {
+			super({
+				name: "emoji",
+				description: "Get an enlarged emoji along with info",
+				aliases: ["emojiinfo"],
+				args: [
+					{
+						type: "emoji"
+					}
+				],
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				},
+				usage: "emoji <emoji>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			let emoji = args[0], createdDate = new Date(emoji.createdTimestamp);
+			message.channel.send(new Discord.RichEmbed()
+			.setTitle(`Emoji - ${emoji.name}`)
+			.setColor(Math.floor(Math.random() * 16777216))
+			.setFooter(`ID: ${emoji.id}`)
+			.setImage(emoji.url)
+			.addField("Emoji created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+			.addField("Roles which can use this emoji", emoji.roles.size == 0 ? "All roles" : emoji.roles.array().map(role => role.name).join(", "))
+			.addField("Animated", emoji.animated ? "Yes" : "No", true)
+			.addField("Managed", emoji.managed ? "Yes" : "No", true)
+			.addField("Emoji URL", emoji.url)
+			);
+		}
+	},
 	class EvalCommand extends Command {
 		constructor() {
 			super({
