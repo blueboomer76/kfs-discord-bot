@@ -10,7 +10,6 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			} else if (falsy.includes(obj)) {
 				return false;
 			} else {return null}
-			break;
 		case "channel":
 			let channel, channelRegex = /<#\d+>/;
 			let guildChannels = message.guild.channels;
@@ -27,23 +26,37 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 				});
 			}
 			if (list.length > 0) {return list} else {return null}; 
-			break;
 		case "command":
 			let command = bot.commands.get(obj) || bot.commands.get(bot.aliases.get(obj))
 			if (command) {return command} else {return null}
-			break;
 		case "duration":
 			// Coming soon
 			break;
 		case "emoji":
-			// Coming soon
-			break;
+			let emoji, emojiRegex = /<:.{2,}:\d+>/, guildEmojis = message.guild.emojis;
+			if (emojiRegex.test(obj)) {
+				return [guildEmojis.get(obj.match(/\d+/)[0])];
+			} else {
+				emoji = guildEmojis.get(obj);
+			}
+			
+			if (emoji) {
+				return [emoji];
+			} else {
+				list = guildEmojis.array().filter(emoji => {
+					return emoji.name.toLowerCase().includes(obj.toLowerCase())
+				});
+			}
+			
+			if (list.length > 0) {return list} else {return null};
+		case "function":
+			const testFunction = params.testFunction;
+			if (testFunction(obj)) {return obj} else {return null};
 		case "image":
 			const imageRegex = /^https?:\/\/.+\.(gif|jpe?g|png)$/i;
 			if (imageRegex.test(obj)) {return obj} else {return null}
 		case "member":
-			let member, memberRegex = /<@!?\d+>/;
-			let guildMembers = message.guild.members;
+			let member, memberRegex = /<@!?\d+>/, guildMembers = message.guild.members;
 			if (memberRegex.test(obj)) {
 				return [guildMembers.get(obj.match(/\d+/)[0])];
 			} else {
@@ -58,20 +71,16 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 					mem.displayName.toLowerCase().includes(obj.toLowerCase())
 				});
 			}
-			if (list.length > 0) {return list} else {return null}; 
-			break;
+			if (list.length > 0) {return list} else {return null};
 		case "number":
 			if (!isNaN(obj) && obj >= params.min && obj <= params.max) {return Math.floor(obj)} else {return null}
-			break;
 		case "oneof":
 			if (params.list.includes(obj)) {return obj} else {return null}; 
-			break;
 		case "regex":
 			// Coming soon
 			break;
 		case "role":
-			let role, roleRegex = /<@&\d+>/;
-			let guildRoles = message.guild.roles;
+			let role, roleRegex = /<@&\d+>/, guildRoles = message.guild.roles;
 			if (roleRegex.test(obj)) {
 				return [guildRoles.get(obj.match(/\d+/)[0])];
 			} else {
@@ -85,10 +94,8 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 				});
 			}
 			if (list.length > 0) {return list} else {return null}; 
-			break;
 		case "string":
 			return obj.toString();
-			break;
 		default:
 			throw new Error("Invalid argument type to check");
 	}

@@ -101,7 +101,7 @@ module.exports = [
 					user: ["BAN_MEMBERS"],
 					level: 0
 				},
-				usage: "ban <user>"
+				usage: "ban <user> [--days <1-14>] [--reason <reason>]"
 			});
 		}
 		
@@ -249,12 +249,14 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (args[0].members.size > 10 && args[0].members.size > message.guild.memberCount / 10) {
-				let cmdErr = await promptor.prompt(message, `You are about to delete the role **${args[0].name}**, which more than 10% of the members in this server have.`)
+			let role = args[0];
+			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return message.channel.send("I cannot delete that role because its position is at or higher than mine.")
+			if (role.members.size > 10 && role.members.size > message.guild.memberCount / 10) {
+				let cmdErr = await promptor.prompt(message, `You are about to delete the role **${role.name}**, which more than 10% of the members in this server have.`)
 				if (cmdErr) return message.channel.send(cmdErr);
 			}
 			
-			await args[0].delete()
+			await role.delete()
 			.then(message.channel.send(`✅ The role **${args[0].name}** has been deleted.`))
 			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
 		}
@@ -289,7 +291,7 @@ module.exports = [
 					user: ["KICK_MEMBERS"],
 					level: 0
 				},
-				usage: "kick <user>"
+				usage: "kick <user> [--reason <reason>]"
 			});
 		}
 		
@@ -424,24 +426,6 @@ module.exports = [
 					time: 20000,
 					type: "user"
 				},
-				flags: [
-					{
-						name: "role",
-						desc: "Role to remove",
-						arg: {
-							num: 1,
-							type: "role"
-						}
-					},
-					{
-						name: "user",
-						desc: "User to remove the role from",
-						arg: {
-							num: 1,
-							type: "member"
-						}
-					}
-				],
 				perms: {
 					bot: ["MANAGE_ROLES"],
 					user: ["MANAGE_ROLES"],
@@ -458,6 +442,40 @@ module.exports = [
 				
 			await member.removeRole(role)
 			.then(message.channel.send(`✅ Role **${role.name}** has been removed from **${member.user.tag}**.`))
+			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
+		}
+	},
+	class ResetNicknameCommand extends Command {
+		constructor() {
+			super({
+				name: "resetnickname",
+				description: "Remove a member's nickname. It will be logged if a modlog channel was set",
+				aliases: ["removenick", "removenickname", "resetnick"],
+				args: [
+					{
+						infiniteArgs: true,
+						type: "member"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_NICKNAMES"],
+					user: ["MANAGE_NICKNAMES"],
+					level: 0
+				},
+				usage: "resetnickname <user>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			let member = args[0];
+			if (member.nickname == null) return message.channel.send("That member does not have a nickname in this guild.")
+				
+			await member.setNickname("")
+			.then(message.channel.send(`✅ Nickname of **${member.user.tag}** has been reset.**`))
 			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
 		}
 	},

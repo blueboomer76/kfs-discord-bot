@@ -1,5 +1,7 @@
 const resolver = require("./objResolver.js");
 
+const listableTypes = ["channel", "emoji", "member", "role"];
+
 function parseArgQuotes(args, findAll) {
 	let matches1 = args.filter(a => a.match(/^"\S/));
 	let matches2 = args.filter(a => a.match(/\S"$/));
@@ -30,11 +32,14 @@ function parseArgQuotes(args, findAll) {
 
 function checkArgs(bot, message, args, cmdArg) {
 	let arg = cmdArg, params;
-	if (arg.type == "number") {
+	if (arg.type == "function") {
+		params = {testFunction: arg.testFunction}
+	} else if (arg.type == "number") {
 		params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity}
 	} else if (arg.type == "oneof") {
 		params = {list: arg.allowedValues}
 	}
+	
 	let toResolve = resolver.resolve(bot, message, args, arg.type, params);
 	if (!toResolve) {
 		if (cmdArg.shiftable) {
@@ -60,14 +65,16 @@ function checkArgs(bot, message, args, cmdArg) {
 			return {error: true, message: argErrorMsg};
 		}
 	}
-	if (arg.type == "channel" || arg.type == "member" || arg.type == "role") {
+	if (listableTypes.includes(arg.type)) {
 		if (toResolve.length == 1) {
 			return toResolve[0];
 		} else {
 			let endMsg = "", list = toResolve.slice(0,20);
-			if (toResolve.length > 20) endMsg += `...and ${toResolve.length - 20} more.`
+			if (toResolve.length > 20) endMsg = `...and ${toResolve.length - 20} more.`
 			if (arg.type == "channel") {
 				list = list.map(chnl => `${chnl.name} (${chnl.id})`);
+			} else if (arg.type == "emoji") {
+				list = list.map(emoji => `${emoji.name} (${emoji.id})`);
 			} else if (arg.type == "member") {
 				list = list.map(mem => `${mem.user.tag} (${mem.user.id})`);
 			} else {
@@ -88,15 +95,11 @@ module.exports = {
 		let parsedArgs = [];
 		for (let i = 0; i < commandArgs.length; i++) {
 			let arg = commandArgs[i];
-			if (arg.num == Infinity || arg.infiniteArgs) {
+			if (arg.infiniteArgs) {
 				if (arg.allowQuotes) {
-					let findAll = false;
-					if (arg.parseSeperately) findAll = !findAll;
-					let newArgs = parseArgQuotes(args.slice(i), findAll);
+					let findAll = arg.parseSeperately ? true : false, newArgs = parseArgQuotes(args.slice(i), findAll);
 					args = args.slice(0, i).concat(newArgs);
-					if (arg.parseSeperately) {
-						return parsedArgs.concat(newArgs)
-					};
+					if (arg.parseSeperately) {return parsedArgs.concat(newArgs)};
 				} else {
 					args[i] = args.slice(i).join(" ");
 				}
@@ -124,10 +127,11 @@ module.exports = {
 	},
 	parseFlags: (bot, message, args, commandFlags) => {
 		// 1. Get flags
-		let flags = [];
-		let flagIndexes = [];
-		let flagRegex = /^(-{1,2}|—)[a-z]/;
-		let flagBases = args.filter(a => flagRegex.test(a));
+		let flags = [],
+			flagIndexes = [],
+			flagRegex = /^(-{1,2}|—)[a-z]/,
+			flagBases = args.filter(a => flagRegex.test(a));
+			
 		for (let i = 0; i < flagBases.length; i++) {
 			flagIndexes.push(args.indexOf(flagBases[i]));
 			let flagObj = {method: "short", name: "", args: []};
@@ -143,10 +147,10 @@ module.exports = {
 			if (i == flagBases.length - 1 && flagIndexes[i] < args.length - 1) {
 				flagObj.args = args.slice(flagIndexes[i] + 1).join(" ").split(",")
 			}
+			console.log(flagObj);
 			flags.push(flagObj);
 		}
-		let newArgs = args.slice(0, flagIndexes[0]);
-		let flagArgs = args.slice(flagIndexes[0]);
+		let newArgs = args.slice(0, flagIndexes[0]), flagArgs = args.slice(flagIndexes[0]);
 		
 		// 2. Parse flags
 		let parsedFlags = [];
@@ -157,9 +161,17 @@ module.exports = {
 				flags[i].name = flagLongNames[flagShortNames.indexOf(flags[i].name)]
 			}
 			if (!flagLongNames.includes(flags[i].name)) {
-				if (parsedFlags.length == 0 && i < flags.length - 1) {
-					newArgs = args.slice(0, flagIndexes[i+1]);
-					flagArgs = args.slice(flagIndexes[i+1]);
+				console.log(parsedFlags.length, i, flags.length - 1, flags[0])
+				if (parsedFlags.length == 0) {
+					if (i < flags.length - 1) {
+						newArgs = args.slice(0, flagIndexes[i+1]);
+						flagArgs = args.slice(flagIndexes[i+1]);
+					} else {
+						newArgs = args;
+						flagArgs = [];
+						break;
+					}
+					console.log(newArgs, flagArgs)
 				} else {
 					continue;
 				}

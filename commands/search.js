@@ -231,13 +231,15 @@ module.exports = [
 					resultText = result.extract;
 				if (!resultText) return message.channel.send("Failed to find a Wikipedia article for that term.")
 				
-				let firstSectionIndex = resultText.indexOf("=="), sliceAt = 1000;
+				let firstSectionIndex = resultText.indexOf("==");
 				if (firstSectionIndex > 2000) {
-					sliceAt = 2000;
-				} else if (firstSectionIndex > 800) {
-					sliceAt = firstSectionIndex;
+					resultText = `resultText.slice(0, 2000)...`
+				} else if (firstSectionIndex > 1000) {
+					resultText = resultText.slice(0, firstSectionIndex);
+				} else {
+					resultText = resultText.slice(0, 1000);
+					if (resultText.length > 1000) resultText += "...";
 				}
-				resultText = resultText.slice(0, sliceAt);
 				
 				message.channel.send(new Discord.RichEmbed()
 				.setTitle(`Wikipedia - ${result.title}`)
@@ -246,6 +248,61 @@ module.exports = [
 				.setDescription(resultText)
 				)
 			})
+		}
+	},
+	class XKCDCommand extends Command {
+		constructor() {
+			super({
+				name: "xkcd",
+				description: "Get a comic from XKCD",
+				args: [
+					{
+						errorMsg: "Please provide \"random\", a number greater than 0, or supply no arguments.",
+						optional: true,
+						type: "function",
+						testFunction: obj => {return obj == "random" || obj > 0}
+					}
+				],
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				},
+				usage: "xkcd [<number> | random]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			request.get("https://xkcd.com/info.0.json", (err, res) => {
+				if (err || res.statusCode >= 400) return message.channel.send(`Failed to retrieve from XKCD. (status code ${res.statusCode})`)
+				
+				let currComic = JSON.parse(res.body);
+				
+				if (args[0] == "random" || args[0] > 0) {
+					let comicNum = args[0] == "random" ? Math.floor(Math.random() * currComic.num) : parseInt(args[0]);
+					request.get(`https://xkcd.com/${comicNum}/info.0.json`, (err2, res2) => {
+						if (err2 || res2.statusCode >= 400) {
+							this.postComic(message, currComic, "Current", res2.statusCode)
+							return;
+						}
+						let chosenComic = JSON.parse(res2.body);
+						this.postComic(message, chosenComic, args[0] == "random" ? "Random " : "")
+					})
+				} else {
+					this.postComic(message, currComic, "Current ")
+				}
+			})
+		}
+		
+		postComic(message, comic, titlePrefix, fallbackCode) {
+			let xkcdEmbed = new Discord.RichEmbed()
+			.setTitle(`${titlePrefix}XKCD Comic - ${comic.title} (#${comic.num})`)
+			.setColor(Math.floor(Math.random() * 16777216))
+			.setDescription(comic.alt)
+			.setImage(comic.img)
+			
+			if (fallbackCode) xkcdEmbed.description = `*Failed to retrieve from XKCD, defaulting to the current one. (status code ${fallbackCode})*\n\n${comic.alt}`
+			message.channel.send(xkcdEmbed);
 		}
 	}
 ];

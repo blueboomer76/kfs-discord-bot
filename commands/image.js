@@ -34,18 +34,14 @@ module.exports = [
 				let results = res.body.data.children.filter(r => !r.data.stickied);
 				if (!message.channel.nsfw) results = results.filter(r => !r.data.over_18);
 				
-				let postData = results[Math.floor(Math.random() * results.length)].data,
-					imgResolutions = postData.preview.images[0].resolutions,
-					img = imgResolutions.find(r => r.width == 960) ||
-						imgResolutions.find(r => r.width == 640) ||
-						imgResolutions.find(r => r.width == 320);
+				let postData = results[Math.floor(Math.random() * results.length)].data;
 				
 				message.channel.send(new Discord.RichEmbed()
 				.setTitle(`${postData.title.replace(/&amp;/g, "&")}`)
 				.setURL(`https://redd.it/${postData.id}`)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author}`)
-				.setImage(img.url.replace(/&amp;/g, "&"))
+				.setImage(postData.url)
 				)
 			})
 		}
@@ -299,18 +295,14 @@ module.exports = [
 				if (err || res.statusCode >= 400) return message.channel.send(`Failed to retrieve from Reddit. (status code ${res.statusCode})`)
 				
 				let results = res.body.data.children,
-					postData = results[Math.floor(Math.random() * results.length)].data,
-					imgResolutions = postData.preview.images[0].resolutions,
-					img = imgResolutions.find(r => r.width == 960) ||
-						imgResolutions.find(r => r.width == 640) ||
-						imgResolutions.find(r => r.width == 320);
+					postData = results[Math.floor(Math.random() * results.length)].data;
 				
 				message.channel.send(new Discord.RichEmbed()
 				.setTitle(`${postData.title.replace(/&amp;/g, "&")}`)
 				.setURL(`https://redd.it/${postData.id}`)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author}`)
-				.setImage(img.url.replace(/&amp;/g, "&"))
+				.setImage(postData.url)
 				)
 			})
 		}

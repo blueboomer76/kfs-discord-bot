@@ -1,18 +1,22 @@
 const Discord = require("discord.js");
 
 function setEntries(entries, options) {
-	let limit = options.limit, page = options.page;
-	let maxPage = Math.ceil(entries[0].length / limit);
-	let displayed = [];
+	const limit = options.limit, maxPage = Math.ceil(entries[0].length / limit);
+	let page = options.page, displayed = [];
+		
 	if (page > maxPage) page = maxPage;
 	if (page < 1) page = 1;
-	for (let i = 0; i < entries.length; i++) {
-		if (limit > 1) {
+	
+	if (limit > 1) {
+		for (let i = 0; i < entries.length; i++) {
 			displayed.push(entries[i].slice((page - 1) * limit, page * limit));
-		} else {
+		}
+	} else {
+		for (let i = 0; i < entries.length; i++) {
 			displayed.push(entries[i][page-1]);
 		}
 	}
+	
 	return {
 		page: page,
 		maxPage: maxPage,
@@ -37,9 +41,8 @@ function setEmbed(genEmbed, displayed, options) {
 
 function paginateOnEdit(sentMessage, entries, options) {
 	if (sentMessage.deleted) return;
-	let entryObj = setEntries(entries, options);
 	
-	let sentEmbed = sentMessage.embeds[0];
+	const entryObj = setEntries(entries, options), sentEmbed = sentMessage.embeds[0];
 	let embedToEdit = {
 		title: sentEmbed.title,
 		author: sentEmbed.author ? sentEmbed.author : undefined,
@@ -52,24 +55,37 @@ function paginateOnEdit(sentMessage, entries, options) {
 	}
 	if (sentEmbed.thumbnail && sentEmbed.thumbnail.url) embedToEdit.thumbnail.url = sentEmbed.thumbnail.url;
 	embedToEdit = setEmbed(embedToEdit, entryObj.entries, options);
+	
 	sentMessage.edit("", {embed: embedToEdit})
 }
 
 function checkReaction(collector, limit) {
-	let dif = Number(new Date()) - collector.lastReactionTime;
-	if (dif < limit - 500) {
+	const dif = Number(new Date()) - collector.lastReactionTime;
+	if (dif < limit - 1000) {
 		setTimeout(checkReaction, dif, collector, limit);
 	} else {
 		collector.stop();
 	}
 }
 
+/*
+	Paginator options:
+	- limit
+	- newLineAfterEntry
+	- noStop
+	- numbered
+	- page
+	- params
+	- pinnedMsg
+	- reactTimeLimit
+*/
+
 module.exports.paginate = (message, genEmbed, entries, options) => {
 	if (options.numbered) {
 		let i = 0;
 		entries[0] = entries[0].map(e => {i++; return `${i}. ${e}`})
 	}
-	let entryObj = setEntries(entries, options);
+	const entryObj = setEntries(entries, options);
 	genEmbed.color = Math.floor(Math.random() * 16777216)
 	genEmbed.footer = {
 		text: `Page ${entryObj.page} / ${entryObj.maxPage}`
@@ -88,6 +104,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 					newMessage.react(emojiList[i]).catch(err => {console.log(err)})
 				}, i * 1000);
 			}
+			
 			const pgCollector = newMessage.createReactionCollector((reaction, user) => 
 				user.id == message.author.id && emojiList.includes(reaction.emoji.name)
 			)
@@ -120,7 +137,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 							errors: ["time"]
 						})
 						.then(collected => {
-							let cMsg = collected.array()[0], goToPage = parseInt(cMsg.content);
+							const cMsg = collected.array()[0], goToPage = parseInt(cMsg.content);
 							if (goToPage != NaN) {
 								options.page = goToPage;
 								paginateOnEdit(pgCollector.message, entries, options);
@@ -134,7 +151,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 						.catch(() => {})
 				}
 			})
-			pgCollector.on("end", () => {if (!newMessage.deleted) newMessage.clearReactions();})
+			pgCollector.on("end", () => {if (!newMessage.deleted) newMessage.clearReactions()})
 			setTimeout(checkReaction, 30000, pgCollector, options.reactTimeLimit ? options.reactTimeLimit : 30000);
 		}
 	})

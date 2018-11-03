@@ -1,6 +1,6 @@
-const Discord = require("discord.js");
-const KendraBot = require("./bot.js");
-const {token} = require("./config.json");
+const Discord = require("discord.js"),
+	KendraBot = require("./bot.js"),
+	{token} = require("./config.json");
 
 if (parseFloat(process.versions.node) < 8) {
 	throw new Error("Incompatible Node version (Node version 8 or higher needed)");
@@ -28,8 +28,12 @@ const bot = new KendraBot({
 	]
 });
 
-bot.loadCommands();
-bot.loadEvents();
+async function loadBot() {
+	await bot.loadCommands();
+	await bot.loadEvents();
+}
+
+loadBot();
 
 process.on("uncaughtException", err => {
 	console.error(`[Exception]\n${new Date()}\n${err.stack}`);

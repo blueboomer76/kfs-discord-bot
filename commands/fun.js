@@ -93,7 +93,7 @@ module.exports = [
 						type: "string"
 					}
 				],
-				usage: "choose <choices...>"
+				usage: "choose <choice 1> <choice 2> [choices...]"
 			});
 		}
 		

@@ -75,7 +75,7 @@ module.exports = async (bot, message) => {
 		if (faultMsg.length > 0) return message.channel.send(faultMsg);
 		
 		let flags = [];
-		if (runCommand.flags) {
+		if (runCommand.flags.length > 0) {
 			let parsedFlags = argParser.parseFlags(bot, message, args, runCommand.flags);
 			if (parsedFlags.error) {
 				return message.channel.send(`⚠ **${parsedFlags.error}**:\n${parsedFlags.message}\n*The correct usage is:* \`${runCommand.usage}\``);
