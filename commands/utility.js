@@ -1,7 +1,7 @@
-const Discord = require("discord.js");
-const Command = require("../structures/command.js");
-const {capitalize, getDuration} = require("../modules/functions.js");
-const paginator = require("../utils/paginator.js");
+const {RichEmbed} = require("discord.js"),
+	Command = require("../structures/command.js"),
+	{capitalize, getDuration} = require("../modules/functions.js"),
+	paginator = require("../utils/paginator.js");
 
 module.exports = [
 	class AvatarCommand extends Command {
@@ -26,10 +26,9 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0];
-			let avatarURL = member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
-			if (!member) member = message.member;
-			message.channel.send(new Discord.RichEmbed()
+			const member = args[0] ? args[0] : message.member,
+				avatarURL = member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
+			message.channel.send(new RichEmbed()
 			.setTitle(`Avatar - ${member.user.tag}`)
 			.setDescription(`Avatar URL: ${avatarURL}`)
 			.setColor(Math.floor(Math.random() * 16777216))
@@ -64,17 +63,21 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let channel = args[0] ? args[0] : message.channel;
-			let createdDate = new Date(channel.createdTimestamp);
-			let channelEmbed = new Discord.RichEmbed()
-			.setTitle(`Channel Info - ${channel.name}`)
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`ID: ${channel.id}`)
-			.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
-			.addField("Type", capitalize(channel.type), true)
-			.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
-			.addField("Has permission overwrites", channel.permissionOverwrites.size == 0 ? "No" : "Yes", true)
+			const channel = args[0] ? args[0] : message.channel,
+				createdDate = new Date(channel.createdTimestamp),
+				channelEmbed = new RichEmbed()
+					.setTitle(`Channel Info - ${channel.name}`)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter(`ID: ${channel.id}`)
+					.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+					.addField("Type", capitalize(channel.type), true)
+					.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
+					.addField("Accessible to everyone", channel.permissionsFor(message.guild.roles.find(r => r.calculatedPosition == 0)).has("VIEW_CHANNEL") ? "Yes" : "No", true)
 			
+			const channelPositions = message.guild.channels.filter(c => c.type == channel.type).map(c => c.calculatedPosition);
+			channelPositions.sort((a, b) => a - b);
+			channelEmbed.addField("Position to same type channels", channelPositions.indexOf(channel.calculatedPosition) + 1);
+
 			if (channel.type == "text") {
 				channelEmbed.addField("Topic", channel.topic ? channel.topic : "No topic set");
 			} else if (channel.type == "voice") {
@@ -110,8 +113,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let emoji = args[0], createdDate = new Date(emoji.createdTimestamp);
-			message.channel.send(new Discord.RichEmbed()
+			const emoji = args[0], createdDate = new Date(emoji.createdTimestamp);
+			message.channel.send(new RichEmbed()
 			.setTitle(`Emoji - ${emoji.name}`)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter(`ID: ${emoji.id}`)
@@ -180,7 +183,7 @@ module.exports = [
 					let result2 = result.toString();
 					if (result2.length > 1000) result = result2.slice(0, 1000) + "...";
 				}
-				message.channel.send(new Discord.RichEmbed()
+				message.channel.send(new RichEmbed()
 				.setTitle("discord.js Evaluator")
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`Execution took: ${endEvalDate - beginEvalDate}ms`)
@@ -217,7 +220,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let role = args[0], rolePos = role.calculatedPosition;
+			const role = args[0], rolePos = role.calculatedPosition;
 	
 			let createdDate = new Date(role.createdTimestamp);
 	
@@ -235,14 +238,16 @@ module.exports = [
 				})
 			}
 	
-			let guildRoles = message.guild.roles, nearbyRoles = [];
+			let guildRoles = message.guild.roles.array();
+			guildRoles.splice(guildRoles.findIndex(r => r.calculatedPosition == 0), 1);
+			let nearbyRoles = [];
 			for (let i = rolePos + 2; i > rolePos - 3; i--) {
-				if (i < 0 || i >= guildRoles.size) continue;
+				if (i <= 0 || i > guildRoles.length) continue;
 				let roleName = guildRoles.find(r => r.calculatedPosition == i).name;
 				nearbyRoles.push(i == rolePos ? `**${roleName}**` : roleName);
 			}
 	
-			message.channel.send(new Discord.RichEmbed()
+			message.channel.send(new RichEmbed()
 			.setTitle(`Role Info - ${role.name}`)
 			.setColor(role.color)
 			.setFooter(`ID: ${role.id}`)
@@ -251,7 +256,7 @@ module.exports = [
 			`${roleMembers.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
 			true)
 			.addField("Color", role.hexColor, true)
-			.addField("Position from top", `${guildRoles.size - rolePos} / ${guildRoles.size}`, true)
+			.addField("Position from top", `${guildRoles.length - rolePos + 1} / ${guildRoles.length}`, true)
 			.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No", true)
 			.addField("Mentionable", role.mentionable ? "Yes" : "No", true)
 			.addField("Managed", role.managed ? "Yes" : "No", true)
@@ -292,14 +297,72 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let entries = message.guild.roles.array();
-			let orderedFlag = flags.find(f => f.name == "ordered");
-			if (orderedFlag) entries.sort((a, b) => b.calculatedPosition - a.calculatedPosition);
-			paginator.paginate(message, {title: `List of roles - ${message.guild.name}`}, [entries.map(role => role.name)], {
-				limit: 20,
+			const orderedFlag = flags.find(f => f.name == "ordered");
+			let roles = message.guild.roles.array();
+			roles.splice(roles.findIndex(r => r.calculatedPosition == 0), 1);
+			if (orderedFlag) roles.sort((a, b) => b.calculatedPosition - a.calculatedPosition);
+			paginator.paginate(message, {title: `List of roles - ${message.guild.name}`}, [roles.map(role => role.name)], {
+				limit: 25,
+				noStop: true,
 				numbered: orderedFlag ? true : false,
 				page: args[0] ? args[0] : 1,
-				params: null
+				params: null,
+				removeReactAfter: 60000
+			});
+		}
+	},
+	class RoleMembersCommand extends Command {
+		constructor() {
+			super({
+				name: "rolemembers",
+				description: "See which members have a certain role",
+				aliases: ["inrole", "rolemems"],
+				args: [
+					{
+						infiniteArgs: true,
+						type: "role"
+					}
+				],
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
+					user: [],
+					level: 0
+				},
+				usage: "rolemembers <role>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const role = args[0];
+			let roleMembers;
+			if (!message.guild.large) {
+				roleMembers = role.members;
+			} else {
+				await message.guild.fetchMembers()
+				.then(g => {
+					roleMembers = g.members.filter(mem => mem.roles.has(role.id));
+				})
+				.catch(err => {
+					console.log(`Failed to fetch members: ${err}`)
+					roleMembers = role.members;
+				})
+			}
+
+			if (roleMembers.size == 0) return {cmdWarn: `There are no members in the role ${role.name}.`};
+			if (roleMembers.size > 250) return {cmdWarn: `There are more than 250 members in the role ${role.name}.`};
+
+			paginator.paginate(message, {title: `List of members in role - ${role.name}`}, [roleMembers.map(m => m.user.tag)], {
+				embedColor: role.color,
+				limit: 25,
+				noStop: true,
+				numbered: false,
+				page: 1,
+				params: null,
+				removeReactAfter: 60000
 			});
 		}
 	},
@@ -327,7 +390,7 @@ module.exports = [
 				guildMembers = guild.members;
 			} else {
 				await guild.fetchMembers()
-				.then(g => {guildMembers = g.members})
+				.then(g => guildMembers = g.members)
 				.catch(err => {
 					console.error(`Failed to fetch members: ${err}`)
 					guildMembers = guild.members;
@@ -352,13 +415,14 @@ module.exports = [
 				case 4:
 					guildVerif = "Very High (verified phone)";
 			}
+			
 			let onlineCount = guild.presences.filter(p => p.status != "offline").size,
 				botCount = guildMembers.filter(mem => mem.user.bot).size;
 	
-			message.channel.send(new Discord.RichEmbed()
+			message.channel.send(new RichEmbed()
 			.setTitle(`Server Info - ${guild.name}`)
 			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`ID: ${guild.id} | Server data as of`)
+			.setFooter(`ID: ${guild.id} | Server stats as of`)
 			.setThumbnail(guild.iconURL)
 			.setTimestamp(message.createdAt)
 			.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
@@ -370,7 +434,7 @@ module.exports = [
 			`${onlineCount} Online (${(onlineCount / guild.memberCount * 100).toFixed(1)}%)\n` +
 			`${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,
 			true)
-			.addField(`Roles [${guild.roles.size} total]`, "Use `rolelist` to see all roles", true)
+			.addField(`Roles [${guild.roles.size - 1} total]`, "Use `rolelist` to see all roles", true)
 			.addField(`Channels [${guild.channels.size} total]`,
 			`${guild.channels.filter(chnl => chnl.type == "text").size} Text\n` +
 			`${guild.channels.filter(chnl => chnl.type == "voice").size} Voice\n` +
@@ -384,7 +448,7 @@ module.exports = [
 			super({
 				name: "userinfo",
 				description: "Get info about a user",
-				aliases: ["user"],
+				aliases: ["member", "memberinfo", "user"],
 				args: [
 					{
 						infiniteArgs: true,
@@ -442,8 +506,12 @@ module.exports = [
 				if (i < 0 || i >= message.guild.memberCount) continue;
 				nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
 			}
+
+			let memRoles = member.roles.array();
+			memRoles.splice(memRoles.findIndex(role => role.calculatedPosition == 0), 1);
+			memRoles = memRoles.map(role => role.name);
 			
-			let userEmbed = new Discord.RichEmbed()
+			let userEmbed = new RichEmbed()
 			.setTitle(`User Info - ${member.user.tag}`)
 			.setFooter(`ID: ${member.id}`)
 			.setThumbnail(member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`)
@@ -454,7 +522,7 @@ module.exports = [
 			.addField("Nickname", member.nickname || "None", true)
 			.addField("Member #", joinPos + 1, true)
 			.addField("Join order", nearbyMems.join(" > "))
-			.addField(`Roles - ${member.roles.size}`, member.roles.array().join(", "))
+			.addField(`Roles - ${memRoles.length}`, memRoles.length == 0 ? "None" : memRoles.join(", "))
 	
 			if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
 				userEmbed.setColor(member.displayColor);

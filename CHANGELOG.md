@@ -1,6 +1,34 @@
 *Note: Some changes have been compacted into some versions in this changelog. The full changelog is available on the Discord server.*
 
 # 1.X (current)
+
+## 1.3.27
+- Added support for posting to botsfordiscord.com
+- Added time since bot creation to bot stats related commands
+
+## 1.3.24
+- Added consistency for command error displaying
+- Added options for executing functions after a command has finished executing
+- Changed the stats posting link for bots.discord.pw to bots.ondiscord.xyz
+
+## 1.3.17
+- Added new commands: rolemembers, birb, and joke
+- Separated stats command into two parts: one for the bot and one for the host
+- Removed unnecessary require() calls
+- Changed some "let" declarations to "const"
+- Moved cat and dog commands to Image category
+
+## 1.3.12
+- Added an "nsfw" property to commands
+
+## 1.3.9
+- Added new commands: emoji, xkcd, and removenickname
+- Allowed object resolver to now resolve emojis
+
+## 1.3.7
+- Changed argument structure: "num" is no longer a property and is replaced with "infiniteArgs"
+- Fix errors in event listeners
+
 ## 1.3.4
 - Added more image commands
 

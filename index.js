@@ -1,5 +1,5 @@
-const KFSDiscordBot = require("./bot.js");
-const {token} = require("./config.json");
+const KFSDiscordBot = require("./bot.js"),
+	{token} = require("./config.json");
 
 if (parseFloat(process.versions.node) < 8) {
 	throw new Error("Incompatible Node version (Node version 8 or higher needed)");

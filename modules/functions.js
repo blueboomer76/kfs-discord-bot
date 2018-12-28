@@ -23,7 +23,7 @@ module.exports = {
 
 		let baseStr1 = "", baseStr2 = "";
 		if (timeDif < 60) {
-			baseStr1 = `${timeDif.toFixed(1)} seconds`
+			baseStr1 = `${timeDif.toFixed(simple ? 0 : 1)} seconds`
 		} else if (timeDif < 3.1536e+9) {
 			if (timeDif < 3600) {
 				baseStr1 = `${Math.floor(timeDif / 60)} minute`;

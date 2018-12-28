@@ -1,5 +1,5 @@
-const Command = require("../structures/command.js");
-const promptor = require("../modules/codePromptor.js");
+const Command = require("../structures/command.js"),
+	promptor = require("../modules/codePromptor.js");
 
 module.exports = [
 	class AddRoleCommand extends Command {
@@ -34,14 +34,14 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let member = args[0], role = args[1];
-			if (member.id == message.author.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself or the bot.");
-			if (member.roles.get(role.id)) return message.channel.send("That user already has the role you provided.");
+			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
+			if (member.roles.has(role.id)) return {cmdWarn: `That user already has the role **${role.name}**.`}
 			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
-				return message.channel.send("Cannot add role: your highest role must be higher than the role to add (overrides with server owner)");
+				return {cmdWarn: `Role **${role.name}** cannot be added to **${member.user.tag}** since its position is at or higher than yours (overrides with server owner)`};
 			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return message.channel.send("Cannot add role: the bot's highest role must be higher than the role to add");
+				return {cmdWarn: `I cannot add the role **${role.name}** to **${member.user.tag}** since its position is at or higher than mine.`};
 			} else if (role.managed) {
-				return message.channel.send("Integrated or managed roles cannot be added to a user.");
+				return {cmdWarn: `Role **${role.name}** cannot be added to **${member.user.tag}** since it is managed or integrated.`};
 			}
 	
 			member.addRole(role)
@@ -95,11 +95,11 @@ module.exports = [
 			let member = args[0],
 				daysFlag = flags.find(f => f.name == "days"),
 				reasonFlag = flags.find(f => f.name == "reason");
-			if (member.id == message.author.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself or the bot.");
+			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
 			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-				return message.channel.send("Cannot ban: your highest role must be higher than the user's highest role (overrides with server owner)");
+				return {cmdWarn: `User **${member.user.tag}** cannot be banned since their highest role is at or higher than yours (overrides with server owner)`};
 			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return message.channel.send("Cannot ban: the bot's highest role must be higher than the user's highest role");
+				return {cmdWarn: `I cannot ban the user **${member.user.tag}** since their highest role is at or higher than mine.`};
 			}
 
 			let cmdErr = await promptor.prompt(message, `You are about to ban the user **${member.user.tag}** from this server.`);
@@ -138,9 +138,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let channelName = args[0].toLowerCase();
-			let channelNameRegex = /[^0-9a-z-_]/;
-			if (channelNameRegex.test(channelName)) return message.channel.send("Channel names can only have letters, numbers, hyphens, or underscores.");
+			const channelName = args[0].toLowerCase(), channelNameRegex = /[^0-9a-z-_]/;
+			if (channelNameRegex.test(channelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
 				
 			message.guild.createChannel(channelName, {type: "text"})
 			.then(() => message.channel.send(`✅ The text channel **${channelName}** has been created.`))
@@ -192,22 +191,28 @@ module.exports = [
 					},
 				],
 				cooldown: {
-					time: 30000,
+					time: 20000,
 					type: "user"
 				},
+				flags: [
+					{
+						name: "yes",
+						desc: "Skips the confirmation dialog"
+					}
+				],
 				perms: {
 					bot: ["MANAGE_CHANNELS"],
 					user: ["MANAGE_CHANNELS"],
 					level: 0
 				},
-				usage: "deletechannel <name>"
+				usage: "deletechannel <name> [--yes]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let channel = args[0];
-			if (channel.createdTimestamp + 1.5552e+10 < Number(new Date())) {
-				let cmdErr = await promptor.prompt(message, `You are about to delete the channel **${channel.name}**, which is more than 180 days old.`)
+			const channel = args[0];
+			if (channel.createdTimestamp + 1.5552e+10 < Number(new Date()) && !flags.some(f => f.name == "yes")) {
+				let cmdErr = await promptor.prompt(message, `You are about to delete the channel **${channel.name}** (ID ${channel.id}), which is more than 180 days old.`)
 				if (cmdErr) return message.channel.send(cmdErr);
 			}
 			
@@ -242,23 +247,98 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			let role = args[0];
+			const role = args[0];
 			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
-				return message.channel.send("Cannot delete role: your highest role must be higher than the role to remove");
+				return {cmdWarn: `Role **${role.name}** cannot be deleted since its position is at or higher than yours (overrides with server owner)`};
 			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return message.channel.send("Cannot delete role: the bot's highest role must be higher than the role to remove");
+				return {cmdWarn: `I cannot delete the role **${role.name}** since its position is at or higher than mine.`};
 			} else if (role.managed) {
-				return message.channel.send("Integrated or managed roles cannot be deleted with this command.");
+				return {cmdWarn: `Role **${role.name}** cannot be deleted since it is managed or integrated.`};
 			}
 
 			if (role.members.size > 10 && role.members.size > message.guild.memberCount / 10) {
-				let cmdErr = await promptor.prompt(message, `You are about to delete the role **${role.name}**, which more than 10% of the members in this server have.`)
+				let cmdErr = await promptor.prompt(message, `You are about to delete the role **${role.name}** (ID ${role.id}), which more than 10% of the members in this server have.`)
 				if (cmdErr) return message.channel.send(cmdErr);
 			}
 
 			role.delete()
 			.then(() => message.channel.send(`✅ The role **${role.name}** has been deleted.`))
 			.catch(err => message.channel.send("An error has occurred while trying to delete the role: `" + err + "`"))
+		}
+	},
+	class HackbanCommand extends Command {
+		constructor() {
+			super({
+				name: "hackban",
+				description: "Bans a user even if that user is not in this server",
+				args: [
+					{
+						errorMsg: "You need to provide a valid user ID.",
+						type: "function",
+						testFunction: obj => /^\d{17,19}$/.test(obj)
+					}
+				],
+				cooldown: {
+					time: 25000,
+					type: "user"
+				},
+				flags: [
+					{
+						name: "days",
+						desc: "Number of days to delete messages",
+						arg: {
+							type: "number",
+							min: 1,
+							max: 7
+						}
+					},
+					{
+						name: "reason",
+						desc: "Reason to put in the audit log",
+						arg: {
+							type: "string"
+						}
+					}
+				],
+				perms: {
+					bot: ["BAN_MEMBERS"],
+					user: ["BAN_MEMBERS"],
+					level: 0
+				},
+				usage: "hackban <user ID> [--days <1-7>] [--reason <reason>]"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			const userID = args[0],
+				daysFlag = flags.find(f => f.name == "days"),
+				reasonFlag = flags.find(f => f.name == "reason");
+			if (userID == message.author.id || userID == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
+			let guildMembers, cmdErr;
+			if (!message.guild.large) {
+				guildMembers = message.guild.members;
+			} else {
+				await message.guild.fetchMembers()
+				.then(g => guildMembers = g.members)
+				.catch(err => cmdErr = `Failed to fetch members: ${err}`);
+			}
+			if (cmdErr) return {cmdWarn: cmdErr};
+
+			const memberWithID = guildMembers.get(userID);
+			if (memberWithID) {
+				if (message.author.id != message.guild.owner.id && memberWithID.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
+					return {cmdWarn: `User **${memberWithID.user.tag}** cannot be hackbanned since their highest role is at or higher than yours (overrides with server owner)`};
+				} else if (memberWithID.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
+					return {cmdWarn: `I cannot hackban the user **${memberWithID.user.tag}** since their highest role is at or higher than mine.`};
+				}
+			}
+
+			message.guild.ban(userID, {
+				days: daysFlag ? daysFlag.args : 0,
+				reason: reasonFlag ? reasonFlag.args : null
+			})
+			.then(() => message.channel.send(`✅ The user with ID **${userID}** was hackbanned from the server.`))
+			.catch(() => message.channel.send("Could not hackban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."))
 		}
 	},
 	class KickCommand extends Command {
@@ -297,11 +377,11 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			let member = args[0],
 				reasonFlag = flags.find(f => f.name == "reason");
-			if (member.id == message.author.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself or the bot.");
+			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
 			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-				return message.channel.send("Cannot kick: your highest role must be higher than the user's highest role (overrides with server owner)");
+				return {cmdWarn: `User **${member.user.tag}** cannot be kicked since their highest role is at or higher than yours (overrides with server owner)`};
 			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return message.channel.send("Cannot kick: the bot's highest role must be higher than the user's highest role");
+				return {cmdWarn: `I cannot kick the user **${member.user.tag}** since their highest role is at or higher than mine.`};
 			}
 
 			let cmdErr = await promptor.prompt(message, `You are about to kick the user **${member.user.tag}** from this server.`)
@@ -367,8 +447,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let errorStatus = false;
-			let toDelete = args[0] + 1;
+			let cmdErr, toDelete = args[0] + 1;
 			if (flags.length > 0) {
 				await message.channel.fetchMessages({"limit": args[0]})
 				.then(messages => {
@@ -391,14 +470,14 @@ module.exports = [
 								toDelete = toDelete.filter(msg => msg.author.id == flags[i].args.id);
 						}
 					}
-					if (!toDelete.get(message.id)) {toDelete.set(message.id, message)};
+					if (!toDelete.get(message.id)) toDelete.set(message.id, message);
 				})
 				.catch(err => {
-					message.channel.send("Error occurred while trying to fetch messages: `" + err + "`")
-					errorStatus = true;
+					cmdErr = "Error occurred while trying to fetch messages: `" + err + "`";
 				})
 			}
-			if (errorStatus) return;
+			if (cmdErr) return message.channel.send(cmdErr);
+			
 			message.channel.bulkDelete(toDelete, true)
 			.then(messages => {
 				message.channel.send(`🗑 Deleted ${messages.size - 1} messages from this channel!`).then(m => m.delete(7500))
@@ -438,19 +517,52 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let member = args[0], role = args[1];
-			if (member.id == message.author.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself or the bot.");
-			if (!member.roles.has(role.id)) return message.channel.send("The user does not have that role.");
+			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
+			if (!member.roles.has(role.id)) return {cmdWarn: `**${member.user.tag}** does not have a role named **${role.name}**.`};
 			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
-				return message.channel.send("Cannot remove role: your highest role must be higher than the role to remove (overrides with server owner)");
+				return {cmdWarn: `Role **${role.name}** cannot be removed from **${member.user.tag}** since its position is at or higher than yours (overrides with server owner)`};
 			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return message.channel.send("Cannot remove role: the bot's highest role must be higher than the role to remove");
+				return {cmdWarn: `I cannot remove the role **${role.name}** from **${member.user.tag}** since its position is at or higher than mine.`};
 			} else if (role.managed) {
-				return message.channel.send("Integrated or managed roles cannot be removed from a user.");
+				return {cmdWarn: `Role **${role.name}** cannot be removed from **${member.user.tag}** since it is managed or integrated.`};
 			}
 	
 			member.removeRole(role)
 			.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from the user **${member.user.tag}**.`))
 			.catch(err => message.channel.send("An error has occurred while trying to remove the role: `" + err + "`"))
+		}
+	},
+	class RenameChannelCommand extends Command {
+		constructor() {
+			super({
+				name: "renamechannel",
+				description: "Renames this channel",
+				aliases: ["rnch", "renamech", "setchname", "setchannelname"],
+				args: [
+					{
+						type: "string"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_CHANNELS"],
+					user: ["MANAGE_CHANNELS"],
+					level: 0
+				},
+				usage: "renamechannel <name>"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			const newChannelName = args[0].toLowerCase(), channelNameRegex = /[^0-9a-z-_]/;
+			if (channelNameRegex.test(newChannelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
+				
+			message.channel.setName(newChannelName)
+			.then(() => message.channel.send(`✅ This channel's name has been set to **${newChannelName}**.`))
+			.catch(err => message.channel.send("An error has occurred while trying to rename this channel: `" + err + "`"))
 		}
 	},
 	class ResetNicknameCommand extends Command {
@@ -479,13 +591,13 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			let member = args[0];
-			if (member.id == message.author.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself or the bot.");
-			if (!member.nickname) return message.channel.send("The user does not have a nickname in this server.");
+			const member = args[0];
+			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
+			if (!member.nickname) return {cmdWarn: `**${member.user.tag}** does not have a nickname in this server.`};
 			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-				return message.channel.send("Cannot reset nickname: your highest role must be higher than the user's highest role");
-			} else if (member.highestRole.comparePositionTo(message.guild.member(bot.user).highestRole) >= 0) {
-				return message.channel.send("Cannot reset nickname: the bot's highest role must be higher than the user's highest role");
+				return {cmdWarn: `Nickname of **${member.user.tag}** cannot be reset since their highest role is at or higher than yours (overrides with server owner)`};
+			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
+				return {cmdWarn: `I cannot reset the nickname of **${member.user.tag}** since their highest role is at or higher than mine.`};
 			}
 
 			member.setNickname("")
@@ -524,12 +636,12 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0], newNick = args[1];
-			if (member.id == message.author.id || member.id == bot.user.id) return message.channel.send("This command cannot be used on yourself or the bot.");
+			const member = args[0], newNick = args[1];
+			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
 			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-				return message.channel.send("Cannot set nickname: your highest role must be higher than the user's highest role (overrides with server owner)");
+				return {cmdWarn: `Nickname of **${member.user.tag}** cannot be set since their highest role is at or higher than yours (overrides with server owner)`};
 			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return message.channel.send("Cannot set nickname: the bot's highest role must be higher than the user's highest role");
+				return {cmdWarn: `I cannot set the nickname of **${member.user.tag}** since their highest role is at or higher than mine.`};
 			}
 
 			member.setNickname(newNick)

@@ -1,6 +1,6 @@
-const Discord = require("discord.js");
-const Command = require("../structures/command.js");
-const request = require("request");
+const {RichEmbed} = require("discord.js"),
+	Command = require("../structures/command.js"),
+	request = require("request");
 
 module.exports = [
 	class EightBallCommand extends Command {
@@ -49,38 +49,6 @@ module.exports = [
 			}
 		}
 	},
-	class CatCommand extends Command {
-		constructor() {
-			super({
-				name: "cat",
-				description: "Get a random cat!",
-				aliases: ["kitten", "meow"],
-				cooldown: {
-					time: 15000,
-					type: "channel"
-				},
-				perms: {
-					bot: ["EMBED_LINKS"],
-					user: [],
-					level: 0
-				}
-			});
-		}
-		
-		async run(bot, message, args, flags) {
-			request.get("http://aws.random.cat/meow", (err, res) => {
-				if (err) return message.channel.send(`Could not request to random.cat: ${err.message}`);
-				if (!res) return message.channel.send("No response was received from random.cat.");
-				if (res.statusCode >= 400) return message.channel.send(`The request to random.cat failed with status code ${res.statusCode} (${res.statusMessage})`);
-				message.channel.send(new Discord.RichEmbed()
-				.setTitle("Here's your random cat!")
-				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter("From random.cat")
-				.setImage(JSON.parse(res.body).file)
-				);
-			})
-		}
-	},
 	class ChooseCommand extends Command {
 		constructor() {
 			super({
@@ -99,7 +67,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (args.length < 2) return message.channel.send("You need to provide at least 2 choices for me to choose from!");
+			if (args.length < 2) return {cmdWarn: "You need to provide at least 2 choices for me to choose from!"};
 			message.channel.send(`I choose: ${args[Math.floor(Math.random() * args.length)]}`);
 		}
 	},
@@ -137,12 +105,12 @@ module.exports = [
 			}
 		}
 	},
-	class DogCommand extends Command {
+	class JokeCommand extends Command {
 		constructor() {
 			super({
-				name: "dog",
-				description: "Get a random dog!",
-				aliases: ["puppy", "woof"],
+				name: "joke",
+				description: "Gets some jokes",
+				aliases: ["jokes"],
 				cooldown: {
 					time: 15000,
 					type: "channel"
@@ -153,19 +121,76 @@ module.exports = [
 					level: 0
 				}
 			});
+			this.cachedPosts = [];
+			this.lastChecked = 0;
+			this.nextPost = null;
+		}
+
+		async run(bot, message, args, flags) {
+			if (new Date() > this.lastChecked + 1000*3600 || this.cachedPosts.length == 0) {
+				try {
+					this.cachedPosts = await this.getJokes();
+				} catch(err) {
+					return {cmdWarn: err};
+				}
+			}
+
+			let embedDesc = "", postData;
+			while (embedDesc.length < 1000) {
+				if (this.cachedPosts.length == 0) {
+					try {
+						this.cachedPosts = await this.getJokes();
+					} catch(err) {
+						break;
+					}
+				}
+
+				postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0];
+				let toDisplayDesc = postData.desc;
+
+				if (embedDesc.length == 0 && toDisplayDesc.length >= 1500) {
+					toDisplayDesc = `${toDisplayDesc}...`;
+				} else if (embedDesc.length + toDisplayDesc.length > 1500) {
+					toDisplayDesc = `${toDisplayDesc.slice(0, 1500 - embedDesc.length)}...`;
+				}
+
+				embedDesc += `**[${postData.title.replace(/&amp;/g, "&")}](https://reddit.com${postData.id})**` + "\n" +
+					toDisplayDesc + "\n" +
+					`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";	
+			}
+
+			message.channel.send(new RichEmbed()
+			.setTitle("Joke Time!")
+			.setDescription(embedDesc)
+			.setColor(Math.floor(Math.random() * 16777216))
+			)
 		}
 		
-		async run(bot, message, args, flags) {
-			request.get("http://random.dog/woof.json", (err, res) => {
-				if (err) return message.channel.send(`Could not request to random.dog: ${err.message}`);
-				if (!res) return message.channel.send("No response was received from random.dog.");
-				if (res.statusCode >= 400) return message.channel.send(`The request to random.dog failed with status code ${res.statusCode} (${res.statusMessage})`);
-				message.channel.send(new Discord.RichEmbed()
-				.setTitle("Here's your random dog!")
-				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter("From random.dog")
-				.setImage(JSON.parse(res.body).url)
-				);
+		getJokes() {
+			return new Promise((resolve, reject) => {
+				request.get({
+					url: "https://reddit.com/r/Jokes/hot.json",
+					qs: {limit: 50},
+					json: true
+				}, (err, res) => {
+					if (err) return reject(`Could not request to Reddit: ${err.message}`);
+					if (!res) return reject("No response was received from Reddit.");
+					if (res.statusCode >= 400) return reject(`The request to Reddit failed with status code ${res.statusCode} (${res.statusMessage})`);
+					
+					this.lastChecked = Number(new Date());
+					const results = res.body.data.children
+						.filter(r => !r.data.stickied && !r.data.over_18)
+						.map(r => {
+							return {
+								title: r.data.title,
+								desc: r.data.selftext.replace(/&amp;/g, "&").trim().slice(0, 1500),
+								id: r.data.id,
+								score: r.data.score,
+								comments: r.data.num_comments
+							}
+						})
+					resolve(results);
+				})
 			})
 		}
 	},
@@ -195,8 +220,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0];
-			message.channel.send(new Discord.RichEmbed()
+			const member = args[0];
+			message.channel.send(new RichEmbed()
 			.setDescription(args[1])
 			.setAuthor(member.user.tag, member.user.avatarURL)
 			.setColor(Math.floor(Math.random() * 16777216))
@@ -219,26 +244,28 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let hash = 0, memberRegex = /<@!?\d+>/;
-			if (memberRegex.test(args[0])) {
-				let memberRegex2 = /\d+/;
-				let member = message.guild.members.get(args[0].match(memberRegex2)[0])
-				args[0] = member ? member.user.tag : args[0];
+			const memberRegex = /<@!?\d+>/;
+			let hash = 0, toRate = args[0];
+			if (memberRegex.test(toRate)) {
+				const memberRegex2 = /\d+/, member = message.guild.members.get(args[0].match(memberRegex2)[0])
+				toRate = member ? member.user.tag : args[0];
+			} else if (toRate == "me") {
+				toRate = message.member.user.tag;
 			}
-			for (let i = 0; i < args[0].length; i++) {
-				let c = args[0].charCodeAt(i);
+			for (let i = 0; i < toRate.length; i++) {
+				const c = toRate.charCodeAt(i);
 				hash = hash * 31 + c;
 				hash |= 0; // Convert to 32-bit integer
 			}
-			let rand = (Math.abs(hash % 90 / 10) + 1).toFixed(1);
-			let toSend;
-			if (args[0].toLowerCase() == bot.user.username.toLowerCase() || args[0] == bot.user.tag) {
-				toSend = "I would rate myself a 10/10";
-			} else if (args[0] == message.author.tag || args[0].toLowerCase() == "me") {
+
+			let rand = (Math.abs(hash % 90 / 10) + 1).toFixed(1), toSend;
+			if (toRate.toLowerCase() == bot.user.username.toLowerCase() || toRate == bot.user.tag) {
+				toSend = "I would rate myself a 10/10, of course.";
+			} else if (toRate == message.author.tag || toRate.toLowerCase() == "me") {
 				rand = (Math.abs(hash % 50 / 10) + 5).toFixed(1);
 				toSend = `I would rate you a ${rand}/10`;
 			} else {
-				toSend = `I would rate **${args[0]}** a ${rand}/10`;
+				toSend = `I would rate \`${toRate}\` a ${rand}/10`;
 			}
 			message.channel.send(toSend);
 		}
@@ -270,16 +297,61 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			message.delete();
-			if (flags.find(f => f.name == "embed")) {
-				if (!message.guild.me.hasPermission("EMBED_LINKS")) return message.channel.send("To post an embed, the bot requires the `Embed Links` permission.")
-				message.channel.send(new Discord.RichEmbed()
+			await message.delete();
+			if (flags.some(f => f.name == "embed")) {
+				if (!message.guild.me.hasPermission("EMBED_LINKS")) return {cmdWarn: "To post an embed, the bot requires the `Embed Links` permission."}
+				message.channel.send(new RichEmbed()
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setDescription(args[0])
 				)
 			} else {
 				message.channel.send(args[0]);
 			}
+		}
+	},
+	class ShipCommand extends Command {
+		constructor() {
+			super({
+				name: "ship",
+				description: "Ship two users, generate a name, and rate it!",
+				args: [
+					{
+						allowQuotes: true,
+						infiniteArgs: true,
+						type: "string"
+					},
+					{
+						infiniteArgs: true,
+						type: "string"
+					}
+				],
+				usage: "ship <user 1> <user 2>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const memberRegex = /<@!?\d+>/, memberRegex2 = /\d+/;
+			let hash = 0, toShip1 = args[0], toShip2 = args[1], member;
+			if (memberRegex.test(toShip1)) {
+				member = message.guild.members.get(args[0].match(memberRegex2)[0])
+				toShip1 = member ? member.user.username : args[0];
+			}
+			if (memberRegex.test(toShip2)) {
+				member = message.guild.members.get(args[1].match(memberRegex2)[0])
+				toShip2 = member ? member.user.username : args[1];
+			}
+			for (let i = 0; i < toShip1.length; i++) {
+				const c = toShip1.charCodeAt(i);
+				hash = hash * 31 + c;
+				hash |= 0; // Convert to 32-bit integer
+			}
+			for (let i = 0; i < toShip2.length; i++) {
+				const c = toShip2.charCodeAt(i);
+				hash = hash * 31 + c;
+				hash |= 0; // Convert to 32-bit integer
+			}
+			
+			message.channel.send(`I would rate the ship between \`${toShip1}\` and \`${toShip2}\` a ${(Math.abs(hash % 90 / 10) + 1).toFixed(1)}/10`)
 		}
 	}
 ];

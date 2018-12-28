@@ -1,5 +1,5 @@
-const Argument = require("./argument.js");
-const Flag = require("./flag.js");
+const Argument = require("./argument.js"),
+	Flag = require("./flag.js");
 
 class Command {
 	constructor(props) {
@@ -13,6 +13,7 @@ class Command {
 		this.examples = props.examples || [];
 		this.flags = [];
 		this.hidden = props.hidden || false;
+		this.nsfw = props.nsfw || false;
 		this.perms = props.perms || {bot: [], user: [], role: null, level: 0};
 		this.usage = props.usage || this.name;
 		

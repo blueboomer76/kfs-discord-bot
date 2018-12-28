@@ -1,7 +1,8 @@
 {
 	"token": "<your bot token>",
-	"botsDiscordPwToken": "[bots.discord.pw token]",
 	"discordBotsOrgToken": "[discordbots.org token]",
+	"botsOnDiscordToken": "[bots.ondiscord.xyz token]",
+	"botsForDiscordToken": "[botsfordiscord.com token]",
 	"ideaWebhookID": "[webhook ID]",
 	"ideaWebhookToken": "[webhook token]",
 	"prefix": "k,",

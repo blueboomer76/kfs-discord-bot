@@ -1,15 +1,20 @@
-const Discord = require("discord.js");
-const Command = require("../structures/command.js");
-const {getDuration} = require("../modules/functions.js");
-const paginator = require("../utils/paginator.js");
-const request = require("request");
+const {RichEmbed} = require("discord.js"),
+	Command = require("../structures/command.js"),
+	{capitalize, getDuration} = require("../modules/functions.js"),
+	paginator = require("../utils/paginator.js"),
+	request = require("request");
+
+const redirSubreddits = [
+	{name: "jokes", goTo: "joke"},
+	{name: "memes", goTo: "meme"}
+];
 
 module.exports = [
 	class RedditCommand extends Command {
 		constructor() {
 			super({
 				name: "reddit",
-				description: "Get top posts from Reddit, from all subreddits or a single one",
+				description: "Get Reddit posts, from all subreddits or a single one",
 				args: [
 					{
 						infiniteArgs: true,
@@ -23,52 +28,82 @@ module.exports = [
 				},
 				examples: [
 					"reddit funny",
-					"reddit aww --compact",
+					"reddit aww --squeeze",
 					"reddit gaming --more"
 				],
 				flags: [
 					{
-						name: "compact",
-						desc: "Whether to compact the displayed posts"
+						name: "controversial",
+						desc: "Whether to see controversial posts"
 					},
 					{
 						name: "more",
 						desc: "Whether to see more posts at a time"
-					}
+					},
+					{
+						name: "new",
+						desc: "Whether to see new posts"
+					},
+					{
+						name: "rising",
+						desc: "Whether to see rising posts"
+					},
+					{
+						name: "squeeze",
+						desc: "Whether to squeeze the displayed posts"
+					},
 				],
 				perms: {
 					bot: ["ADD_REACTIONS", "EMBED_LINKS", "MANAGE_MESSAGES"],
 					user: [],
 					level: 0
 				},
-				usage: "reddit [subreddit] [--compact] [--more]"
+				usage: "reddit [subreddit] [--(controversial|new|rising)] [--more] [--squeeze]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let subreddit, compact = false;
-			if (args[0]) {subreddit = args[0].replace(/^\/?[Rr]\//, "")} else {subreddit = "all"}
-			if (flags.find(f => f.name == "compact")) compact = true;
-			let numToDisplay = compact ? 50 : 25;
+			let subreddit, compact = flags.some(f => f.name == "squeeze");
+			if (args[0]) {
+				const foundRedirSub = redirSubreddits.find(e => e.name == args[0].toLowerCase());
+				if (foundRedirSub) return bot.commands.get(foundRedirSub.goTo).run(bot, message);
+				subreddit = args[0].replace(/^\/?[Rr]\//, "")
+				if (subreddit.length < 3 || subreddit.length > 21) return {cmdWarn: "Subreddit names should have in between 3 and 21 characters."};
+				if (!(/^[0-9A-Za-z_]+$/).test(subreddit)) return {cmdWarn: "Subreddit names should be alphanumeric with underscores only."};
+			} else {
+				subreddit = "all";
+			}
+			const numToDisplay = compact ? 50 : 25;
+			let postSort = "hot";
+				
+			if (flags.some(f => f.name == "new")) {
+				postSort = "new";
+			} else if (flags.some(f => f.name == "rising")) {
+				postSort = "rising";
+			} else if (flags.some(f => f.name == "controversial")) {
+				postSort = "controversial";
+			}
 			
 			request.get({
-				url: `https://reddit.com/r/${subreddit}/hot.json`,
+				url: `https://reddit.com/r/${subreddit}/${postSort}.json`,
 				qs: {limit: flags.find(f => f.name == "more") ? numToDisplay * 2 : numToDisplay},
 				json: true
 			}, (err, res) => {
-				if (err) return message.channel.send(`Could not request to Reddit: ${err.message}`);
-				if (!res) return message.channel.send("No response was received from Reddit.");
-				if (res.statusCode == 404) return message.channel.send("That subreddit doesn't exist!");
-				if (res.statusCode == 403) return message.channel.send("That subreddit is private.");
-				if (res.statusCode >= 400) return message.channel.send(`The request to Reddit failed with status code ${res.statusCode} (${res.statusMessage})`);
+				if (err) return message.channel.send(`⚠ Could not request to Reddit: ${err.message}`);
+				if (!res) return message.channel.send("⚠ No response was received from Reddit.");
+				if (res.statusCode == 403) return message.channel.send("⚠ Unfortunately, that subreddit is inaccessible.")
+				if (res.statusCode >= 400) return message.channel.send(`⚠ The request to Reddit failed with status code ${res.statusCode} (${res.statusMessage})`);
 				
-				let results = res.body.data.children.filter(r => !r.data.stickied);
+				let results = res.body.data.children;
+				if (!results[0] || results[0].kind != "t3") return message.channel.send("⚠ A subreddit with that name does not exist.")
+				
+				results = results.filter(r => !r.data.stickied);
 				if (!message.channel.nsfw) results = results.filter(r => !r.data.over_18);
-				if (results.length == 0) return message.channel.send("No results found.");
+				if (results.length == 0) return message.channel.send("⚠ No results found.");
 				
 				let entries = [[]], viewAll = false;
 				if (!args[0] || args[0] == "all" || args[0] == "popular") viewAll = true;
-				
+								
 				if (compact) {
 					for (const post of results) {
 						let postData = post.data,
@@ -98,6 +133,8 @@ module.exports = [
 				} else {
 					embedTitle += `r/${subreddit}`;
 				}
+				
+				if (postSort != "hot") embedTitle += ` (${capitalize(postSort)} Posts)` 
 				
 				paginator.paginate(message, {
 					title: embedTitle,
@@ -151,12 +188,13 @@ module.exports = [
 			request.get({
 				url: "http://api.urbandictionary.com/v0/define",
 				qs: {term: args[0]},
+				json: true
 			}, (err, res) => {
 				if (err) return message.channel.send(`Could not request to the Urban Dictionary: ${err.message}`);
 				if (!res) return message.channel.send("No response was received from the Urban Dictionary.");
 				if (res.statusCode >= 400) return message.channel.send(`The request to the Urban Dictionary failed with status code ${res.statusCode} (${res.statusMessage})`);
-				
-				let defs = JSON.parse(res.body);
+
+				let defs = res.body;
 				if (defs.list.length > 0) {
 					let entries = [
 						defs.list.map(def => `Urban Dictionary - ${def.word}`),
@@ -190,7 +228,7 @@ module.exports = [
 						params: ["title", "description", "fields"]
 					});
 				} else {
-					message.channel.send("No definition found for that term.");
+					message.channel.send("⚠ No definition found for that term.");
 				}
 			})
 		}
@@ -236,7 +274,7 @@ module.exports = [
 
 				let result = Object.values(res.body.query.pages)[0],
 					resultText = result.extract;
-				if (!resultText) return message.channel.send("No Wikipedia article exists for that term. *(Make sure to check capitalization)*");
+				if (!resultText) return message.channel.send("⚠ No Wikipedia article exists for that term. *(Make sure to check capitalization)*");
 				
 				let firstSectionIndex = resultText.indexOf("==");
 				if (firstSectionIndex > 2000) {
@@ -248,7 +286,7 @@ module.exports = [
 					if (result.extract.length > 1000) resultText += "...";
 				}
 
-				message.channel.send(new Discord.RichEmbed()
+				message.channel.send(new RichEmbed()
 				.setTitle(`Wikipedia - ${result.title}`)
 				.setDescription(resultText)
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -312,13 +350,13 @@ module.exports = [
 		}
 		
 		postComic(message, comic, titlePrefix, isFallback) {
-			let xkcdEmbed = new Discord.RichEmbed()
+			let xkcdEmbed = new RichEmbed()
 			.setTitle(`${titlePrefix}XKCD Comic - ${comic.title} (#${comic.num})`)
 			.setDescription(comic.alt)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setImage(comic.img)
 			
-			if (isFallback) xkcdEmbed.description = `*Failed to retrieve from XKCD, defaulting to the current one.*\n\n${comic.alt}`
+			if (isFallback) xkcdEmbed.description = `*Failed to fetch from XKCD, defaulting to the current one.*\n\n${comic.alt}`
 			message.channel.send(xkcdEmbed);
 		}
 	}

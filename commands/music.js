@@ -1,6 +1,6 @@
-const Command = require("../structures/command.js");
-const paginator = require("../utils/paginator.js");
-const ytdl = require("ytdl-core");
+const Command = require("../structures/command.js"),
+	paginator = require("../utils/paginator.js"),
+	ytdl = require("ytdl-core");
 
 module.exports = [
 	class LeaveCommand extends Command {
@@ -12,19 +12,19 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			let mvChannel = message.member.voiceChannel;
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
+			const mvChannel = message.member.voiceChannel;
 			if (message.author.id != message.guild.owner.id) {
 				if (!message.member.hasPermission("MANAGE_GUILD")) {
 					if (!mvChannel) {
-						return message.channel.send("You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)")
+						return {cmdErr: "You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)"};
 					} else if (mvChannel.id != gvConnection.channel.id) {
-						return message.channel.send("You need to be in the same voice channel as me to perform this command. (Overrides with server owner or `Manage Server` permission)")
+						return {cmdErr: "You need to be in the same voice channel as me to perform this command. (Overrides with server owner or `Manage Server` permission)"};
 					}
 				}
 				if (gvConnection.dispatcher) {
-					return message.channel.send("The audio has not finished playing. (Overrides with server owner)")
+					return {cmdErr: "The audio has not finished playing. (Overrides with server owner)"};
 				}
 			}
 	
@@ -41,19 +41,19 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			let mvChannel = message.member.voiceChannel;
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
+			const mvChannel = message.member.voiceChannel;
 			if (message.author.id != message.guild.owner.id && !message.member.hasPermission("MANAGE_GUILD")) {
 				if (!mvChannel) {
-					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)")
+					return {cmdErr: "You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)"};
 				} else if (mvChannel.id != gvConnection.channel.id) {
-					return message.channel.send("You need to be in the same voice channel as me to pause the audio. (Overrides with server owner or `Manage Server` permission)")
+					return {cmdErr: "You need to be in the same voice channel as me to pause the audio. (Overrides with server owner or `Manage Server` permission)"};
 				}
 			} else if (!gvConnection.dispatcher) {
-				return message.channel.send("Cannot pause: no audio is playing");
+				return {cmdErr: "Cannot pause: no audio is playing"};
 			} else if (gvConnection.dispatcher.paused) {
-				return message.channel.send("Cannot pause: audio is already paused");
+				return {cmdErr: "Cannot pause: audio is already paused"};
 			}
 			
 			gvConnection.dispatcher.pause();
@@ -93,7 +93,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let mvChannel = message.member.voiceChannel;
-			if (!mvChannel) return message.channel.send("You are not in a voice channel! Join one first.");
+			if (!mvChannel) return {cmdErr: "You are not in a voice channel! Join one first."};
 			
 			let gvConnection = message.guild.voiceConnection;
 			let cmdErr;
@@ -109,18 +109,18 @@ module.exports = [
 			}
 
 			// Check for errors
-			if (cmdErr) return message.channel.send("Failed to connect to the voice channel.");
+			if (cmdErr) return {cmdErr: "Failed to connect to the voice channel."};
 			if (mvChannel.id != gvConnection.channel.id) {
-				return message.channel.send("You need to be in the same voice channel as me to play audio.")
+				return {cmdErr: "You need to be in the same voice channel as me to play audio."}
 			}
 			
-			if (gvConnection.queue.length > 10) return message.channel.send("The maximum queue limit has been reached. No more audio can be queued.");
+			if (gvConnection.queue.length > 10) return {cmdErr: "The maximum queue limit has been reached. No more audio can be queued."};
 			if (gvConnection.queue.includes(args[0])) {
-				return message.channel.send("That audio is already in the queue.")
+				return {cmdErr: "That audio is already in the queue."}
 			}
 			try {ytdl(args[0])} catch(err) {cmdErr = true;}
-			if (cmdErr) return message.channel.send("Invalid YouTube URL was provided.");
-			
+			if (cmdErr) return {cmdErr: "You have provided an invalid YouTube URL."};
+
 			if (!gvConnection.nowPlaying) {
 				gvConnection.nowPlaying = args[0];
 				let seekFlag = flags.find(f => f.name == "seek");
@@ -134,14 +134,14 @@ module.exports = [
 		}
 		
 		playQueue(msg, seek) {
-			let gvConnection = msg.guild.voiceConnection;
-			let stream = ytdl(gvConnection.nowPlaying, {filter: "audioonly"});
+			const gvConnection = msg.guild.voiceConnection,
+				stream = ytdl(gvConnection.nowPlaying, {filter: "audioonly"});
 			gvConnection.playStream(stream, {seek: seek});
 			this.addDispatcherEvent(msg);
 		}
 		
 		addDispatcherEvent(msg) {
-			let gvConnection = msg.guild.voiceConnection;
+			const gvConnection = msg.guild.voiceConnection;
 			gvConnection.dispatcher.on("speaking", value => {
 				if (value == false && gvConnection && gvConnection.dispatcher && !gvConnection.dispatcher.paused) {
 					if (gvConnection.queue.length == 0) {
@@ -183,12 +183,12 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			let queue = gvConnection.queue;
-			if (!gvConnection.nowPlaying) return message.channel.send("There is no audio in the queue.");
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"}
+			const queue = gvConnection.queue;
+			if (!gvConnection.nowPlaying) return {cmdWarn: "There is no music in the queue."};
 			
-			let entries = [queue];
+			const entries = [queue];
 			paginator.paginate(message, {title: `Music Queue - ${message.guild.name}`}, entries, {
 				limit: 5,
 				numbered: true,
@@ -207,19 +207,19 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			let mvChannel = message.member.voiceChannel;
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
+			const mvChannel = message.member.voiceChannel;
 			if (message.author.id != message.guild.owner.id && !message.member.hasPermission("MANAGE_GUILD")) {
 				if (!mvChannel) {
-					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)")
+					return {cmdErr: "You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)"};
 				} else if (mvChannel.id != gvConnection.channel.id) {
-					return message.channel.send("You need to be in the same voice channel as me to resume the audio. (Overrides with server owner or `Manage Server` permission)")
+					return {cmdErr: "You need to be in the same voice channel as me to resume the audio. (Overrides with server owner or `Manage Server` permission)"};
 				}
 			} else if (!gvConnection.dispatcher) {
-				return message.channel.send("Cannot resume: no audio is playing");
+				return {cmdErr: "Cannot resume: no audio is playing"};
 			} else if (!gvConnection.dispatcher.paused) {
-				return message.channel.send("Cannot resume: audio is already playing");
+				return {cmdErr: "Cannot resume: audio is already playing"};
 			}
 			
 			gvConnection.dispatcher.resume();
@@ -235,17 +235,17 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			let mvChannel = message.member.voiceChannel;
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
+			const mvChannel = message.member.voiceChannel;
 			if (message.author.id != message.guild.owner.id && !message.member.hasPermission("MANAGE_GUILD")) {
 				if (!mvChannel) {
-					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)")
+					return {cmdErr: "You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)"};
 				} else if (mvChannel.id != gvConnection.channel.id) {
-					return message.channel.send("You need to be in the same voice channel as me to skip the current audio. (Overrides with server owner or `Manage Server` permission)")
+					return {cmdErr: "You need to be in the same voice channel as me to skip the current audio. (Overrides with server owner or `Manage Server` permission)"};
 				}
 			} else if (!gvConnection.dispatcher) {
-				return message.channel.send("Cannot skip: no audio is playing");
+				return {cmdErr: "Cannot skip: no audio is playing"};
 			}
 			
 			gvConnection.dispatcher.end();
@@ -261,17 +261,17 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			let mvChannel = message.member.voiceChannel;
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
+			const mvChannel = message.member.voiceChannel;
 			if (message.author.id != message.guild.owner.id && !message.member.hasPermission("MANAGE_GUILD")) {
 				if (!mvChannel) {
-					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)")
+					return {cmdErr: "You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)"};
 				} else if (mvChannel.id != gvConnection.channel.id) {
-					return message.channel.send("You need to be in the same voice channel as me to stop the audio. (Overrides with server owner or `Manage Server` permission)")
+					return {cmdErr: "You need to be in the same voice channel as me to stop the audio. (Overrides with server owner or `Manage Server` permission)"};
 				}
 			} else if (!gvConnection.dispatcher) {
-				return message.channel.send("Cannot stop: no audio is playing");
+				return {cmdErr: "Cannot stop: no audio is playing"};
 			}
 	
 			gvConnection.nowPlaying = null;
@@ -298,17 +298,17 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			let mvChannel = message.member.voiceChannel;
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
+			const mvChannel = message.member.voiceChannel;
 			if (message.author.id != message.guild.owner.id && !message.member.hasPermission("MANAGE_GUILD")) {
 				if (!mvChannel) {
-					return message.channel.send("You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)")
+					return {cmdErr: "You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)"};
 				} else if (mvChannel.id != gvConnection.channel.id) {
-					return message.channel.send("You need to be in the same voice channel as me to set the audio volume. (Overrides with server owner or `Manage Server` permission)")
+					return {cmdErr: "You need to be in the same voice channel as me to set the audio volume. (Overrides with server owner or `Manage Server` permission)"};
 				}
 			} else if (!gvConnection.dispatcher) {
-				return message.channel.send("Cannot set volume: no audio is playing");
+				return {cmdErr: "Cannot set volume: no audio is playing"};
 			}
 			
 			gvConnection.dispatcher.setVolume(args[0] / 100);
