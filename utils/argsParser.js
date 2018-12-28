@@ -44,24 +44,29 @@ function checkArgs(bot, message, args, cmdArg) {
 	
 	let toResolve = resolver.resolve(bot, message, args, arg.type, params);
 	if (toResolve == null) {
-		let argErrorMsg = `\`${args.slice(0, 1500)}\` is not a valid ${arg.type}`;
-		if (cmdArg.errorMsg) {
-			argErrorMsg = cmdArg.errorMsg;
+		if (cmdArg.shiftable) {
+			return {shift: true};
 		} else {
-			if (arg.type == "number") {
-				argErrorMsg += "\nThe argument must be a number that is "
-				if (arg.min && arg.max) {
-					argErrorMsg += `in between ${params.min} and ${params.max}`;
-				} else if (arg.min) {
-					argErrorMsg += `greater than or equal to ${params.min}`;
-				} else {
-					argErrorMsg += `less than or equal to ${params.max}`;
+			let userInput = args.length > 1500 ? `${args.slice(0, 1500)}...` : args;
+			let argErrorMsg = listableTypes.includes(arg.type) ? `No ${arg.type}s were found matching \`${userInput}\`` : `\`${userInput}\` is not a valid ${arg.type}`;
+			if (cmdArg.errorMsg) {
+				argErrorMsg = cmdArg.errorMsg;
+			} else {
+				if (arg.type == "number") {
+					argErrorMsg += "\nThe argument must be a number that is "
+					if (arg.min && arg.max) {
+						argErrorMsg += `in between ${params.min} and ${params.max}`;
+					} else if (arg.min) {
+						argErrorMsg += `greater than or equal to ${params.min}`;
+					} else {
+						argErrorMsg += `less than or equal to ${params.max}`;
+					}
+				} else if (arg.type == "oneof") {
+					argErrorMsg = `The argument must be one of these values: ${params.list.join(", ")}`;
 				}
-			} else if (arg.type == "oneof") {
-				argErrorMsg = `\nThe argument must be one of these values: ${params.list.join(", ")}`;
 			}
+			return {error: true, message: argErrorMsg};
 		}
-		return {error: true, message: argErrorMsg};
 	}
 	if (listableTypes.includes(arg.type)) {
 		if (toResolve.length == 1) {
@@ -118,6 +123,10 @@ module.exports = {
 			if (parsedArg.error) {
 				if (parsedArg.error == true) parsedArg.error = `Argument ${i+1} error`;
 				return parsedArg;
+			} else if (parsedArg.shift) {
+				args.splice(i, 0, null);
+				parsedArgs.push(null);
+				continue;
 			}
 			args[i] = parsedArg;
 			parsedArgs.push(parsedArg);
@@ -185,7 +194,7 @@ module.exports = {
 				}
 				let parsedFlagArg = checkArgs(bot, message, flagArgToCheck, commandFlag.arg);
 				if (parsedFlagArg.error) {
-					parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`;
+					if (parsedFlagArg.error == true) parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`;
 					return parsedFlagArg;
 				}
 				flags[i].args = parsedFlagArg;

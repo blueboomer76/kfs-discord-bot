@@ -1,8 +1,8 @@
-const {Client, Collection, WebhookClient} = require("discord.js");
-const {capitalize} = require("./modules/functions.js");
-const config = require("./config.json");
-const fs = require("fs");
-const request = require("request");
+const {Client, Collection, WebhookClient} = require("discord.js"),
+	{capitalize} = require("./modules/functions.js"),
+	config = require("./config.json"),
+	fs = require("fs"),
+	request = require("request");
 
 class KFSDiscordBot extends Client {
 	constructor(options) {
@@ -57,7 +57,7 @@ class KFSDiscordBot extends Client {
 			guildCount: 0,
 			userCount: 0,
 			channelCount: 0,
-			phone: {channels: [], msgCount: 0, lastMsgTime: 0},
+			phone: {channels: [], msgCount: 0, lastMsgTime: 0, timeout: null},
 			recentCommands: [],
 			stats: {
 				commandCurrentTotal: 0,
@@ -168,27 +168,6 @@ class KFSDiscordBot extends Client {
 		});
 	}
 
-	async postBotsDiscordPwStats() {
-		request.post({
-			url: `https://bots.discord.pw/api/bots/${this.user.id}/stats`,
-			headers: {
-				"Authorization": config.botsDiscordPwToken
-			},
-			body: {"server_count": this.guilds.size},
-			json: true
-		}, (err, res) => {
-			if (err) {
-				console.log(`[Stats Posting] Could not request to bots.discord.pw: ${err.message}`);
-			} else if (!res) {
-				console.log("[Stats Posting] No response was received from bots.discord.pw.");
-			} else if (res.statusCode >= 400) {
-				console.log(`[Stats Posting] The request to bots.discord.pw failed with status code ${res.statusCode} (${res.statusMessage})`);
-			} else {
-				console.log("[Stats Posting] Stats successfully posted to bots.discord.pw");
-			}
-		})
-	}
-	
 	async postDiscordBotsOrgStats() {
 		request.post({
 			url: `https://discordbots.org/api/bots/${this.user.id}/stats`,
@@ -209,41 +188,101 @@ class KFSDiscordBot extends Client {
 			}
 		})
 	}
-
+	
+	async postBotsOnDiscordStats() {
+		request.post({
+			url: `https://bots.ondiscord.xyz/bot-api/bots/${this.user.id}/guilds`,
+			headers: {
+				"Authorization": config.botsOnDiscordToken
+			},
+			body: {"guildCount": this.guilds.size},
+			json: true
+		}, (err, res) => {
+			if (err) {
+				console.log(`[Stats Posting] Could not request to bots.ondiscord.xyz: ${err.message}`);
+			} else if (!res) {
+				console.log("[Stats Posting] No response was received from bots.ondiscord.xyz.");
+			} else if (res.statusCode >= 400) {
+				console.log(`[Stats Posting] The request to bots.ondiscord.xyz failed with status code ${res.statusCode} (${res.statusMessage})`);
+			} else {
+				console.log("[Stats Posting] Stats successfully posted to bots.ondiscord.xyz");
+			}
+		})
+	}
+	
+	async postBotsForDiscordStats() {
+		request.post({
+			url: `https://botsfordiscord.com/api/bot/${this.user.id}`,
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": config.botsForDiscordToken
+			},
+			body: {"server_count": this.guilds.size},
+			json: true
+		}, (err, res) => {
+			if (err) {
+				console.log(`[Stats Posting] Could not request to botsfordiscord.com: ${err.message}`);
+			} else if (!res) {
+				console.log("[Stats Posting] No response was received from botsfordiscord.com.");
+			} else if (res.statusCode >= 400) {
+				console.log(`[Stats Posting] The request to botsfordiscord.com failed with status code ${res.statusCode} (${res.statusMessage})`);
+			} else {
+				console.log("[Stats Posting] Stats successfully posted to botsfordiscord.com");
+			}
+		})
+	}
+	
 	async handlePhoneMessage(message) {
-		let phoneCache = this.cache.phone,
-			ch0 = phoneCache.channels[0],
-			ch1 = phoneCache.channels[1],
-			affected = 0,
+		let phoneCache = this.cache.phone;
+		if (phoneCache.channels[0].deleted || phoneCache.channels[1].deleted) {
+			this.resetPhone(this);
+			return;
+		}
+		
+		let affected = 0,
 			toSend = message.content.replace(/https?:\/\/\S+\.\S+/gi, "")
 			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
+		
 		phoneCache.lastMsgTime = Number(new Date());
 		phoneCache.msgCount++;
 		setTimeout(() => {phoneCache.msgCount--;}, 5000);
-		if (message.channel.id == ch0) affected = 1;
+		if (message.channel.id == phoneCache.channels[0].id) affected = 1;
 		if (toSend.length > 1500) toSend = toSend.slice(0, 1500) + "...";
 
-		this.channels.get(phoneCache.channels[affected]).send(`📞 ${toSend}`);
+		phoneCache.channels[affected].send(`📞 ${toSend}`);
 		if (phoneCache.msgCount >= 4) {
-			setTimeout(() => {
-				let phoneMsg = "☎ The phone connection was cut off due to possible overload."
-				this.channels.get(ch0).send(phoneMsg);
-				this.channels.get(ch1).send(phoneMsg);
-			}, 5000);
-			phoneCache.channels = [];
+			this.resetPhone("☎ The phone connection was cut off due to possible overload.", true);
 		}
 	}
 	
 	async checkPhone() {
 		let phoneCache = this.cache.phone, dif = Number(new Date()) - phoneCache.lastMsgTime;
 		if (dif < 1000*3595) {
-			setTimeout(() => {this.checkPhone()}, dif);
+			phoneCache.timeout = setTimeout(() => {this.checkPhone()}, dif);
 		} else {
-			let phoneMsg = "⏰ The phone call has timed out due to inactivity."
-			this.channels.get(phoneCache.channels[0]).send(phoneMsg);
-			this.channels.get(phoneCache.channels[1]).send(phoneMsg);
-			phoneCache.channels = [];
+			this.resetPhone("⏰ The phone call has timed out due to inactivity.");
 		}
+	}
+	
+	resetPhone(phoneMsg, overload) {
+		let phoneCache = this.cache.phone;
+		if (phoneMsg) {
+			const ch0 = phoneCache.channels[0],
+				ch1 = phoneCache.channels[1];
+			if (overload) {
+				setTimeout(() => {
+					ch0.send(phoneMsg);
+					ch1.send(phoneMsg);
+				}, 5000);
+			} else {
+				ch0.send(phoneMsg);
+				ch1.send(phoneMsg);
+			}
+		}
+		phoneCache.channels = [];
+		
+		let phoneTimeout = phoneCache.timeout;
+		if (phoneTimeout) {clearTimeout(phoneTimeout); phoneTimeout = null;}
 	}
 }
 

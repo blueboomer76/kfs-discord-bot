@@ -17,7 +17,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (args[0].length > 1000) return message.channel.send("That text is too long, must be under 1000 characters.")
+			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."}
 			
 			let inputText = args[0].replace(/\n/g, " ");
 			let cowsayLines = [
@@ -86,7 +86,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (args[0].length > 85) return message.channel.send("That text is too long, must be under 85 characters.");
+			if (args[0].length > 85) return {cmdWarn: "That text is too long, must be under 85 characters."};
 			
 			let chars = args[0].toLowerCase().split(""), emojified = "", letterRegex = /[a-z]/;
 			for (const c of chars) {
@@ -152,12 +152,9 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (args[0].length > 1000) return message.channel.send("That text is too long, must be under 1000 characters.");
+			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."}
 			let chars = args[0].split(""), reversed = "";
-			for (let i = chars.length - 1; i >= 0; i--) {
-				reversed += chars[i];
-			}
-		
+			for (let i = chars.length - 1; i >= 0; i--) reversed += chars[i];
 			message.channel.send(reversed);
 		}
 	}

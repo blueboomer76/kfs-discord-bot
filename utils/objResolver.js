@@ -71,7 +71,9 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 		case "oneof":
 			if (params.list.includes(lowerObj)) {return lowerObj} else {return null}
 		case "role":
-			let role, roleRegex = /^<@&\d{17,19}>$/, guildRoles = message.guild.roles;
+			const roleRegex = /^<@&\d{17,19}>$/, guildRoles = message.guild.roles.clone();
+			guildRoles.delete(guildRoles.find(role => role.calculatedPosition == 0).id);
+			let role;
 			if (roleRegex.test(obj)) {
 				role = guildRoles.get(obj.match(/\d+/)[0]);
 				if (role) {return [role]} else {return null}
