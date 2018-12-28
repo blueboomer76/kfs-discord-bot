@@ -1,5 +1,6 @@
-const Discord = require("discord.js");
-const Command = require("../structures/command.js");
+const {RichEmbed} = require("discord.js"),
+	Command = require("../structures/command.js"),
+	request = require("request");
 
 module.exports = [
 	class BlackjackCommand extends Command {
@@ -60,9 +61,10 @@ module.exports = [
 				if (playerValue == 21) {
 					if (game.botMessage.deleted) return;
 					game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\nBLACKJACK!`);
-				}				
-				return `${toDisplayDealer}\n${toDisplayPlayer}\n\n` + 
-				`Type \`stand\` to end your turn, or \`hit\` to draw another card.`
+				} else {		
+					return `${toDisplayDealer}\n${toDisplayPlayer}\n\n` + 
+					`Type \`stand\` to end your turn, or \`hit\` to draw another card.`
+				}
 			} else if (state == "drawing") {
 				if (game.botMessage.deleted) return;
 				game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\n` + 
@@ -110,8 +112,7 @@ module.exports = [
 				errors: ["time"]
 			})
 			.then(collected => {
-				let cMsg = collected.array()[0].content;
-				if (cMsg == "stand") {
+				if (collected.array()[0].content == "stand") {
 					this.dealDealerCards(game);
 				} else {
 					game.player.push(this.drawFromDeck(game.deck))
@@ -145,11 +146,12 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let commonObjs = ["🔋", "🛒", "👞", "📎"];
-			let uncommonObjs = ["🐠", "🐡", "🐢", "🦐"];
-			let rareObjs = ["🦑", "🐙", "🐸"];
+			const commonObjs = ["🔋", "🛒", "👞", "📎"],
+				uncommonObjs = ["🐠", "🐡", "🐢", "🦐"],
+				rareObjs = ["🦑", "🐙", "🐸"];
 			
-			let rand = Math.random(), fished;
+			const rand = Math.random();
+			let fished;
 			if (rand < 0.45) {
 				fished = commonObjs[Math.floor(Math.random() * commonObjs.length)]
 			} else if (rand < 0.75) {
@@ -180,10 +182,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let choices = ["rock", "paper", "scissors"],
+			const choices = ["rock", "paper", "scissors"],
 				userChoice = args[0],
-				botChoice = choices[Math.floor(Math.random() * 3)],
-				msgSuffix;
+				botChoice = choices[Math.floor(Math.random() * 3)];
+			let msgSuffix;
 			
 			if (userChoice == botChoice) {
 				msgSuffix = "The game is a tie"
@@ -230,5 +232,89 @@ module.exports = [
 			`------------------\n` +
 			`You rolled the slots... and ${result}`);
 		}
-	}
+	},
+	class TriviaCommand extends Command {
+		constructor() {
+			super({
+				name: "trivia",
+				description: "See how much knowledge you have with trivia questions!",
+				cooldown: {
+					time: 30000,
+					type: "user"
+				}
+			});
+			this.questions = [];
+			this.lettersObj = ["A", "B", "C", "D"];
+		}
+		
+		async run(bot, message, args, flags) {
+			if (this.questions.length == 0) {
+				try {
+					this.questions = await this.getQuestions();
+				} catch(err) {
+					return {cmdWarn: err};
+				}
+			}
+			
+			let tQuestion = this.questions.splice(Math.floor(Math.random() * this.questions.length), 1)[0],
+				tempAnswers = tQuestion.otherAnswers,
+				answers = [],
+				numAnswers = tQuestion.otherAnswers.length + 1,
+				answerLetter = null;
+			
+			tempAnswers.push(tQuestion.answer);
+			
+			for (let i = tempAnswers.length; i > 0; i--) {
+				let ans = tempAnswers.splice(Math.floor(Math.random() * i), 1)[0];
+				if (ans == tQuestion.answer) answerLetter = this.lettersObj[numAnswers - i];
+				answers.push(ans);
+			}
+			
+			let i = -1;
+			message.channel.send("__**Trivia**__" + "\n" + tQuestion.question.replace(/&quot;/g, "\"").replace(/&#039;/g, "'") + "\n\n" + answers.map(a => {
+				i++;
+				return `${this.lettersObj[i]} - ${a}`
+			}).join("\n") + "\n\n" + "*Answer with the letter of your choice.*")
+			.then(msg => {
+				msg.channel.awaitMessages(msg2 => msg2.author.id == message.author.id && (["A", "B", "C", "D"]).includes(msg2.content.toUpperCase()), {
+					max: 1,
+					time: 30000,
+					errors: ["time"]
+				})
+				.then(collected => {
+					if (!msg.deleted) {
+						msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer! (You chose ${collected.array()[0].content.toUpperCase()})`)
+					}
+				})
+				.catch(err => {
+					if (!msg.deleted) {
+						msg.edit(msg.content + "\n\n" + "*You did not answer in time, try again!*")
+					}
+				})
+			})
+		}
+		
+		getQuestions() {
+			return new Promise((resolve, reject) => {
+				request.get({
+					url: "https://opentdb.com/api.php",
+					qs: {amount: 10},
+					json: true
+				}, (err, res) => {
+					if (err || res.statusCode >= 400) reject(`Failed to fetch from Open Trivia Database. (status code ${res.statusCode})`)
+					
+					const results = res.body.results.map(r => {
+						return {
+							category: r.category,
+							type: r.difficulty,
+							question: r.question,
+							answer: r.correct_answer,
+							otherAnswers: r.incorrect_answers
+						}
+					})
+					resolve(results);
+				})
+			})
+		}
+	},
 ]

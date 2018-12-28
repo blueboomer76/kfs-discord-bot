@@ -1,8 +1,8 @@
-const {Client, Collection, WebhookClient} = require("discord.js");
-const fs = require("fs");
-const request = require("request");
-const config = require("./config.json");
-const {capitalize} = require("./modules/functions.js");
+const {Client, Collection, WebhookClient} = require("discord.js"),
+	config = require("./config.json"),
+	{capitalize} = require("./modules/functions.js"),
+	fs = require("fs"),
+	request = require("request");
 
 class KendraBot extends Client {
 	constructor(options) {
@@ -56,7 +56,7 @@ class KendraBot extends Client {
 			guildCount: 0,
 			userCount: 0,
 			channelCount: 0,
-			phone: {channels: [], msgCount: 0, lastMsgTime: 0},
+			phone: {channels: [], msgCount: 0, lastMsgTime: 0, timeout: null},
 			recentCommands: [],
 			stats: {
 				lastCheck: Number(new Date()),
@@ -71,8 +71,7 @@ class KendraBot extends Client {
 			status: {
 				randomIters: 0,
 				pos: 0
-			},
-			usage: []
+			}
 		};
 		if (config.ideaWebhook) {
 			this.ideaWebhook = new WebhookClient(config.ideaWebhook.id, config.ideaWebhook.token);
@@ -166,19 +165,41 @@ class KendraBot extends Client {
 		}, 1000);
 	}
 	
-	async postBotsDiscordPwStats(bot) {
+	async postBotsOnDiscordStats(bot) {
 		request.post({
-			url: `https://bots.discord.pw/api/bots/${bot.user.id}/stats`,
+			url: `https://bots.ondiscord.xyz/bot-api/bots/${bot.user.id}/guilds`,
 			headers: {
-				"Authorization": config.botsDiscordPwToken
+				"Authorization": config.botsOnDiscordToken
+			},
+			body: {"guildCount": bot.guilds.size},
+			json: true
+		}, (err, res) => {
+			if (err) {
+				console.log(`Failed to post to bots.ondiscord.xyz:\n${err}`)
+			} else if (res.statusCode >= 400) {
+				console.log(`An unexpected status code ${res.statusCode} was returned from bots.ondiscord.xyz`)
+			} else {
+				console.log("Stats successfully posted to bots.ondiscord.xyz")
+			}
+		})
+	}
+	
+	async postBotsForDiscordStats(bot) {
+		request.post({
+			url: `https://botsfordiscord.com/api/bot/${bot.user.id}`,
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": config.discordBotsOrgToken
 			},
 			body: {"server_count": bot.guilds.size},
 			json: true
 		}, (err, res) => {
-			if (!err) {
-				console.log("Stats successfully posted to bots.discord.pw")
+			if (err) {
+				console.log(`Failed to post to botsfordiscord.com:\n${err}`)
+			} else if (res.statusCode >= 400) {
+				console.log(`An unexpected status code ${res.statusCode} was returned from botsfordiscord.com`)
 			} else {
-				console.log(`Failed to post to bots.discord.pw:\n${err}`)
+				console.log("Stats successfully posted to botsfordiscord.com")
 			}
 		})
 	}
@@ -192,43 +213,57 @@ class KendraBot extends Client {
 			body: {"server_count": bot.guilds.size},
 			json: true
 		}, (err, res) => {
-			if (!err) {
-				console.log("Stats successfully posted to discordbots.org")
-			} else {
+			if (err) {
 				console.log(`Failed to post to discordbots.org:\n${err}`)
+			} else if (res.statusCode >= 400) {
+				console.log(`An unexpected status code ${res.statusCode} was returned from discordbots.org`)
+			} else {
+				console.log("Stats successfully posted to discordbots.org")
 			}
 		})
 	}
 	
 	async handlePhoneMessage(message) {
-		let phoneCache = this.cache.phone,
-			affected = 0,
-			toSend = message.content.replace(/https?\:\/\/\S+\.\S+/gi, "")
+		let phoneCache = this.cache.phone;
+		if (phoneCache.channels[0].deleted || phoneCache.channels[1].deleted) {
+			this.resetPhone(this);
+			return;
+		}
+		
+		const toSend = message.content.replace(/https?\:\/\/\S+\.\S+/gi, "")
 			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
+		let affected = 0;
+		
 		phoneCache.lastMsgTime = Number(new Date());
 		phoneCache.msgCount++;
 		setTimeout(() => {phoneCache.msgCount--;}, 5000);
-		if (message.channel.id == phoneCache.channels[0]) affected = 1;
+		if (message.channel.id == phoneCache.channels[0].id) affected = 1;
 		
-		this.channels.get(phoneCache.channels[affected]).send(`📞 ${toSend}`);
+		phoneCache.channels[affected].send(`📞 ${toSend}`);
 		if (phoneCache.msgCount > 4) {
-			let phoneMsg = "☎️ The phone connection was cut off due to being overloaded."
-			this.channels.get(phoneCache.channels[0]).send(phoneMsg);
-			this.channels.get(phoneCache.channels[1]).send(phoneMsg);
-			phoneCache.channels = [];
+			this.resetPhone(this, "☎️ The phone connection was cut off due to being overloaded.");
 		}
 	}
 	
 	async checkPhone(bot) {
 		let phoneCache = bot.cache.phone, dif = Number(new Date()) - phoneCache.lastMsgTime;
-		if (dif < 1000*3595) {
-			setTimeout(bot.checkPhone, dif);
+		if (dif < 1000*55) {
+			phoneCache.timeout = setTimeout(bot.checkPhone, dif, bot);
 		} else {
-			let phoneMsg = "⏰ The phone call has timed out due to inactivity."
-			bot.channels.get(phoneCache.channels[0]).send(phoneMsg);
-			bot.channels.get(phoneCache.channels[1]).send(phoneMsg);
-			phoneCache.channels = [];
+			bot.resetPhone(bot, "⏰ The phone call has timed out due to inactivity.");
 		}
+	}
+	
+	resetPhone(bot, phoneMsg) {
+		let phoneCache = bot.cache.phone;
+		if (phoneMsg) {
+			phoneCache.channels[0].send(phoneMsg);
+			phoneCache.channels[1].send(phoneMsg);
+		}
+		phoneCache.channels = [];
+		
+		let phoneTimeout = phoneCache.timeout;
+		if (phoneTimeout) {clearTimeout(phoneTimeout); phoneTimeout = null;}
 	}
 }
 

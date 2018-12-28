@@ -1,5 +1,3 @@
-const Discord = require("discord.js");
-
 function setEntries(entries, options) {
 	const limit = options.limit, maxPage = Math.ceil(entries[0].length / limit);
 	let page = options.page, displayed = [];
@@ -48,7 +46,7 @@ function paginateOnEdit(sentMessage, entries, options) {
 		author: sentEmbed.author ? sentEmbed.author : undefined,
 		color: sentEmbed.color,
 		footer: {
-			text: `Page ${entryObj.page} / ${entryObj.maxPage}`
+			text: `Page ${entryObj.page} / ${entryObj.maxPage} [${entries[0].length} entries]`
 		},
 		thumbnail: {},
 		fields: []
@@ -70,6 +68,9 @@ function checkReaction(collector, limit) {
 
 /*
 	Paginator options:
+	- embedColor
+	- embedText
+	- forceStop
 	- limit
 	- newLineAfterEntry
 	- noStop
@@ -78,6 +79,7 @@ function checkReaction(collector, limit) {
 	- params
 	- pinnedMsg
 	- reactTimeLimit
+	- removeReactAfter
 */
 
 module.exports.paginate = (message, genEmbed, entries, options) => {
@@ -86,13 +88,13 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 		entries[0] = entries[0].map(e => {i++; return `${i}. ${e}`})
 	}
 	const entryObj = setEntries(entries, options);
-	genEmbed.color = Math.floor(Math.random() * 16777216)
+	genEmbed.color = options.embedColor != undefined ? options.embedColor : Math.floor(Math.random() * 16777216)
 	genEmbed.footer = {
-		text: `Page ${entryObj.page} / ${entryObj.maxPage}`
+		text: `Page ${entryObj.page} / ${entryObj.maxPage} [${entries[0].length} entries]`
 	}
 	genEmbed = setEmbed(genEmbed, entryObj.entries, options);
 	
-	message.channel.send("", {embed: genEmbed})
+	message.channel.send(options.embedText ? options.embedText : "", {embed: genEmbed})
 	.then(newMessage => {
 		if (entries[0].length > options.limit) {
 			newMessage.lastReactionTime = Number(new Date());
@@ -105,9 +107,9 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 				}, i * 1000);
 			}
 			
-			const pgCollector = newMessage.createReactionCollector((reaction, user) => 
-				user.id == message.author.id && emojiList.includes(reaction.emoji.name)
-			)
+			const pgCollector = newMessage.createReactionCollector((reaction, user) => {
+				return user.id == message.author.id && emojiList.includes(reaction.emoji.name)
+			}, options.removeReactAfter ? {time: options.removeReactAfter} : {})
 			pgCollector.on("collect", async reaction => {
 				pgCollector.lastReactionTime = Number(new Date());
 				let page = Number(newMessage.embeds[0].footer.text.match(/\d+/)[0]);
@@ -127,9 +129,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 						newMessage.delete();
 						break;
 					case "🔢":
-						let newMessage2;
-						await message.channel.send("What page do you want to go to?")
-						.then(msg2 => {newMessage2 = msg2})
+						const newMessage2 = await message.channel.send("What page do you want to go to?");
 						reaction.remove(message.author.id);
 						message.channel.awaitMessages(msg => msg.author.id == message.author.id, {
 							max: 1,

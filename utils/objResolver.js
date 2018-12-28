@@ -1,5 +1,3 @@
-const Discord = require("discord.js");
-
 module.exports.resolve = (bot, message, obj, type, params) => {
 	let list;
 	switch (type) {
@@ -80,7 +78,9 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			// Coming soon
 			break;
 		case "role":
-			let role, roleRegex = /<@&\d+>/, guildRoles = message.guild.roles;
+			if (obj == "everyone") return null;
+			const roleRegex = /<@&\d+>/, guildRoles = message.guild.roles;
+			let role;
 			if (roleRegex.test(obj)) {
 				return [guildRoles.get(obj.match(/\d+/)[0])];
 			} else {

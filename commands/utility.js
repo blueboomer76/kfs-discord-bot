@@ -1,4 +1,4 @@
-const Discord = require("discord.js"),
+const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	{capitalize, getDuration} = require("../modules/functions.js"),
 	paginator = require("../utils/paginator.js");
@@ -26,10 +26,9 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0];
-			let avatarURL = member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
-			if (!member) member = message.member;
-			message.channel.send(new Discord.RichEmbed()
+			const member = args[0] ? args[0] : message.member,
+				avatarURL = member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
+			message.channel.send(new RichEmbed()
 			.setTitle(`Avatar - ${member.user.tag}`)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setDescription(`Avatar URL: ${avatarURL}`)
@@ -64,17 +63,20 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let channel = args[0] ? args[0] : message.channel;
-			let createdDate = new Date(channel.createdTimestamp);
-			let channelPosition = channel.type == "category" ? channel.position : channel.calculatedPosition;
-			let channelEmbed = new Discord.RichEmbed()
-			.setTitle(`Channel Info - ${channel.name}`)
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`ID: ${channel.id}`)
-			.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
-			.addField("Type", capitalize(channel.type), true)
-			.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
-			.addField("Accessible to everyone", channel.permissionsFor(message.guild.id).has("READ_MESSAGES") ? "Yes" : "No", true)
+			const channel = args[0] ? args[0] : message.channel,
+				createdDate = new Date(channel.createdTimestamp),
+				channelPosition = channel.type == "category" ? channel.position : channel.calculatedPosition,
+				channelEmbed = new RichEmbed()
+					.setTitle(`Channel Info - ${channel.name}`)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter(`ID: ${channel.id}`)
+					.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+					.addField("Type", capitalize(channel.type), true)
+					.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
+					.addField("Accessible to everyone", channel.permissionsFor(message.guild.id).has("READ_MESSAGES") ? "Yes" : "No", true)
+			
+			let posInfo = channel.type == "voice" ? "voice" : "text and category";
+			channelEmbed.addField(`Relative position to ${posInfo} channels`, channelPosition + 1, true)
 			
 			if (channel.type == "text") {
 				channelEmbed.addField("Topic", channel.topic && channel.topic.length > 0 ? channel.topic : "No topic set")
@@ -113,8 +115,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let emoji = args[0], createdDate = new Date(emoji.createdTimestamp);
-			message.channel.send(new Discord.RichEmbed()
+			const emoji = args[0], createdDate = new Date(emoji.createdTimestamp);
+			message.channel.send(new RichEmbed()
 			.setTitle(`Emoji - ${emoji.name}`)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter(`ID: ${emoji.id}`)
@@ -179,7 +181,7 @@ module.exports = [
 				if (res != undefined && res != null && res.toString().length > 1000) {
 					res = `${res.toString().slice(0,1000)}...`
 				};
-				message.channel.send(new Discord.RichEmbed()
+				message.channel.send(new RichEmbed()
 				.setTitle("discord.js Evaluator")
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setTimestamp(message.createdAt)
@@ -216,11 +218,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let role = args[0],
-				rolePos = role.calculatedPosition,
-				roleMembers,
-				guildRoles = message.guild.roles,
-				nearbyRoles = [];
+			const role = args[0], rolePos = role.calculatedPosition;
+			let roleMembers, guildRoles = message.guild.roles, nearbyRoles = [];
 				
 			if (!message.guild.large) {
 				roleMembers = role.members;
@@ -241,9 +240,9 @@ module.exports = [
 				nearbyRoles.push(i == rolePos ? `**${roleName}**` : roleName);
 			}
 			
-			let createdDate = new Date(role.createdTimestamp);
+			const createdDate = new Date(role.createdTimestamp);
 			
-			message.channel.send(new Discord.RichEmbed()
+			message.channel.send(new RichEmbed()
 			.setTitle(`Role Info - ${role.name}`)
 			.setColor(role.color)
 			.setFooter(`ID: ${role.id}`)
@@ -293,14 +292,59 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let entries = message.guild.roles.array();
-			let orderedFlag = flags.find(f => f.name == "ordered");
+			const entries = message.guild.roles.array(), orderedFlag = flags.find(f => f.name == "ordered");
 			if (orderedFlag) entries.sort((a,b) => b.position - a.position);	
 			paginator.paginate(message, {title: `List of roles - ${message.guild.name}`}, [entries.map(role => role.name)], {
-				limit: 20,
+				limit: 25,
+				noStop: true,
 				numbered: orderedFlag ? true : false,
 				page: args[0] ? args[0] : 1,
-				params: null
+				params: null,
+				removeReactAfter: 60000
+			});
+		}
+	},
+	class RoleMembersCommand extends Command {
+		constructor() {
+			super({
+				name: "rolemembers",
+				description: "See which members have a certain role",
+				aliases: ["inrole", "rolemems"],
+				args: [
+					{
+						infiniteArgs: true,
+						type: "role"
+					}
+				],
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
+					user: [],
+					level: 0
+				},
+				usage: "rolemembers <role>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const role = args[0], roleMembers = message.guild.members.array().filter(mem => mem.roles.has(role.id));
+			
+			// Need to add await get guild members here
+			
+			if (roleMembers.length == 0) return {cmdWarn: `There are no members in the role ${role.name}.`}
+			if (roleMembers.length >= 250) return {cmdWarn: `There are more than 250 members in the role ${role.name}.`}
+					
+			paginator.paginate(message, {title: `List of members in role - ${role.name}`}, [roleMembers.map(m => m.user.tag)], {
+				embedColor: role.color,
+				limit: 25,
+				noStop: true,
+				numbered: false,
+				page: 1,
+				params: null,
+				removeReactAfter: 60000
 			});
 		}
 	},
@@ -328,16 +372,16 @@ module.exports = [
 				guildMembers = guild.members;
 			} else {
 				await guild.fetchMembers()
-				.then(g => {guildMembers = g.members})
+				.then(g => guildMembers = g.members)
 				.catch(err => {
 					console.log(`Failed to fetch members: ${err}`)
 					guildMembers = guild.members;
 				})
 			}
 			
-			let botCount = guildMembers.filter(mem => mem.user.bot).size,
-				createdDate = new Date(guild.createdTimestamp),
-				guildVerif;
+			const botCount = guildMembers.filter(mem => mem.user.bot).size,
+				createdDate = new Date(guild.createdTimestamp);
+			let guildVerif;
 			
 			switch (guild.verificationLevel) {
 				case 0:
@@ -356,11 +400,11 @@ module.exports = [
 					guildVerif = "Very High (verified phone)";
 			}
 			
-			message.channel.send(new Discord.RichEmbed()
+			message.channel.send(new RichEmbed()
 			.setTitle(`Server Info - ${guild.name}`)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setThumbnail(guild.iconURL)
-			.setFooter(`ID: ${guild.id} | Server data as of`)
+			.setFooter(`ID: ${guild.id} | Server stats as of`)
 			.setTimestamp(message.createdAt)
 			.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
 			.addField("Owner", `${guild.owner.user.tag} \`(ID ${guild.ownerID})\``)
@@ -384,7 +428,7 @@ module.exports = [
 			super({
 				name: "userinfo",
 				description: "Get info about a user",
-				aliases: ["user"],
+				aliases: ["member", "memberinfo", "user"],
 				args: [
 					{
 						infiniteArgs: true,
@@ -448,7 +492,7 @@ module.exports = [
 			let createdDate = new Date(member.user.createdTimestamp);
 			let joinedDate = new Date(member.joinedTimestamp);
 			
-			let userEmbed = new Discord.RichEmbed()
+			let userEmbed = new RichEmbed()
 			.setTitle(`User Info - ${member.user.tag}`)
 			.setThumbnail(member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`)
 			.setFooter(`ID: ${member.id}`)

@@ -1,15 +1,21 @@
-const Discord = require("discord.js");
-const Command = require("../structures/command.js");
-const request = require("request");
-const paginator = require("../utils/paginator.js");
-const {getDuration} = require("../modules/functions.js");
+const {RichEmbed} = require("discord.js"),
+	Command = require("../structures/command.js"),
+	paginator = require("../utils/paginator.js"),
+	{capitalize, getDuration} = require("../modules/functions.js"),
+	request = require("request");
+
+const redirSubreddits = [
+	{name: "anime_irl", goTo: "animeirl"},
+	{name: "animemes", goTo: "animeme"},
+	{name: "memes", goTo: "meme"}
+];
 
 module.exports = [
 	class RedditCommand extends Command {
 		constructor() {
 			super({
 				name: "reddit",
-				description: "Get top posts from Reddit, from all subreddits or a single one",
+				description: "Get Reddit posts, from all subreddits or a single one",
 				args: [
 					{
 						infiniteArgs: true,
@@ -28,44 +34,75 @@ module.exports = [
 				],
 				flags: [
 					{
-						name: "compact",
-						desc: "Whether to compact the displayed posts"
+						name: "controversial",
+						desc: "Whether to see controversial posts"
 					},
 					{
 						name: "more",
 						desc: "Whether to see more posts at a time"
-					}
+					},
+					{
+						name: "new",
+						desc: "Whether to see new posts"
+					},
+					{
+						name: "rising",
+						desc: "Whether to see rising posts"
+					},
+					{
+						name: "squeeze",
+						desc: "Whether to squeeze the displayed posts"
+					},
 				],
 				perms: {
 					bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
 					user: [],
 					level: 0
 				},
-				usage: "reddit [subreddit] [--compact] [--more]"
+				usage: "reddit [subreddit] [--(controversial|new|rising)] [--more] [--squeeze]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let subreddit, compact = false;
-			if (args[0]) {subreddit = args[0].replace(/^\/?(R|r)\//, "")} else {subreddit = "all"};
-			if (flags.find(f => f.name == "compact")) compact = true;
-			let numToDisplay = compact ? 50 : 25;
+			let subreddit, compact = flags.some(f => f.name == "squeeze");
+			if (args[0]) {
+				const foundRedirSub = redirSubreddits.find(e => e.name == args[0].toLowerCase());
+				if (foundRedirSub) return bot.commands.get(foundRedirSub.goTo).run(bot, message);
+				subreddit = args[0].replace(/^\/?(R|r)\//, "")
+				if (subreddit.length < 4) return {cmdWarn: "Subreddit names should have at least 4 characters."};
+				if (!(/^[0-9A-Za-z_]+$/).test(subreddit)) return {cmdWarn: "Subreddit names should be alphanumeric with underscores only."}
+			} else {
+				subreddit = "all"
+			};
+			const numToDisplay = compact ? 50 : 25;
+			let postSort = "hot";
+				
+			if (flags.some(f => f.name == "new")) {
+				postSort = "new";
+			} else if (flags.some(f => f.name == "rising")) {
+				postSort = "rising";
+			} else if (flags.some(f => f.name == "controversial")) {
+				postSort = "controversial";
+			}
 			
 			request.get({
-				url: `https://reddit.com/r/${subreddit}/hot.json`,
+				url: `https://reddit.com/r/${subreddit}/${postSort}.json`,
 				qs: {limit: flags.find(f => f.name == "more") ? numToDisplay * 2 : numToDisplay},
 				json: true
 			}, (err, res) => {
-				if (res.statusCode == 403) return message.channel.send("That reddit is private.")
-				if (err || res.statusCode >= 400) return message.channel.send(`Failed to retrieve from Reddit. (status code ${res.statusCode})`)
+				if (res.statusCode == 403) return message.channel.send("⚠ Unfortunately, that subreddit is inaccessible.")
+				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to fetch from Reddit. (status code ${res.statusCode})`)
 				
-				let results = res.body.data.children.filter(r => !r.data.stickied);
+				let results = res.body.data.children;
+				if (!results[0] || results[0].kind != "t3") return message.channel.send("⚠ A subreddit with that name does not exist.")
+				
+				results = results.filter(r => !r.data.stickied);
 				if (!message.channel.nsfw) results = results.filter(r => !r.data.over_18);
-				if (results.length == 0) return message.channel.send("No results found.")
+				if (results.length == 0) return message.channel.send("⚠ No results found.")
 				
 				let entries = [[]], viewAll = false;
 				if (!args[0] || args[0] == "all" || args[0] == "popular") viewAll = true;
-				
+								
 				if (compact) {
 					for (const post of results) {
 						let postData = post.data,
@@ -93,8 +130,10 @@ module.exports = [
 				} else if (viewAll) {
 					embedTitle += "All subreddits"
 				} else {
-					embedTitle += `r/${args[0]}`;
+					embedTitle += `r/${subreddit}`;
 				}
+				
+				if (postSort != "hot") embedTitle += ` (${capitalize(postSort)} Posts)` 
 				
 				paginator.paginate(message, {
 					title: embedTitle,
@@ -148,10 +187,11 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			request.get({
 				url: `http://api.urbandictionary.com/v0/define`,
-				qs: {term: args.join(" ")}
+				qs: {term: args[0]},
+				json: true
 			}, (err, res) => {
-				if (err || res.statusCode >= 400) return message.channel.send(`Failed to retrieve from the Urban Dictionary. (status code ${res.statusCode})`)
-				let defs = JSON.parse(res.body);
+				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to fetch from the Urban Dictionary. (status code ${res.statusCode})`)
+				let defs = res.body;
 				if (defs.list.length > 0) {
 					let entries = [
 						defs.list.map(def => `Urban Dictionary - ${def.word}`),
@@ -185,7 +225,7 @@ module.exports = [
 						params: ["title", "description", "fields"]
 					});
 				} else {
-					message.channel.send("No definition found for that term.")
+					message.channel.send("⚠ No definition found for that term.")
 				}
 			})
 		}
@@ -225,11 +265,11 @@ module.exports = [
 				},
 				json: true
 			}, (err, res) => {
-				if (err || res.statusCode >= 400) return message.channel.send(`Failed to retrieve from Wikipedia. (status code ${res.statusCode})`)
+				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to fetch from Wikipedia. (status code ${res.statusCode})`)
 				
 				let result = Object.values(res.body.query.pages)[0],
 					resultText = result.extract;
-				if (!resultText) return message.channel.send("Failed to find a Wikipedia article for that term.")
+				if (!resultText) return message.channel.send("⚠ Failed to find a Wikipedia article for that term.")
 				
 				let firstSectionIndex = resultText.indexOf("==");
 				if (firstSectionIndex > 2000) {
@@ -241,7 +281,7 @@ module.exports = [
 					if (resultText.length > 1000) resultText += "...";
 				}
 				
-				message.channel.send(new Discord.RichEmbed()
+				message.channel.send(new RichEmbed()
 				.setTitle(`Wikipedia - ${result.title}`)
 				.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -274,7 +314,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get("https://xkcd.com/info.0.json", (err, res) => {
-				if (err || res.statusCode >= 400) return message.channel.send(`Failed to retrieve from XKCD. (status code ${res.statusCode})`)
+				if (err || res.statusCode >= 400) return message.channel.send(`Failed to fetch from XKCD. (status code ${res.statusCode})`)
 				
 				let currComic = JSON.parse(res.body);
 				
@@ -282,7 +322,7 @@ module.exports = [
 					let comicNum = args[0] == "random" ? Math.floor(Math.random() * currComic.num) : parseInt(args[0]);
 					request.get(`https://xkcd.com/${comicNum}/info.0.json`, (err2, res2) => {
 						if (err2 || res2.statusCode >= 400) {
-							this.postComic(message, currComic, "Current", res2.statusCode)
+							this.postComic(message, currComic, "Current ", res2.statusCode)
 							return;
 						}
 						let chosenComic = JSON.parse(res2.body);
@@ -295,13 +335,13 @@ module.exports = [
 		}
 		
 		postComic(message, comic, titlePrefix, fallbackCode) {
-			let xkcdEmbed = new Discord.RichEmbed()
+			let xkcdEmbed = new RichEmbed()
 			.setTitle(`${titlePrefix}XKCD Comic - ${comic.title} (#${comic.num})`)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setDescription(comic.alt)
 			.setImage(comic.img)
 			
-			if (fallbackCode) xkcdEmbed.description = `*Failed to retrieve from XKCD, defaulting to the current one. (status code ${fallbackCode})*\n\n${comic.alt}`
+			if (fallbackCode) xkcdEmbed.description = `*Failed to fetch from XKCD, defaulting to the current one. (status code ${fallbackCode})*\n\n${comic.alt}`
 			message.channel.send(xkcdEmbed);
 		}
 	}

@@ -1,9 +1,10 @@
-const Discord = require("discord.js"),
+const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	{capitalize, getDuration, parsePerm} = require("../modules/functions.js"),
 	stats = require("../modules/stats.json"),
 	paginator = require("../utils/paginator.js"),
-	packageInfo = require("../package.json");
+	packageInfo = require("../package.json"),
+	os = require("os");
 
 module.exports = [
 	class BotInfoCommand extends Command {
@@ -26,17 +27,20 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			message.channel.send(new Discord.RichEmbed()
+			message.channel.send(new RichEmbed()
 			.setTitle("About Kendra")
 			.setDescription("Kendra is an actively developed bot that not only has fun, moderation, utility commands, but a phone command for calling other servers, and combines features from popular bots. New commands are added to Kendra often.")
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter(`Bot ID: ${bot.user.id}`)
 			.addField("Library", `Discord.js v${packageInfo.dependencies["discord.js"].slice(1)}`, true)
-			.addField("Bot Version", `${packageInfo.version}`, true)
-			.addField("Stats", `${bot.cache.guildCount} Servers\n${bot.cache.userCount} Users`, true)
-			.addField("Bot Invite", `[Go!](https://discordapp.com/api/oauth2/authorize?client_id=${bot.user.id}&permissions=403041398&scope=bot)`, true)
+			.addField("Bot Version", packageInfo.version, true)
+			.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
+			.addField("Quick Stats", `${bot.cache.guildCount} Servers\n${bot.cache.userCount} Users\n${bot.cache.channelCount} Channels`, true)
+			.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=403041398&scope=bot)`, true)
 			.addField("Kendra's server", "[Go!](https://discord.gg/yB8TvWU)", true)
-			.addField("Upvote this bot", "[Go!](https://discordbots.org/bots/429807759144386572)", true)
+			.addField("Upvote this bot", "Discordbots.org: [Go!](https://discordbots.org/bots/429807759144386572/vote)" + "\n" +
+      "Botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/429807759144386572/vote)" + "\n" +
+			"Bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/429807759144386572)", true)
 			);
 		}
 	},
@@ -72,11 +76,12 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let command = args[0], helpEmbed = new Discord.RichEmbed();
+			const command = args[0], helpEmbed = new RichEmbed();
 			if (!command) {
 				helpEmbed.setTitle("All the commands for this bot")
+				.setDescription("Use `k,help <command>` to get help for a command, e.g. `k,help urban`")
 				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter(`Use k,help <command> to get help for a command | Total commands: ${bot.commands.size}`);
+				.setFooter(`There are ${bot.commands.size} commands in total.`);
 				let cmds = bot.commands;
 				if (!bot.ownerIds.includes(message.author.id) && !bot.adminIds.includes(message.author.id)) {
 					cmds = cmds.filter(cmd => !cmd.hidden);
@@ -86,14 +91,14 @@ module.exports = [
 					helpEmbed.addField(bot.categories[i], Array.from(cmdsInCat).join(", "));
 				}
 			} else {
-				let commandFlags = command.flags.map(f => `\`--${f.name}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`);
-				let commandPerms = command.perms;
-				let permReq = {
-					bot: commandPerms.bot.length > 0 ? commandPerms.bot.map(p => parsePerm(p)).join(", ") : "None",
-					user: commandPerms.user.length > 0 ? commandPerms.user.map(p => parsePerm(p)).join(", ") : "None",
-					role: commandPerms.role ? `\nRequires having a role named ${commandPerms.role}.` : "",
-					level: commandPerms.level > 0 ? `\nRequires being ${bot.permLevels[commandPerms.level].name}.` : ""
-				};
+				const commandFlags = command.flags.map(f => `\`--${f.name}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`),
+					commandPerms = command.perms,
+					permReq = {
+						bot: commandPerms.bot.length > 0 ? commandPerms.bot.map(p => parsePerm(p)).join(", ") : "None",
+						user: commandPerms.user.length > 0 ? commandPerms.user.map(p => parsePerm(p)).join(", ") : "None",
+						role: commandPerms.role ? `\nRequires having a role named ${commandPerms.role}.` : "",
+						level: commandPerms.level > 0 ? `\nRequires being ${bot.permLevels[commandPerms.level].name}.` : ""
+					};
 				helpEmbed.setTitle(`Help - ${command.name}`)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.addField("Category", command.category)
@@ -105,8 +110,9 @@ module.exports = [
 				.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`)
 				.addField("Cooldown", `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}`)
 			}
-			if (flags.find(f => f.name == "dm")) {
-				message.member.send(helpEmbed);
+			if (flags.some(f => f.name == "dm")) {
+				message.member.send(helpEmbed)
+				.catch(err => message.channel.send("Failed to send a help message as a DM. Check your settings and try again."))
 			} else {
 				message.channel.send(helpEmbed);
 			}
@@ -131,15 +137,17 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			message.channel.send(new Discord.RichEmbed()
+			message.channel.send(new RichEmbed()
 			.setTitle("Kendra's References")
 			.setDescription("Exciting, huh? Now you have the chance to spread the love! uwu")
 			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter("Made by blueboomer#4939")
-			.addField("Bot Invite", `[Go!](https://discordapp.com/api/oauth2/authorize?client_id=${bot.user.id}&permissions=403041398&scope=bot)`)
-			.addField("Kendra's server", "[Go!](https://discord.gg/yB8TvWU)")
-			.addField("Upvote this bot", "[Go!](https://discordbots.org/bots/429807759144386572/vote)")
-			.addField("Github", "[Go!](https://github.com/blueboomer76/KendraBot)")
+			.setFooter("Made by CreativeAllurer#4939")
+			.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=403041398&scope=bot)`, true)
+			.addField("Kendra's server", "[Go!](https://discord.gg/yB8TvWU)", true)
+			.addField("Upvote this bot", "Discordbots.org: [Go!](https://discordbots.org/bots/429807759144386572/vote)" + "\n" +
+      "Botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/429807759144386572/vote)" + "\n" +
+			"Bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/429807759144386572)", true)
+			.addField("Github", "[Go!](https://github.com/blueboomer76/KendraBot)", true)
 			);
 		}
 	},
@@ -157,6 +165,10 @@ module.exports = [
 					},
 					{
 						type: "string"
+					},
+					{
+						optional: true,
+						type: "string"
 					}
 				],
 				cooldown: {
@@ -169,26 +181,27 @@ module.exports = [
 					user: [],
 					level: 4
 				},
-				usage: "load <category> <command>"
+				usage: "load <category> <command> [class name]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let category = args[0];
-			let commandName = args[1];
+			let category = args[0], commandName = args[1], newCommand;
 			
-			if (bot.commands.get(commandName)) return message.channel.send("A command with that name is already loaded.")
+			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."}
 			try {
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
-				let commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`);
-				let CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[1]));
-				let command = new CommandClass();
-				command.category = capitalize(category, true);
-				bot.commands.set(commandName, command);
-				if (command.aliases.length > 0) {
-					for (const alias of command.aliases) { 
-						bot.aliases.set(alias, command.name);
-					}
+				let commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
+					CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[2] ? args[2].toLowerCase() : args[1].toLowerCase()))
+				try {
+					newCommand = new CommandClass();
+				} catch(err2) {
+					return {cmdWarn: "Please provide a third argument for the class name, replacing all numbers in the command with the word."}
+				}
+				newCommand.category = capitalize(category, true);
+				bot.commands.set(commandName, newCommand);
+				if (newCommand.aliases.length > 0) {
+					for (const alias of newCommand.aliases) {bot.aliases.set(alias, newCommand.name)}
 				}
 				message.channel.send(`The command ${commandName} was loaded.`);
 			} catch(err) {
@@ -211,34 +224,34 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let phoneMsg, phoneMsg0, phoneCache = bot.cache.phone;
-			if (!phoneCache.channels.includes(message.channel.id)) {
-				phoneCache.channels.push(message.channel.id);
+			if (!phoneCache.channels.some(c => c.id == message.channel.id)) {
+				phoneCache.channels.push(message.channel);
 				if (phoneCache.channels.length == 1) {
 					message.react("☎");
 				} else {
 					bot.cache.stats.callCurrentTotal++;
 					phoneCache.lastMsgTime = Number(new Date());
-					setTimeout(bot.checkPhone, 1000*600, bot);
+					phoneCache.timeout = setTimeout(bot.checkPhone, 1000*60, bot);
 					
 					message.channel.send("☎ A phone connection has started! Greet the other side!");
 					if (phoneCache.channels.length == 2) {
 						phoneMsg0 = "The other side has picked up the phone! Greet the other side!";
 					} else {
 						phoneMsg0 = "Looks like someone else picked up the phone."
-						bot.channels.get(phoneCache.channels.shift()).send("☎ Someone else is now using the phone...");
+						phoneCache.channels.shift().send("☎ Someone else is now using the phone...");
 					}
-					bot.channels.get(phoneCache.channels[0]).send(`☎ ${phoneMsg0}`)
+					phoneCache.channels[0].send(`☎ ${phoneMsg0}`);
 				}
 			} else {
 				if (phoneCache.channels.length == 1) {
 					phoneMsg = "There was no response from the phone, hanging it up.";
 				} else {
 					let affected = 0;
-					if (message.channel.id == phoneCache.channels[0]) affected = 1;
+					if (message.channel.id == phoneCache.channels[0].id) affected = 1;
 					phoneMsg = "You have hung up the phone.";
-					bot.channels.get(phoneCache.channels[affected]).send("☎ The other side hung up the phone.");
+					phoneCache.channels[affected].send("☎ The other side hung up the phone.");
 				}
-				phoneCache.channels = [];
+				bot.resetPhone(bot);
 				message.channel.send(`☎ ${phoneMsg}`);
 			}
 		}
@@ -257,8 +270,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const msg = await message.channel.send("Ping?");
-			msg.edit(`🏓 **Pong!**\nLatency: ${msg.createdTimestamp - message.createdTimestamp}ms\nAPI Latency: ${Math.round(bot.ping)}ms`)
+			message.channel.send("Ping?")
+			.then(msg => {
+				msg.edit(`🏓 **Pong!**\nLatency: ${msg.createdTimestamp - message.createdTimestamp}ms\nAPI Latency: ${Math.round(bot.ping)}ms`)
+			})
 		}
 	},
 	class ReloadCommand extends Command {
@@ -270,6 +285,10 @@ module.exports = [
 				args: [
 					{
 						type: "command"
+					},
+					{
+						optional: true,
+						type: "string"
 					}
 				],
 				cooldown: {
@@ -282,27 +301,33 @@ module.exports = [
 					user: [],
 					level: 4
 				},
-				usage: "reload <command>"
+				usage: "reload <command> [command class name]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let command = args[0];
-			let commandName = command.name;
-			let category = command.category;
+			let command = args[0], newCommand, commandName = command.name, category = command.category;
 			try {
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
 				let commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`);
-				let CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[0].name));
-				let command = new CommandClass();
-				command.category = category;
-				bot.commands.set(commandName, command);
-				if (command.aliases.length > 0) {
-					for (const alias of command.aliases) { 
-						bot.aliases.set(alias, command.name);
+				let CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[1] ? args[1] : args[0].name));
+				try {
+					newCommand = new CommandClass();
+				} catch(err2) {
+					return {cmdWarn: "Please provide a second argument for the class name, replacing all numbers in the command with the word."}
+				}
+				newCommand.category = category;
+				bot.commands.set(commandName, newCommand);
+				if (newCommand.aliases.length > 0) {
+					const toRemoveAliases = bot.aliases.filter(alias => alias == commandName);
+					for (const alias of toRemoveAliases.keys()) {
+						bot.aliases.delete(alias);
+					}
+					for (const alias of newCommand.aliases) { 
+						bot.aliases.set(alias, newCommand.name);
 					}
 				}
-				message.channel.send(`The command ${commandName} was reloaded.`);
+				message.react("✅");
 			} catch(err) {
 				message.channel.send(`An error has occurred: \`${err}\``);
 			}
@@ -383,8 +408,16 @@ module.exports = [
 				description: "Get detailed stats for the Kendra bot",
 				aliases: ["botstats"],
 				allowDMs: true,
+				args: [
+					{
+						optional: true,
+						shiftable: true,
+						type: "oneof",
+						allowedValues: ["processor"]
+					}
+				],
 				cooldown: {
-					time: 120000,
+					time: 60000,
 					type: "guild"
 				},
 				perms: {
@@ -392,78 +425,72 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				startTyping: true
+				usage: "stats [processor]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let beginEval = new Date();
-			let serverCount = bot.guilds.size;
-			let bigServerCount = bot.guilds.filter(g => g.large).size;
-			let userCount = bot.users.size;
-			let onlineUserCount = bot.users.filter(u => u.presence.status != "offline").size;
-			let textChannelCount = bot.channels.filter(chnl => chnl.type == "text").size;
-			let voiceChannelCount = bot.channels.filter(chnl => chnl.type == "voice").size;
-			let categoryCount = bot.channels.filter(chnl => chnl.type == "category").size;
-			let sessionMessages = bot.cache.stats.messageCurrentTotal + bot.cache.stats.messageSessionTotal;
-			let totalMessages = stats.messageTotal + bot.cache.stats.messageCurrentTotal;
-			let sessionCalls = bot.cache.stats.callCurrentTotal + bot.cache.stats.callSessionTotal
-			let totalCalls = stats.callTotal + bot.cache.stats.callCurrentTotal;
-			let commandCurrentTotal = bot.cache.stats.commandCurrentTotal;
-			for (let i = 0; i < bot.cache.stats.commandUsage.length; i++) {
-				commandCurrentTotal += bot.cache.stats.commandUsage[i].uses;
-			}
-			let sessionCommands = commandCurrentTotal + bot.cache.stats.commandSessionTotal;
-			let totalCommands = stats.commandTotal + commandCurrentTotal;
-			let endEval = new Date();
-			message.channel.send(new Discord.RichEmbed()
-			.setAuthor(`Kendra Bot Stats`, bot.user.avatarURL)
+			let statsEmbed = new RichEmbed()
 			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
 			.setTimestamp(message.createdAt)
-			.setDescription("Here's some detailed stats about the Kendra bot!")
-			.addField("Memory Usage", `${(process.memoryUsage().heapUsed / 1048576).toFixed(2)} MB`, true)
-			.addField("Last Restart", getDuration(bot.readyTimestamp), true)
-			.addField("Servers", 
-			`Total: ${serverCount.toLocaleString()}` + `\n` +
-			`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
-			, true)
-			.addField("Users", 
-			`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + `\n` +
-			`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(1)}%)`
-			, true)
-			.addField("Channels", 
-			`Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + `\n` +
-			`Voice: ${voiceChannelCount.toLocaleString()} (${(voiceChannelCount / serverCount).toFixed(2)}/server)` + `\n` +
-			`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
-			, true)
-			.addField("Messages Seen",
-			`Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, Number(new Date()) - bot.readyTimestamp)})` + `\n` +
-			`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, stats.duration)})`
-			, true)
-			.addField("Phone Calls Made",
-			`Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, Number(new Date()) - bot.readyTimestamp)})` + `\n` +
-			`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, stats.duration)})`
-			, true)
-			.addField("Commands",
-			`Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, Number(new Date()) - bot.readyTimestamp)})` + "\n" +
-			`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, stats.duration)})`
-			, true)
-			)
-		}
-		
-		/*
-			Others found:
-			Bot Author, Shard Number, RAM Usage, Shard Uptime,
 			
-			Ratios, Min, Max, Average,:
-			Pct Online/Guild
-			Music Listeners/Guild
-			ML Pct/Guild
-			Music Connections/Guild
-			Queue Size
-			Being the only bot in a server
-		*/
+			if (args[0] == "processor") {
+				statsEmbed.setAuthor(`Kendra Bot Stats - Processor`, bot.user.avatarURL)
+				this.getProcessorStats(message, statsEmbed);
+			} else {
+				let beginEval = new Date(),
+					serverCount = bot.guilds.size,
+					bigServerCount = bot.guilds.filter(g => g.large).size,
+					userCount = bot.users.size,
+					onlineUserCount = bot.users.filter(u => u.presence.status != "offline").size,
+					textChannelCount = bot.channels.filter(chnl => chnl.type == "text").size,
+					voiceChannelCount = bot.channels.filter(chnl => chnl.type == "voice").size,
+					categoryCount = bot.channels.filter(chnl => chnl.type == "category").size,
+					sessionMessages = bot.cache.stats.messageCurrentTotal + bot.cache.stats.messageSessionTotal,
+					totalMessages = stats.messageTotal + bot.cache.stats.messageCurrentTotal,
+					sessionCalls = bot.cache.stats.callCurrentTotal + bot.cache.stats.callSessionTotal,
+					totalCalls = stats.callTotal + bot.cache.stats.callCurrentTotal,
+					commandCurrentTotal = bot.cache.stats.commandCurrentTotal;
+				for (let i = 0; i < bot.cache.stats.commandUsage.length; i++) {
+					commandCurrentTotal += bot.cache.stats.commandUsage[i].uses;
+				}
+				let sessionCommands = commandCurrentTotal + bot.cache.stats.commandSessionTotal,
+					totalCommands = stats.commandTotal + commandCurrentTotal,
+					endEval = new Date();
+				
+				statsEmbed.setAuthor(`Kendra Bot Stats`, bot.user.avatarURL)
+				.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
+				.setDescription("Here's some detailed stats about the Kendra bot! *To see stats about the bot host, use `k,stats processor`*")
+				.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
+				.addField("Last Restart", getDuration(bot.readyTimestamp), true)
+				.addField("Servers", 
+				`Total: ${serverCount.toLocaleString()}` + "\n" +
+				`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
+				, true)
+				.addField("Users", 
+				`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
+				`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(1)}%)`
+				, true)
+				.addField("Channels", 
+				`Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
+				`Voice: ${voiceChannelCount.toLocaleString()} (${(voiceChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
+				`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
+				, true)
+				.addField("Messages Seen",
+				`Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, Number(new Date()) - bot.readyTimestamp)})` + `\n` +
+				`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, stats.duration)})`
+				, true)
+				.addField("Phone Calls Made",
+				`Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, Number(new Date()) - bot.readyTimestamp)})` + `\n` +
+				`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, stats.duration)})`
+				, true)
+				.addField("Commands",
+				`Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, Number(new Date()) - bot.readyTimestamp)})` + "\n" +
+				`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, stats.duration)})`
+				, true)
+				message.channel.send(statsEmbed);
+			}
+		}
 		
 		setRate(amount, duration) {
 			let amtPerDay = amount / duration * 8.64e+7;
@@ -476,6 +503,56 @@ module.exports = [
 			} else {
 				return `${amtPerDay.toFixed(2)}/day`;
 			}		
+		}
+		
+		getProcessorStats(message, processorEmbed) {
+			const totalMemory = os.totalmem(),
+				freeMemory = os.freemem(),
+				usedMemory = totalMemory - freeMemory,
+				cpus = os.cpus(),
+				processMemoryUsage = process.memoryUsage(),
+				heapTotal = processMemoryUsage.heapTotal,
+				heapUsed = processMemoryUsage.heapUsed,
+				cpuUsage1 = [];
+			
+			for (const cpu of cpus) {
+				cpuUsage1.push({
+					idle: cpu.times.idle,
+					nonidle: Object.values(cpu.times).reduce((prev, val) => prev + val) - cpu.times.idle
+				})
+			}
+			
+			processorEmbed.setDescription("Here's some detailed stats about the host that Kendra is on!")
+			.addField("Total Resident Set (RSS)", `${(processMemoryUsage.rss / 1048576).toFixed(2)} MB`, true)
+			.addField("Heap Usage", `Total: ${(processMemoryUsage.heapTotal / 1048576).toFixed(2)} MB`+ "\n" + 
+			`Used: ${(processMemoryUsage.heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
+			.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB` + "\n" +
+			`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)` + "\n" +
+			`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true)
+			
+			setTimeout(this.postProcessorStats, 250, message, processorEmbed, cpuUsage1)
+		}
+		
+		postProcessorStats(message, processorEmbed, cpuUsage1) {
+			let cpuUsage2 = [], cpus = os.cpus();
+			for (const cpu of cpus) {
+				cpuUsage2.push({
+					idle: cpu.times.idle,
+					nonidle: Object.values(cpu.times).reduce((prev, val) => prev + val) - cpu.times.idle
+				})
+			}
+			
+			let usagePercentages = [];
+			
+			for (let i = 0; i < cpus.length; i++) {
+				let idleDif = cpuUsage2[i].idle - cpuUsage1[i].idle, nonidleDif = cpuUsage2[i].nonidle - cpuUsage1[i].nonidle;
+				usagePercentages.push(nonidleDif / (idleDif + nonidleDif))
+			}
+			
+			processorEmbed.addField("CPU Usage", `${(usagePercentages.reduce((prev, val) => prev + val) / cpus.length * 100).toFixed(1)}%`, true)
+			.addField("Processor", cpus[0].model)
+			.addField("Number of Cores", cpus.length)
+			message.channel.send(processorEmbed)
 		}
 	},
 	class SuggestCommand extends Command {
@@ -516,9 +593,9 @@ module.exports = [
 				}]
 			})
 			.then(() => {
-				message.channel.send("Your suggestion has been sent to the support server.");
+				message.channel.send("✅ Your suggestion has been sent to the support server.");
 			}).catch(err => {
-				message.channel.send("Failed to send suggestion to support server.");
+				return {cmdWarn: "⚠ Failed to send suggestion to support server."};
 			})
 		}
 	},
@@ -548,10 +625,14 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let command = args[0];
-			if (command.category == "Core" || command.name == "eval") return message.channel.send("That command is not unloadable.")
+			const command = args[0];
+			if (command.category == "Core" || command.name == "eval") return {cmdErr: "That command is not unloadable."}
 			delete require.cache[require.resolve(`./${command.category.toLowerCase().replace(/ /g, "-")}.js`)];
-			bot.commands.delete(args[0]);
+			bot.commands.delete(command.name);
+			if (command.aliases.length > 0) {
+				const toRemoveAliases = bot.aliases.filter(alias => alias == command.name);
+				for (const alias of toRemoveAliases.keys()) {bot.aliases.delete(alias)}
+			}
 			message.channel.send(`The command ${command.name} was unloaded.`);
 		}
 	},
@@ -578,16 +659,16 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "k,usage [page]"
+				usage: "usage [page]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let commandUsage = require("../modules/stats.json").commandDistrib;
+			const commandUsage = require("../modules/stats.json").commandDistrib;
 			commandUsage.sort((a,b) => b.uses - a.uses);
-			let entries = [commandUsage.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
+			const entries = [commandUsage.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
 			paginator.paginate(message, {title: "Most Popular Bot Commands"}, entries, {
-				limit: 20,
+				limit: 25,
 				noStop: true,
 				numbered: true,
 				page: args[0] ? args[0] : 1,

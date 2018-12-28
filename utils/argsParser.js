@@ -43,9 +43,9 @@ function checkArgs(bot, message, args, cmdArg) {
 	let toResolve = resolver.resolve(bot, message, args, arg.type, params);
 	if (!toResolve) {
 		if (cmdArg.shiftable) {
-			// Coming soon
+			return {shift: true}
 		} else {
-			let argErrorMsg = `\`${args}\` is not a valid ${arg.type}\n`
+			let argErrorMsg = listableTypes.includes(arg.type) ? `No ${arg.type}s were found matching \`${args}\`` : `\`${args}\` is not a valid ${arg.type}\n`
 			if (cmdArg.errorMsg) {
 				argErrorMsg = cmdArg.errorMsg;
 			} else {
@@ -109,7 +109,8 @@ module.exports = {
 					let neededType = arg.type == "oneof" ? "value" : arg.type;
 					return {
 						error: `Missing argument ${i+1}`,
-						message: arg.missingArgMsg ? arg.missingArgMsg : `A valid ${neededType} must be provided.`}
+						message: arg.missingArgMsg ? arg.missingArgMsg : `A valid ${neededType} must be provided.`
+					}
 				} else {
 					parsedArgs.push(null);
 					continue;
@@ -119,6 +120,10 @@ module.exports = {
 			if (parsedArg.error) {
 				if (parsedArg.error == true) parsedArg.error = `Argument ${i+1} error`;
 				return parsedArg;
+			} else if (parsedArg.shift) {
+				args.splice(i, 0, null);
+				parsedArgs.push(null);
+				continue;
 			}
 			args[i] = parsedArg;
 			parsedArgs.push(parsedArg);
@@ -147,7 +152,6 @@ module.exports = {
 			if (i == flagBases.length - 1 && flagIndexes[i] < args.length - 1) {
 				flagObj.args = args.slice(flagIndexes[i] + 1).join(" ").split(",")
 			}
-			console.log(flagObj);
 			flags.push(flagObj);
 		}
 		let newArgs = args.slice(0, flagIndexes[0]), flagArgs = args.slice(flagIndexes[0]);
@@ -171,7 +175,6 @@ module.exports = {
 						flagArgs = [];
 						break;
 					}
-					console.log(newArgs, flagArgs)
 				} else {
 					continue;
 				}
@@ -188,7 +191,7 @@ module.exports = {
 				for (let j = 0; j < flags[i].args.length; j++) {
 					let parsedFlagArg = checkArgs(bot, message, flags[i].args[j], commandFlag.arg);
 					if (parsedFlagArg.error) {
-						parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`
+						if (parsedFlagArg.error == true) parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`;
 						return parsedFlagArg;
 					};
 					flags[i].args[j] = parsedFlagArg;

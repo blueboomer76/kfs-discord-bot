@@ -1,12 +1,10 @@
-const config = require("../config.json"),
-	{version} = require("../package.json"),
-	stats = require("../modules/stats.json");
+const config = require("../config.json"), {version} = require("../package.json");
 
 module.exports = async bot => {
 	console.log(`Bot started successfully on ${new Date()}`);
 	
 	bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
-	bot.user.setActivity(`k,help | with you in ${bot.guilds.size} servers`);
+	bot.user.setActivity(`${bot.prefix}help | with you in ${bot.guilds.size} servers`);
 	bot.cache.guildCount = bot.guilds.size;
 	bot.cache.userCount = bot.users.size;
 	bot.cache.channelCount = bot.channels.size;
@@ -27,7 +25,7 @@ module.exports = async bot => {
 					newBotGame = `with ${bot.cache.channelCount} channels`;
 					break;
 				case 2:
-					newBotGame = `${stats.commandTotal} run commands`
+					newBotGame = `${require("../modules/stats.json").commandTotal} run commands`
 					break;
 				case 3:
 					newBotGame = `on version ${version}`;
@@ -43,15 +41,17 @@ module.exports = async bot => {
 				bot.cache.channelCount = bot.channels.size;
 			}
 		}
-		bot.user.setActivity(`k,help | ${newBotGame}`);
+		bot.user.setActivity(`${bot.prefix}help | ${newBotGame}`);
 	}, 1000*300)
 	
 	setInterval(() => {
-		if (new Date() % 1000*7200 < 1000*3600) {
-			bot.logStats();
-		} else {
-			if (config.botsDiscordPwToken) {
-				bot.postBotsDiscordPwStats(bot);
+		bot.logStats();
+		if (new Date() % (1000*10800) < 1000*3600) {
+			if (config.botsOnDiscordToken) {
+				bot.postBotsOnDiscordStats(bot);
+			}
+			if (config.botsForDiscordToken) {
+				bot.postBotsForDiscordStats(bot);
 			}
 			if (config.discordBotsOrgToken) {
 				bot.postDiscordBotsOrgStats(bot);

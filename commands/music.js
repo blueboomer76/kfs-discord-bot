@@ -1,7 +1,6 @@
-const Discord = require("discord.js");
-const Command = require("../structures/command.js");
-const ytdl = require("ytdl-core");
-const paginator = require("../utils/paginator.js")
+const Command = require("../structures/command.js"),
+	paginator = require("../utils/paginator.js"),
+	ytdl = require("ytdl-core");
 
 module.exports = [
 	class LeaveCommand extends Command {
@@ -13,13 +12,13 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			if (message.member.voiceChannel == gvConnection.channel || message.member.hasPermission("MANAGE_SERVER")) {
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"}
+			if (message.member.voiceChannel.id == gvConnection.channel.id || message.member.hasPermission("MANAGE_SERVER")) {
 				await gvConnection.disconnect();
 				message.react("✅");
 			} else {
-				message.channel.send("This action cannot be performed unless you are in the same voice channel as me or have the `Manage Server` permission.")
+				return {cmdErr: "This action cannot be performed unless you are in the same voice channel as me or have the `Manage Server` permission."}
 			}
 		}
 	},
@@ -32,16 +31,16 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			if (!message.member.voiceChannel) return message.channel.send("You are not in a voice channel")
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"}
+			if (!message.member.voiceChannel) return {cmdErr: "You are not in a voice channel"}
 			if (message.member.voiceChannel != gvConnection.channel) {
-				return message.channel.send("You need to be in the same voice channel as me to pause music.")
+				return {cmdErr: "You need to be in the same voice channel as me to pause music."}
 			}
 			if (!gvConnection.dispatcher) {
-				return message.channel.send("Cannot pause: there is no music playing");
+				return {cmdErr: "Cannot pause: there is no music playing"};
 			} else if (gvConnection.dispatcher.paused) {
-				return message.channel.send("Cannot pause: music is already paused");
+				return {cmdErr: "Cannot pause: music is already paused"};
 			}
 			
 			gvConnection.dispatcher.pause();
@@ -81,7 +80,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (!message.member.voiceChannel) return message.channel.send("You are not in a voice channel! Join one first.");
+			if (!message.member.voiceChannel) return {cmdErr: "You are not in a voice channel! Join one first."};
 			
 			let gvConnection = message.guild.voiceConnection, stream, cmdErr;
 			if (!gvConnection) {
@@ -95,16 +94,16 @@ module.exports = [
 			}
 			
 			// Check for errors
-			if (cmdErr) return message.channel.send("Failed to connect to the voice channel.");
+			if (cmdErr) return {cmdErr: "Failed to connect to the voice channel."};
 			if (message.member.voiceChannel != gvConnection.channel) {
-				return message.channel.send("You need to be in the same voice channel as me to play music.")
+				return {cmdErr: "You need to be in the same voice channel as me to play music."}
 			}
-			if (gvConnection.queue.length > 10) return message.channel.send("The maximum queue limit has been reached. No more music can be queued.");
+			if (gvConnection.queue.length > 10) return {cmdErr: "The maximum queue limit has been reached. No more music can be queued."};
 			if (gvConnection.queue.some(e => e.url == args[0])) {
-				return message.channel.send("That music is already in the queue.")
+				return {cmdErr: "That music is already in the queue."}
 			}
 			try {ytdl(args[0])} catch(err) {cmdErr = true;}
-			if (cmdErr) return message.channel.send("You have provided an invalid YouTube URL.");
+			if (cmdErr) return {cmdErr: "You have provided an invalid YouTube URL."};
 			
 			if (!gvConnection.nowPlaying.url) {
 				gvConnection.nowPlaying = {url: args[0]};
@@ -119,15 +118,15 @@ module.exports = [
 		}
 		
 		playQueue(msg, seek) {
-			let gvConnection = msg.guild.voiceConnection;
-			const dispatcher = gvConnection.playStream(ytdl(gvConnection.nowPlaying.url, {filter: "audioonly"}), {
+			const gvConnection = msg.guild.voiceConnection,
+				dispatcher = gvConnection.playStream(ytdl(gvConnection.nowPlaying.url, {filter: "audioonly"}), {
 				seek: seek
 			});
 			this.addDispatcherEvent(msg);
 		}
 		
 		addDispatcherEvent(msg) {
-			let gvConnection = msg.guild.voiceConnection;
+			const gvConnection = msg.guild.voiceConnection;
 			gvConnection.dispatcher.on("speaking", value => {
 				if (value == false && gvConnection && gvConnection.dispatcher && !gvConnection.dispatcher.paused) {
 					if (gvConnection.queue.length == 0) {
@@ -169,16 +168,12 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			let queue = gvConnection.queue;
-			if (queue.length == 0 && !gvConnection.nowPlaying) return message.channel.send("There is no music in the queue.");
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"}
+			const queue = gvConnection.queue;
+			if (queue.length == 0 && !gvConnection.nowPlaying) return {cmdWarn: "There is no music in the queue."};
 			
-			let startPage = args[0] ? args[0] : 1,
-				entries = [queue.map(e => e.url)],
-				queueEmbed = {
-					title: `Music Queue - ${message.guild.name}`
-				};
+			const entries = [queue.map(e => e.url)];
 			paginator.paginate(message, {title: `Music Queue - ${message.guild.name}`}, entries, {
 				limit: 5,
 				numbered: true,
@@ -197,16 +192,16 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			if (!message.member.voiceChannel) return message.channel.send("You are not in a voice channel")
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"}
+			if (!message.member.voiceChannel) return {cmdErr: "You are not in a voice channel"}
 			if (message.member.voiceChannel != gvConnection.channel) {
-				return message.channel.send("You need to be in the same voice channel as me to resume music.")
+				return {cmdErr: "You need to be in the same voice channel as me to resume music."}
 			}
 			if (!gvConnection.dispatcher) {
-				return message.channel.send("Cannot resume: there is no music playing");
+				return {cmdErr: "Cannot resume: there is no music playing"};
 			} else if (!gvConnection.dispatcher.paused) {
-				return message.channel.send("Cannot resume: music is already playing");
+				return {cmdErr: "Cannot resume: music is already playing"};
 			}
 			
 			gvConnection.dispatcher.resume();
@@ -222,13 +217,13 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			if (!message.member.voiceChannel) return message.channel.send("You are not in a voice channel")
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"}
+			if (!message.member.voiceChannel) return {cmdErr: "You are not in a voice channel"}
 			if (message.member.voiceChannel != gvConnection.channel) {
-				return message.channel.send("You need to be in the same voice channel as me to skip music.")
+				return {cmdErr: "You need to be in the same voice channel as me to skip music."}
 			}
-			if (!gvConnection.dispatcher) return message.channel.send("Cannot skip: there is no music playing");
+			if (!gvConnection.dispatcher) return {cmdErr: "Cannot skip: there is no music playing"};
 			
 			gvConnection.dispatcher.end();
 			message.react("⏩");
@@ -243,9 +238,9 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			if (!gvConnection.dispatcher) return message.channel.send("I am not playing any music")
+			const gvConnection = message.guild.voiceConnection;
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"}
+			if (!gvConnection.dispatcher) return {cmdErr: "I am not playing any music"}
 			
 			if (message.member.voiceChannel == gvConnection.channel || message.member.hasPermission("MANAGE_SERVER")) {
 				gvConnection.nowPlaying = {};
@@ -275,13 +270,13 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let gvConnection = bot.voiceConnections.get(message.guild.id);
-			if (!gvConnection) return message.channel.send("I am not in a voice channel in this server!")
-			if (!message.member.voiceChannel) return message.channel.send("You are not in a voice channel")
+			const gvConnection = bot.voiceConnections.get(message.guild.id);
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"}
+			if (!message.member.voiceChannel) return {cmdErr: "You are not in a voice channel"}
 			if (message.member.voiceChannel != gvConnection.channel) {
-				return message.channel.send("You need to be in the same voice channel as me to set the volume.")
+				return {cmdErr: "You need to be in the same voice channel as me to set the volume."}
 			}
-			if (!gvConnection.dispatcher) return message.channel.send("Cannot set volume: there is no music playing");
+			if (!gvConnection.dispatcher) return {cmdErr: "Cannot set volume: there is no music playing"};
 			
 			gvConnection.dispatcher.setVolume(args[0] / 100);
 			message.channel.send(`🔉 Volume of music has been set to **${args[0]}/100**`);

@@ -29,8 +29,8 @@ const bot = new KendraBot({
 });
 
 async function loadBot() {
-	await bot.loadCommands();
-	await bot.loadEvents();
+	bot.loadCommands();
+	bot.loadEvents();
 }
 
 loadBot();
