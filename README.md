@@ -1,4 +1,8 @@
-[![Bot Widget](https://discordbots.org/api/widget/333058410465722368.svg)](https://discordbots.org/bots/333058410465722368)
+[![discordbots.org Bot Widget](https://discordbots.org/api/widget/333058410465722368.svg)](https://discordbots.org/bots/333058410465722368)
+
+[![bots.ondiscord.xyz Bot Widget](https://bots.ondiscord.xyz/bots/333058410465722368/embed)](https://bots.ondiscord.xyz/bots/333058410465722368)
+
+[![botsfordiscord.com Bot Widget](https://botsfordiscord.com/api/bot/333058410465722368/widget)](https://botsfordiscord.com/bots/333058410465722368)
 
 # KFS Discord Bot
 A multipurpose Discord bot for fun, utility, and more, written in discord.js.
