@@ -69,7 +69,7 @@ module.exports = [
 				const foundRedirSub = redirSubreddits.find(e => e.name == args[0].toLowerCase());
 				if (foundRedirSub) return bot.commands.get(foundRedirSub.goTo).run(bot, message);
 				subreddit = args[0].replace(/^\/?(R|r)\//, "")
-				if (subreddit.length < 4) return {cmdWarn: "Subreddit names should have at least 4 characters."};
+				if (subreddit.length < 3) return {cmdWarn: "Subreddit names should have at least 4 characters."};
 				if (!(/^[0-9A-Za-z_]+$/).test(subreddit)) return {cmdWarn: "Subreddit names should be alphanumeric with underscores only."}
 			} else {
 				subreddit = "all"

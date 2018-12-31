@@ -8,7 +8,6 @@ function getPosts(url, checkNsfw) {
 	return new Promise((resolve, reject) => {
 		request.get({
 			url: url,
-			qs: {limit: 25},
 			json: true
 		}, (err, res) => {
 			if (err || res.statusCode >= 400) reject(`Failed to fetch from Reddit. (status code ${res.statusCode})`)

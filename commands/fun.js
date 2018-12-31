@@ -1,6 +1,5 @@
 const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
-	resolver = require("../utils/objResolver.js"),
 	request = require("request");
 
 const magicMsgs = [

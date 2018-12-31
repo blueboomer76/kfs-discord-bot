@@ -1,5 +1,7 @@
 <img src="https://discordbots.org/api/widget/429807759144386572.svg">
 
+<img src="https://botsfordiscord.com/api/bot/429807759144386572/widget">
+
 # Kendra Discord Bot
 A multipurpose Discord bot for fun, utility, and more, coded in discord.js.
 
@@ -17,6 +19,6 @@ Kendra is an **actively developed bot** that not only has fun, moderation, utili
 6. Run `node index.js`
 
 ## References
-Link to invite the bot: [Go!](https://discordapp.com/api/oauth2/authorize?client_id=429807759144386572&permissions=403041398&scope=bot)
+Link to invite the bot: [Go!](https://discordapp.com/oauth2/authorize?client_id=429807759144386572&permissions=403041398&scope=bot)
 
 Link to official server: [Go!](https://discord.gg/yB8TvWU)

@@ -36,7 +36,6 @@ module.exports = [
 				let lines = [],
 					words = args[0].split(" "),
 					currLine = [],
-					currWidth = 0,
 					nextWidth = 0;
 				
 				for (let i = 0; i < words.length; i++) {
@@ -53,7 +52,6 @@ module.exports = [
 					} else {
 						currLine.push(words[i]);
 					}
-					currWidth = nextWidth;
 					if (i == words.length - 1) lines.push(currLine.join(" "));
 				}
 
