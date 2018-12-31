@@ -103,13 +103,15 @@ module.exports = [
 				.setColor(Math.floor(Math.random() * 16777216))
 				.addField("Category", command.category)
 				.addField("Description", command.description)
-				.addField("Aliases", command.aliases.length > 0 ? command.aliases.join(", ") : "None")
-				.addField("Flags", command.flags.length > 0 ? commandFlags.join("\n") : "None")
-				.addField("Usage", command.usage)
-				.addField("Examples", command.examples.length > 0 ? command.examples.join("\n") : "No examples provided")
-				.addField("Allows DMs", command.allowDMs ? "Yes" : "No")
-				.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`)
-				.addField("Cooldown", `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}`)
+				if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "))
+				if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"))
+				helpEmbed.addField("Usage", command.usage)
+				if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.join("\n"))
+				if (command.allowDMs) helpEmbed.addField("Allows DMs", "Yes")
+				if (commandPerms.bot.length > 0 || commandPerms.user.length > 0 || commandPerms.role || commandPerms.level > 0) {
+					helpEmbed.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`)
+				}
+				helpEmbed.addField("Cooldown", `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}`)
 			}
 			if (flags.some(f => f.name == "dm")) {
 				message.member.send(helpEmbed)
@@ -501,7 +503,7 @@ module.exports = [
 		}
 
 		setRate(amount, duration) {
-			let amtPerDay = amount / duration * 8.64e+7;
+			const amtPerDay = amount / duration * 8.64e+7;
 			if (amtPerDay > 43200) {
 				return `${(amtPerDay/86400).toFixed(2)}/sec`;
 			} else if (amtPerDay > 720) {

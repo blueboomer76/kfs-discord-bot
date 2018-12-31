@@ -79,7 +79,8 @@ module.exports = [
 			channelEmbed.addField("Position to same type channels", channelPositions.indexOf(channel.calculatedPosition) + 1);
 
 			if (channel.type == "text") {
-				channelEmbed.addField("Topic", channel.topic ? channel.topic : "No topic set");
+				channelEmbed.addField("NSFW", channel.nsfw ? "Yes" : "No")
+				.addField("Topic", channel.topic ? channel.topic : "No topic set")
 			} else if (channel.type == "voice") {
 				channelEmbed.addField("User Limit", channel.userLimit == 0 ? "No limit" : channel.userLimit, true)
 				.addField("Bitrate", `${channel.bitrate} bits`, true)
