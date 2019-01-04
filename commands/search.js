@@ -28,7 +28,7 @@ module.exports = [
 				},
 				examples: [
 					"reddit funny",
-					"reddit aww --squeeze",
+					"reddit aww --new",
 					"reddit gaming --more"
 				],
 				flags: [
@@ -52,13 +52,17 @@ module.exports = [
 						name: "squeeze",
 						desc: "Whether to squeeze the displayed posts"
 					},
+					{
+						name: "top",
+						desc: "Whether to show top posts"
+					}
 				],
 				perms: {
 					bot: ["ADD_REACTIONS", "EMBED_LINKS", "MANAGE_MESSAGES"],
 					user: [],
 					level: 0
 				},
-				usage: "reddit [subreddit] [--(controversial|new|rising)] [--more] [--squeeze]"
+				usage: "reddit [subreddit] [--(controversial|new|rising|top)] [--more] [--squeeze]"
 			});
 		}
 		
@@ -74,9 +78,15 @@ module.exports = [
 				subreddit = "all";
 			}
 			const numToDisplay = compact ? 50 : 25;
-			let postSort = "hot";
+			let postSort = "hot", reqQuery = {
+				limit: flags.some(f => f.name == "more") ? numToDisplay * 2 : numToDisplay,
+				raw_json: 1
+			};
 				
-			if (flags.some(f => f.name == "new")) {
+			if (flags.some(f => f.name == "top")) {
+				postSort = "top";
+				reqQuery.t = "week";
+			} else if (flags.some(f => f.name == "new")) {
 				postSort = "new";
 			} else if (flags.some(f => f.name == "rising")) {
 				postSort = "rising";
@@ -86,7 +96,7 @@ module.exports = [
 			
 			request.get({
 				url: `https://reddit.com/r/${subreddit}/${postSort}.json`,
-				qs: {limit: flags.find(f => f.name == "more") ? numToDisplay * 2 : numToDisplay},
+				qs: reqQuery,
 				json: true
 			}, (err, res) => {
 				if (err) return message.channel.send(`⚠ Could not request to Reddit: ${err.message}`);
@@ -99,7 +109,7 @@ module.exports = [
 				
 				results = results.filter(r => !r.data.stickied);
 				if (!message.channel.nsfw) results = results.filter(r => !r.data.over_18);
-				if (results.length == 0) return message.channel.send("⚠ No results found.");
+				if (results.length == 0) return message.channel.send("⚠ No results found in the subreddit. *(You may try going to an NSFW channel to see all results)*");
 				
 				let entries = [[]], viewAll = false;
 				if (!args[0] || args[0] == "all" || args[0] == "popular") viewAll = true;
@@ -108,7 +118,7 @@ module.exports = [
 					for (const post of results) {
 						let postData = post.data,
 							postTitle = postData.title.length > 150 ? `${postData.title.slice(0, 150)}...` : postData.title;
-							toDisplay = `[${postTitle.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})`;
+							toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
 						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`
 						entries[0].push(toDisplay);
 					}
@@ -116,7 +126,7 @@ module.exports = [
 					for (const post of results) {
 						let postData = post.data,
 							postTitle = postData.title.length > 200 ? `${postData.title.slice(0, 200)}...` : postData.title,
-							toDisplay = `[${postTitle.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})`;
+							toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
 						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`
 						let postFlair = postData.link_flair_text;
 						if (postFlair) toDisplay += ` [${postData.link_flair_text}]`

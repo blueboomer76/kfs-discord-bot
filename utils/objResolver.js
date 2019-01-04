@@ -1,4 +1,4 @@
-module.exports.resolve = (bot, message, obj, type, params) => {
+module.exports.resolve = async (bot, message, obj, type, params) => {
 	let lowerObj = obj.toLowerCase();
 	let list;
 	switch (type) {
@@ -51,6 +51,13 @@ module.exports.resolve = (bot, message, obj, type, params) => {
 			if (imageRegex.test(obj)) {return obj} else {return null}
 		case "member":
 			let member, memberRegex = /^<@!?\d{17,19}>$/, guildMembers = message.guild.members;
+
+			if (message.guild.large) {
+				await message.guild.fetchMembers()
+				.then(guild => guildMembers = guild.members)
+				.catch(err => console.log("Failed to fetch members in object resolver: " + err))
+			}
+
 			if (memberRegex.test(obj)) {
 				member = guildMembers.get(obj.match(/\d+/)[0]);
 				if (member) {return [member]} else {return null}
