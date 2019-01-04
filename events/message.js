@@ -52,7 +52,7 @@ async function execCommand(runCommand, bot, message, args) {
 
 	let flags = [];
 	if (runCommand.flags.length > 0) {
-		let parsedFlags = argParser.parseFlags(bot, message, args, runCommand.flags);
+		let parsedFlags = await argParser.parseFlags(bot, message, args, runCommand.flags);
 		if (parsedFlags.error) {
 			if (parsedFlags.error.startsWith("Multiple")) return {cmdErr: `**${parsedFlags.error}**\n${parsedFlags.message}`};
 			return {cmdErr: `**${parsedFlags.error}**\n${parsedFlags.message}\n*The correct usage is:* \`${runCommand.usage}\``};
@@ -60,7 +60,7 @@ async function execCommand(runCommand, bot, message, args) {
 		flags = parsedFlags.flags;
 		args = parsedFlags.newArgs;
 	}
-	args = argParser.parseArgs(bot, message, args, runCommand.args);
+	args = await argParser.parseArgs(bot, message, args, runCommand.args);
 	if (args.error) {
 		if (args.error.startsWith("Multiple")) return {cmdErr: `**${args.error}**\n${args.message}`};
 		return {cmdErr: `**${args.error}**\n${args.message}\n*The correct usage is:* \`${runCommand.usage}\``};

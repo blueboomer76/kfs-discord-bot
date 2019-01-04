@@ -3,8 +3,8 @@ const resolver = require("./objResolver.js");
 const listableTypes = ["channel", "emoji", "member", "role"];
 
 function parseArgQuotes(args, findAll) {
-	let beginMatches = args.filter(a => a.match(/^"\S/));
-	let endMatches = args.filter(a => a.match(/\S"$/));
+	const beginMatches = args.filter(a => a.match(/^"\S/)),
+		endMatches = args.filter(a => a.match(/\S"$/));
 	if (beginMatches && endMatches) {
 		let beginIndexes = [], endIndexes = [];
 		for (let i = 0; i < beginMatches.length; i++) {
@@ -32,7 +32,7 @@ function parseArgQuotes(args, findAll) {
 	return args;
 }
 
-function checkArgs(bot, message, args, cmdArg) {
+async function checkArgs(bot, message, args, cmdArg) {
 	let arg = cmdArg, params;
 	if (arg.type == "function") {
 		params = {testFunction: arg.testFunction}
@@ -42,7 +42,7 @@ function checkArgs(bot, message, args, cmdArg) {
 		params = {list: arg.allowedValues}
 	}
 	
-	let toResolve = resolver.resolve(bot, message, args, arg.type, params);
+	let toResolve = await resolver.resolve(bot, message, args, arg.type, params);
 	if (toResolve == null) {
 		if (cmdArg.shiftable) {
 			return {shift: true};
@@ -93,7 +93,7 @@ function checkArgs(bot, message, args, cmdArg) {
 }
 
 module.exports = {
-	parseArgs: (bot, message, args, commandArgs) => {
+	parseArgs: async (bot, message, args, commandArgs) => {
 		if (!commandArgs) return args;
 		let parsedArgs = [];
 		for (let i = 0; i < commandArgs.length; i++) {
@@ -119,7 +119,8 @@ module.exports = {
 					continue;
 				}
 			}
-			let parsedArg = checkArgs(bot, message, args[i], arg);
+
+			let parsedArg = await checkArgs(bot, message, args[i], arg);
 			if (parsedArg.error) {
 				if (parsedArg.error == true) parsedArg.error = `Argument ${i+1} error`;
 				return parsedArg;
@@ -133,7 +134,7 @@ module.exports = {
 		}
 		return parsedArgs;
 	},
-	parseFlags: (bot, message, args, commandFlags) => {
+	parseFlags: async (bot, message, args, commandFlags) => {
 		// 1. Get flags
 		let flags = [],
 			flagIndexes = [],
@@ -192,7 +193,7 @@ module.exports = {
 						message: commandFlag.arg.errMsg ? commandFlag.arg.errMsg : `A valid ${neededType} must be provided.`
 					}
 				}
-				let parsedFlagArg = checkArgs(bot, message, flagArgToCheck, commandFlag.arg);
+				let parsedFlagArg = await checkArgs(bot, message, flagArgToCheck, commandFlag.arg);
 				if (parsedFlagArg.error) {
 					if (parsedFlagArg.error == true) parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`;
 					return parsedFlagArg;
