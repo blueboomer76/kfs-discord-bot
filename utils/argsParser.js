@@ -3,8 +3,7 @@ const resolver = require("./objResolver.js");
 const listableTypes = ["channel", "emoji", "member", "role"];
 
 function parseArgQuotes(args, findAll) {
-	let matches1 = args.filter(a => a.match(/^"\S/));
-	let matches2 = args.filter(a => a.match(/\S"$/));
+	const matches1 = args.filter(a => a.match(/^"\S/)), matches2 = args.filter(a => a.match(/\S"$/));
 	if (matches1 && matches2) {
 		let indexes1 = [], indexes2 = [];
 		for (let i = 0; i < matches1.length; i++) {
@@ -16,8 +15,7 @@ function parseArgQuotes(args, findAll) {
 		for (let i = 0; i < matches1.length; i++) {
 			let i2Index = indexes2.find(ind => ind >= indexes1[i])
 			if (i2Index != undefined) {
-				let start = indexes1[i];
-				let end = i2Index + 1;
+				let start = indexes1[i], end = i2Index + 1;
 				if (i > 0 && indexes2.find(ind => ind >= indexes1[i-1]) == i2Index) continue;
 				let newArg = args.splice(start, end - start).join(" ");
 				args.splice(start, 0, newArg.slice(1, newArg.length - 1));
@@ -30,17 +28,19 @@ function parseArgQuotes(args, findAll) {
 	return args;
 }
 
-function checkArgs(bot, message, args, cmdArg) {
+async function checkArgs(bot, message, args, cmdArg) {
 	let arg = cmdArg, params;
 	if (arg.type == "function") {
 		params = {testFunction: arg.testFunction}
+	} else if (arg.type == "member") {
+		params = {large: message.guild.large}
 	} else if (arg.type == "number") {
 		params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity}
 	} else if (arg.type == "oneof") {
 		params = {list: arg.allowedValues}
 	}
 	
-	let toResolve = resolver.resolve(bot, message, args, arg.type, params);
+	let toResolve = await resolver.resolve(bot, message, args, arg.type, params);
 	if (!toResolve) {
 		if (cmdArg.shiftable) {
 			return {shift: true}
@@ -90,7 +90,7 @@ function checkArgs(bot, message, args, cmdArg) {
 }
 
 module.exports = {
-	parseArgs: (bot, message, args, commandArgs) => {
+	parseArgs: async (bot, message, args, commandArgs) => {
 		if (!commandArgs) return args;
 		let parsedArgs = [];
 		for (let i = 0; i < commandArgs.length; i++) {
@@ -116,7 +116,8 @@ module.exports = {
 					continue;
 				}
 			};
-			let parsedArg = checkArgs(bot, message, args[i], arg);
+
+			let parsedArg = await checkArgs(bot, message, args[i], arg);
 			if (parsedArg.error) {
 				if (parsedArg.error == true) parsedArg.error = `Argument ${i+1} error`;
 				return parsedArg;
@@ -130,7 +131,7 @@ module.exports = {
 		}
 		return parsedArgs;
 	},
-	parseFlags: (bot, message, args, commandFlags) => {
+	parseFlags: async (bot, message, args, commandFlags) => {
 		// 1. Get flags
 		let flags = [],
 			flagIndexes = [],
@@ -165,7 +166,6 @@ module.exports = {
 				flags[i].name = flagLongNames[flagShortNames.indexOf(flags[i].name)]
 			}
 			if (!flagLongNames.includes(flags[i].name)) {
-				console.log(parsedFlags.length, i, flags.length - 1, flags[0])
 				if (parsedFlags.length == 0) {
 					if (i < flags.length - 1) {
 						newArgs = args.slice(0, flagIndexes[i+1]);
@@ -189,7 +189,7 @@ module.exports = {
 					}
 				}
 				for (let j = 0; j < flags[i].args.length; j++) {
-					let parsedFlagArg = checkArgs(bot, message, flags[i].args[j], commandFlag.arg);
+					let parsedFlagArg = await checkArgs(bot, message, flags[i].args[j], commandFlag.arg);
 					if (parsedFlagArg.error) {
 						if (parsedFlagArg.error == true) parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`;
 						return parsedFlagArg;
