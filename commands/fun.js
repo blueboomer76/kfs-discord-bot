@@ -195,6 +195,73 @@ module.exports = [
 			})
 		}
 	},
+	class PunCommand extends Command {
+		constructor() {
+			super({
+				name: "pun",
+				description: "Gets a pun",
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				}
+			});
+			this.cachedPosts = [];
+			this.lastChecked = 0;
+		}
+		
+		async run(bot, message, args, flags) {
+			if (new Date() > this.lastChecked + 1000*3600 || this.cachedPosts.length == 0) {
+				try {
+					this.cachedPosts = await this.getPuns();
+				} catch(err) {
+					return {cmdWarn: err};
+				}
+			}
+			
+			const postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0],
+				punEmbed = new RichEmbed()
+					.setTitle(postData.title)
+					.setURL(`https://reddit.com${postData.url}`)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | u/${postData.author}`)
+			if (postData.desc) punEmbed.setDescription(postData.desc);
+			if (postData.imageURL) punEmbed.setImage(postData.imageURL);
+
+			message.channel.send(punEmbed)
+		}
+		
+		getPuns() {
+			return new Promise((resolve, reject) => {
+				request.get({
+					url: "https://reddit.com/r/puns/hot.json",
+					json: true
+				}, (err, res) => {
+					if (err || res.statusCode >= 400) reject(`Failed to fetch from Reddit. (status code ${res.statusCode})`)
+					
+					this.lastChecked = Number(new Date());
+					const results = res.body.data.children
+						.filter(r => !r.data.stickied)
+						.map(r => {
+							return {
+								title: r.data.title,
+								desc: r.data.selftext != "" ? r.data.selftext.replace(/&amp;/g, "&").trim() : null,
+								url: r.data.permalink,
+								score: r.data.score,
+								comments: r.data.num_comments,
+								author: r.data.author,
+								imageURL: r.data.thumbnail != "self" ? r.data.url : null
+							}
+						})
+					resolve(results);
+				})
+			})
+		}
+	},
 	class QuoteCommand extends Command {
 		constructor() {
 			super({
@@ -295,7 +362,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			await message.delete();
-			if (flags.find(f => f.name == "embed")) {
+			if (flags.some(f => f.name == "embed")) {
 				message.channel.send(new RichEmbed()
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setDescription(args[0])
