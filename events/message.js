@@ -44,7 +44,7 @@ async function execCommand(runCommand, bot, message, args) {
 			if (permLevels[i].validate(message)) userLevel = i;
 		}
 		if (userLevel < requiredPerms.level) {
-			let faultDesc = permLevels[requiredPerms.level].desc ? ` (${permLevels[requiredPerms.level].desc})` : "";
+			const faultDesc = permLevels[requiredPerms.level].desc ? ` (${permLevels[requiredPerms.level].desc})` : "";
 			faultMsg += `\nYou need to be a ${bot.permLevels[requiredPerms.level].name} to run this command${faultDesc}`;
 		}
 	}
@@ -52,7 +52,7 @@ async function execCommand(runCommand, bot, message, args) {
 	
 	let flags = [];
 	if (runCommand.flags.length > 0) {
-		let parsedFlags = await argParser.parseFlags(bot, message, args, runCommand.flags);
+		const parsedFlags = await argParser.parseFlags(bot, message, args, runCommand.flags);
 		if (parsedFlags.error) {
 			if (parsedFlags.error.startsWith("Multiple")) return {cmdErr: `**${parsedFlags.error}**\n${parsedFlags.message}`};
 			return {cmdErr: `**${parsedFlags.error}**\n${parsedFlags.message}\n*The correct usage is:* \`${runCommand.usage}\``};
@@ -60,7 +60,7 @@ async function execCommand(runCommand, bot, message, args) {
 		flags = parsedFlags.flags;
 		args = parsedFlags.newArgs;
 	}
-	args = await argParser.parseArgs(bot, message, args, runCommand.args);
+	args = await argParser.parseArgs(bot, message, args, runCommand);
 	if (args.error) {
 		if (args.error.startsWith("Multiple")) return {cmdErr: `**${args.error}**\n${args.message}`};
 		return {cmdErr: `**${args.error}**\n${args.message}\n*The correct usage is:* \`${runCommand.usage}\``};
@@ -111,8 +111,8 @@ module.exports = async (bot, message) => {
 			}
 			
 			if (!bot.ownerIds.includes(message.author.id) && runCommand.cooldown.time != 0) {
-				const orCooldown = runRes && runRes.cooldown ? runRes.cooldown : null;
-				cdChecker.addCooldown(bot, message, runCommand.name, orCooldown);
+				const cdOverride = runRes && runRes.cooldown ? runRes.cooldown : null;
+				cdChecker.addCooldown(bot, message, runCommand.name, cdOverride);
 			}
 			
 			if (!runRes || !runRes.noLog) {

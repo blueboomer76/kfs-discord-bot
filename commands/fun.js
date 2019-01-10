@@ -267,28 +267,58 @@ module.exports = [
 			super({
 				name: "quote",
 				description: "Makes a quote",
-				args: [
+				subcommands: [
 					{
-						allowQuotes: true,
-						infiniteArgs: true,
-						type: "member"
+						name: "message",
+						args: [
+							{
+								errorMsg: "Please provide a valid message ID.",
+								type: "function",
+								testFunction: obj => {return obj.length >= 17 && obj.length < 19 && parseInt(obj) != NaN}
+							}
+						]
 					},
 					{
-						infiniteArgs: true,
-						type: "string"
+						name: "fallback",
+						args: [
+							{
+								allowQuotes: true,
+								infiniteArgs: true,
+								type: "member"
+							},
+							{
+								infiniteArgs: true,
+								type: "string"
+							}
+						],
 					}
 				],
-				usage: "quote <user> <quote>"
+				usage: "quote <user> <quote> OR quote message <id>"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			const member = args[0];
-			message.channel.send(new RichEmbed()
-			.setAuthor(member.user.tag, member.user.avatarURL)
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setDescription(args[1])
-			)
+			if (args[0] == "message") {
+				message.channel.fetchMessage(args[1])
+				.then(msg => {
+					message.channel.send(new RichEmbed()
+						.setAuthor(msg.author.tag, msg.author.avatarURL)
+						.setDescription(msg.content)
+						.setColor(msg.member.displayColor)
+						.setFooter("Sent")
+						.setTimestamp(msg.createdAt)
+						.addField("Jump to message", `[Click or tap here](https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${msg.id})`)
+					)
+				})
+				.catch(() => message.channel.send("⚠ A message with that ID was not found in this channel."))
+			} else {
+				const member = args[0];
+				message.channel.send(new RichEmbed()
+					.setAuthor(member.user.tag, member.user.avatarURL)
+					.setDescription(args[1])
+					.setColor(Math.floor(Math.random() * 16777216))
+				)
+			}
 		}
 	},
 	class RateWaifuCommand extends Command {

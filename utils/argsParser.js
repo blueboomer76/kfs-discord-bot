@@ -45,12 +45,12 @@ async function checkArgs(bot, message, args, cmdArg) {
 		if (cmdArg.shiftable) {
 			return {shift: true}
 		} else {
-			let argErrorMsg = listableTypes.includes(arg.type) ? `No ${arg.type}s were found matching \`${args}\`` : `\`${args}\` is not a valid ${arg.type}\n`
+			let argErrorMsg = listableTypes.includes(arg.type) ? `No ${arg.type}s were found matching \`${args}\`` : `\`${args}\` is not a valid ${arg.type}`
 			if (cmdArg.errorMsg) {
 				argErrorMsg = cmdArg.errorMsg;
 			} else {
-				if (arg.type == "number") {
-					argErrorMsg += "The argument must be a number that is "
+				if (arg.type == "number" && (arg.min || arg.max)) {
+					argErrorMsg += "\n" + "The argument must be a number that is "
 					if (arg.min && arg.max) {
 						argErrorMsg += `in between ${params.min} and ${params.max}`
 					} else if (arg.min) {
@@ -90,8 +90,31 @@ async function checkArgs(bot, message, args, cmdArg) {
 }
 
 module.exports = {
-	parseArgs: async (bot, message, args, commandArgs) => {
+	parseArgs: async (bot, message, args, command) => {
+		let commandArgs = command.args;
 		if (!commandArgs) return args;
+
+		const subcommands = command.subcommands;
+		let subcmd;
+		if (subcommands.length > 0) {
+			const foundScmd = subcommands.find(scmd => scmd.name == args[0]);
+			if (foundScmd) {
+				subcmd = foundScmd.name;
+				commandArgs = foundScmd.args;
+				args.shift();
+			} else {
+				const fallback = subcommands.find(scmd => scmd.name == "fallback")
+				if (fallback) {
+					commandArgs = fallback.args;
+				} else {
+					return {
+						error: "Invalid subcommand",
+						message: `You must provide one of these subcommands: ${subcommands.map(scmd => scmd.name).join(", ")}`
+					};
+				}
+			}
+		}
+
 		let parsedArgs = [];
 		for (let i = 0; i < commandArgs.length; i++) {
 			let arg = commandArgs[i];
@@ -99,7 +122,7 @@ module.exports = {
 				if (arg.allowQuotes) {
 					let findAll = arg.parseSeperately ? true : false, newArgs = parseArgQuotes(args.slice(i), findAll);
 					args = args.slice(0, i).concat(newArgs);
-					if (arg.parseSeperately) {return parsedArgs.concat(newArgs)};
+					if (arg.parseSeperately) return parsedArgs.concat(newArgs);
 				} else {
 					args[i] = args.slice(i).join(" ");
 				}
@@ -129,6 +152,8 @@ module.exports = {
 			args[i] = parsedArg;
 			parsedArgs.push(parsedArg);
 		}
+		if (subcmd) parsedArgs.unshift(subcmd)
+
 		return parsedArgs;
 	},
 	parseFlags: async (bot, message, args, commandFlags) => {
