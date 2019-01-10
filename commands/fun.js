@@ -201,15 +201,30 @@ module.exports = [
 			super({
 				name: "quote",
 				description: "Makes a quote",
-				args: [
+				subcommands: [
 					{
-						allowQuotes: true,
-						infiniteArgs: true,
-						type: "member"
+						name: "message",
+						args: [
+							{
+								errorMsg: "You need to provide a valid message ID.",
+								type: "function",
+								testFunction: obj => /^\d{17,19}$/.test(obj)
+							}
+						]
 					},
 					{
-						infiniteArgs: true,
-						type: "string"
+						name: "fallback",
+						args: [
+							{
+								allowQuotes: true,
+								infiniteArgs: true,
+								type: "member"
+							},
+							{
+								infiniteArgs: true,
+								type: "string"
+							}
+						],
 					}
 				],
 				perms: {
@@ -217,17 +232,32 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "quote <user> <quote>"
+				usage: "quote <user> <quote> OR quote message <ID>"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			const member = args[0];
-			message.channel.send(new RichEmbed()
-			.setDescription(args[1])
-			.setAuthor(member.user.tag, member.user.avatarURL)
-			.setColor(Math.floor(Math.random() * 16777216))
-			)
+			if (args[0] == "message") {
+				message.channel.fetchMessage(args[1])
+				.then(msg => {
+					const quoteEmbed = new RichEmbed()
+						.setDescription(msg.content)
+						.setAuthor(msg.author.tag, msg.author.avatarURL || `https://cdn.discordapp.com/embed/avatars/${msg.author.discriminator % 5}.png`)
+						.setFooter("Sent")
+						.setTimestamp(msg.createdAt)
+						.addField("Jump to message", `[Click or tap here](https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${msg.id})`);
+					if (msg.member) quoteEmbed.setColor(msg.member.displayColor);
+					message.channel.send(quoteEmbed);
+				})
+				.catch(() => message.channel.send("⚠ A message with that ID was not found in this channel."))
+			} else {
+				const member = args[0];
+				message.channel.send(new RichEmbed()
+					.setDescription(args[1])
+					.setAuthor(member.user.tag, member.user.avatarURL)
+					.setColor(Math.floor(Math.random() * 16777216))
+				)
+			}
 		}
 	},
 	class RateCommand extends Command {

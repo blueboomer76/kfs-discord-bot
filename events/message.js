@@ -60,7 +60,7 @@ async function execCommand(runCommand, bot, message, args) {
 		flags = parsedFlags.flags;
 		args = parsedFlags.newArgs;
 	}
-	args = await argParser.parseArgs(bot, message, args, runCommand.args);
+	args = await argParser.parseArgs(bot, message, args, runCommand);
 	if (args.error) {
 		if (args.error.startsWith("Multiple")) return {cmdErr: `**${args.error}**\n${args.message}`};
 		return {cmdErr: `**${args.error}**\n${args.message}\n*The correct usage is:* \`${runCommand.usage}\``};
