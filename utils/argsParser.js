@@ -93,8 +93,31 @@ async function checkArgs(bot, message, args, cmdArg) {
 }
 
 module.exports = {
-	parseArgs: async (bot, message, args, commandArgs) => {
-		if (!commandArgs) return args;
+	parseArgs: async (bot, message, args, command) => {
+		const subcommands = command.subcommands;
+		let commandArgs = command.args;
+		if (commandArgs.length == 0 && subcommands.length == 0) return args;
+
+		let subcmd;
+		if (subcommands.length > 0) {
+			const foundScmd = subcommands.find(scmd => scmd.name == args[0]);
+			if (foundScmd) {
+				subcmd = foundScmd.name;
+				commandArgs = foundScmd.args;
+				args.shift();
+			} else {
+				const fallback = subcommands.find(scmd => scmd.name == "fallback")
+				if (fallback) {
+					commandArgs = fallback.args;
+				} else {
+					return {
+						error: "Invalid subcommand",
+						message: `You must provide one of these subcommands: ${subcommands.map(scmd => scmd.name).join(", ")}`
+					};
+				}
+			}
+		}
+
 		let parsedArgs = [];
 		for (let i = 0; i < commandArgs.length; i++) {
 			let arg = commandArgs[i];
@@ -132,6 +155,8 @@ module.exports = {
 			args[i] = parsedArg;
 			parsedArgs.push(parsedArg);
 		}
+		if (subcmd) parsedArgs.unshift(subcmd)
+
 		return parsedArgs;
 	},
 	parseFlags: async (bot, message, args, commandFlags) => {
