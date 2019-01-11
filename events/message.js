@@ -103,16 +103,18 @@ module.exports = async (bot, message) => {
 				if (runRes.cmdWarn) {
 					const errTitle = runRes.errTitle ? `**${runRes.errTitle}**\n` : ""
 					message.channel.send(`⚠ ${errTitle}${runRes.cmdWarn}`)
-				}
-				if (runRes.cmdErr) {
+				} else if (runRes.cmdErr) {
 					const errTitle = runRes.errTitle ? `**${runRes.errTitle}**\n` : ""
 					message.channel.send(`‼ ${errTitle}${runRes.cmdErr}`)
 				}
 			}
 			
 			if (!bot.ownerIds.includes(message.author.id) && runCommand.cooldown.time != 0) {
-				const cdOverride = runRes && runRes.cooldown ? runRes.cooldown : null;
-				cdChecker.addCooldown(bot, message, runCommand.name, cdOverride);
+				let cdOverrides = {name: runCommand.cooldown.name ? runCommand.cooldown.name : null};
+				if (runRes) {
+					cdOverrides.time = runRes.cooldown ? runRes.cooldown : null
+				}
+				cdChecker.addCooldown(bot, message, runCommand, cdOverrides);
 			}
 			
 			if (!runRes || !runRes.noLog) {

@@ -203,7 +203,8 @@ module.exports = [
 					},
 				],
 				cooldown: {
-					time: 20000,
+					name: "image-editing",
+					time: 15000,
 					type: "channel"
 				},
 				flags: [
@@ -317,7 +318,8 @@ module.exports = [
 					},
 				],
 				cooldown: {
-					time: 20000,
+					name: "image-editing",
+					time: 15000,
 					type: "channel"
 				},
 				perms: {
@@ -359,7 +361,8 @@ module.exports = [
 					},
 				],
 				cooldown: {
-					time: 20000,
+					name: "image-editing",
+					time: 15000,
 					type: "channel"
 				},
 				perms: {
@@ -402,7 +405,8 @@ module.exports = [
 					}
 				],
 				cooldown: {
-					time: 20000,
+					name: "image-editing",
+					time: 15000,
 					type: "channel"
 				},
 				perms: {
@@ -444,7 +448,8 @@ module.exports = [
 					}
 				],
 				cooldown: {
-					time: 20000,
+					name: "image-editing",
+					time: 15000,
 					type: "channel"
 				},
 				perms: {
@@ -526,7 +531,8 @@ module.exports = [
 					}
 				],
 				cooldown: {
-					time: 20000,
+					name: "image-editing",
+					time: 15000,
 					type: "channel"
 				},
 				perms: {
@@ -617,7 +623,8 @@ module.exports = [
 					},
 				],
 				cooldown: {
-					time: 20000,
+					name: "image-editing",
+					time: 15000,
 					type: "channel"
 				},
 				perms: {
@@ -672,7 +679,8 @@ module.exports = [
 					},
 				],
 				cooldown: {
-					time: 20000,
+					name: "image-editing",
+					time: 15000,
 					type: "channel"
 				},
 				perms: {
@@ -714,7 +722,8 @@ module.exports = [
 					},
 				],
 				cooldown: {
-					time: 20000,
+					name: "image-editing",
+					time: 15000,
 					type: "channel"
 				},
 				perms: {
