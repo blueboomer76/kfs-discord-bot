@@ -111,8 +111,11 @@ module.exports = async (bot, message) => {
 			}
 			
 			if (!bot.ownerIDs.includes(message.author.id) && runCommand.cooldown.time != 0 && (!runRes || runRes.cooldown)) {
-				const orCooldown = runRes && runRes.cooldown ? runRes.cooldown : null;
-				cdChecker.addCooldown(bot, message, runCommand.name, orCooldown);
+				let cdOverrides = {name: runCommand.cooldown.name ? runCommand.cooldown.name : null};
+				if (runRes) {
+					cdOverrides.time = runRes.cooldown && runRes.cooldown.time ? runRes.cooldown.time : null;
+				}
+				cdChecker.addCooldown(bot, message, runCommand, cdOverrides);
 			}
 			
 			/*
