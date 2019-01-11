@@ -8,6 +8,7 @@ class Command {
 		this.allowDMs = props.allowDMs || false;
 		this.args = [];
 		this.cooldown = props.cooldown || {time: 15000, type: "user"};
+		this.cooldown.name = props.cooldown && props.cooldown.name ? props.cooldown.name : null;
 		this.disabled = props.disabled || false;
 		this.examples = props.examples || [];
 		this.flags = [];

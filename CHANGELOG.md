@@ -2,6 +2,9 @@
 
 # 1.X (current)
 
+## 1.3.35
+- Added grouped cooldown support
+
 ## 1.3.34
 - Added subcommand support to commands
 - Changed resolvers to use promises instead
