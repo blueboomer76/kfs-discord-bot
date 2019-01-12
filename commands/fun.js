@@ -90,7 +90,7 @@ module.exports = [
 		}
 	
 		async run(bot, message, args, flags) {
-			let iters = args[0] ? args[0] : 1;
+			const iters = args[0] || 1;
 			if (iters == 1) {
 				let res;
 				if (Math.random() < 0.5) {res = "Heads"} else {res = "Tails"}

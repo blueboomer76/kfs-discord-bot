@@ -79,16 +79,16 @@ class KFSDiscordBot extends Client {
 	loadCommands() {
 		fs.readdir("./commands/", (err, files) => {
 			if (err) throw err;
-			let cmdFiles = files.filter(f => f.split(".").pop() == "js");
+			const cmdFiles = files.filter(f => f.split(".").pop() == "js");
 			if (cmdFiles.length > 0) {
 				for (const fileName of cmdFiles) {
-					let rawCategory = fileName.split(".").shift();
-					let category = capitalize(rawCategory.replace(/-/g, " "));
+					const rawCategory = fileName.split(".").shift(),
+						category = capitalize(rawCategory.replace(/-/g, " "));
 					this.categories.push(category);
-					let commandClasses = require(`./commands/${fileName}`);
+					const commandClasses = require(`./commands/${fileName}`);
 					if (commandClasses.length > 0) {
 						for (const CommandClass of commandClasses) {
-							let command = new CommandClass();
+							const command = new CommandClass();
 							command.category = category;
 							this.commands.set(command.name, command);
 							if (command.aliases.length > 0) {
@@ -114,8 +114,7 @@ class KFSDiscordBot extends Client {
 			const evFiles = files.filter(f => f.split(".").pop() == "js");
 			if (evFiles.length > 0) {
 				for (const eventFile of evFiles) {
-					let eventName = eventFile.split(".")[0];
-					let ev = require(`./events/${eventFile}`);
+					const eventName = eventFile.split(".")[0], ev = require(`./events/${eventFile}`);
 					this.on(eventName, ev.bind(null, this));
 					delete require.cache[require.resolve(`./events/${eventFile}`)];
 				}
@@ -131,25 +130,25 @@ class KFSDiscordBot extends Client {
 
 		fs.readFile("modules/stats.json", {encoding: "utf8"}, (err, data) => {
 			if (err) {console.error(err); return}
-			let storedStats = JSON.parse(data);
-			let cachedStats = this.cache.stats;
+			const storedStats = JSON.parse(data),
+				cachedStats = this.cache.stats;
 
 			storedStats.duration += Number(new Date()) - cachedStats.lastCheck;
 
-			let storedUsages = storedStats.commandUsages;
-			let cachedUsages = cachedStats.commandUsages;
+			const storedUsages = storedStats.commandUsages,
+				cachedUsages = cachedStats.commandUsages;
 			let commandCurrentTotal = cachedStats.commandCurrentTotal;
-			for (let i = 0; i < cachedUsages.length; i++) {
-				let cmdIndex = storedUsages.findIndex(u => u.command == cachedUsages[i].command);
+			for (const entry of cachedUsages) {
+				const cmdIndex = storedUsages.findIndex(u => u.command == entry.command);
 				if (cmdIndex != -1) {
-					storedUsages[cmdIndex].uses += cachedUsages[i].uses;
+					storedUsages[cmdIndex].uses += entry.uses;
 				} else {
 					storedUsages.push({
-						command: cachedUsages[i].command,
-						uses: cachedUsages[i].uses
+						command: entry.command,
+						uses: entry.uses
 					})
 				}
-				commandCurrentTotal += cachedUsages[i].uses;
+				commandCurrentTotal += entry.uses;
 			}
 			storedStats.commandTotal += commandCurrentTotal;
 			storedStats.callTotal += cachedStats.callCurrentTotal;
@@ -233,13 +232,13 @@ class KFSDiscordBot extends Client {
 	}
 	
 	async handlePhoneMessage(message) {
-		let phoneCache = this.cache.phone;
+		const phoneCache = this.cache.phone;
 		if (phoneCache.channels[0].deleted || phoneCache.channels[1].deleted) {
 			this.resetPhone(this);
 			return;
 		}
 		
-		const toSend = message.content.replace(/https?:\/\/\S+\.\S+/gi, "")
+		const toSend = message.cleanContent.replace(/https?:\/\/\S+\.\S+/gi, "")
 			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
 		let affected = 0;
 		
@@ -255,7 +254,7 @@ class KFSDiscordBot extends Client {
 	}
 	
 	async checkPhone(bot) {
-		let phoneCache = bot.cache.phone, dif = Number(new Date()) - phoneCache.lastMsgTime;
+		const phoneCache = bot.cache.phone, dif = Number(new Date()) - phoneCache.lastMsgTime;
 		if (dif < 1000*3595) {
 			phoneCache.timeout = setTimeout(bot.checkPhone, dif, bot);
 		} else {
@@ -264,7 +263,7 @@ class KFSDiscordBot extends Client {
 	}
 	
 	resetPhone(bot, phoneMsg) {
-		let phoneCache = bot.cache.phone;
+		const phoneCache = bot.cache.phone;
 		if (phoneMsg) {
 			phoneCache.channels[0].send(phoneMsg);
 			phoneCache.channels[1].send(phoneMsg);

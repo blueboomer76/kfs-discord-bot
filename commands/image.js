@@ -13,13 +13,13 @@ function getPosts(url, checkNsfw) {
 			if (err) return reject(`Could not request to Reddit: ${err.message}`);
 			if (!res) return reject("No response was received from Reddit.");
 			if (res.statusCode >= 400) return reject(`The request to Reddit failed with status code ${res.statusCode} (${res.statusMessage})`);
-			let results = res.body.data.children.filter(r => !r.data.stickied);
+			const results = res.body.data.children.filter(r => !r.data.stickied);
 		
 			if (checkNsfw) {
-				let sfwResults = [], nsfwResults = [];
+				const sfwResults = [], nsfwResults = [];
 				
 				for (const result of results) {
-					let postObj = {
+					const postObj = {
 						title: result.data.title,
 						url: result.data.permalink,
 						score: result.data.score,
@@ -36,7 +36,7 @@ function getPosts(url, checkNsfw) {
 				
 				resolve({sfw: sfwResults, nsfw: nsfwResults});
 			} else {
-				results = results.map(r => {
+				resolve(results.map(r => {
 					return {
 						title: r.data.title,
 						url: r.data.permalink,
@@ -45,8 +45,7 @@ function getPosts(url, checkNsfw) {
 						author: r.data.author,
 						imageURL: r.data.url
 					}
-				})
-				resolve(results);
+				}))
 			}
 		})
 	})
@@ -58,7 +57,7 @@ function sendRedditEmbed(message, postData) {
 		.setTitle(title.length > 250 ? `${title.slice(0, 250)}...` : title)
 		.setURL(`https://reddit.com${postData.url}`)
 		.setColor(Math.floor(Math.random() * 16777216))
-		.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | u/${postData.author}`)
+		.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
 		.setImage(postData.imageURL)
 	)
 }
@@ -465,11 +464,11 @@ module.exports = [
 			
 			Jimp.read(imageURL)
 			.then(img => {
-				let imgClone1 = img.clone(),
+				const imgClone1 = img.clone(),
 					imgClone2 = img.clone(),
 					imgWidth = img.bitmap.width,
 					imgHeight = img.bitmap.height;
-					
+
 				if (type == "haah" || type == "right-to-left") {
 					imgClone1.crop(imgWidth / 2, 0, imgWidth / 2, imgHeight);
 					imgClone2.crop(imgWidth / 2, 0, imgWidth / 2, imgHeight);

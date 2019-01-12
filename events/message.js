@@ -111,7 +111,7 @@ module.exports = async (bot, message) => {
 			}
 			
 			if (!bot.ownerIDs.includes(message.author.id) && runCommand.cooldown.time != 0 && (!runRes || runRes.cooldown)) {
-				let cdOverrides = {name: runCommand.cooldown.name ? runCommand.cooldown.name : null};
+				const cdOverrides = {name: runCommand.cooldown.name ? runCommand.cooldown.name : null};
 				if (runRes) {
 					cdOverrides.time = runRes.cooldown && runRes.cooldown.time ? runRes.cooldown.time : null;
 				}

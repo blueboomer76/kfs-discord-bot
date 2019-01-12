@@ -27,7 +27,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			message.channel.send(new RichEmbed()
-			.setTitle("About this bot")
+			.setAuthor("About this bot", bot.user.avatarURL)
 			.setDescription("This is an actively developed bot that not only has fun, moderation, utility commands, but a phone command for calling other servers, and combines features from popular bots.")
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter(`Bot ID: ${bot.user.id}`)
@@ -78,7 +78,7 @@ module.exports = [
 			const command = args[0], helpEmbed = new RichEmbed();
 			if (!command) {
 				helpEmbed.setTitle("All bot commands")
-				.setDescription(`Use \`help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\``)
+				.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\``)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`There are ${bot.commands.size} commands in total.`);
 				let cmds = bot.commands;
@@ -86,7 +86,7 @@ module.exports = [
 					cmds = cmds.filter(cmd => !cmd.disabled && !cmd.hidden);
 				}
 				for (let i = 0; i < bot.categories.length; i++) {
-					let cmdsInCat = cmds.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
+					const cmdsInCat = cmds.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
 					helpEmbed.addField(bot.categories[i], cmdsInCat.join(", "));
 				}
 			} else {
@@ -100,18 +100,18 @@ module.exports = [
 					};
 
 				helpEmbed.setTitle(`Help - ${command.name}`)
-				.setColor(Math.floor(Math.random() * 16777216))
-				.addField("Category", command.category)
-				.addField("Description", command.description)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.addField("Category", command.category)
+					.addField("Description", command.description)
 				if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "))
 				if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"))
-				helpEmbed.addField("Usage", command.usage)
+				helpEmbed.addField("Usage", bot.prefix + command.usage)
 				if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.join("\n"))
 				if (command.allowDMs) helpEmbed.addField("Allows DMs", "Yes")
 				if (commandPerms.bot.length > 0 || commandPerms.user.length > 0 || commandPerms.role || commandPerms.level > 0) {
 					helpEmbed.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`)
 				}
-				helpEmbed.addField("Cooldown", `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}`)
+				helpEmbed.addField("Cooldown", command.cooldown.time != 0 ? `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}` : "None")
 			}
 			if (flags.some(f => f.name == "dm")) {
 				message.member.send(helpEmbed)
@@ -187,14 +187,14 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let category = capitalize(args[0]), commandName = args[1].toLowerCase();
+			const category = capitalize(args[0]), commandName = args[1].toLowerCase();
 			
 			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."}
 			try {
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
-				let commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
-					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[2] ? args[2].toLowerCase() : commandName)),
-					newCommand;
+				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
+					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[2] ? args[2].toLowerCase() : commandName));
+				let newCommand;
 				try {
 					newCommand = new CommandClass();
 				} catch(err2) {
@@ -225,7 +225,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let phoneMsg, phoneMsg0, phoneCache = bot.cache.phone;
+			const phoneCache = bot.cache.phone;
+			let phoneMsg, phoneMsg0;
 			if (!phoneCache.channels.some(c => c.id == message.channel.id)) {
 				phoneCache.channels.push(message.channel);
 				if (phoneCache.channels.length == 1) {
@@ -313,9 +314,9 @@ module.exports = [
 				category = command.category;
 			try {
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
-				let commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
-					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[1] ? args[1].toLowerCase() : commandName)),
-					newCommand;
+				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
+					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[1] ? args[1].toLowerCase() : commandName));
+				let newCommand;
 				try {
 					newCommand = new CommandClass();
 				} catch(err2) {
@@ -366,7 +367,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			try {
-				let res = delete require.cache[require.resolve(`../${args[0]}`)];
+				const res = delete require.cache[require.resolve(`../${args[0]}`)];
 				if (res) {
 					message.channel.send(`The file ${args[0]} was reloaded and its require.cache has been cleared.`);
 				} else {
@@ -381,7 +382,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "shutdown",
-				description: "Shuts down the bot",
+				description: "Shuts down the bot and kills its process",
 				allowDMs: true,
 				cooldown: {
 					time: 0,
@@ -434,7 +435,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let statsEmbed = new RichEmbed()
+			const statsEmbed = new RichEmbed()
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setTimestamp(message.createdAt)
 
@@ -445,10 +446,8 @@ module.exports = [
 				const storedStats = require("../modules/stats.json"),
 					processUptime = process.uptime() * 1000,
 					duration = storedStats.duration + (Number(new Date()) - bot.cache.stats.lastCheck);
-
-				let beginEval = new Date();
-
-				let serverCount = bot.guilds.size,
+				const beginEval = new Date();
+				const serverCount = bot.guilds.size,
 					bigServerCount = bot.guilds.filter(g => g.large).size,
 					userCount = bot.users.size,
 					onlineUserCount = bot.users.filter(u => u.presence.status != "offline").size,
@@ -456,8 +455,8 @@ module.exports = [
 					voiceChannelCount = bot.channels.filter(chnl => chnl.type == "voice").size,
 					categoryCount = bot.channels.filter(chnl => chnl.type == "category").size;
 				let commandCurrentTotal = bot.cache.stats.commandCurrentTotal;
-				for (let i = 0; i < bot.cache.stats.commandUsages.length; i++) {
-					commandCurrentTotal += bot.cache.stats.commandUsages[i].uses;
+				for (const usageCacheEntry of bot.cache.stats.commandUsages) {
+					commandCurrentTotal += usageCacheEntry.uses;
 				}
 				let sessionCommands = bot.cache.stats.commandSessionTotal + commandCurrentTotal,
 					totalCommands = storedStats.commandTotal + commandCurrentTotal,
@@ -544,7 +543,7 @@ module.exports = [
 		}
 		
 		postProcessorStats(message, processorEmbed, cpuUsage1) {
-			let cpuUsage2 = [], cpus = os.cpus();
+			const cpuUsage2 = [], cpus = os.cpus();
 			for (const cpu of cpus) {
 				cpuUsage2.push({
 					idle: cpu.times.idle,
@@ -552,8 +551,7 @@ module.exports = [
 				})
 			}
 			
-			let usagePercentages = [];
-			
+			const usagePercentages = [];
 			for (let i = 0; i < cpus.length; i++) {
 				let idleDif = cpuUsage2[i].idle - cpuUsage1[i].idle, nonidleDif = cpuUsage2[i].nonidle - cpuUsage1[i].nonidle;
 				usagePercentages.push(nonidleDif / (idleDif + nonidleDif))

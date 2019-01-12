@@ -76,7 +76,7 @@ module.exports = [
 				}
 			});
 			this.questions = [];
-			this.lettersObj = ["A", "B", "C", "D"];
+			this.letters = ["A", "B", "C", "D"];
 		}
 		
 		async run(bot, message, args, flags) {
@@ -98,14 +98,14 @@ module.exports = [
 			
 			for (let i = tempAnswers.length; i > 0; i--) {
 				let ans = tempAnswers.splice(Math.floor(Math.random() * i), 1)[0];
-				if (ans == tQuestion.answer) answerLetter = this.lettersObj[numAnswers - i];
+				if (ans == tQuestion.answer) answerLetter = this.letters[numAnswers - i];
 				answers.push(ans);
 			}
 			
 			let i = -1;
 			message.channel.send("__**Trivia**__" + "\n" + tQuestion.question.replace(/&quot;/g, "\"").replace(/&#039;/g, "'") + "\n\n" + answers.map(a => {
 				i++;
-				return `${this.lettersObj[i]} - ${a}`
+				return `${this.letters[i]} - ${a}`
 			}).join("\n") + "\n\n" + "*Answer with the letter of your choice.*")
 			.then(msg => {
 				msg.channel.awaitMessages(msg2 => msg2.author.id == message.author.id && (["A", "B", "C", "D"]).includes(msg2.content.toUpperCase()), {
