@@ -27,7 +27,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0] ? args[0] : message.member,
-				avatarURL = member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
+				avatarURL = member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
 			message.channel.send(new RichEmbed()
 			.setTitle(`Avatar - ${member.user.tag}`)
 			.setDescription(`Avatar URL: ${avatarURL}`)
@@ -63,7 +63,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const channel = args[0] ? args[0] : message.channel,
+			const channel = args[0] || message.channel,
 				createdDate = new Date(channel.createdTimestamp),
 				channelEmbed = new RichEmbed()
 					.setTitle(`Channel Info - ${channel.name}`)
@@ -173,12 +173,11 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let consoleFlag = flags.find(f => f.name == "console");
-			let toEval = args[0];
+			const consoleFlag = flags.some(f => f.name == "console");
 			let result, beginEvalDate, endEvalDate;
 			try {
 				beginEvalDate = Number(new Date());
-				result = eval(toEval);
+				result = eval(args[0]);
 			} catch (err) {
 				result = err;
 				if (err && err.stack && !consoleFlag) result = err.stack;
@@ -191,10 +190,10 @@ module.exports = [
 				console.log(result);
 				message.react("✅");
 			} else {
-				if (toEval.length > 1000) toEval = toEval.slice(0, 1000) + "...";
+				const toEval = args[0].length > 1000 ? `${args[0].slice(0, 1000)}...` : args[0];
 				if (result != undefined && result != null) {
-					let result2 = result.toString();
-					if (result2.length > 1000) result = result2.slice(0, 1000) + "...";
+					const result2 = result.toString();
+					if (result2.length > 1000) result = `${result2.slice(0, 1000)}...`;
 				}
 				message.channel.send(new RichEmbed()
 				.setTitle("discord.js Evaluator")
@@ -235,7 +234,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const role = args[0], rolePos = role.calculatedPosition;
 	
-			let createdDate = new Date(role.createdTimestamp);
+			const createdDate = new Date(role.createdTimestamp);
 	
 			let roleMembers;
 			if (!message.guild.large) {
@@ -251,7 +250,7 @@ module.exports = [
 				})
 			}
 	
-			let guildRoles = message.guild.roles.array();
+			const guildRoles = message.guild.roles.array();
 			guildRoles.splice(guildRoles.findIndex(r => r.calculatedPosition == 0), 1);
 			let nearbyRoles = [];
 			for (let i = rolePos + 2; i > rolePos - 3; i--) {
@@ -365,8 +364,8 @@ module.exports = [
 				})
 			}
 
-			if (roleMembers.size == 0) return {cmdWarn: `There are no members in the role ${role.name}.`};
-			if (roleMembers.size > 250) return {cmdWarn: `There are more than 250 members in the role ${role.name}.`};
+			if (roleMembers.size == 0) return {cmdWarn: `There are no members in the role **${role.name}**.`};
+			if (roleMembers.size > 250) return {cmdWarn: `There are more than 250 members in the role **${role.name}**.`};
 
 			paginator.paginate(message, {title: `List of members in role - ${role.name}`}, [roleMembers.map(m => m.user.tag)], {
 				embedColor: role.color,
@@ -398,7 +397,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let guild = message.guild, guildMembers;
+			const guild = message.guild;
+			let guildMembers;
 			if (!guild.large) {
 				guildMembers = guild.members;
 			} else {
@@ -483,11 +483,11 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0] ? args[0] : message.member;
-	
+			const member = args[0] || message.member;
+
 			let createdDate = new Date(member.user.createdTimestamp);
 			let joinedDate = new Date(member.joinedTimestamp);
-	
+			
 			let rawPresence = member.presence, presence;
 			if (rawPresence.status == "online") {
 				presence = "Online";
@@ -532,18 +532,18 @@ module.exports = [
 				if (roleList.length > 1000) roleList = roleList.slice(0, 1000) + "...";
 			}
 
-			let userEmbed = new RichEmbed()
-			.setTitle(`User Info - ${member.user.tag}`)
-			.setFooter(`ID: ${member.id}`)
-			.setThumbnail(member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`)
-			.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
-			.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`)
-			.addField("Status", presence, true)
-			.addField("Bot user", member.user.bot ? "Yes" : "No", true)
-			.addField("Nickname", member.nickname || "None", true)
-			.addField("Member #", joinPos + 1, true)
-			.addField("Join order", nearbyMems.join(" > "))
-			.addField(`Roles - ${memRoles.length}`, roleList)
+			const userEmbed = new RichEmbed()
+				.setTitle(`User Info - ${member.user.tag}`)
+				.setFooter(`ID: ${member.id}`)
+				.setThumbnail(member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`)
+				.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`)
+				.addField("Status", presence, true)
+				.addField("Bot user", member.user.bot ? "Yes" : "No", true)
+				.addField("Nickname", member.nickname || "None", true)
+				.addField("Member #", joinPos + 1, true)
+				.addField("Join order", nearbyMems.join(" > "))
+				.addField(`Roles - ${memRoles.length}`, roleList);
 	
 			if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
 				userEmbed.setColor(member.displayColor);

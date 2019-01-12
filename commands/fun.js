@@ -92,7 +92,7 @@ module.exports = [
 		}
 	
 		async run(bot, message, args, flags) {
-			let iters = args[0] ? args[0] : 1;
+			const iters = args[0] || 1;
 			if (iters == 1) {
 				let res;
 				if (Math.random() < 0.5) {res = "Heads"} else {res = "Tails"}
@@ -386,8 +386,8 @@ module.exports = [
 			}
 			
 			let toShipRaw1 = toShip1, toShipRaw2 = toShip2;
-			if (toShipRaw1.length > 500) toShipRaw1 = toShipRaw1.slice(0, 500) + "...";
-			if (toShipRaw2.length > 500) toShipRaw2 = toShipRaw2.slice(0, 500) + "...";
+			if (toShipRaw1.length > 500) toShipRaw1 = `${toShipRaw1.slice(0, 500)}...`;
+			if (toShipRaw2.length > 500) toShipRaw2 = `${toShipRaw2.slice(0, 500)}...`;
 			message.channel.send(`I would rate the ship between \`${toShipRaw1}\` and \`${toShipRaw2}\` a ${(Math.abs(hash % 90 / 10) + 1).toFixed(1)}/10`)
 		}
 	}
