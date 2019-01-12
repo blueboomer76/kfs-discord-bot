@@ -72,7 +72,8 @@ module.exports = {
 				} else {
 					toSend += "This command"
 				}
-				toSend += ` cannot be used again for **${((checkedCd.resets - Number(new Date())) / 1000).toFixed(1)} seconds**`
+				const cdTime = ((checkedCd.resets - Number(new Date())) / 1000).toFixed(1);
+				toSend += ` cannot be used again for **${cdTime > 0 ? cdTime : 0.1} seconds**`
 				if (cdType == "channel") {
 					toSend += " in this channel"
 				} else if (cdType == "guild") {

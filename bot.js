@@ -81,15 +81,15 @@ class KendraBot extends Client {
 	loadCommands() {
 		fs.readdir("./commands/", (err, files) => {
 			if (err) throw err;
-			let cmdFiles = files.filter(f => f.split(".").pop() == "js").map(f => f.split(".").shift());
+			const cmdFiles = files.filter(f => f.split(".").pop() == "js").map(f => f.split(".").shift());
 			if (cmdFiles.length != 0) {
 				for (let category of cmdFiles) {
 					category = capitalize(category.replace(/-/g, " "));
 					this.categories.push(category);
-					let commandClasses = require(`./commands/${category.toLowerCase().replace(/ /g, "-")}`);
+					const commandClasses = require(`./commands/${category.toLowerCase().replace(/ /g, "-")}`);
 					if (commandClasses.length > 0) {
 						for (const CommandClass of commandClasses) {
-							let command = new CommandClass();
+							const command = new CommandClass();
 							command.category = category;
 							this.commands.set(command.name, command);
 							if (command.aliases.length > 0) {
@@ -115,8 +115,7 @@ class KendraBot extends Client {
 			const evFiles = files.filter(f => f.split(".").pop() == "js");
 			if (evFiles.length > 0) {
 				for (const eventFile of evFiles) {
-					let eventName = eventFile.split(".")[0];
-					let ev = require(`./events/${eventFile}`);
+					const eventName = eventFile.split(".")[0], ev = require(`./events/${eventFile}`);
 					this.on(eventName, ev.bind(null, this));
 					delete require.cache[require.resolve(`./events/${eventFile}`)];
 				}
@@ -132,28 +131,30 @@ class KendraBot extends Client {
 			await delete require.cache[require.resolve("./modules/stats.json")];
 		}
 		setTimeout(() => {
-			let stats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8"));
-			let stats2 = this.cache.stats;
+			const stats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8")),
+				stats2 = this.cache.stats;
 			stats.duration = stats.duration + (Number(new Date()) - stats2.lastCheck)
 			stats.messageTotal += stats2.messageCurrentTotal;
-			let distrib = stats.commandDistrib;
-			let usageCache = stats2.commandUsage;
+
+			const distrib = stats.commandDistrib,
+				usageCache = stats2.commandUsage;
 			let commandCurrentTotal = stats2.commandCurrentTotal;
-			for (let i = 0; i < usageCache.length; i++) {
-				let cmdIndex = distrib.findIndex(u => u.command == usageCache[i].command)
+			for (const entry of usageCache) {
+				const cmdIndex = distrib.findIndex(u => u.command == entry.command)
 				if (cmdIndex != -1) {
-					distrib[cmdIndex].uses += usageCache[i].uses;
+					distrib[cmdIndex].uses += entry.uses;
 				} else {
 					distrib.push({
-						command: usageCache[i].command,
-						uses: usageCache[i].uses
+						command: entry.command,
+						uses: entry.uses
 					})
 				}
-				commandCurrentTotal += usageCache[i].uses;
+				commandCurrentTotal += entry.uses;
 			}
 			stats.callTotal += stats2.callCurrentTotal;
 			stats.commandTotal += commandCurrentTotal;
 			fs.writeFile("modules/stats.json", JSON.stringify(stats, null, 4), err => {if (err) throw err;});
+
 			stats2.messageSessionTotal += stats2.messageCurrentTotal;
 			stats2.messageCurrentTotal = 0;
 			stats2.callSessionTotal += stats2.callCurrentTotal;
@@ -224,13 +225,13 @@ class KendraBot extends Client {
 	}
 	
 	async handlePhoneMessage(message) {
-		let phoneCache = this.cache.phone;
+		const phoneCache = this.cache.phone;
 		if (phoneCache.channels[0].deleted || phoneCache.channels[1].deleted) {
 			this.resetPhone(this);
 			return;
 		}
 		
-		const toSend = message.content.replace(/https?\:\/\/\S+\.\S+/gi, "")
+		const toSend = message.cleanContent.replace(/https?\:\/\/\S+\.\S+/gi, "")
 			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
 		let affected = 0;
 		
@@ -246,8 +247,8 @@ class KendraBot extends Client {
 	}
 	
 	async checkPhone(bot) {
-		let phoneCache = bot.cache.phone, dif = Number(new Date()) - phoneCache.lastMsgTime;
-		if (dif < 1000*55) {
+		const phoneCache = bot.cache.phone, dif = Number(new Date()) - phoneCache.lastMsgTime;
+		if (dif < 1000*3595) {
 			phoneCache.timeout = setTimeout(bot.checkPhone, dif, bot);
 		} else {
 			bot.resetPhone(bot, "⏰ The phone call has timed out due to inactivity.");
@@ -255,7 +256,7 @@ class KendraBot extends Client {
 	}
 	
 	resetPhone(bot, phoneMsg) {
-		let phoneCache = bot.cache.phone;
+		const phoneCache = bot.cache.phone;
 		if (phoneMsg) {
 			phoneCache.channels[0].send(phoneMsg);
 			phoneCache.channels[1].send(phoneMsg);

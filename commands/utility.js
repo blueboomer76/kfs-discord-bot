@@ -27,7 +27,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0] ? args[0] : message.member,
-				avatarURL = member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
+				avatarURL = member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
 			message.channel.send(new RichEmbed()
 			.setTitle(`Avatar - ${member.user.tag}`)
 			.setColor(Math.floor(Math.random() * 16777216))
@@ -63,7 +63,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const channel = args[0] ? args[0] : message.channel,
+			const channel = args[0] || message.channel,
 				createdDate = new Date(channel.createdTimestamp),
 				channelPosition = channel.type == "category" ? channel.position : channel.calculatedPosition,
 				channelEmbed = new RichEmbed()
@@ -75,7 +75,7 @@ module.exports = [
 					.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
 					.addField("Accessible to everyone", channel.permissionsFor(message.guild.id).has("READ_MESSAGES") ? "Yes" : "No", true)
 			
-			let posInfo = channel.type == "voice" ? "voice" : "text and category";
+			const posInfo = channel.type == "voice" ? "voice" : "text and category";
 			channelEmbed.addField(`Relative position to ${posInfo} channels`, channelPosition + 1, true)
 			
 			if (channel.type == "text") {
@@ -158,12 +158,13 @@ module.exports = [
 					user: [],
 					level: 5
 				},
-				usage: "eval <code>"
+				usage: "eval <code> [--console]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let res, beginEval, endEval, consoleFlag = flags.find(f => f.name == "console");
+			const consoleFlag = flags.some(f => f.name == "console");
+			let res, beginEval, endEval;
 			try {
 				beginEval = Number(new Date());
 				res = eval(args[0]);
@@ -178,7 +179,7 @@ module.exports = [
 				console.log(res);
 				message.react("✅");
 			} else {
-				let toEval = args[0].length < 1000 ? args[0] : args[0].slice(0,1000);
+				const toEval = args[0].length < 1000 ? args[0] : args[0].slice(0,1000);
 				if (res != undefined && res != null && res.toString().length > 1000) {
 					res = `${res.toString().slice(0,1000)}...`
 				};
@@ -219,8 +220,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const role = args[0], rolePos = role.calculatedPosition;
-			let roleMembers, guildRoles = message.guild.roles, nearbyRoles = [];
+			const role = args[0], rolePos = role.calculatedPosition, guildRoles = message.guild.roles;
+			let roleMembers, nearbyRoles = [];
 				
 			if (!message.guild.large) {
 				roleMembers = role.members;
@@ -293,7 +294,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const entries = message.guild.roles.array(), orderedFlag = flags.find(f => f.name == "ordered");
+			const entries = message.guild.roles.array(), orderedFlag = flags.some(f => f.name == "ordered");
 			if (orderedFlag) entries.sort((a,b) => b.position - a.position);	
 			paginator.paginate(message, {title: `List of roles - ${message.guild.name}`}, [entries.map(role => role.name)], {
 				limit: 25,
@@ -335,8 +336,8 @@ module.exports = [
 			
 			// Need to add await get guild members here
 			
-			if (roleMembers.length == 0) return {cmdWarn: `There are no members in the role ${role.name}.`}
-			if (roleMembers.length >= 250) return {cmdWarn: `There are more than 250 members in the role ${role.name}.`}
+			if (roleMembers.length == 0) return {cmdWarn: `There are no members in the role **${role.name}**.`}
+			if (roleMembers.length >= 250) return {cmdWarn: `There are more than 250 members in the role **${role.name}**.`}
 					
 			paginator.paginate(message, {title: `List of members in role - ${role.name}`}, [roleMembers.map(m => m.user.tag)], {
 				embedColor: role.color,
@@ -368,7 +369,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let guild = message.guild, guildMembers;
+			const guild = message.guild;
+			let guildMembers;
 			if (!guild.large) {
 				guildMembers = guild.members;
 			} else {
@@ -451,7 +453,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0] ? args[0] : message.member, guildMembers, userRoles = member.roles.array();
+			const member = args[0] || message.member;
+			let guildMembers, userRoles = member.roles.array();
 			
 			userRoles.splice(userRoles.findIndex(role => role.id == message.guild.id), 1);
 			userRoles = userRoles.map(role => role.name);
@@ -490,21 +493,21 @@ module.exports = [
 			}
 			if (memPresence.game) userPresence += ` (playing ${memPresence.game.name})`
 			
-			let createdDate = new Date(member.user.createdTimestamp);
-			let joinedDate = new Date(member.joinedTimestamp);
+			const createdDate = new Date(member.user.createdTimestamp),
+				joinedDate = new Date(member.joinedTimestamp);
 			
-			let userEmbed = new RichEmbed()
-			.setTitle(`User Info - ${member.user.tag}`)
-			.setThumbnail(member.user.avatarURL ? member.user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`)
-			.setFooter(`ID: ${member.id}`)
-			.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
-			.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`)
-			.addField("Status", userPresence, true)
-			.addField("Nickname", member.nickname ? member.nickname : "None", true)
-			.addField("Bot user", member.user.bot ? "Yes" : "No", true)
-			.addField("Member #", joinPos + 1, true)
-			.addField("Join order", `${nearbyMems.join(" > ")}`)
-			.addField(`Roles - ${userRoles.length}`, userRoles.length == 0 ? "None" : userRoles.join(", "));
+			const userEmbed = new RichEmbed()
+				.setTitle(`User Info - ${member.user.tag}`)
+				.setThumbnail(member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`)
+				.setFooter(`ID: ${member.id}`)
+				.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`)
+				.addField("Status", userPresence, true)
+				.addField("Nickname", member.nickname ? member.nickname : "None", true)
+				.addField("Bot user", member.user.bot ? "Yes" : "No", true)
+				.addField("Member #", joinPos + 1, true)
+				.addField("Join order", `${nearbyMems.join(" > ")}`)
+				.addField(`Roles - ${userRoles.length}`, userRoles.length == 0 ? "None" : userRoles.join(", "));
 			
 			if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
 				userEmbed.setColor(member.displayColor);

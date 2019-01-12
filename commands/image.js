@@ -11,13 +11,13 @@ function getPosts(url, checkNsfw) {
 			json: true
 		}, (err, res) => {
 			if (err || res.statusCode >= 400) reject(`Failed to fetch from Reddit. (status code ${res.statusCode})`)
-			let results = res.body.data.children.filter(r => !r.data.stickied);
+			const results = res.body.data.children.filter(r => !r.data.stickied);
 		
 			if (checkNsfw) {
-				let sfwResults = [], nsfwResults = [];
+				const sfwResults = [], nsfwResults = [];
 				
 				for (const result of results) {
-					let postObj = {
+					const postObj = {
 						title: result.data.title,
 						url: result.data.permalink,
 						score: result.data.score,
@@ -34,7 +34,7 @@ function getPosts(url, checkNsfw) {
 				
 				resolve({sfw: sfwResults, nsfw: nsfwResults});
 			} else {
-				results = results.map(r => {
+				resolve(results.map(r => {
 					return {
 						title: r.data.title,
 						url: r.data.permalink,
@@ -43,8 +43,7 @@ function getPosts(url, checkNsfw) {
 						author: r.data.author,
 						imageURL: r.data.url
 					}
-				})
-				resolve(results)
+				}))
 			}
 		})
 	})
@@ -55,7 +54,7 @@ function sendRedditEmbed(message, postData) {
 		.setTitle(`${postData.title.replace(/&amp;/g, "&")}`)
 		.setURL(`https://reddit.com${postData.url}`)
 		.setColor(Math.floor(Math.random() * 16777216))
-		.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | u/${postData.author}`)
+		.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
 		.setImage(postData.imageURL)
 	)
 }
@@ -556,18 +555,17 @@ module.exports = [
 			
 			Jimp.read(imageURL)
 			.then(img => {
-				let imgToSend,
-					imgClone1 = img.clone(),
+				const imgClone1 = img.clone(),
 					imgClone2 = img.clone(),
 					imgWidth = img.bitmap.width,
 					imgHeight = img.bitmap.height;
-					
+
 				if (type == "haah" || type == "right-to-left") {
 					imgClone1.crop(imgWidth/2,0,imgWidth/2,imgHeight);
 					imgClone2.crop(imgWidth/2,0,imgWidth/2,imgHeight);
 					imgClone2.mirror(true, false);
 					
-					imgToSend = new Jimp(imgWidth, imgHeight, (err, img2) => {
+					new Jimp(imgWidth, imgHeight, (err, img2) => {
 						img2.composite(imgClone1,imgWidth/2,0)
 						img2.composite(imgClone2,0,0)
 						imageManager.postImage(message, img2, "mirror-haah.png")
@@ -578,7 +576,7 @@ module.exports = [
 					imgClone2.crop(0,imgHeight/2,imgWidth,imgHeight/2);
 					imgClone2.mirror(false, true);
 					
-					imgToSend = new Jimp(imgWidth, imgHeight, (err, img2) => {
+					new Jimp(imgWidth, imgHeight, (err, img2) => {
 						img2.composite(imgClone1,0,imgHeight/2)
 						.composite(imgClone2,0,0)
 						imageManager.postImage(message, img2, "mirror-hooh.png")
@@ -588,7 +586,7 @@ module.exports = [
 					imgClone2.crop(0,0,imgWidth/2,imgHeight);
 					imgClone2.mirror(true, false);
 					
-					imgToSend = new Jimp(imgWidth, imgHeight, (err, img2) => {
+					new Jimp(imgWidth, imgHeight, (err, img2) => {
 						img2.composite(imgClone1,0,0)
 						.composite(imgClone2,imgWidth/2,0)
 						imageManager.postImage(message, img2, "mirror-waaw.png")
@@ -598,7 +596,7 @@ module.exports = [
 					imgClone2.crop(0,0,imgWidth,imgHeight/2);
 					imgClone2.mirror(false, true);
 					
-					imgToSend = new Jimp(imgWidth, imgHeight, (err, img2) => {
+					new Jimp(imgWidth, imgHeight, (err, img2) => {
 						img2.composite(imgClone1,0,0)
 						.composite(imgClone2,0,imgHeight/2)
 						imageManager.postImage(message, img2, "mirror-woow.png")

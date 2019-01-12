@@ -28,7 +28,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			message.channel.send(new RichEmbed()
-			.setTitle("About Kendra")
+			.setAuthor("About this bot", bot.user.avatarURL)
 			.setDescription("Kendra is an actively developed bot that not only has fun, moderation, utility commands, but a phone command for calling other servers, and combines features from popular bots. New commands are added to Kendra often.")
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter(`Bot ID: ${bot.user.id}`)
@@ -79,7 +79,7 @@ module.exports = [
 			const command = args[0], helpEmbed = new RichEmbed();
 			if (!command) {
 				helpEmbed.setTitle("All the commands for this bot")
-				.setDescription("Use `k,help <command>` to get help for a command, e.g. `k,help urban`")
+				.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\``)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`There are ${bot.commands.size} commands in total.`);
 				let cmds = bot.commands;
@@ -87,7 +87,7 @@ module.exports = [
 					cmds = cmds.filter(cmd => !cmd.hidden);
 				}
 				for (let i = 0; i < bot.categories.length; i++) {
-					let cmdsInCat = cmds.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
+					const cmdsInCat = cmds.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
 					helpEmbed.addField(bot.categories[i], Array.from(cmdsInCat).join(", "));
 				}
 			} else {
@@ -100,17 +100,17 @@ module.exports = [
 						level: commandPerms.level > 0 ? `\nRequires being ${bot.permLevels[commandPerms.level].name}.` : ""
 					};
 				helpEmbed.setTitle(`Help - ${command.name}`)
-				.setColor(Math.floor(Math.random() * 16777216))
-				.addField("Category", command.category)
-				.addField("Description", command.description)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.addField("Category", command.category)
+					.addField("Description", command.description)
 				if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "))
 				if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"))
-				helpEmbed.addField("Usage", command.usage)
+				helpEmbed.addField("Usage", bot.prefix + command.usage)
 				if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.join("\n"))
 				if (commandPerms.bot.length > 0 || commandPerms.user.length > 0 || commandPerms.role || commandPerms.level > 0) {
 					helpEmbed.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`)
 				}
-				helpEmbed.addField("Cooldown", `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}`)
+				helpEmbed.addField("Cooldown", command.cooldown.time != 0 ? `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}` : "None")
 			}
 			if (flags.some(f => f.name == "dm")) {
 				message.member.send(helpEmbed)
@@ -188,12 +188,13 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let category = args[0], commandName = args[1], newCommand;
+			const category = args[0], commandName = args[1];
+			let newCommand;
 			
 			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."}
 			try {
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
-				let commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
+				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[2] ? args[2].toLowerCase() : args[1].toLowerCase()))
 				try {
 					newCommand = new CommandClass();
@@ -225,7 +226,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let phoneMsg, phoneMsg0, phoneCache = bot.cache.phone;
+			const phoneCache = bot.cache.phone;
+			let phoneMsg, phoneMsg0;
 			if (!phoneCache.channels.some(c => c.id == message.channel.id)) {
 				phoneCache.channels.push(message.channel);
 				if (phoneCache.channels.length == 1) {
@@ -233,7 +235,7 @@ module.exports = [
 				} else {
 					bot.cache.stats.callCurrentTotal++;
 					phoneCache.lastMsgTime = Number(new Date());
-					phoneCache.timeout = setTimeout(bot.checkPhone, 1000*60, bot);
+					phoneCache.timeout = setTimeout(bot.checkPhone, 1000*3600, bot);
 					
 					message.channel.send("☎ A phone connection has started! Greet the other side!");
 					if (phoneCache.channels.length == 2) {
@@ -311,8 +313,8 @@ module.exports = [
 			let command = args[0], newCommand, commandName = command.name, category = command.category;
 			try {
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
-				let commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`);
-				let CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[1] ? args[1] : args[0].name));
+				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
+					CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[1] ? args[1] : args[0].name));
 				try {
 					newCommand = new CommandClass();
 				} catch(err2) {
@@ -363,7 +365,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			try {
-				let res = delete require.cache[require.resolve(`../${args[0]}`)];
+				const res = delete require.cache[require.resolve(`../${args[0]}`)];
 				if (res) {
 					message.channel.send(`The file ${args[0]} was reloaded and its require.cache has been cleared.`);
 				} else {
@@ -374,12 +376,11 @@ module.exports = [
 			}
 		}
 	},
-	class RestartCommand extends Command {
+	class ShutdownCommand extends Command {
 		constructor() {
 			super({
-				name: "restart",
-				description: "Restarts the bot",
-				aliases: ["reboot"],
+				name: "shutdown",
+				description: "Shuts down the bot and kills its process",
 				allowDMs: true,
 				cooldown: {
 					time: 0,
@@ -395,12 +396,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			message.channel.send("Restarting the bot in 10 seconds...");
-			bot.logStats();
-			setTimeout(() => {
-				bot.destroy();
-				process.exit(1);
-			}, 10000)
+			await message.channel.send("Shutting down the bot...");
+			await bot.logStats();
+			bot.destroy();
+			process.exit(1);
 		}
 	},
 	class StatsCommand extends Command {
@@ -432,7 +431,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let statsEmbed = new RichEmbed()
+			const statsEmbed = new RichEmbed()
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setTimestamp(message.createdAt)
 			
@@ -440,7 +439,7 @@ module.exports = [
 				statsEmbed.setAuthor(`Kendra Bot Stats - Processor`, bot.user.avatarURL)
 				this.getProcessorStats(message, statsEmbed);
 			} else {
-				let beginEval = new Date(),
+				const beginEval = new Date(),
 					serverCount = bot.guilds.size,
 					bigServerCount = bot.guilds.filter(g => g.large).size,
 					userCount = bot.users.size,
@@ -451,12 +450,12 @@ module.exports = [
 					sessionMessages = bot.cache.stats.messageCurrentTotal + bot.cache.stats.messageSessionTotal,
 					totalMessages = stats.messageTotal + bot.cache.stats.messageCurrentTotal,
 					sessionCalls = bot.cache.stats.callCurrentTotal + bot.cache.stats.callSessionTotal,
-					totalCalls = stats.callTotal + bot.cache.stats.callCurrentTotal,
-					commandCurrentTotal = bot.cache.stats.commandCurrentTotal;
-				for (let i = 0; i < bot.cache.stats.commandUsage.length; i++) {
-					commandCurrentTotal += bot.cache.stats.commandUsage[i].uses;
+					totalCalls = stats.callTotal + bot.cache.stats.callCurrentTotal;
+				let commandCurrentTotal = bot.cache.stats.commandCurrentTotal;
+				for (const usageCacheEntry of bot.cache.stats.commandUsage) {
+					commandCurrentTotal += usageCacheEntry.uses;
 				}
-				let sessionCommands = commandCurrentTotal + bot.cache.stats.commandSessionTotal,
+				const sessionCommands = commandCurrentTotal + bot.cache.stats.commandSessionTotal,
 					totalCommands = stats.commandTotal + commandCurrentTotal,
 					endEval = new Date();
 				
@@ -536,7 +535,7 @@ module.exports = [
 		}
 		
 		postProcessorStats(message, processorEmbed, cpuUsage1) {
-			let cpuUsage2 = [], cpus = os.cpus();
+			const cpuUsage2 = [], cpus = os.cpus();
 			for (const cpu of cpus) {
 				cpuUsage2.push({
 					idle: cpu.times.idle,
@@ -544,8 +543,7 @@ module.exports = [
 				})
 			}
 			
-			let usagePercentages = [];
-			
+			const usagePercentages = [];
 			for (let i = 0; i < cpus.length; i++) {
 				let idleDif = cpuUsage2[i].idle - cpuUsage1[i].idle, nonidleDif = cpuUsage2[i].nonidle - cpuUsage1[i].nonidle;
 				usagePercentages.push(nonidleDif / (idleDif + nonidleDif))

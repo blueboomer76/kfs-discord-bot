@@ -51,7 +51,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0], role = args[1];
+			const member = args[0], role = args[1];
 			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot add the role **${role.name}** to **${member.user.tag}** because its position is at or higher than mine.`}
 			if (member.roles.has(role.id)) return {cmdWarn: `That member already has the role **${role.name}**.`}
 				
@@ -72,7 +72,7 @@ module.exports = [
 					},
 				],
 				cooldown: {
-					time: 25000,
+					time: 20000,
 					type: "user"
 				},
 				flags: [
@@ -93,6 +93,10 @@ module.exports = [
 							num: 1,
 							type: "string"
 						}
+					},
+					{
+						name: "yes",
+						desc: "Skips the confirmation dialog"
 					}
 				],
 				perms: {
@@ -100,19 +104,20 @@ module.exports = [
 					user: ["BAN_MEMBERS"],
 					level: 0
 				},
-				usage: "ban <user> [--days <1-14>] [--reason <reason>]"
+				usage: "ban <user> [--days <1-14>] [--reason <reason>] [--yes]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0],
+			const member = args[0],
 				daysFlag = flags.find(f => f.name == "days"),
-				reasonFlag = flags.find(f => f.name == "reason"),
-				cmdErr;
+				reasonFlag = flags.find(f => f.name == "reason");
 			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot ban the member **${member.user.tag}** because their highest role is at or higher than mine.`}
-				
-			cmdErr = await promptor.prompt(message, `You are about to ban the user **${member.user.tag}** from this guild.`);
-			if (cmdErr) return message.channel.send(cmdErr);
+			
+			if (!flags.some(f => f.name == "yes")) {
+				const promptRes = await promptor.prompt(message, `You are about to ban the user **${member.user.tag}** from this guild.`);
+				if (promptRes) return message.channel.send(promptRes);
+			}
 			
 			member.ban({
 				days: daysFlag ? daysFlag.args[0] : 0,
@@ -220,8 +225,8 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const channel = args[0];
 			if (args[0].createdTimestamp + 1.5552e+10 < Number(new Date()) && !flags.some(f => f.name == "yes")) {
-				let cmdErr = await promptor.prompt(message, `You are about to delete the channel **${channel.name}** (ID ${channel.id}), which is more than 180 days old.`)
-				if (cmdErr) return message.channel.send(cmdErr);
+				const promptRes = await promptor.prompt(message, `You are about to delete the channel **${channel.name}** (ID ${channel.id}), which is more than 180 days old.`)
+				if (promptRes) return message.channel.send(promptRes);
 			}
 			
 			channel.delete()
@@ -245,6 +250,12 @@ module.exports = [
 					time: 30000,
 					type: "user"
 				},
+				flags: [
+					{
+						name: "yes",
+						desc: "Skips the confirmation dialog"
+					}
+				],
 				perms: {
 					bot: ["MANAGE_ROLES"],
 					user: ["MANAGE_ROLES"],
@@ -257,9 +268,9 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const role = args[0];
 			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot delete the role **${role.name}** because its position is at or higher than mine.`}
-			if (role.members.size > 10 && role.members.size > message.guild.memberCount / 10) {
-				let cmdErr = await promptor.prompt(message, `You are about to delete the role **${role.name}** (ID ${role.name}), which more than 10% of the members in this server have.`)
-				if (cmdErr) return message.channel.send(cmdErr);
+			if (role.members.size > 10 && role.members.size > message.guild.memberCount / 10 && !flags.some(f => f.name == "yes")) {
+				const promptRes = await promptor.prompt(message, `You are about to delete the role **${role.name}** (ID ${role.name}), which more than 10% of the members in this server have.`)
+				if (promptRes) return {cmdWarn: promptRes};
 			}
 			
 			role.delete()
@@ -313,17 +324,16 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let userId = parseInt(args[0]),
+			const userId = parseInt(args[0]),
 				daysFlag = flags.find(f => f.name == "days"),
-				reasonFlag = flags.find(f => f.name == "reason"),
-				cmdErr;
+				reasonFlag = flags.find(f => f.name == "reason");
 				
 			message.guild.ban(userId, {
 				days: daysFlag ? daysFlag.args[0] : 0,
 				reason: reasonFlag ? reasonFlag.args[0] : null
 			})
 			.then(message.channel.send(`✅ The user with ID **${userId}** was banned from the guild.`))
-			.catch(err => message.channel.send("Could not ban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."))
+			.catch(() => message.channel.send("Could not ban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."))
 		}
 	},
 	class KickCommand extends Command {
@@ -361,13 +371,11 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0], reasonFlag = flags.find(f => f.name == "reason"),
-				cmdErr;
+			const member = args[0], reasonFlag = flags.find(f => f.name == "reason");
 			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return message.channel.send(`I cannot kick the member **${member.user.tag}** because their highest role is at or higher than mine.`)
 			
-			cmdErr = await promptor.prompt(message, `You are about to kick the user **${args[0].user.tag}** from this guild.`)
-			
-			if (cmdErr) return message.channel.send(cmdErr);
+			const promptRes = await promptor.prompt(message, `You are about to kick the user **${args[0].user.tag}** from this guild.`)
+			if (promptRes) return {cmdWarn: promptRes};
 			
 			member.kick(reasonFlag ? reasonFlag.args[0] : null)
 			.then(message.channel.send(`✅ The user **${member.user.tag}** was kicked from the guild.`))
@@ -378,13 +386,13 @@ module.exports = [
 		constructor() {
 			super({
 				name: "purge",
-				description: "Deletes messages from a channel",
+				description: "Deletes messages from a channel. Flags cannot be used for deleting from more than 100 messages at a time",
 				aliases: ["clear", "prune"],
 				args: [
 					{
 						type: "number",
 						min: 1,
-						max: 99
+						max: 500
 					}
 				],
 				cooldown: {
@@ -426,18 +434,25 @@ module.exports = [
 					user: ["MANAGE_MESSAGES"],
 					level: 0
 				},
-				usage: "purge <1-99> [--user <user>] [--text <text>] [--attachments] [--bots] [--embeds]"
+				usage: "purge <1-500> OR purge <1-100> [--user <user>] [--text <text>] [--attachments] [--bots] [--embeds]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let cmdErr, toDelete = args[0] + 1;
+			await message.delete();
+
+			const deleteLarge = args[0] > 100 ? true : false,
+				iters = Math.ceil(args[0] / 100);
+			let toDelete = args[0];
+
 			if (flags.length > 0) {
-				await message.channel.fetchMessages({"limit": toDelete})
+				if (deleteLarge) return {cmdWarn: "Flags are not supported for deleting from more than 100 messages at a time."}
+				let fetchErr;
+				await message.channel.fetchMessages({limit: 100})
 				.then(messages => {
 					toDelete = messages;
-					for (let i = 0; i < flags.length; i++) {
-						switch (flags[i].name) {
+					for (const flag of flags) {
+						switch (flag.name) {
 							case "attachments":
 								toDelete = toDelete.filter(msg => msg.attachments.size > 0);
 								break;
@@ -448,25 +463,39 @@ module.exports = [
 								toDelete = toDelete.filter(msg => msg.embeds[0]);
 								break;
 							case "text":
-								toDelete = toDelete.filter(msg => msg.content.includes(flags[i].args[0]));
+								toDelete = toDelete.filter(msg => msg.content.includes(flag.args[0]));
 								break;
 							case "user":
-								toDelete = toDelete.filter(msg => msg.member == flags[i].args[0]);
+								toDelete = toDelete.filter(msg => msg.member == flag.args[0]);
 						}
 					}
 					if (!toDelete.get(message.id)) toDelete.set(message.id, message);
 				})
-				.catch(err => {
-					cmdErr = "Error occurred while trying to fetch messages:```" + err + "```"
-				})
+				.catch(err => fetchErr = err)
+				if (fetchErr) {
+					console.log(fetchErr);
+					return {cmdWarn: "Failed to fetch messages"};
+				}
+			} else if (deleteLarge) {
+				const promptRes = await promptor.prompt(message, `You are about to delete ${toDelete} messages from this channel.`)
+				if (promptRes) return {cmdWarn: promptRes};
 			}
-			if (cmdErr) return message.channel.send(cmdErr);
-			
-			message.channel.bulkDelete(toDelete, true)
-			.then(messages => {
-				message.channel.send(`🗑 Deleted ${messages.size - 1} messages from this channel!`).then(m => m.delete(7500))
-			})
-			.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
+
+			if (deleteLarge) {
+				for (let i = 0; i < iters; i++) {
+					let deleteErr;
+					await message.channel.bulkDelete(i == iters - 1 ? toDelete % 100 : 100, true)
+					.catch(err => deleteErr = "Could not delete all messages: ```" + err + "```")
+					if (deleteErr) return {cmdWarn: deleteErr}
+				}
+				message.channel.send(`🗑 Deleted ${args[0]} messages from this channel!`).then(m => m.delete(7500))
+			} else {
+				message.channel.bulkDelete(toDelete, true)
+				.then(() => {
+					message.channel.send(`🗑 Deleted ${args[0]} messages from this channel!`).then(m => m.delete(7500))
+				})
+				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"))
+			}
 		}
 	},
 	class RemoveRoleCommand extends Command {
@@ -500,7 +529,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0], role = args[1];
+			const member = args[0], role = args[1];
 			if (!member.roles.has(role.id)) return message.channel.send(`**${member.user.tag}** does not have a role named **${role.name}**.`);
 			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return message.channel.send(`I cannot remove the role **${role.name}** from **${member.user.tag}** because its position is at or higher than mine.`)
 				

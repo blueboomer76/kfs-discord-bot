@@ -68,7 +68,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (args.length < 2) return {cmdWarn: "You need to provide at least 2 choices for me to choose from!"}
+			if (args.length < 2) return {cmdWarn: "You need to provide at least 2 choices for me to choose from!", cooldown: null, noLog: true}
 			message.channel.send(`I choose: ${args[Math.floor(Math.random() * args.length)]}`);
 		}
 	},
@@ -91,7 +91,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let iters = args[0] ? args[0] : 1;
+			const iters = args[0] || 1;
 			if (iters == 1) {
 				let res;
 				if (Math.random() < 0.5) {res = "Heads"} else {res = "Tails"}
@@ -228,7 +228,7 @@ module.exports = [
 					.setTitle(postData.title)
 					.setURL(`https://reddit.com${postData.url}`)
 					.setColor(Math.floor(Math.random() * 16777216))
-					.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | u/${postData.author}`)
+					.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
 			if (postData.desc) punEmbed.setDescription(postData.desc);
 			if (postData.imageURL) punEmbed.setImage(postData.imageURL);
 
@@ -302,7 +302,7 @@ module.exports = [
 				message.channel.fetchMessage(args[1])
 				.then(msg => {
 					message.channel.send(new RichEmbed()
-						.setAuthor(msg.author.tag, msg.author.avatarURL)
+						.setAuthor(msg.author.tag, member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`)
 						.setDescription(msg.content)
 						.setColor(msg.member.displayColor)
 						.setFooter("Sent")
