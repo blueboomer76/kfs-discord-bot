@@ -78,9 +78,9 @@ module.exports = [
 			const command = args[0], helpEmbed = new RichEmbed();
 			if (!command) {
 				helpEmbed.setTitle("All bot commands")
-				.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\``)
-				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter(`There are ${bot.commands.size} commands in total.`);
+					.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\``)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter(`There are ${bot.commands.size} commands in total.`);
 				let cmds = bot.commands;
 				if (!bot.ownerIDs.includes(message.author.id) && !bot.adminIDs.includes(message.author.id)) {
 					cmds = cmds.filter(cmd => !cmd.disabled && !cmd.hidden);
@@ -101,11 +101,12 @@ module.exports = [
 
 				helpEmbed.setTitle(`Help - ${command.name}`)
 					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter("Don't include the usage symbols when running the command.")
 					.addField("Category", command.category)
 					.addField("Description", command.description)
 				if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "))
 				if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"))
-				helpEmbed.addField("Usage", bot.prefix + command.usage)
+				helpEmbed.addField("Usage", "`" + bot.prefix + command.usage + "`")
 				if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.join("\n"))
 				if (command.allowDMs) helpEmbed.addField("Allows DMs", "Yes")
 				if (commandPerms.bot.length > 0 || commandPerms.user.length > 0 || commandPerms.role || commandPerms.level > 0) {
@@ -141,14 +142,14 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			message.channel.send(new RichEmbed()
-			.setTitle("Bot References")
-			.setDescription("Exciting! Now you have the chance to spread the love!")
-			.setColor(Math.floor(Math.random() * 16777216))
-			.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
-			.addField("Support Server", "[Go!](https://discord.gg/yB8TvWU)", true)
-			.addField("Upvote this bot", "discordbots.org: [Go!](https://discordbots.org/bots/333058410465722368/vote)" + "\n" +
-			"bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/333058410465722368)" + "\n" +
-			"botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/333058410465722368/vote)", true)
+				.setTitle("Bot References")
+				.setDescription("Exciting! Now you have the chance to spread the love!")
+				.setColor(Math.floor(Math.random() * 16777216))
+				.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
+				.addField("Support Server", "[Go!](https://discord.gg/yB8TvWU)", true)
+				.addField("Upvote this bot", "discordbots.org: [Go!](https://discordbots.org/bots/333058410465722368/vote)" + "\n" +
+				"bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/333058410465722368)" + "\n" +
+				"botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/333058410465722368/vote)", true)
 			);
 		}
 	},
@@ -468,35 +469,35 @@ module.exports = [
 				let endEval = new Date();
 				
 				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL)
-				.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
-				.setDescription(`Here's some detailed stats about this bot! *To see stats about the bot host, use \`${bot.prefix}stats processor\`*`)
-				.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
-				.addField("Last Ready", getDuration(bot.readyTimestamp), true)
-				.addField("Servers", 
-				`Total: ${serverCount.toLocaleString()}` + "\n" +
-				`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
-				, true)
-				.addField("Users", 
-				`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
-				`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(1)}%)`
-				, true)
-				.addField("Channels", 
-				`Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
-				`Voice: ${voiceChannelCount.toLocaleString()} (${(voiceChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
-				`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
-				, true)
-				.addField("Commands",
-				`Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, processUptime)})` + "\n" +
-				`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, duration)})`
-				, true)
-				.addField("Phone Connections",
-				`Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, processUptime)})` + "\n" +
-				`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, duration)})`
-				, true)
-				.addField("Messages Seen",
-				`Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, processUptime)})` + "\n" +
-				`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, duration)})`
-				, true)
+					.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
+					.setDescription(`Here's some detailed stats about this bot! *To see stats about the bot host, use \`${bot.prefix}stats processor\`*`)
+					.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
+					.addField("Last Ready", getDuration(bot.readyTimestamp), true)
+					.addField("Servers", 
+					`Total: ${serverCount.toLocaleString()}` + "\n" +
+					`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
+					, true)
+					.addField("Users", 
+					`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
+					`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(1)}%)`
+					, true)
+					.addField("Channels", 
+					`Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
+					`Voice: ${voiceChannelCount.toLocaleString()} (${(voiceChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
+					`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
+					, true)
+					.addField("Commands",
+					`Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, processUptime)})` + "\n" +
+					`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, duration)})`
+					, true)
+					.addField("Phone Connections",
+					`Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, processUptime)})` + "\n" +
+					`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, duration)})`
+					, true)
+					.addField("Messages Seen",
+					`Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, processUptime)})` + "\n" +
+					`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, duration)})`
+					, true)
 				message.channel.send(statsEmbed);
 			}
 		}
@@ -532,12 +533,12 @@ module.exports = [
 			}
 			
 			processorEmbed.setDescription("Here's some detailed stats about the host that this bot is on!")
-			.addField("Total Resident Set (RSS)", `${(processMemoryUsage.rss / 1048576).toFixed(2)} MB`, true)
-			.addField("Heap Usage", `Total: ${(processMemoryUsage.heapTotal / 1048576).toFixed(2)} MB`+ "\n" + 
-			`Used: ${(processMemoryUsage.heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
-			.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB` + "\n" +
-			`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)` + "\n" +
-			`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true)
+				.addField("Total Resident Set (RSS)", `${(processMemoryUsage.rss / 1048576).toFixed(2)} MB`, true)
+				.addField("Heap Usage", `Total: ${(processMemoryUsage.heapTotal / 1048576).toFixed(2)} MB`+ "\n" + 
+				`Used: ${(processMemoryUsage.heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
+				.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB` + "\n" +
+				`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)` + "\n" +
+				`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true)
 			
 			setTimeout(this.postProcessorStats, 250, message, processorEmbed, cpuUsage1)
 		}
