@@ -52,7 +52,9 @@ async function checkArgs(bot, message, args, cmdArg) {
 			if (cmdArg.errorMsg) {
 				argErrorMsg = cmdArg.errorMsg;
 			} else {
-				if (arg.type == "number") {
+				if (arg.type == "image") {
+					argErrorMsg = "A valid mention or image URL must be provided"
+				} else if (arg.type == "number") {
 					argErrorMsg += "\nThe argument must be a number that is "
 					if (arg.min && arg.max) {
 						argErrorMsg += `in between ${params.min} and ${params.max}`;

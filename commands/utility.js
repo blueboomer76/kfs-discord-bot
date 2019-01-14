@@ -1,6 +1,7 @@
 const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	{capitalize, getDuration} = require("../modules/functions.js"),
+	{fetchMembers} = require("../modules/memberFetcher.js"),
 	paginator = require("../utils/paginator.js");
 
 module.exports = [
@@ -26,13 +27,13 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const member = args[0] ? args[0] : message.member,
+			const member = args[0] || message.member,
 				avatarURL = member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
 			message.channel.send(new RichEmbed()
-			.setTitle(`Avatar - ${member.user.tag}`)
-			.setDescription(`Avatar URL: ${avatarURL}`)
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setImage(avatarURL)
+				.setTitle(`Avatar - ${member.user.tag}`)
+				.setDescription(`Avatar URL: ${avatarURL}`)
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setImage(avatarURL)
 			);
 		}
 	},
@@ -115,9 +116,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const emoji = args[0];
-
-			let createdDate = new Date(emoji.createdTimestamp);
+			const emoji = args[0],
+				createdDate = new Date(emoji.createdTimestamp);
 
 			let emojiRoleList;
 			if (emoji.roles.size == 0) {
@@ -128,15 +128,15 @@ module.exports = [
 			}
 
 			message.channel.send(new RichEmbed()
-			.setTitle(`Emoji - ${emoji.name}`)
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`ID: ${emoji.id}`)
-			.setImage(emoji.url)
-			.addField("Emoji created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
-			.addField("Roles which can use this emoji", emojiRoleList)
-			.addField("Animated", emoji.animated ? "Yes" : "No", true)
-			.addField("Managed", emoji.managed ? "Yes" : "No", true)
-			.addField("Emoji URL", emoji.url)
+				.setTitle(`Emoji - ${emoji.name}`)
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setFooter(`ID: ${emoji.id}`)
+				.setImage(emoji.url)
+				.addField("Emoji created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.addField("Roles which can use this emoji", emojiRoleList)
+				.addField("Animated", emoji.animated ? "Yes" : "No", true)
+				.addField("Managed", emoji.managed ? "Yes" : "No", true)
+				.addField("Emoji URL", emoji.url)
 			);
 		}
 	},
@@ -196,12 +196,12 @@ module.exports = [
 					if (result2.length > 1000) result = `${result2.slice(0, 1000)}...`;
 				}
 				message.channel.send(new RichEmbed()
-				.setTitle("discord.js Evaluator")
-				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter(`Execution took: ${endEvalDate - beginEvalDate}ms`)
-				.setTimestamp(message.createdAt)
-				.addField("Your code", "```javascript" + "\n" + toEval + "```")
-				.addField("Result", "```javascript" + "\n" + result + "```")
+					.setTitle("discord.js Evaluator")
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter(`Execution took: ${endEvalDate - beginEvalDate}ms`)
+					.setTimestamp(message.createdAt)
+					.addField("Your code", "```javascript" + "\n" + toEval + "```")
+					.addField("Result", "```javascript" + "\n" + result + "```")
 				);
 			}
 		}
@@ -232,47 +232,35 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const role = args[0], rolePos = role.calculatedPosition;
-	
-			const createdDate = new Date(role.createdTimestamp);
-	
-			let roleMembers;
-			if (!message.guild.large) {
-				roleMembers = role.members;
-			} else {
-				await message.guild.fetchMembers()
-				.then(g => {
-					roleMembers = g.members.filter(mem => mem.roles.has(role.id));
-				})
-				.catch(err => {
-					console.log(`Failed to fetch members: ${err}`)
-					roleMembers = role.members;
-				})
-			}
-	
-			const guildRoles = message.guild.roles.array();
+			const role = args[0],
+				rolePos = role.calculatedPosition,
+				guildRoles = message.guild.roles.array();
 			guildRoles.splice(guildRoles.findIndex(r => r.calculatedPosition == 0), 1);
+	
+			const createdDate = new Date(role.createdTimestamp),
+				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
+				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id));
 			let nearbyRoles = [];
 			for (let i = rolePos + 2; i > rolePos - 3; i--) {
 				if (i <= 0 || i > guildRoles.length) continue;
-				let roleName = guildRoles.find(r => r.calculatedPosition == i).name;
+				const roleName = guildRoles.find(r => r.calculatedPosition == i).name;
 				nearbyRoles.push(i == rolePos ? `**${roleName}**` : roleName);
 			}
 	
 			message.channel.send(new RichEmbed()
-			.setTitle(`Role Info - ${role.name}`)
-			.setColor(role.color)
-			.setFooter(`ID: ${role.id}`)
-			.addField("Role created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
-			.addField(`Members in Role [${roleMembers.size} total]`,
-			`${roleMembers.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
-			true)
-			.addField("Color", role.hexColor, true)
-			.addField("Position from top", `${guildRoles.length - rolePos + 1} / ${guildRoles.length}`, true)
-			.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No", true)
-			.addField("Mentionable", role.mentionable ? "Yes" : "No", true)
-			.addField("Managed", role.managed ? "Yes" : "No", true)
-			.addField("Role order", nearbyRoles.join(" > "))
+				.setTitle(`Role Info - ${role.name}`)
+				.setColor(role.color)
+				.setFooter(`ID: ${role.id}`)
+				.addField("Role created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.addField(`Members in Role [${roleMembers.size} total]`,
+				`${roleMembers.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
+				true)
+				.addField("Color", role.hexColor, true)
+				.addField("Position from top", `${guildRoles.length - rolePos + 1} / ${guildRoles.length}`, true)
+				.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No", true)
+				.addField("Mentionable", role.mentionable ? "Yes" : "No", true)
+				.addField("Managed", role.managed ? "Yes" : "No", true)
+				.addField("Role order", nearbyRoles.join(" > "))
 			);
 		}
 	},
@@ -316,8 +304,8 @@ module.exports = [
 			paginator.paginate(message, {title: `List of roles - ${message.guild.name}`}, [roles.map(role => role.name)], {
 				limit: 25,
 				noStop: true,
-				numbered: orderedFlag ? true : false,
-				page: args[0] ? args[0] : 1,
+				numbered: orderedFlag,
+				page: args[0] || 1,
 				params: null,
 				removeReactAfter: 60000
 			});
@@ -349,20 +337,9 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const role = args[0];
-			let roleMembers;
-			if (!message.guild.large) {
-				roleMembers = role.members;
-			} else {
-				await message.guild.fetchMembers()
-				.then(g => {
-					roleMembers = g.members.filter(mem => mem.roles.has(role.id));
-				})
-				.catch(err => {
-					console.log(`Failed to fetch members: ${err}`)
-					roleMembers = role.members;
-				})
-			}
+			const role = args[0],
+				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
+				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id));
 
 			if (roleMembers.size == 0) return {cmdWarn: `There are no members in the role **${role.name}**.`};
 			if (roleMembers.size > 250) return {cmdWarn: `There are more than 250 members in the role **${role.name}**.`};
@@ -397,19 +374,9 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const guild = message.guild;
-			let guildMembers;
-			if (!guild.large) {
-				guildMembers = guild.members;
-			} else {
-				await guild.fetchMembers()
-				.then(g => guildMembers = g.members)
-				.catch(err => {
-					console.error(`Failed to fetch members: ${err}`)
-					guildMembers = guild.members;
-				})
-			}
-	
+			const guild = message.guild,
+				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members;
+			
 			let createdDate = new Date(guild.createdTimestamp),
 				guildVerif;
 			switch (guild.verificationLevel) {
@@ -429,30 +396,30 @@ module.exports = [
 					guildVerif = "Very High (verified phone)";
 			}
 			
-			let onlineCount = guild.presences.filter(p => p.status != "offline").size,
+			const onlineCount = guild.presences.filter(p => p.status != "offline").size,
 				botCount = guildMembers.filter(mem => mem.user.bot).size;
 	
 			message.channel.send(new RichEmbed()
-			.setTitle(`Server Info - ${guild.name}`)
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`ID: ${guild.id} | Server stats as of`)
-			.setThumbnail(guild.iconURL)
-			.setTimestamp(message.createdAt)
-			.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
-			.addField("Owner", `${guild.owner.user.tag} \`(ID ${guild.owner.id})\``)
-			.addField("Region", guild.region, true)
-			.addField("Verification", guildVerif, true)
-			.addField("Explicit Filter", guild.explicitContentFilter == 0 ? "None" : (guild.explicitContentFilter == 1 ? "Low" : "High"), true)
-			.addField(`Members [${guild.memberCount} total]`,
-			`${onlineCount} Online (${(onlineCount / guild.memberCount * 100).toFixed(1)}%)\n` +
-			`${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,
-			true)
-			.addField(`Roles [${guild.roles.size - 1} total]`, "Use `rolelist` to see all roles", true)
-			.addField(`Channels [${guild.channels.size} total]`,
-			`${guild.channels.filter(chnl => chnl.type == "text").size} Text\n` +
-			`${guild.channels.filter(chnl => chnl.type == "voice").size} Voice\n` +
-			`${guild.channels.filter(chnl => chnl.type == "category").size} Categories`,
-			true)
+				.setTitle(`Server Info - ${guild.name}`)
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setFooter(`ID: ${guild.id} | Server stats as of`)
+				.setThumbnail(guild.iconURL)
+				.setTimestamp(message.createdAt)
+				.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.addField("Owner", `${guild.owner.user.tag} \`(ID ${guild.owner.id})\``)
+				.addField("Region", guild.region, true)
+				.addField("Verification", guildVerif, true)
+				.addField("Explicit Filter", guild.explicitContentFilter == 0 ? "None" : (guild.explicitContentFilter == 1 ? "Low" : "High"), true)
+				.addField(`Members [${guild.memberCount} total]`,
+				`${onlineCount} Online (${(onlineCount / guild.memberCount * 100).toFixed(1)}%)\n` +
+				`${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,
+				true)
+				.addField(`Roles [${guild.roles.size - 1} total]`, "Use `rolelist` to see all roles", true)
+				.addField(`Channels [${guild.channels.size} total]`,
+				`${guild.channels.filter(chnl => chnl.type == "text").size} Text\n` +
+				`${guild.channels.filter(chnl => chnl.type == "voice").size} Voice\n` +
+				`${guild.channels.filter(chnl => chnl.type == "category").size} Categories`,
+				true)
 			);
 		}
 	},
@@ -487,7 +454,7 @@ module.exports = [
 
 			let createdDate = new Date(member.user.createdTimestamp);
 			let joinedDate = new Date(member.joinedTimestamp);
-			
+
 			let rawPresence = member.presence, presence;
 			if (rawPresence.status == "online") {
 				presence = "Online";
@@ -499,22 +466,13 @@ module.exports = [
 				presence = "Offline";
 			}
 			if (rawPresence.game) presence += ` (playing ${rawPresence.game.name})`;
-	
-			let guildMembers;
-			if (!message.guild.large) {
-				guildMembers = message.guild.members;
-			} else {
-				await message.guild.fetchMembers()
-				.then(g => guildMembers = g.members)
-				.catch(err => {
-					console.log(`Failed to fetch members: ${err}`)
-					guildMembers = message.guild.members;
-				})
-			}
-	
-			let guildMemArray = guildMembers.array();
+
+			const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
+				guildMemArray = guildMembers.array();
 			guildMemArray.sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
-			let joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp), nearbyMems = [];
+
+			const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp);
+			let nearbyMems = [];
 			for (let i = joinPos - 2; i < joinPos + 3; i++) {
 				if (i < 0 || i >= message.guild.memberCount) continue;
 				nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);

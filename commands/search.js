@@ -77,11 +77,12 @@ module.exports = [
 			} else {
 				subreddit = "all";
 			}
-			const numToDisplay = compact ? 50 : 25;
-			let postSort = "hot", reqQuery = {
-				limit: flags.some(f => f.name == "more") ? numToDisplay * 2 : numToDisplay,
-				raw_json: 1
-			};
+			const numToDisplay = compact ? 50 : 25,
+				reqQuery = {
+					limit: flags.some(f => f.name == "more") ? numToDisplay * 2 : numToDisplay,
+					raw_json: 1
+				};
+			let postSort = "hot";
 				
 			if (flags.some(f => f.name == "top")) {
 				postSort = "top";
@@ -105,8 +106,11 @@ module.exports = [
 				if (res.statusCode >= 400) return message.channel.send(`⚠ The request to Reddit failed with status code ${res.statusCode} (${res.statusMessage})`);
 				
 				let results = res.body.data.children;
-				if (!results[0] || results[0].kind != "t3") return message.channel.send("⚠ A subreddit with that name does not exist.")
-				
+				if (!results[0]) return message.channel.send("⚠ A subreddit with that name does not exist, or it has no posts yet.")
+				if (results[0].kind != "t3") return message.channel.send("⚠ A subreddit with that name does not exist, but these related subreddits were found: " + "\n" + results.map(r => {
+					return r.data.display_name
+				}).join(", "))
+
 				results = results.filter(r => !r.data.stickied);
 				if (!message.channel.nsfw) results = results.filter(r => !r.data.over_18);
 				if (results.length == 0) return message.channel.send("⚠ No results found in the subreddit. *(You may try going to an NSFW channel to see all results)*");
@@ -204,9 +208,9 @@ module.exports = [
 				if (!res) return message.channel.send("No response was received from the Urban Dictionary.");
 				if (res.statusCode >= 400) return message.channel.send(`The request to the Urban Dictionary failed with status code ${res.statusCode} (${res.statusMessage})`);
 
-				let defs = res.body;
+				const defs = res.body;
 				if (defs.list.length > 0) {
-					let entries = [
+					const entries = [
 						defs.list.map(def => `Urban Dictionary - ${def.word}`),
 						defs.list.map(def => def.definition.length > 2000 ? `${def.definition.slice(0, 2000)}...` : def.definition),
 						defs.list.map(def => {
@@ -282,13 +286,13 @@ module.exports = [
 				if (!res) return message.channel.send("No response was received from Wikipedia.");
 				if (res.statusCode >= 400) return message.channel.send(`The request to Wikipedia failed with status code ${res.statusCode} (${res.statusMessage})`);
 
-				let result = Object.values(res.body.query.pages)[0],
-					resultText = result.extract;
+				const result = Object.values(res.body.query.pages)[0];
+				let resultText = result.extract;
 				if (!resultText) return message.channel.send("⚠ No Wikipedia article exists for that term. *(Make sure to check capitalization)*");
 				
 				let firstSectionIndex = resultText.indexOf("==");
 				if (firstSectionIndex > 2000) {
-					resultText = `${resultText.slice(0, 2000)}...`
+					resultText = resultText.slice(0, 2000) + "..."
 				} else if (firstSectionIndex > 1000) {
 					resultText = resultText.slice(0, firstSectionIndex);
 				} else {
@@ -297,10 +301,10 @@ module.exports = [
 				}
 
 				message.channel.send(new RichEmbed()
-				.setTitle(`Wikipedia - ${result.title}`)
-				.setDescription(resultText)
-				.setColor(Math.floor(Math.random() * 16777216))
-				.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
+					.setTitle(`Wikipedia - ${result.title}`)
+					.setDescription(resultText)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
 				);
 			})
 		}
@@ -334,8 +338,7 @@ module.exports = [
 				if (!res) return message.channel.send("No response was received from XKCD.");
 				if (res.statusCode >= 400) return message.channel.send(`The request to XKCD failed with status code ${res.statusCode} (${res.statusMessage})`);
 				
-				let currComic = JSON.parse(res.body);
-				
+				const currComic = JSON.parse(res.body);
 				if (args[0] == "random" || parseInt(args[0]) > 0) {
 					let comicNum;
 					if (args[0] == "random") {
@@ -360,11 +363,11 @@ module.exports = [
 		}
 		
 		postComic(message, comic, titlePrefix, isFallback) {
-			let xkcdEmbed = new RichEmbed()
-			.setTitle(`${titlePrefix}XKCD Comic - ${comic.title} (#${comic.num})`)
-			.setDescription(comic.alt)
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setImage(comic.img)
+			const xkcdEmbed = new RichEmbed()
+				.setTitle(`${titlePrefix}XKCD Comic - ${comic.title} (#${comic.num})`)
+				.setDescription(comic.alt)
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setImage(comic.img)
 			
 			if (isFallback) xkcdEmbed.description = `*Failed to fetch from XKCD, defaulting to the current one.*\n\n${comic.alt}`
 			message.channel.send(xkcdEmbed);

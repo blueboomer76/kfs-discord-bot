@@ -1,3 +1,15 @@
+const {fetchMembers} = require("../modules/memberFetcher.js");
+
+const memberRegex = /^<@!?\d{17,19}>$/;
+
+async function getMember(message, id) {
+	let member;
+	await message.guild.fetchMember(id)
+	.then(mem => member = mem)
+	.catch(() => member = null)
+	return member;
+}
+
 module.exports.resolve = async (bot, message, obj, type, params) => {
 	let lowerObj = obj.toLowerCase();
 	let list;
@@ -12,8 +24,8 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				return null;
 			}
 		case "channel":
-			let channel, channelRegex = /^<#\d{17,19}>$/;
-			let guildChannels = message.guild.channels;
+			const channelRegex = /^<#\d{17,19}>$/, guildChannels = message.guild.channels;
+			let channel;
 			if (channelRegex.test(obj)) {
 				channel = guildChannels.get(obj.match(/\d+/)[0]);
 				if (channel) {return [channel]} else {return null}
@@ -27,7 +39,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			});
 			if (list.length > 0) {return list} else {return null}
 		case "command":
-			let command = bot.commands.get(lowerObj) || bot.commands.get(bot.aliases.get(lowerObj));
+			const command = bot.commands.get(lowerObj) || bot.commands.get(bot.aliases.get(lowerObj));
 			if (command) {return command} else {return null}
 		case "emoji":
 			let emoji, emojiRegex = /^<a?:[0-9A-Za-z_]{2,}:\d{17,19}>$/, guildEmojis = message.guild.emojis;
@@ -47,30 +59,35 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			const testFunction = params.testFunction;
 			if (testFunction(obj)) {return obj} else {return null}
 		case "image":
+			if (memberRegex.test(obj)) {
+				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
+					member = guildMembers.get(obj.match(/\d+/)[0]);
+				if (member) {
+					return member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
+				} else {
+					return null;
+				}
+			}
 			const imageRegex = /^https?:\/\/.+\.(gif|jpe?g|png)$/i;
 			if (imageRegex.test(obj)) {return obj} else {return null}
 		case "member":
-			let member, memberRegex = /^<@!?\d{17,19}>$/, guildMembers = message.guild.members;
-
-			if (message.guild.large) {
-				await message.guild.fetchMembers()
-				.then(guild => guildMembers = guild.members)
-				.catch(err => console.log("Failed to fetch members in object resolver: " + err))
-			}
+			const idRegex = /^\d{17,19}$/;
+			let member;
 
 			if (memberRegex.test(obj)) {
-				member = guildMembers.get(obj.match(/\d+/)[0]);
-				if (member) {return [member]} else {return null}
-			} else {
-				member = guildMembers.get(obj);
+				member = message.guild.large ? await getMember(message, obj.match(/\d+/)[0]) : message.guild.members.get(obj.match(/\d+/)[0]);
+				return member ? [member] : null;
+			} else if (idRegex.test(obj)) {
+				member = message.guild.large ? await getMember(message, obj.match(/\d+/)[0]) : message.guild.members.get(obj.match(/\d+/)[0]);
 				if (member) return [member];
 			}
 
-			list = guildMembers.array().filter(mem => {
+			const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members;
+			list = guildMembers.filter(mem => {
 				return mem.user.tag.toLowerCase().includes(lowerObj) ||
 				mem.user.username.toLowerCase().includes(lowerObj) ||
 				mem.displayName.toLowerCase().includes(lowerObj)
-			});
+			}).array();
 			if (list.length > 0) {return list} else {return null}
 		case "number":
 			let num = Math.floor(obj);

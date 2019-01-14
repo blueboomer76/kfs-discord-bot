@@ -88,10 +88,10 @@ module.exports = [
 				if (res.statusCode >= 400) return message.channel.send(`The request to random.birb.pw failed with status code ${res.statusCode} (${res.statusMessage})`);
 				
 				message.channel.send(new RichEmbed()
-				.setTitle("Here's your random birb!")
-				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter("From random.birb.pw")
-				.setImage(`https://random.birb.pw/img/${JSON.parse(res.body).file}`)
+					.setTitle("Here's your random birb!")
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter("From random.birb.pw")
+					.setImage(`https://random.birb.pw/img/${JSON.parse(res.body).file}`)
 				);
 			});
 		}
@@ -128,14 +128,14 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "blur [image URL] [--level <1-10>]"
+				usage: "blur [image URL or mention] [--level <1-10>]"
 			});
 		}
 
 		async run(bot, message, args, flags) {
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
-				await imageManager.getRecentImage(message)
+				await imageManager.resolveImageURL(message)
 				.then(url => imageURL = url)
 				.catch(err => cmdErr = err)
 				if (cmdErr) return message.channel.send(cmdErr);
@@ -175,10 +175,10 @@ module.exports = [
 				if (!res) return message.channel.send("No response was received from random.cat.");
 				if (res.statusCode >= 400) return message.channel.send(`The request to random.cat failed with status code ${res.statusCode} (${res.statusMessage})`);
 				message.channel.send(new RichEmbed()
-				.setTitle("Here's your random cat!")
-				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter("From random.cat")
-				.setImage(JSON.parse(res.body).file)
+					.setTitle("Here's your random cat!")
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter("From random.cat")
+					.setImage(JSON.parse(res.body).file)
 				);
 			});
 		}
@@ -207,10 +207,10 @@ module.exports = [
 				if (!res) return message.channel.send("No response was received from random.dog.");
 				if (res.statusCode >= 400) return message.channel.send(`The request to random.dog failed with status code ${res.statusCode} (${res.statusMessage})`);
 				message.channel.send(new RichEmbed()
-				.setTitle("Here's your random dog!")
-				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter("From random.dog")
-				.setImage(JSON.parse(res.body).url)
+					.setTitle("Here's your random dog!")
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter("From random.dog")
+					.setImage(JSON.parse(res.body).url)
 				);
 			});
 		}
@@ -236,14 +236,14 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "flip [image URL]"
+				usage: "flip [image URL or mention]"
 			});
 		}
 
 		async run(bot, message, args, flags) {
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
-				await imageManager.getRecentImage(message)
+				await imageManager.resolveImageURL(message)
 				.then(url => imageURL = url)
 				.catch(err => cmdErr = err)
 				if (cmdErr) return message.channel.send(cmdErr);
@@ -279,14 +279,14 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "flop [image URL]"
+				usage: "flop [image URL or mention]"
 			});
 		}
 
 		async run(bot, message, args, flags) {
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
-				await imageManager.getRecentImage(message)
+				await imageManager.resolveImageURL(message)
 				.then(url => imageURL = url)
 				.catch(err => cmdErr = err)
 				if (cmdErr) return message.channel.send(cmdErr);
@@ -323,14 +323,14 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "grayscale [image URL]"
+				usage: "grayscale [image URL or mention]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
-				await imageManager.getRecentImage(message)
+				await imageManager.resolveImageURL(message)
 				.then(url => imageURL = url)
 				.catch(err => cmdErr = err)
 				if (cmdErr) return message.channel.send(cmdErr);
@@ -366,14 +366,14 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "invert [image URL]"
+				usage: "invert [image URL or mention]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
-				await imageManager.getRecentImage(message)
+				await imageManager.resolveImageURL(message)
 				.then(url => imageURL = url)
 				.catch(err => cmdErr = err)
 				if (cmdErr) return message.channel.send(cmdErr);
@@ -448,7 +448,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "mirror [image URL] <[haah | left-to-right] | [hooh | bottom-to-top] | [waaw | right-to-left] | [woow | top-to-bottom]>"
+				usage: "mirror [image URL or mention] <[haah | left-to-right] | [hooh | bottom-to-top] | [waaw | right-to-left] | [woow | top-to-bottom]>"
 			});
 		}
 
@@ -456,7 +456,7 @@ module.exports = [
 			let imageURL = args[0], type = args[1], cmdErr;
 
 			if (!imageURL) {
-				await imageManager.getRecentImage(message)
+				await imageManager.resolveImageURL(message)
 				.then(url => imageURL = url)
 				.catch(err => cmdErr = err)
 				if (cmdErr) return message.channel.send(cmdErr);
@@ -539,14 +539,14 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "needsmorejpeg [image URL]"
+				usage: "needsmorejpeg [image URL or mention]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
-				await imageManager.getRecentImage(message)
+				await imageManager.resolveImageURL(message)
 				.then(url => imageURL = url)
 				.catch(err => cmdErr = err)
 				if (cmdErr) return message.channel.send(cmdErr);
@@ -595,14 +595,14 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "pixelate [image URL]"
+				usage: "pixelate [image URL or mention]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
-				await imageManager.getRecentImage(message)
+				await imageManager.resolveImageURL(message)
 				.then(url => imageURL = url)
 				.catch(err => cmdErr = err)
 				if (cmdErr) return message.channel.send(cmdErr);
@@ -638,14 +638,14 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "sepia [image URL]"
+				usage: "sepia [image URL or mention]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
-				await imageManager.getRecentImage(message)
+				await imageManager.resolveImageURL(message)
 				.then(url => imageURL = url)
 				.catch(err => cmdErr = err)
 				if (cmdErr) return message.channel.send(cmdErr);
