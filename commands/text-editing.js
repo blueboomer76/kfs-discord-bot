@@ -91,7 +91,8 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			if (args[0].length > 85) return {cmdWarn: "That text is too long, must be under 85 characters.", cooldown: null, noLog: true};
 			
-			let chars = args[0].toLowerCase().split(""), emojified = "", emojiRegex = /[a-z]/;
+			const chars = args[0].toLowerCase().split(""), emojiRegex = /[a-z]/;
+			let emojified = "";
 			for (const c of chars) {
 				if (emojiRegex.test(c)) {
 					emojified += `:regional_indicator_${c}: `
@@ -156,7 +157,8 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters.", cooldown: null, noLog: true}
-			let chars = args[0].split(""), reversed = "";
+			const chars = args[0].split("");
+			let reversed = "";
 			for (let i = chars.length - 1; i > -1; i--) reversed += chars[i];
 			message.channel.send(reversed);
 		}

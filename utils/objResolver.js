@@ -1,3 +1,15 @@
+const fetchMembers = require("../modules/memberFetcher.js");
+
+const memberRegex = /<@!?\d+>/;
+
+function getMember(message, id) {
+	let member;
+	message.guild.fetchMember(id)
+	.then(mem => member = mem)
+	.catch(() => member = null)
+	return member;
+}
+
 module.exports.resolve = async (bot, message, obj, type, params) => {
 	let list;
 	switch (type) {
@@ -9,8 +21,8 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				return false;
 			} else {return null}
 		case "channel":
-			let channel, channelRegex = /<#\d+>/;
-			let guildChannels = message.guild.channels;
+			const channelRegex = /<#\d+>/, guildChannels = message.guild.channels;
+			let channel;
 			if (channelRegex.test(obj)) {
 				return [guildChannels.get(obj.match(/\d+/)[0])];
 			} else {
@@ -25,7 +37,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			}
 			if (list.length > 0) {return list} else {return null}; 
 		case "command":
-			let command = bot.commands.get(obj) || bot.commands.get(bot.aliases.get(obj))
+			const command = bot.commands.get(obj) || bot.commands.get(bot.aliases.get(obj))
 			if (command) {return command} else {return null}
 		case "duration":
 			// Coming soon
@@ -51,30 +63,37 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			const testFunction = params.testFunction;
 			if (testFunction(obj)) {return obj} else {return null};
 		case "image":
+			if (memberRegex.test(obj)) {
+				const guildMembers = message.guild.large ? fetchMembers(message) : message.guild.members,
+					member = guildMembers.get(obj.match(/\d+/)[0]);
+				if (member) {
+					return member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
+				} else {
+					return null;
+				}
+			}
 			const imageRegex = /^https?:\/\/.+\.(gif|jpe?g|png)$/i;
 			if (imageRegex.test(obj)) {return obj} else {return null}
 		case "member":
-			let member, memberRegex = /<@!?\d+>/, guildMembers = message.guild.members;
-
-			if (params.large) {
-				await message.guild.fetchMembers()
-				.then(guild => guildMembers = guild.members)
-				.catch(err => console.log("Failed to fetch members in object resolver: " + err))
-			}
+			let member;
 
 			if (memberRegex.test(obj)) {
-				return [guildMembers.get(obj.match(/\d+/)[0])];
-			} else {
-				member = guildMembers.get(obj);
+				member = message.guild.large ? getMember(obj.match(/\d+/)[0]) : message.guild.members.get(obj.match(/\d+/)[0]);
+				return member ? [member] : null;
 			}
+			member = guildMembers.get(obj);
+
 			if (member) {
-				return [member];
+				member = message.guild.large ? getMember(obj.match(/\d+/)[0]) : message.guild.members.get(obj.match(/\d+/)[0]);
+				return member ? [member] : null;
 			} else {
-				list = guildMembers.array().filter(mem => {
-					return mem.user.tag.toLowerCase().includes(obj.toLowerCase()) ||
-					mem.user.username.toLowerCase().includes(obj.toLowerCase()) ||
-					mem.displayName.toLowerCase().includes(obj.toLowerCase())
-				});
+				const guildMembers = message.guild.large ? fetchMembers(message) : message.guild.members,
+					comparedObj = obj.toLowerCase();
+				list = guildMembers.filter(mem => {
+					return mem.user.tag.toLowerCase().includes(comparedObj) ||
+					mem.user.username.toLowerCase().includes(comparedObj) ||
+					mem.displayName.toLowerCase().includes(comparedObj)
+				}).array();
 			}
 			if (list.length > 0) {return list} else {return null};
 		case "number":

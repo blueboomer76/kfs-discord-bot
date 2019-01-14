@@ -1,5 +1,4 @@
-const Discord = require("discord.js"),
-	KendraBot = require("./bot.js"),
+const KendraBot = require("./bot.js"),
 	{token} = require("./config.json");
 
 if (parseFloat(process.versions.node) < 8) {
@@ -9,7 +8,7 @@ if (parseFloat(process.versions.node) < 8) {
 // Check for modules/stats.json
 
 try {
-	require("./modules/stats.json")
+	require("./modules/stats.json");
 } catch(err) {
 	require("fs").writeFile("modules/stats.json", JSON.stringify({
 		duration: 0,
@@ -17,7 +16,7 @@ try {
 		commandTotal: 0,
 		callTotal: 0,
 		commandDistrib: []
-	}), err => {if (err) throw err;});
+	}), err => {if (err) throw err;})
 }
 
 const bot = new KendraBot({

@@ -1,7 +1,7 @@
 const Jimp = require("jimp");
 
 module.exports = {
-	getRecentImage: message => {
+	resolveImageUrl: message => {
 		return new Promise(async (resolve, reject) => {
 			await message.channel.fetchMessages({limit: 25})
 			.then(msgs => {
@@ -33,7 +33,7 @@ module.exports = {
 					reject("No image attachment found in recent messages.")
 				}
 			})
-			.catch(err => reject("Failed while trying to fetch messages:\n" + err.stack))
+			.catch(err => reject("Failed while trying to fetch messages:" + "\n" + err))
 		})
 	},
 	postImage: (msg, img, fileName) => {
@@ -46,7 +46,7 @@ module.exports = {
 				}]
 			})
 		})
-		.catch(err => {
+		.catch(() => {
 			msg.channel.send("Failed to generate the image.")
 		})
 	}

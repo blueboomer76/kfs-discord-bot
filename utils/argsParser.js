@@ -32,8 +32,6 @@ async function checkArgs(bot, message, args, cmdArg) {
 	let arg = cmdArg, params;
 	if (arg.type == "function") {
 		params = {testFunction: arg.testFunction}
-	} else if (arg.type == "member") {
-		params = {large: message.guild.large}
 	} else if (arg.type == "number") {
 		params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity}
 	} else if (arg.type == "oneof") {
@@ -49,7 +47,9 @@ async function checkArgs(bot, message, args, cmdArg) {
 			if (cmdArg.errorMsg) {
 				argErrorMsg = cmdArg.errorMsg;
 			} else {
-				if (arg.type == "number" && (arg.min || arg.max)) {
+				if (arg.type == "image") {
+					argErrorMsg = "A valid mention or image URL must be provided"
+				} else if (arg.type == "number" && (arg.min || arg.max)) {
 					argErrorMsg += "\n" + "The argument must be a number that is "
 					if (arg.min && arg.max) {
 						argErrorMsg += `in between ${params.min} and ${params.max}`

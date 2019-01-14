@@ -79,9 +79,9 @@ module.exports = [
 			const command = args[0], helpEmbed = new RichEmbed();
 			if (!command) {
 				helpEmbed.setTitle("All the commands for this bot")
-				.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\``)
-				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter(`There are ${bot.commands.size} commands in total.`);
+					.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\``)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter(`There are ${bot.commands.size} commands in total.`);
 				let cmds = bot.commands;
 				if (!bot.ownerIds.includes(message.author.id) && !bot.adminIds.includes(message.author.id)) {
 					cmds = cmds.filter(cmd => !cmd.hidden);
@@ -101,11 +101,12 @@ module.exports = [
 					};
 				helpEmbed.setTitle(`Help - ${command.name}`)
 					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter("Don't include the usage symbols when running the command.")
 					.addField("Category", command.category)
 					.addField("Description", command.description)
 				if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "))
 				if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"))
-				helpEmbed.addField("Usage", bot.prefix + command.usage)
+				helpEmbed.addField("Usage", "`" + bot.prefix + command.usage + "`")
 				if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.join("\n"))
 				if (commandPerms.bot.length > 0 || commandPerms.user.length > 0 || commandPerms.role || commandPerms.level > 0) {
 					helpEmbed.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`)
@@ -114,7 +115,7 @@ module.exports = [
 			}
 			if (flags.some(f => f.name == "dm")) {
 				message.member.send(helpEmbed)
-				.catch(err => message.channel.send("Failed to send a help message as a DM. Check your settings and try again."))
+				.catch(() => message.channel.send("Failed to send a help message as a DM. Check your settings and try again."))
 			} else {
 				message.channel.send(helpEmbed);
 			}
@@ -140,16 +141,16 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			message.channel.send(new RichEmbed()
-			.setTitle("Kendra's References")
-			.setDescription("Exciting, huh? Now you have the chance to spread the love! uwu")
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter("Made by CreativeAllurer#4939")
-			.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=403041398&scope=bot)`, true)
-			.addField("Kendra's server", "[Go!](https://discord.gg/yB8TvWU)", true)
-			.addField("Upvote this bot", "Discordbots.org: [Go!](https://discordbots.org/bots/429807759144386572/vote)" + "\n" +
-      "Botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/429807759144386572/vote)" + "\n" +
-			"Bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/429807759144386572)", true)
-			.addField("Github", "[Go!](https://github.com/blueboomer76/KendraBot)", true)
+				.setTitle("Kendra's References")
+				.setDescription("Exciting, huh? Now you have the chance to spread the love! uwu")
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setFooter("Made by CreativeAllurer#4939")
+				.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=403041398&scope=bot)`, true)
+				.addField("Kendra's server", "[Go!](https://discord.gg/yB8TvWU)", true)
+				.addField("Upvote this bot", "Discordbots.org: [Go!](https://discordbots.org/bots/429807759144386572/vote)" + "\n" +
+				"Botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/429807759144386572/vote)" + "\n" +
+				"Bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/429807759144386572)", true)
+				.addField("Github", "[Go!](https://github.com/blueboomer76/KendraBot)", true)
 			);
 		}
 	},
@@ -460,35 +461,35 @@ module.exports = [
 					endEval = new Date();
 				
 				statsEmbed.setAuthor(`Kendra Bot Stats`, bot.user.avatarURL)
-				.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
-				.setDescription("Here's some detailed stats about the Kendra bot! *To see stats about the bot host, use `k,stats processor`*")
-				.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
-				.addField("Last Restart", getDuration(bot.readyTimestamp), true)
-				.addField("Servers", 
-				`Total: ${serverCount.toLocaleString()}` + "\n" +
-				`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
-				, true)
-				.addField("Users", 
-				`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
-				`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(1)}%)`
-				, true)
-				.addField("Channels", 
-				`Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
-				`Voice: ${voiceChannelCount.toLocaleString()} (${(voiceChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
-				`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
-				, true)
-				.addField("Messages Seen",
-				`Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, Number(new Date()) - bot.readyTimestamp)})` + `\n` +
-				`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, stats.duration)})`
-				, true)
-				.addField("Phone Calls Made",
-				`Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, Number(new Date()) - bot.readyTimestamp)})` + `\n` +
-				`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, stats.duration)})`
-				, true)
-				.addField("Commands",
-				`Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, Number(new Date()) - bot.readyTimestamp)})` + "\n" +
-				`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, stats.duration)})`
-				, true)
+					.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
+					.setDescription("Here's some detailed stats about the Kendra bot! *To see stats about the bot host, use `k,stats processor`*")
+					.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
+					.addField("Last Restart", getDuration(bot.readyTimestamp), true)
+					.addField("Servers", 
+					`Total: ${serverCount.toLocaleString()}` + "\n" +
+					`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
+					, true)
+					.addField("Users", 
+					`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
+					`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(1)}%)`
+					, true)
+					.addField("Channels", 
+					`Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
+					`Voice: ${voiceChannelCount.toLocaleString()} (${(voiceChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
+					`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
+					, true)
+					.addField("Messages Seen",
+					`Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, Number(new Date()) - bot.readyTimestamp)})` + `\n` +
+					`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, stats.duration)})`
+					, true)
+					.addField("Phone Calls Made",
+					`Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, Number(new Date()) - bot.readyTimestamp)})` + `\n` +
+					`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, stats.duration)})`
+					, true)
+					.addField("Commands",
+					`Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, Number(new Date()) - bot.readyTimestamp)})` + "\n" +
+					`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, stats.duration)})`
+					, true)
 				message.channel.send(statsEmbed);
 			}
 		}
@@ -524,12 +525,12 @@ module.exports = [
 			}
 			
 			processorEmbed.setDescription("Here's some detailed stats about the host that Kendra is on!")
-			.addField("Total Resident Set (RSS)", `${(processMemoryUsage.rss / 1048576).toFixed(2)} MB`, true)
-			.addField("Heap Usage", `Total: ${(processMemoryUsage.heapTotal / 1048576).toFixed(2)} MB`+ "\n" + 
-			`Used: ${(processMemoryUsage.heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
-			.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB` + "\n" +
-			`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)` + "\n" +
-			`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true)
+				.addField("Total Resident Set (RSS)", `${(processMemoryUsage.rss / 1048576).toFixed(2)} MB`, true)
+				.addField("Heap Usage", `Total: ${(processMemoryUsage.heapTotal / 1048576).toFixed(2)} MB`+ "\n" + 
+				`Used: ${(processMemoryUsage.heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
+				.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB` + "\n" +
+				`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)` + "\n" +
+				`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true)
 			
 			setTimeout(this.postProcessorStats, 250, message, processorEmbed, cpuUsage1)
 		}
