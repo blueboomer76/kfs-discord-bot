@@ -1,3 +1,3 @@
 module.exports = async (bot, info) => {
-	console.log("Warning:", info)
-}
+	console.log("Warning:", info);
+};

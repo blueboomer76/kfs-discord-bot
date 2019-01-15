@@ -12,13 +12,13 @@ const cdMessages = [
 
 function getIdByType(message, type) {
 	if (type == "user") {
-		return message.author.id
+		return message.author.id;
 	} else if (type == "channel") {
-		return message.channel.id
+		return message.channel.id;
 	} else if (type == "guild") {
-		if (message.guild) {return message.guild.id} else {return message.author.id};
+		if (message.guild) {return message.guild.id} else {return message.author.id}
 	} else {
-		throw new Error("Cooldown type must either be user, channel, or guild.")
+		throw new Error("Cooldown type must either be user, channel, or guild.");
 	}
 }
 
@@ -27,7 +27,7 @@ function findCooldown(bot, id, name, findIndex) {
 	if (findIndex) {
 		return bot.cache.recentCommands.findIndex(filter);
 	} else {
-		return bot.cache.recentCommands.find(filter)
+		return bot.cache.recentCommands.find(filter);
 	}
 }
 
@@ -43,14 +43,14 @@ function addCooldown(bot, message, command, overrides) {
 	if (!overrides) overrides = {};
 	const cdName = overrides.name ? overrides.name : command.name,
 		cdTime = overrides.time ? overrides.time : command.cooldown.time,
-		cdId = getIdByType(message, overrides.type ? overrides.type : command.cooldown.type)
+		cdId = getIdByType(message, overrides.type ? overrides.type : command.cooldown.type);
 
 	bot.cache.recentCommands.push({
 		id: cdId,
 		name: cdName,
 		resets: Number(new Date()) + cdTime,
 		notified: false
-	})
+	});
 	setTimeout(removeCooldown, cdTime, bot, cdId, cdName);
 }
 
@@ -68,16 +68,16 @@ module.exports = {
 				let toSend = `⛔ **Cooldown:**\n*${cdMessages[Math.floor(Math.random() * cdMessages.length)]}*` + "\n";
 
 				if (command.cooldown.name) {
-					toSend += `${capitalize(command.cooldown.name, true)} commands`
+					toSend += `${capitalize(command.cooldown.name, true)} commands`;
 				} else {
-					toSend += "This command"
+					toSend += "This command";
 				}
 				const cdTime = ((checkedCd.resets - Number(new Date())) / 1000).toFixed(1);
-				toSend += ` cannot be used again for **${cdTime > 0 ? cdTime : 0.1} seconds**`
+				toSend += ` cannot be used again for **${cdTime > 0 ? cdTime : 0.1} seconds**`;
 				if (cdType == "channel") {
-					toSend += " in this channel"
+					toSend += " in this channel";
 				} else if (cdType == "guild") {
-					toSend += " in this guild"
+					toSend += " in this guild";
 				}
 				message.channel.send(`${toSend}!`);
 			}
@@ -87,4 +87,4 @@ module.exports = {
 		}
 	},
 	addCooldown: addCooldown
-}
+};

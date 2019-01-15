@@ -104,9 +104,9 @@ class KendraBot extends Client {
 					}
 				}
 			} else {
-				throw new Error("No command files or commands found")
+				throw new Error("No command files or commands found");
 			}
-		})
+		});
 	}
 	
 	loadEvents() {
@@ -123,7 +123,7 @@ class KendraBot extends Client {
 			} else {
 				throw new Error("No events found");
 			}
-		})
+		});
 	}
 	
 	async logStats() {
@@ -133,21 +133,18 @@ class KendraBot extends Client {
 		setTimeout(() => {
 			const stats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8")),
 				stats2 = this.cache.stats;
-			stats.duration = stats.duration + (Number(new Date()) - stats2.lastCheck)
+			stats.duration = stats.duration + (Number(new Date()) - stats2.lastCheck);
 			stats.messageTotal += stats2.messageCurrentTotal;
 
 			const distrib = stats.commandDistrib,
 				usageCache = stats2.commandUsage;
 			let commandCurrentTotal = stats2.commandCurrentTotal;
 			for (const entry of usageCache) {
-				const cmdIndex = distrib.findIndex(u => u.command == entry.command)
+				const cmdIndex = distrib.findIndex(u => u.command == entry.command);
 				if (cmdIndex != -1) {
 					distrib[cmdIndex].uses += entry.uses;
 				} else {
-					distrib.push({
-						command: entry.command,
-						uses: entry.uses
-					})
+					distrib.push({command: entry.command, uses: entry.uses});
 				}
 				commandCurrentTotal += entry.uses;
 			}
@@ -176,13 +173,13 @@ class KendraBot extends Client {
 			json: true
 		}, (err, res) => {
 			if (err) {
-				console.log(`Failed to post to bots.ondiscord.xyz:\n${err}`)
+				console.log(`Failed to post to bots.ondiscord.xyz:\n${err}`);
 			} else if (res.statusCode >= 400) {
-				console.log(`An unexpected status code ${res.statusCode} was returned from bots.ondiscord.xyz`)
+				console.log(`An unexpected status code ${res.statusCode} was returned from bots.ondiscord.xyz`);
 			} else {
-				console.log("Stats successfully posted to bots.ondiscord.xyz")
+				console.log("Stats successfully posted to bots.ondiscord.xyz");
 			}
-		})
+		});
 	}
 	
 	async postBotsForDiscordStats(bot) {
@@ -196,13 +193,13 @@ class KendraBot extends Client {
 			json: true
 		}, (err, res) => {
 			if (err) {
-				console.log(`Failed to post to botsfordiscord.com:\n${err}`)
+				console.log(`Failed to post to botsfordiscord.com:\n${err}`);
 			} else if (res.statusCode >= 400) {
-				console.log(`An unexpected status code ${res.statusCode} was returned from botsfordiscord.com`)
+				console.log(`An unexpected status code ${res.statusCode} was returned from botsfordiscord.com`);
 			} else {
-				console.log("Stats successfully posted to botsfordiscord.com")
+				console.log("Stats successfully posted to botsfordiscord.com");
 			}
-		})
+		});
 	}
 	
 	async postDiscordBotsOrgStats(bot) {
@@ -215,13 +212,13 @@ class KendraBot extends Client {
 			json: true
 		}, (err, res) => {
 			if (err) {
-				console.log(`Failed to post to discordbots.org:\n${err}`)
+				console.log(`Failed to post to discordbots.org:\n${err}`);
 			} else if (res.statusCode >= 400) {
-				console.log(`An unexpected status code ${res.statusCode} was returned from discordbots.org`)
+				console.log(`An unexpected status code ${res.statusCode} was returned from discordbots.org`);
 			} else {
-				console.log("Stats successfully posted to discordbots.org")
+				console.log("Stats successfully posted to discordbots.org");
 			}
-		})
+		});
 	}
 	
 	async handlePhoneMessage(message) {
@@ -231,13 +228,13 @@ class KendraBot extends Client {
 			return;
 		}
 		
-		const toSend = message.cleanContent.replace(/https?\:\/\/\S+\.\S+/gi, "")
+		const toSend = message.cleanContent.replace(/https?:\/\/\S+\.\S+/gi, "")
 			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
 		let affected = 0;
 		
 		phoneCache.lastMsgTime = Number(new Date());
 		phoneCache.msgCount++;
-		setTimeout(() => {phoneCache.msgCount--;}, 5000);
+		setTimeout(() => {phoneCache.msgCount--}, 5000);
 		if (message.channel.id == phoneCache.channels[0].id) affected = 1;
 		
 		phoneCache.channels[affected].send(`📞 ${toSend}`);
@@ -264,7 +261,7 @@ class KendraBot extends Client {
 		phoneCache.channels = [];
 		
 		let phoneTimeout = phoneCache.timeout;
-		if (phoneTimeout) {clearTimeout(phoneTimeout); phoneTimeout = null;}
+		if (phoneTimeout) {clearTimeout(phoneTimeout); phoneTimeout = null}
 	}
 }
 

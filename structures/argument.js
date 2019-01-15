@@ -15,7 +15,7 @@ class Argument {
 		if (props.max) this.max = props.max;
 		if (props.testFunction) {
 			this.testFunction = props.testFunction;
-			if (!props.errorMsg) throw new Error("Missing required message for missing arg message with type test function")
+			if (!props.errorMsg) throw new Error("Missing required message for missing arg message with type test function");
 		}
 			
 		if (!props.type) throw new Error("Argument type not given");

@@ -10,7 +10,7 @@ function getPosts(url, checkNsfw) {
 			url: url,
 			json: true
 		}, (err, res) => {
-			if (err || res.statusCode >= 400) reject(`Failed to fetch from Reddit. (status code ${res.statusCode})`)
+			if (err || res.statusCode >= 400) reject(`Failed to fetch from Reddit. (status code ${res.statusCode})`);
 			const results = res.body.data.children.filter(r => !r.data.stickied);
 		
 			if (checkNsfw) {
@@ -24,7 +24,7 @@ function getPosts(url, checkNsfw) {
 						comments: result.data.num_comments,
 						author: result.data.author,
 						imageURL: result.data.url
-					}
+					};
 					if (result.data.over_18) {
 						nsfwResults.push(postObj);
 					} else {
@@ -42,11 +42,11 @@ function getPosts(url, checkNsfw) {
 						comments: r.data.num_comments,
 						author: r.data.author,
 						imageURL: r.data.url
-					}
-				}))
+					};
+				}));
 			}
-		})
-	})
+		});
+	});
 }
 
 function sendRedditEmbed(message, postData) {
@@ -56,7 +56,7 @@ function sendRedditEmbed(message, postData) {
 		.setColor(Math.floor(Math.random() * 16777216))
 		.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
 		.setImage(postData.imageURL)
-	)
+	);
 }
 
 module.exports = [
@@ -85,29 +85,29 @@ module.exports = [
 			let cmdErr;
 			if (new Date() > this.lastChecked + 1000*3600 || this.cachedSfwPosts.length == 0) {
 				this.lastChecked = Number(new Date());
-				await getPosts(`https://reddit.com/r/Animemes/hot.json`, true)
-				.then(posts => {
-					this.lastChecked = Number(new Date());
-					this.cachedSfwPosts = posts.sfw;
-					this.cachedNsfwPosts = posts.nsfw;
-				})
-				.catch(err => cmdErr = err)
-				if (cmdErr) return {cmdWarn: cmdErr}
+				await getPosts("https://reddit.com/r/Animemes/hot.json", true)
+					.then(posts => {
+						this.lastChecked = Number(new Date());
+						this.cachedSfwPosts = posts.sfw;
+						this.cachedNsfwPosts = posts.nsfw;
+					})
+					.catch(err => cmdErr = err);
+				if (cmdErr) return {cmdWarn: cmdErr};
 			}
 			
 			let postData;
 			if (!message.channel.nsfw) {
-				postData = this.cachedSfwPosts.splice(Math.floor(Math.random() * this.cachedSfwPosts.length), 1)
+				postData = this.cachedSfwPosts.splice(Math.floor(Math.random() * this.cachedSfwPosts.length), 1);
 			} else {
 				const postPos = Math.floor(Math.random() * (this.cachedSfwPosts.length + this.cachedNsfwPosts.length));
 				if (postPos < this.cachedSfwPosts.length) {
-					postData = this.cachedSfwPosts.splice(postPos, 1)
+					postData = this.cachedSfwPosts.splice(postPos, 1);
 				} else {
-					postData = this.cachedNsfwPosts.splice(postPos - this.cachedSfwPosts.length, 1)
+					postData = this.cachedNsfwPosts.splice(postPos - this.cachedSfwPosts.length, 1);
 				}
 			}
 			
-			sendRedditEmbed(message, postData[0])
+			sendRedditEmbed(message, postData[0]);
 		}
 	},
 	class AnimeIRLCommand extends Command {
@@ -134,29 +134,29 @@ module.exports = [
 			let cmdErr;
 			if (new Date() > this.lastChecked + 1000*3600 || this.cachedSfwPosts.length == 0) {
 				this.lastChecked = Number(new Date());
-				await getPosts(`https://reddit.com/r/anime_irl/hot.json`, true)
-				.then(posts => {
-					this.lastChecked = Number(new Date());
-					this.cachedSfwPosts = posts.sfw;
-					this.cachedNsfwPosts = posts.nsfw;
-				})
-				.catch(err => cmdErr = err)
-				if (cmdErr) return {cmdWarn: cmdErr}
+				await getPosts("https://reddit.com/r/anime_irl/hot.json", true)
+					.then(posts => {
+						this.lastChecked = Number(new Date());
+						this.cachedSfwPosts = posts.sfw;
+						this.cachedNsfwPosts = posts.nsfw;
+					})
+					.catch(err => cmdErr = err);
+				if (cmdErr) return {cmdWarn: cmdErr};
 			}
 			
 			let postData;
 			if (!message.channel.nsfw) {
-				postData = this.cachedSfwPosts.splice(Math.floor(Math.random() * this.cachedSfwPosts.length), 1)
+				postData = this.cachedSfwPosts.splice(Math.floor(Math.random() * this.cachedSfwPosts.length), 1);
 			} else {
 				const postPos = Math.floor(Math.random() * (this.cachedSfwPosts.length + this.cachedNsfwPosts.length));
 				if (postPos < this.cachedSfwPosts.length) {
-					postData = this.cachedSfwPosts.splice(postPos, 1)
+					postData = this.cachedSfwPosts.splice(postPos, 1);
 				} else {
-					postData = this.cachedNsfwPosts.splice(postPos - this.cachedSfwPosts.length, 1)
+					postData = this.cachedNsfwPosts.splice(postPos - this.cachedSfwPosts.length, 1);
 				}
 			}
 			
-			sendRedditEmbed(message, postData[0])
+			sendRedditEmbed(message, postData[0]);
 		}
 	},
 	class BirbCommand extends Command {
@@ -179,7 +179,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get("http://random.birb.pw/tweet.json", (err, res) => {
-				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to retrieve from random.birb. (status code ${res.statusCode})`)
+				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to retrieve from random.birb. (status code ${res.statusCode})`);
 				
 				message.channel.send(new RichEmbed()
 					.setTitle("Here's your random birb!")
@@ -230,19 +230,19 @@ module.exports = [
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
 				await imageManager.resolveImageUrl(message)
-				.then(url => imageURL = url)
-				.catch(err => cmdErr = err)
+					.then(url => imageURL = url)
+					.catch(err => cmdErr = err);
 				if (cmdErr) return message.channel.send(cmdErr);
 			}
 			
 			Jimp.read(imageURL)
-			.then(img => {
-				let levelFlag = flags.find(f => f.name == "level");
-				imageManager.postImage(message, img.blur(levelFlag ? levelFlag.args[0] : 2), "blur.png")
-			})
-			.catch(err => {
-				message.channel.send("⚠ Failed to get image for that URL.")
-			})
+				.then(img => {
+					const levelFlag = flags.find(f => f.name == "level");
+					imageManager.postImage(message, img.blur(levelFlag ? levelFlag.args[0] : 2), "blur.png");
+				})
+				.catch(() => {
+					message.channel.send("⚠ Failed to get image for that URL.");
+				});
 		}
 	},
 	class CatCommand extends Command {
@@ -265,7 +265,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get("http://aws.random.cat/meow", (err, res) => {
-				if (err) return message.channel.send(`⚠ Failed to retrieve from random.cat. (status code ${res.statusCode})`)
+				if (err) return message.channel.send(`⚠ Failed to retrieve from random.cat. (status code ${res.statusCode})`);
 				message.channel.send(new RichEmbed()
 					.setTitle("Here's your random cat!")
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -334,18 +334,18 @@ module.exports = [
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
 				await imageManager.resolveImageUrl(message)
-				.then(url => imageURL = url)
-				.catch(err => cmdErr = err)
+					.then(url => imageURL = url)
+					.catch(err => cmdErr = err);
 				if (cmdErr) return message.channel.send(cmdErr);
 			}
 			
 			Jimp.read(imageURL)
-			.then(img => {
-				imageManager.postImage(message, img.mirror(true, false), "flip.png")
-			})
-			.catch(err => {
-				message.channel.send("⚠ Failed to get image for that URL.")
-			})
+				.then(img => {
+					imageManager.postImage(message, img.mirror(true, false), "flip.png");
+				})
+				.catch(() => {
+					message.channel.send("⚠ Failed to get image for that URL.");
+				});
 		}
 	},
 	class FlopCommand extends Command {
@@ -377,18 +377,18 @@ module.exports = [
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
 				await imageManager.resolveImageUrl(message)
-				.then(url => imageURL = url)
-				.catch(err => cmdErr = err)
+					.then(url => imageURL = url)
+					.catch(err => cmdErr = err);
 				if (cmdErr) return message.channel.send(cmdErr);
 			}
 			
 			Jimp.read(imageURL)
-			.then(img => {
-				imageManager.postImage(message, img.mirror(false, true), "flop.png")
-			})
-			.catch(err => {
-				message.channel.send("⚠ Failed to get image for that URL.")
-			})
+				.then(img => {
+					imageManager.postImage(message, img.mirror(false, true), "flop.png");
+				})
+				.catch(() => {
+					message.channel.send("⚠ Failed to get image for that URL.");
+				});
 		}
 	},
 	class GreyscaleCommand extends Command {
@@ -421,18 +421,18 @@ module.exports = [
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
 				await imageManager.resolveImageUrl(message)
-				.then(url => imageURL = url)
-				.catch(err => cmdErr = err)
+					.then(url => imageURL = url)
+					.catch(err => cmdErr = err);
 				if (cmdErr) return message.channel.send(cmdErr);
 			}
 			
 			Jimp.read(imageURL)
-			.then(img => {
-				imageManager.postImage(message, img.greyscale(), "greyscale.png")
-			})
-			.catch(err => {
-				message.channel.send("⚠ Failed to get image for that URL.")
-			})
+				.then(img => {
+					imageManager.postImage(message, img.greyscale(), "greyscale.png");
+				})
+				.catch(() => {
+					message.channel.send("⚠ Failed to get image for that URL.");
+				});
 		}
 	},
 	class InvertCommand extends Command {
@@ -464,18 +464,18 @@ module.exports = [
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
 				await imageManager.resolveImageUrl(message)
-				.then(url => imageURL = url)
-				.catch(err => cmdErr = err)
+					.then(url => imageURL = url)
+					.catch(err => cmdErr = err);
 				if (cmdErr) return message.channel.send(cmdErr);
 			}
 			
 			Jimp.read(imageURL)
-			.then(img => {
-				imageManager.postImage(message, img.invert(), "invert.png")
-			})
-			.catch(err => {
-				message.channel.send("⚠ Failed to get image for that URL.")
-			})
+				.then(img => {
+					imageManager.postImage(message, img.invert(), "invert.png");
+				})
+				.catch(() => {
+					message.channel.send("⚠ Failed to get image for that URL.");
+				});
 		}
 	},
 	class MemeCommand extends Command {
@@ -500,18 +500,18 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			let cmdErr;
 			if (new Date() > this.lastChecked + 1000*3600 || this.cachedPosts.length == 0) {
-				await getPosts(`https://reddit.com/r/memes/hot.json`, false)
-				.then(posts => {
-					this.lastChecked = Number(new Date());
-					this.cachedPosts = posts;
-				})
-				.catch(err => cmdErr = err)
-				if (cmdErr) return message.channel.send(cmdErr)
+				await getPosts("https://reddit.com/r/memes/hot.json", false)
+					.then(posts => {
+						this.lastChecked = Number(new Date());
+						this.cachedPosts = posts;
+					})
+					.catch(err => cmdErr = err);
+				if (cmdErr) return message.channel.send(cmdErr);
 			}
 			
 			const postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1);
 			
-			sendRedditEmbed(message, postData[0])
+			sendRedditEmbed(message, postData[0]);
 		}
 	},
 	class MirrorCommand extends Command {
@@ -544,68 +544,66 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0], type = args[1], cmdErr;
+			const type = args[1];
+			let imageURL = args[0], cmdErr;
 			
 			if (!imageURL) {
 				await imageManager.resolveImageUrl(message)
-				.then(url => imageURL = url)
-				.catch(err => cmdErr = err)
+					.then(url => imageURL = url)
+					.catch(err => cmdErr = err);
 				if (cmdErr) return message.channel.send(cmdErr);
 			}
 			
 			Jimp.read(imageURL)
-			.then(img => {
-				const imgClone1 = img.clone(),
-					imgClone2 = img.clone(),
-					imgWidth = img.bitmap.width,
-					imgHeight = img.bitmap.height;
+				.then(img => {
+					const imgClone1 = img.clone(),
+						imgClone2 = img.clone(),
+						imgWidth = img.bitmap.width,
+						imgHeight = img.bitmap.height;
 
-				if (type == "haah" || type == "right-to-left") {
-					imgClone1.crop(imgWidth/2,0,imgWidth/2,imgHeight);
-					imgClone2.crop(imgWidth/2,0,imgWidth/2,imgHeight);
-					imgClone2.mirror(true, false);
-					
-					new Jimp(imgWidth, imgHeight, (err, img2) => {
-						img2.composite(imgClone1,imgWidth/2,0)
-						img2.composite(imgClone2,0,0)
-						imageManager.postImage(message, img2, "mirror-haah.png")
-					})
-					return;
-				} else if (type == "hooh" || type == "bottom-to-top") {
-					imgClone1.crop(0,imgHeight/2,imgWidth,imgHeight/2);
-					imgClone2.crop(0,imgHeight/2,imgWidth,imgHeight/2);
-					imgClone2.mirror(false, true);
-					
-					new Jimp(imgWidth, imgHeight, (err, img2) => {
-						img2.composite(imgClone1,0,imgHeight/2)
-						.composite(imgClone2,0,0)
-						imageManager.postImage(message, img2, "mirror-hooh.png")
-					})
-				} else if (type == "waaw" || type == "left-to-right") {
-					imgClone1.crop(0,0,imgWidth/2,imgHeight);
-					imgClone2.crop(0,0,imgWidth/2,imgHeight);
-					imgClone2.mirror(true, false);
-					
-					new Jimp(imgWidth, imgHeight, (err, img2) => {
-						img2.composite(imgClone1,0,0)
-						.composite(imgClone2,imgWidth/2,0)
-						imageManager.postImage(message, img2, "mirror-waaw.png")
-					})
-				} else {
-					imgClone1.crop(0,0,imgWidth,imgHeight/2);
-					imgClone2.crop(0,0,imgWidth,imgHeight/2);
-					imgClone2.mirror(false, true);
-					
-					new Jimp(imgWidth, imgHeight, (err, img2) => {
-						img2.composite(imgClone1,0,0)
-						.composite(imgClone2,0,imgHeight/2)
-						imageManager.postImage(message, img2, "mirror-woow.png")
-					})
-				}
-			})
-			.catch(err => {
-				message.channel.send("⚠ Failed to get image for that URL.")
-			})
+					if (type == "haah" || type == "right-to-left") {
+						imgClone1.crop(imgWidth/2,0,imgWidth/2,imgHeight);
+						imgClone2.crop(imgWidth/2,0,imgWidth/2,imgHeight);
+						imgClone2.mirror(true, false);
+						
+						new Jimp(imgWidth, imgHeight, (err, img2) => {
+							img2.composite(imgClone1,imgWidth/2,0);
+							img2.composite(imgClone2,0,0);
+							imageManager.postImage(message, img2, "mirror-haah.png");
+						});
+						return;
+					} else if (type == "hooh" || type == "bottom-to-top") {
+						imgClone1.crop(0,imgHeight/2,imgWidth,imgHeight/2);
+						imgClone2.crop(0,imgHeight/2,imgWidth,imgHeight/2);
+						imgClone2.mirror(false, true);
+						
+						new Jimp(imgWidth, imgHeight, (err, img2) => {
+							img2.composite(imgClone1,0,imgHeight/2).composite(imgClone2,0,0);
+							imageManager.postImage(message, img2, "mirror-hooh.png");
+						});
+					} else if (type == "waaw" || type == "left-to-right") {
+						imgClone1.crop(0,0,imgWidth/2,imgHeight);
+						imgClone2.crop(0,0,imgWidth/2,imgHeight);
+						imgClone2.mirror(true, false);
+						
+						new Jimp(imgWidth, imgHeight, (err, img2) => {
+							img2.composite(imgClone1,0,0).composite(imgClone2,imgWidth/2,0);
+							imageManager.postImage(message, img2, "mirror-waaw.png");
+						});
+					} else {
+						imgClone1.crop(0,0,imgWidth,imgHeight/2);
+						imgClone2.crop(0,0,imgWidth,imgHeight/2);
+						imgClone2.mirror(false, true);
+						
+						new Jimp(imgWidth, imgHeight, (err, img2) => {
+							img2.composite(imgClone1,0,0).composite(imgClone2,0,imgHeight/2);
+							imageManager.postImage(message, img2, "mirror-woow.png");
+						});
+					}
+				})
+				.catch(() => {
+					message.channel.send("⚠ Failed to get image for that URL.");
+				});
 		}
 	},
 	class NeedsMoreJPEGCommand extends Command {
@@ -638,30 +636,30 @@ module.exports = [
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
 				await imageManager.resolveImageUrl(message)
-				.then(url => imageURL = url)
-				.catch(err => cmdErr = err)
+					.then(url => imageURL = url)
+					.catch(err => cmdErr = err);
 				if (cmdErr) return message.channel.send(cmdErr);
 			}
 			
 			Jimp.read(imageURL)
-			.then(img => {
-				img.quality(1)
-				.getBufferAsync(Jimp.MIME_JPEG)
-				.then(imgToSend => {
-					message.channel.send({
-						files: [{
-							attachment: imgToSend,
-							name: "needsmorejpeg.jpg"
-						}]
-					})
+				.then(img => {
+					img.quality(1)
+						.getBufferAsync(Jimp.MIME_JPEG)
+						.then(imgToSend => {
+							message.channel.send({
+								files: [{
+									attachment: imgToSend,
+									name: "needsmorejpeg.jpg"
+								}]
+							});
+						})
+						.catch(() => {
+							message.channel.send("Failed to generate the image.");
+						});
 				})
-				.catch(err => {
-					msg.channel.send("Failed to generate the image.")
-				})
-			})
-			.catch(err => {
-				message.channel.send("⚠ Failed to get image for that URL.")
-			})
+				.catch(() => {
+					message.channel.send("⚠ Failed to get image for that URL.");
+				});
 		}
 	},
 	class PixelateCommand extends Command {
@@ -694,18 +692,18 @@ module.exports = [
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
 				await imageManager.resolveImageUrl(message)
-				.then(url => imageURL = url)
-				.catch(err => cmdErr = err)
+					.then(url => imageURL = url)
+					.catch(err => cmdErr = err);
 				if (cmdErr) return message.channel.send(cmdErr);
 			}
 			
 			Jimp.read(imageURL)
-			.then(img => {
-				imageManager.postImage(message, img.pixelate(10), "pixelate.png")
-			})
-			.catch(err => {
-				message.channel.send("⚠ Failed to get image for that URL.")
-			})
+				.then(img => {
+					imageManager.postImage(message, img.pixelate(10), "pixelate.png");
+				})
+				.catch(() => {
+					message.channel.send("⚠ Failed to get image for that URL.");
+				});
 		}
 	},
 	class SepiaCommand extends Command {
@@ -737,18 +735,18 @@ module.exports = [
 			let imageURL = args[0], cmdErr;
 			if (!imageURL) {
 				await imageManager.resolveImageUrl(message)
-				.then(url => imageURL = url)
-				.catch(err => cmdErr = err)
+					.then(url => imageURL = url)
+					.catch(err => cmdErr = err);
 				if (cmdErr) return message.channel.send(cmdErr);
 			}
 			
 			Jimp.read(imageURL)
-			.then(img => {
-				imageManager.postImage(message, img.sepia(), "sepia.png")
-			})
-			.catch(err => {
-				message.channel.send("⚠ Failed to get image for that URL.")
-			})
+				.then(img => {
+					imageManager.postImage(message, img.sepia(), "sepia.png");
+				})
+				.catch(() => {
+					message.channel.send("⚠ Failed to get image for that URL.");
+				});
 		}
 	}
-]
+];

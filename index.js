@@ -16,7 +16,7 @@ try {
 		commandTotal: 0,
 		callTotal: 0,
 		commandDistrib: []
-	}), err => {if (err) throw err;})
+	}), err => {if (err) throw err;});
 }
 
 const bot = new KendraBot({
@@ -40,7 +40,7 @@ process.on("uncaughtException", err => {
 });
 
 process.on("unhandledRejection", (err, promise) => {
-	console.log(`At ${new Date()}:`)
+	console.log(`At ${new Date()}:`);
 	console.error(promise);
 });
 

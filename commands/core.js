@@ -28,19 +28,19 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			message.channel.send(new RichEmbed()
-			.setAuthor("About this bot", bot.user.avatarURL)
-			.setDescription("Kendra is an actively developed bot that not only has fun, moderation, utility commands, but a phone command for calling other servers, and combines features from popular bots. New commands are added to Kendra often.")
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`Bot ID: ${bot.user.id}`)
-			.addField("Library", `Discord.js v${packageInfo.dependencies["discord.js"].slice(1)}`, true)
-			.addField("Bot Version", packageInfo.version, true)
-			.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
-			.addField("Quick Stats", `${bot.cache.guildCount} Servers\n${bot.cache.userCount} Users\n${bot.cache.channelCount} Channels`, true)
-			.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=403041398&scope=bot)`, true)
-			.addField("Kendra's server", "[Go!](https://discord.gg/yB8TvWU)", true)
-			.addField("Upvote this bot", "Discordbots.org: [Go!](https://discordbots.org/bots/429807759144386572/vote)" + "\n" +
-			"Botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/429807759144386572/vote)" + "\n" +
-			"Bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/429807759144386572)", true)
+				.setAuthor("About this bot", bot.user.avatarURL)
+				.setDescription("Kendra is an actively developed bot that not only has fun, moderation, utility commands, but a phone command for calling other servers, and combines features from popular bots. New commands are added to Kendra often.")
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setFooter(`Bot ID: ${bot.user.id}`)
+				.addField("Library", `Discord.js v${packageInfo.dependencies["discord.js"].slice(1)}`, true)
+				.addField("Bot Version", packageInfo.version, true)
+				.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
+				.addField("Quick Stats", `${bot.cache.guildCount} Servers\n${bot.cache.userCount} Users\n${bot.cache.channelCount} Channels`, true)
+				.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=403041398&scope=bot)`, true)
+				.addField("Kendra's server", "[Go!](https://discord.gg/yB8TvWU)", true)
+				.addField("Upvote this bot", "Discordbots.org: [Go!](https://discordbots.org/bots/429807759144386572/vote)" + "\n" +
+				"Botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/429807759144386572/vote)" + "\n" +
+				"Bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/429807759144386572)", true)
 			);
 		}
 	},
@@ -103,19 +103,19 @@ module.exports = [
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter("Don't include the usage symbols when running the command.")
 					.addField("Category", command.category)
-					.addField("Description", command.description)
-				if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "))
-				if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"))
-				helpEmbed.addField("Usage", "`" + bot.prefix + command.usage + "`")
-				if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.join("\n"))
+					.addField("Description", command.description);
+				if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "));
+				if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"));
+				helpEmbed.addField("Usage", "`" + bot.prefix + command.usage + "`");
+				if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.join("\n"));
 				if (commandPerms.bot.length > 0 || commandPerms.user.length > 0 || commandPerms.role || commandPerms.level > 0) {
-					helpEmbed.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`)
+					helpEmbed.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`);
 				}
-				helpEmbed.addField("Cooldown", command.cooldown.time != 0 ? `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}` : "None")
+				helpEmbed.addField("Cooldown", command.cooldown.time != 0 ? `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}` : "None");
 			}
 			if (flags.some(f => f.name == "dm")) {
 				message.member.send(helpEmbed)
-				.catch(() => message.channel.send("Failed to send a help message as a DM. Check your settings and try again."))
+					.catch(() => message.channel.send("Failed to send a help message as a DM. Check your settings and try again."));
 			} else {
 				message.channel.send(helpEmbed);
 			}
@@ -192,15 +192,15 @@ module.exports = [
 			const category = args[0], commandName = args[1];
 			let newCommand;
 			
-			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."}
+			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."};
 			try {
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
 				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
-					CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[2] ? args[2].toLowerCase() : args[1].toLowerCase()))
+					CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[2] ? args[2].toLowerCase() : args[1].toLowerCase()));
 				try {
 					newCommand = new CommandClass();
 				} catch(err2) {
-					return {cmdWarn: "Please provide a third argument for the class name, replacing all numbers in the command with the word."}
+					return {cmdWarn: "Please provide a third argument for the class name, replacing all numbers in the command with the word."};
 				}
 				newCommand.category = capitalize(category, true);
 				bot.commands.set(commandName, newCommand);
@@ -242,7 +242,7 @@ module.exports = [
 					if (phoneCache.channels.length == 2) {
 						phoneMsg0 = "The other side has picked up the phone! Greet the other side!";
 					} else {
-						phoneMsg0 = "Looks like someone else picked up the phone."
+						phoneMsg0 = "Looks like someone else picked up the phone.";
 						phoneCache.channels.shift().send("☎ Someone else is now using the phone...");
 					}
 					phoneCache.channels[0].send(`☎ ${phoneMsg0}`);
@@ -276,9 +276,9 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			message.channel.send("Ping?")
-			.then(msg => {
-				msg.edit(`🏓 **Pong!**\nLatency: ${msg.createdTimestamp - message.createdTimestamp}ms\nAPI Latency: ${Math.round(bot.ping)}ms`)
-			})
+				.then(msg => {
+					msg.edit(`🏓 **Pong!**\nLatency: ${msg.createdTimestamp - message.createdTimestamp}ms\nAPI Latency: ${Math.round(bot.ping)}ms`);
+				});
 		}
 	},
 	class ReloadCommand extends Command {
@@ -311,7 +311,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let command = args[0], newCommand, commandName = command.name, category = command.category;
+			const command = args[0], commandName = command.name, category = command.category;
+			let newCommand;
 			try {
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
 				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
@@ -319,7 +320,7 @@ module.exports = [
 				try {
 					newCommand = new CommandClass();
 				} catch(err2) {
-					return {cmdWarn: "Please provide a second argument for the class name, replacing all numbers in the command with the word."}
+					return {cmdWarn: "Please provide a second argument for the class name, replacing all numbers in the command with the word."};
 				}
 				newCommand.category = category;
 				bot.commands.set(commandName, newCommand);
@@ -433,11 +434,11 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const statsEmbed = new RichEmbed()
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setTimestamp(message.createdAt)
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setTimestamp(message.createdAt);
 			
 			if (args[0] == "processor") {
-				statsEmbed.setAuthor(`Kendra Bot Stats - Processor`, bot.user.avatarURL)
+				statsEmbed.setAuthor("Kendra Bot Stats - Processor", bot.user.avatarURL);
 				this.getProcessorStats(message, statsEmbed);
 			} else {
 				const beginEval = new Date(),
@@ -460,36 +461,30 @@ module.exports = [
 					totalCommands = stats.commandTotal + commandCurrentTotal,
 					endEval = new Date();
 				
-				statsEmbed.setAuthor(`Kendra Bot Stats`, bot.user.avatarURL)
+				statsEmbed.setAuthor("Kendra Bot Stats", bot.user.avatarURL)
 					.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
 					.setDescription("Here's some detailed stats about the Kendra bot! *To see stats about the bot host, use `k,stats processor`*")
 					.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
 					.addField("Last Restart", getDuration(bot.readyTimestamp), true)
-					.addField("Servers", 
-					`Total: ${serverCount.toLocaleString()}` + "\n" +
+					.addField("Servers", `Total: ${serverCount.toLocaleString()}` + "\n" +
 					`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
 					, true)
-					.addField("Users", 
-					`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
+					.addField("Users", `Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
 					`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(1)}%)`
 					, true)
-					.addField("Channels", 
-					`Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
+					.addField("Channels", `Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
 					`Voice: ${voiceChannelCount.toLocaleString()} (${(voiceChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
 					`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
 					, true)
-					.addField("Messages Seen",
-					`Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, Number(new Date()) - bot.readyTimestamp)})` + `\n` +
+					.addField("Messages Seen", `Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, Number(new Date()) - bot.readyTimestamp)})` + "\n" +
 					`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, stats.duration)})`
 					, true)
-					.addField("Phone Calls Made",
-					`Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, Number(new Date()) - bot.readyTimestamp)})` + `\n` +
+					.addField("Phone Calls Made", `Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, Number(new Date()) - bot.readyTimestamp)})` + "\n" +
 					`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, stats.duration)})`
 					, true)
-					.addField("Commands",
-					`Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, Number(new Date()) - bot.readyTimestamp)})` + "\n" +
+					.addField("Commands", `Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, Number(new Date()) - bot.readyTimestamp)})` + "\n" +
 					`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, stats.duration)})`
-					, true)
+					, true);
 				message.channel.send(statsEmbed);
 			}
 		}
@@ -521,7 +516,7 @@ module.exports = [
 				cpuUsage1.push({
 					idle: cpu.times.idle,
 					nonidle: Object.values(cpu.times).reduce((prev, val) => prev + val) - cpu.times.idle
-				})
+				});
 			}
 			
 			processorEmbed.setDescription("Here's some detailed stats about the host that Kendra is on!")
@@ -530,9 +525,9 @@ module.exports = [
 				`Used: ${(processMemoryUsage.heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
 				.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB` + "\n" +
 				`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)` + "\n" +
-				`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true)
+				`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true);
 			
-			setTimeout(this.postProcessorStats, 250, message, processorEmbed, cpuUsage1)
+			setTimeout(this.postProcessorStats, 250, message, processorEmbed, cpuUsage1);
 		}
 		
 		postProcessorStats(message, processorEmbed, cpuUsage1) {
@@ -541,19 +536,19 @@ module.exports = [
 				cpuUsage2.push({
 					idle: cpu.times.idle,
 					nonidle: Object.values(cpu.times).reduce((prev, val) => prev + val) - cpu.times.idle
-				})
+				});
 			}
 			
 			const usagePercentages = [];
 			for (let i = 0; i < cpus.length; i++) {
-				let idleDif = cpuUsage2[i].idle - cpuUsage1[i].idle, nonidleDif = cpuUsage2[i].nonidle - cpuUsage1[i].nonidle;
-				usagePercentages.push(nonidleDif / (idleDif + nonidleDif))
+				const idleDif = cpuUsage2[i].idle - cpuUsage1[i].idle, nonidleDif = cpuUsage2[i].nonidle - cpuUsage1[i].nonidle;
+				usagePercentages.push(nonidleDif / (idleDif + nonidleDif));
 			}
 			
 			processorEmbed.addField("CPU Usage", `${(usagePercentages.reduce((prev, val) => prev + val) / cpus.length * 100).toFixed(1)}%`, true)
-			.addField("Processor", cpus[0].model)
-			.addField("Number of Cores", cpus.length)
-			message.channel.send(processorEmbed)
+				.addField("Processor", cpus[0].model)
+				.addField("Number of Cores", cpus.length);
+			message.channel.send(processorEmbed);
 		}
 	},
 	class SuggestCommand extends Command {
@@ -590,14 +585,14 @@ module.exports = [
 						text: `#${message.channel.name} (ID ${message.channel.id}) in ${message.guild.name} (ID ${message.guild.id})`,
 						timestamp: message.createdAt
 					},
-					description: args[0].replace(/https?\:\/\/\S+\.\S+/gi, "").replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
+					description: args[0].replace(/https?:\/\/\S+\.\S+/gi, "").replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
 				}]
 			})
-			.then(() => {
-				message.channel.send("✅ Your suggestion has been sent to the support server.");
-			}).catch(err => {
-				return {cmdWarn: "⚠ Failed to send suggestion to support server."};
-			})
+				.then(() => {
+					message.channel.send("✅ Your suggestion has been sent to the support server.");
+				}).catch(() => {
+					return {cmdWarn: "⚠ Failed to send suggestion to support server."};
+				});
 		}
 	},
 	class UnloadCommand extends Command {
@@ -627,7 +622,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const command = args[0];
-			if (command.category == "Core" || command.name == "eval") return {cmdErr: "That command is not unloadable."}
+			if (command.category == "Core" || command.name == "eval") return {cmdErr: "That command is not unloadable."};
 			delete require.cache[require.resolve(`./${command.category.toLowerCase().replace(/ /g, "-")}.js`)];
 			bot.commands.delete(command.name);
 			if (command.aliases.length > 0) {

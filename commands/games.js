@@ -1,5 +1,4 @@
-const {RichEmbed} = require("discord.js"),
-	Command = require("../structures/command.js"),
+const Command = require("../structures/command.js"),
 	request = require("request");
 
 module.exports = [
@@ -17,13 +16,13 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let memberGame = message.member.bjGame,
-				suits = ["♠", "♥", "♣", "♦"],
+			const suits = ["♠", "♥", "♣", "♦"],
 				values = ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
 				deck = [];
+			let memberGame = message.member.bjGame;
 			for (let i = 0; i < 4; i++) {
 				for (let j = 0; j < 13; j++) {
-					deck.push({suit: suits[i], value: values[j]})
+					deck.push({suit: suits[i], value: values[j]});
 				}
 			}
 			
@@ -33,10 +32,10 @@ module.exports = [
 				deck: deck,
 				message: message,
 				botMessage: null
-			}
+			};
 			
 			await message.channel.send(this.showGame(memberGame, "start"))
-			.then(msg => memberGame.botMessage = msg);
+				.then(msg => memberGame.botMessage = msg);
 			
 			await this.awaitResponse(memberGame);
 			
@@ -48,14 +47,14 @@ module.exports = [
 		}
 		
 		showGame(game, state) {
-			let toDisplayDealer = game.dealer.map(card => `${card.value} ${card.suit}`).join(", "),
-				toDisplayPlayer = game.player.map(card => `${card.value} ${card.suit}`).join(", "),
-				dealerValue = this.getHandValue(game.dealer),
+			const dealerValue = this.getHandValue(game.dealer),
 				playerValue = this.getHandValue(game.player),
 				mystery = state == "end" && playerValue <= 21 ? "" : ", ???";
+			let toDisplayDealer = game.dealer.map(card => `${card.value} ${card.suit}`).join(", "),
+				toDisplayPlayer = game.player.map(card => `${card.value} ${card.suit}`).join(", ");
 			
 			toDisplayDealer = `**Dealer:** ${toDisplayDealer}${mystery} (value ${dealerValue})`;
-			toDisplayPlayer = `**Player:** ${toDisplayPlayer} (value ${playerValue})`
+			toDisplayPlayer = `**Player:** ${toDisplayPlayer} (value ${playerValue})`;
 			
 			if (state == "start") {
 				if (playerValue == 21) {
@@ -63,12 +62,12 @@ module.exports = [
 					game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\nBLACKJACK!`);
 				} else {		
 					return `${toDisplayDealer}\n${toDisplayPlayer}\n\n` + 
-					`Type \`stand\` to end your turn, or \`hit\` to draw another card.`
+					"Type `stand` to end your turn, or `hit` to draw another card.";
 				}
 			} else if (state == "drawing") {
 				if (game.botMessage.deleted) return;
 				game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\n` + 
-				`Type \`stand\` to end your turn, or \`hit\` to draw another card.`)
+				"Type `stand` to end your turn, or `hit` to draw another card.");
 			} else {
 				if (game.botMessage.deleted) return;
 				
@@ -76,7 +75,7 @@ module.exports = [
 				if (playerValue > 21) {
 					result = "BUST";
 				} else if (dealerValue > 21) {
-					result = "Dealer Bust"
+					result = "Dealer Bust";
 				} else if (playerValue > dealerValue) {
 					result = "Player wins";
 				} else if (dealerValue > playerValue) {
@@ -111,25 +110,25 @@ module.exports = [
 				time: 20000,
 				errors: ["time"]
 			})
-			.then(collected => {
-				if (collected.array()[0].content == "stand") {
-					this.dealDealerCards(game);
-				} else {
-					game.player.push(this.drawFromDeck(game.deck))
-					if (this.getHandValue(game.player) < 21) {
-						this.showGame(game, "drawing");
-						this.awaitResponse(game);
+				.then(collected => {
+					if (collected.array()[0].content == "stand") {
+						this.dealDealerCards(game);
 					} else {
-						this.endGame(game, "end");
+						game.player.push(this.drawFromDeck(game.deck));
+						if (this.getHandValue(game.player) < 21) {
+							this.showGame(game, "drawing");
+							this.awaitResponse(game);
+						} else {
+							this.endGame(game, "end");
+						}
 					}
-				}
-			})
-			.catch(() => this.dealDealerCards(game))
+				})
+				.catch(() => this.dealDealerCards(game));
 		}
 		
 		dealDealerCards(game) {
 			while (this.getHandValue(game.dealer) < 17) {
-				game.dealer.push(this.drawFromDeck(game.deck))
+				game.dealer.push(this.drawFromDeck(game.deck));
 			}
 			this.endGame(game);
 		}
@@ -153,13 +152,13 @@ module.exports = [
 			const rand = Math.random();
 			let fished;
 			if (rand < 0.45) {
-				fished = commonObjs[Math.floor(Math.random() * commonObjs.length)]
+				fished = commonObjs[Math.floor(Math.random() * commonObjs.length)];
 			} else if (rand < 0.75) {
-				fished = "🐟"
+				fished = "🐟";
 			} else if (rand < 0.95) {
-				fished = uncommonObjs[Math.floor(Math.random() * uncommonObjs.length)]
+				fished = uncommonObjs[Math.floor(Math.random() * uncommonObjs.length)];
 			} else {
-				fished = rareObjs[Math.floor(Math.random() * rareObjs.length)]
+				fished = rareObjs[Math.floor(Math.random() * rareObjs.length)];
 			}
 			
 			message.channel.send(`🎣 You used a fishing pole and caught: ${fished}!`);
@@ -188,13 +187,13 @@ module.exports = [
 			let msgSuffix;
 			
 			if (userChoice == botChoice) {
-				msgSuffix = "The game is a tie"
+				msgSuffix = "The game is a tie";
 			} else {
 				let win = false;
 				if (userChoice == "rock" && botChoice == "scissors") win = !win;
 				if (userChoice == "paper" && botChoice == "rock") win = !win;
 				if (userChoice == "scissors" && botChoice == "paper") win = !win;
-				if (win) {msgSuffix = "You win"} else {msgSuffix = "The bot wins"};
+				if (win) {msgSuffix = "You win"} else {msgSuffix = "The bot wins"}
 			}
 			message.channel.send(`You chose ${userChoice} and I choose ${botChoice}. ${msgSuffix}!`);
 		}
@@ -209,27 +208,27 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const symbols = ["🍒", "💵", "💰", "💎", "🍊", "🍋", "🍐", "🍉", "🍇", ":seven:"]
-			let chosen = [];
+			const symbols = ["🍒", "💵", "💰", "💎", "🍊", "🍋", "🍐", "🍉", "🍇", ":seven:"],
+				chosen = [];
 			for (let i = 0; i < 9; i++) {
-				chosen.push(symbols[Math.floor(Math.random() * symbols.length)])
+				chosen.push(symbols[Math.floor(Math.random() * symbols.length)]);
 			}
 			
 			let result = "lost...";
 			if (chosen[3] == chosen[4] || chosen[3] == chosen[5] || chosen[4] == chosen[5]) {
-				result = "matched 2 symbols!"
+				result = "matched 2 symbols!";
 				if (chosen[3] == chosen[4] && chosen[3] == chosen[5] && chosen[4] == chosen[5]) {
-					result = "matched 3 symbols!"
+					result = "matched 3 symbols!";
 				}
 				
 			}
 			
-			message.channel.send(`**🎰 | Kendra Slots**\n` + 
-			`------------------\n` +
+			message.channel.send("**🎰 | Kendra Slots**\n" + 
+			"------------------\n" +
 			`${chosen[0]} : ${chosen[1]} : ${chosen[2]}\n\n` +
 			`${chosen[3]} : ${chosen[4]} : ${chosen[5]} **<<<**\n\n` +
 			`${chosen[6]} : ${chosen[7]} : ${chosen[8]}\n` +
-			`------------------\n` +
+			"------------------\n" +
 			`You rolled the slots... and ${result}`);
 		}
 	},
@@ -256,16 +255,16 @@ module.exports = [
 				}
 			}
 			
-			let tQuestion = this.questions.splice(Math.floor(Math.random() * this.questions.length), 1)[0],
+			const tQuestion = this.questions.splice(Math.floor(Math.random() * this.questions.length), 1)[0],
 				tempAnswers = tQuestion.otherAnswers,
 				answers = [],
-				numAnswers = tQuestion.otherAnswers.length + 1,
-				answerLetter = null;
+				numAnswers = tQuestion.otherAnswers.length + 1;
+			let answerLetter = null;
 			
 			tempAnswers.push(tQuestion.answer);
 			
 			for (let i = tempAnswers.length; i > 0; i--) {
-				let ans = tempAnswers.splice(Math.floor(Math.random() * i), 1)[0];
+				const ans = tempAnswers.splice(Math.floor(Math.random() * i), 1)[0];
 				if (ans == tQuestion.answer) answerLetter = this.letters[numAnswers - i];
 				answers.push(ans);
 			}
@@ -273,25 +272,25 @@ module.exports = [
 			let i = -1;
 			message.channel.send("__**Trivia**__" + "\n" + tQuestion.question.replace(/&quot;/g, "\"").replace(/&#039;/g, "'") + "\n\n" + answers.map(a => {
 				i++;
-				return `${this.letters[i]} - ${a}`
+				return `${this.letters[i]} - ${a}`;
 			}).join("\n") + "\n\n" + "*Answer with the letter of your choice.*")
-			.then(msg => {
-				msg.channel.awaitMessages(msg2 => msg2.author.id == message.author.id && (["A", "B", "C", "D"]).includes(msg2.content.toUpperCase()), {
-					max: 1,
-					time: 30000,
-					errors: ["time"]
-				})
-				.then(collected => {
-					if (!msg.deleted) {
-						msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer! (You chose ${collected.array()[0].content.toUpperCase()})`)
-					}
-				})
-				.catch(err => {
-					if (!msg.deleted) {
-						msg.edit(msg.content + "\n\n" + "*You did not answer in time, try again!*")
-					}
-				})
-			})
+				.then(msg => {
+					msg.channel.awaitMessages(msg2 => msg2.author.id == message.author.id && (["A", "B", "C", "D"]).includes(msg2.content.toUpperCase()), {
+						max: 1,
+						time: 30000,
+						errors: ["time"]
+					})
+						.then(collected => {
+							if (!msg.deleted) {
+								msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer! (You chose ${collected.array()[0].content.toUpperCase()})`);
+							}
+						})
+						.catch(() => {
+							if (!msg.deleted) {
+								msg.edit(msg.content + "\n\n" + "*You did not answer in time, try again!*");
+							}
+						});
+				});
 		}
 		
 		getQuestions() {
@@ -301,7 +300,7 @@ module.exports = [
 					qs: {amount: 10},
 					json: true
 				}, (err, res) => {
-					if (err || res.statusCode >= 400) reject(`Failed to fetch from Open Trivia Database. (status code ${res.statusCode})`)
+					if (err || res.statusCode >= 400) reject(`Failed to fetch from Open Trivia Database. (status code ${res.statusCode})`);
 					
 					const results = res.body.results.map(r => {
 						return {
@@ -310,11 +309,11 @@ module.exports = [
 							question: r.question,
 							answer: r.correct_answer,
 							otherAnswers: r.incorrect_answers
-						}
-					})
+						};
+					});
 					resolve(results);
-				})
-			})
+				});
+			});
 		}
 	},
-]
+];

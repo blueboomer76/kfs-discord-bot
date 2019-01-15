@@ -68,16 +68,17 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let subreddit, compact = flags.some(f => f.name == "squeeze");
+			const compact = flags.some(f => f.name == "squeeze");
+			let subreddit;
 			if (args[0]) {
 				const foundRedirSub = redirSubreddits.find(e => e.name == args[0].toLowerCase());
 				if (foundRedirSub) return bot.commands.get(foundRedirSub.goTo).run(bot, message);
-				subreddit = args[0].replace(/^\/?[Rr]\//, "")
+				subreddit = args[0].replace(/^\/?[Rr]\//, "");
 				if (subreddit.length < 3) return {cmdWarn: "Subreddit names should have at least 3 characters."};
-				if (!(/^[0-9A-Za-z_]+$/).test(subreddit)) return {cmdWarn: "Subreddit names should be alphanumeric with underscores only."}
+				if (!(/^[0-9A-Za-z_]+$/).test(subreddit)) return {cmdWarn: "Subreddit names should be alphanumeric with underscores only."};
 			} else {
-				subreddit = "all"
-			};
+				subreddit = "all";
+			}
 			const numToDisplay = compact ? 50 : 25,
 				reqQuery = {
 					limit: flags.some(f => f.name == "more") ? numToDisplay * 2 : numToDisplay,
@@ -101,38 +102,39 @@ module.exports = [
 				qs: reqQuery,
 				json: true
 			}, (err, res) => {
-				if (res.statusCode == 403) return message.channel.send("⚠ Unfortunately, that subreddit is inaccessible.")
-				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to fetch from Reddit. (status code ${res.statusCode})`)
+				if (res.statusCode == 403) return message.channel.send("⚠ Unfortunately, that subreddit is inaccessible.");
+				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to fetch from Reddit. (status code ${res.statusCode})`);
 				
 				let results = res.body.data.children;
-				if (!results[0]) return message.channel.send("⚠ A subreddit with that name does not exist, or it has no posts yet.")
+				if (!results[0]) return message.channel.send("⚠ A subreddit with that name does not exist, or it has no posts yet.");
 				if (results[0].kind != "t3") return message.channel.send("⚠ A subreddit with that name does not exist, but these related subreddits were found: " + "\n" + results.map(r => {
-					return r.data.display_name
-				}).join(", "))
+					return r.data.display_name;
+				}).join(", "));
 
 				results = results.filter(r => !r.data.stickied);
 				if (!message.channel.nsfw) results = results.filter(r => !r.data.over_18);
-				if (results.length == 0) return message.channel.send("⚠ No results found in the subreddit. *(You may try going to an NSFW channel to see all results)*")
+				if (results.length == 0) return message.channel.send("⚠ No results found in the subreddit. *(You may try going to an NSFW channel to see all results)*");
 				
-				let entries = [[]], viewAll = false;
+				const entries = [[]];
+				let viewAll = false;
 				if (!args[0] || args[0] == "all" || args[0] == "popular") viewAll = true;
 								
 				if (compact) {
 					for (const post of results) {
-						let postData = post.data,
-							postTitle = postData.title.length < 150 ? postData.title : `${postData.title.slice(0,150)}...`,
-							toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
-						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`
+						const postData = post.data,
+							postTitle = postData.title.length < 150 ? postData.title : `${postData.title.slice(0,150)}...`;
+						let toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
+						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`;
 						entries[0].push(toDisplay);
 					}
 				} else {
 					for (const post of results) {
-						let postData = post.data,
-							postTitle = postData.title.length < 200 ? postData.title : `${postData.title.slice(0,200)}...`,
-							toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
-						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`
-						let postFlair = postData.link_flair_text;
-						if (postFlair) toDisplay += ` [${postData.link_flair_text}]`
+						const postData = post.data,
+							postTitle = postData.title.length < 200 ? postData.title : `${postData.title.slice(0,200)}...`;
+						let toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
+						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`;
+						const postFlair = postData.link_flair_text;
+						if (postFlair) toDisplay += ` [${postFlair}]`;
 						
 						entries[0].push(`${toDisplay}\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author} | ${getDuration(postData.created_utc * 1000, null, true)}`);
 					}
@@ -142,12 +144,12 @@ module.exports = [
 				if (args[0] == "random") {
 					embedTitle += "Random subreddit!";
 				} else if (viewAll) {
-					embedTitle += "All subreddits"
+					embedTitle += "All subreddits";
 				} else {
 					embedTitle += `r/${subreddit}`;
 				}
 				
-				if (postSort != "hot") embedTitle += ` (${capitalize(postSort)} Posts)` 
+				if (postSort != "hot") embedTitle += ` (${capitalize(postSort)} Posts)`;
 				
 				paginator.paginate(message, {
 					title: embedTitle,
@@ -161,7 +163,7 @@ module.exports = [
 					page: 1,
 					params: null
 				});
-			})
+			});
 		}
 	},
 	class UrbanCommand extends Command {
@@ -200,11 +202,11 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get({
-				url: `http://api.urbandictionary.com/v0/define`,
+				url: "http://api.urbandictionary.com/v0/define",
 				qs: {term: args[0]},
 				json: true
 			}, (err, res) => {
-				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to fetch from the Urban Dictionary. (status code ${res.statusCode})`)
+				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to fetch from the Urban Dictionary. (status code ${res.statusCode})`);
 				const defs = res.body;
 				if (defs.list.length > 0) {
 					const entries = [
@@ -226,10 +228,10 @@ module.exports = [
 									value: `👍 ${def.thumbs_up} / 👎 ${def.thumbs_down}`,
 									inline: true
 								}
-							]
+							];
 						})
 					];
-					let pageFlag = flags.find(f => f.name == "page");
+					const pageFlag = flags.find(f => f.name == "page");
 					paginator.paginate(message, {
 						thumbnail: {url: "https://i.imgur.com/Bg54V46.png"}
 					}, entries, {
@@ -239,9 +241,9 @@ module.exports = [
 						params: ["title", "description", "fields"]
 					});
 				} else {
-					message.channel.send("⚠ No definition found for that term.")
+					message.channel.send("⚠ No definition found for that term.");
 				}
-			})
+			});
 		}
 	},
 	class WikipediaCommand extends Command {
@@ -279,15 +281,15 @@ module.exports = [
 				},
 				json: true
 			}, (err, res) => {
-				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to fetch from Wikipedia. (status code ${res.statusCode})`)
+				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to fetch from Wikipedia. (status code ${res.statusCode})`);
 				
 				const result = Object.values(res.body.query.pages)[0];
 				let resultText = result.extract;
-				if (!resultText) return message.channel.send("⚠ Failed to find a Wikipedia article for that term.")
+				if (!resultText) return message.channel.send("⚠ Failed to find a Wikipedia article for that term.");
 				
-				let firstSectionIndex = resultText.indexOf("==");
+				const firstSectionIndex = resultText.indexOf("==");
 				if (firstSectionIndex > 2000) {
-					resultText = resultText.slice(0, 2000) + "..."
+					resultText = resultText.slice(0, 2000) + "...";
 				} else if (firstSectionIndex > 1000) {
 					resultText = resultText.slice(0, firstSectionIndex);
 				} else {
@@ -300,8 +302,8 @@ module.exports = [
 					.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setDescription(resultText)
-				)
-			})
+				);
+			});
 		}
 	},
 	class XKCDCommand extends Command {
@@ -328,23 +330,23 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get("https://xkcd.com/info.0.json", (err, res) => {
-				if (err || res.statusCode >= 400) return message.channel.send(`Failed to fetch from XKCD. (status code ${res.statusCode})`)
+				if (err || res.statusCode >= 400) return message.channel.send(`Failed to fetch from XKCD. (status code ${res.statusCode})`);
 				
 				const currComic = JSON.parse(res.body);
 				if (args[0] == "random" || args[0] > 0) {
-					let comicNum = args[0] == "random" ? Math.floor(Math.random() * currComic.num) : parseInt(args[0]);
+					const comicNum = args[0] == "random" ? Math.floor(Math.random() * currComic.num) : parseInt(args[0]);
 					request.get(`https://xkcd.com/${comicNum}/info.0.json`, (err2, res2) => {
 						if (err2 || res2.statusCode >= 400) {
-							this.postComic(message, currComic, "Current ", res2.statusCode)
+							this.postComic(message, currComic, "Current ", res2.statusCode);
 							return;
 						}
-						let chosenComic = JSON.parse(res2.body);
-						this.postComic(message, chosenComic, args[0] == "random" ? "Random " : "")
-					})
+						const chosenComic = JSON.parse(res2.body);
+						this.postComic(message, chosenComic, args[0] == "random" ? "Random " : "");
+					});
 				} else {
-					this.postComic(message, currComic, "Current ")
+					this.postComic(message, currComic, "Current ");
 				}
-			})
+			});
 		}
 		
 		postComic(message, comic, titlePrefix, fallbackCode) {
@@ -352,9 +354,9 @@ module.exports = [
 				.setTitle(`${titlePrefix}XKCD Comic - ${comic.title} (#${comic.num})`)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setDescription(comic.alt)
-				.setImage(comic.img)
+				.setImage(comic.img);
 			
-			if (fallbackCode) xkcdEmbed.description = `*Failed to fetch from XKCD, defaulting to the current one. (status code ${fallbackCode})*\n\n${comic.alt}`
+			if (fallbackCode) xkcdEmbed.description = `*Failed to fetch from XKCD, defaulting to the current one. (status code ${fallbackCode})*\n\n${comic.alt}`;
 			message.channel.send(xkcdEmbed);
 		}
 	}

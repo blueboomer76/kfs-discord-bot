@@ -1,4 +1,4 @@
 module.exports = async (bot, rateLimitInfo) => {
 	if (rateLimitInfo.limit == 1) return;
-	console.log(`The client has reached a rate limit:`, rateLimitInfo);
+	console.log("The client has reached a rate limit:", rateLimitInfo);
 };
