@@ -26,7 +26,7 @@ function findCooldown(bot, id, name, findIndex) {
 	if (findIndex) {
 		return bot.cache.recentCommands.findIndex(filter);
 	} else {
-		return bot.cache.recentCommands.find(filter)
+		return bot.cache.recentCommands.find(filter);
 	}
 }
 
@@ -48,7 +48,7 @@ function addCooldown(bot, message, command, overrides) {
 		name: cdName,
 		resets: Number(new Date()) + cdTime,
 		notified: false
-	})
+	});
 	setTimeout(removeCooldown, cdTime, bot, cdID, cdName);
 }
 
@@ -87,4 +87,4 @@ module.exports = {
 		}
 	},
 	addCooldown: addCooldown
-}
+};

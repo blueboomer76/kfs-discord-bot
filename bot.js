@@ -105,7 +105,7 @@ class KFSDiscordBot extends Client {
 			} else {
 				throw new Error("No command files or commands found");
 			}
-		})
+		});
 	}
 	
 	loadEvents() {
@@ -122,7 +122,7 @@ class KFSDiscordBot extends Client {
 			} else {
 				throw new Error("No events found");
 			}
-		})
+		});
 	}
 	
 	async logStats() {
@@ -146,7 +146,7 @@ class KFSDiscordBot extends Client {
 					storedUsages.push({
 						command: entry.command,
 						uses: entry.uses
-					})
+					});
 				}
 				commandCurrentTotal += entry.uses;
 			}
@@ -154,7 +154,7 @@ class KFSDiscordBot extends Client {
 			storedStats.callTotal += cachedStats.callCurrentTotal;
 			storedStats.messageTotal += cachedStats.messageCurrentTotal;
 
-			fs.writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {if (err) throw err});
+			fs.writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {if (err) throw err;});
 
 			cachedStats.commandSessionTotal += commandCurrentTotal;
 			cachedStats.commandCurrentTotal = 0;
@@ -185,7 +185,7 @@ class KFSDiscordBot extends Client {
 			} else {
 				console.log("[Stats Posting] Stats successfully posted to discordbots.org");
 			}
-		})
+		});
 	}
 	
 	async postBotsOnDiscordStats() {
@@ -206,7 +206,7 @@ class KFSDiscordBot extends Client {
 			} else {
 				console.log("[Stats Posting] Stats successfully posted to bots.ondiscord.xyz");
 			}
-		})
+		});
 	}
 	
 	async postBotsForDiscordStats() {
@@ -228,7 +228,7 @@ class KFSDiscordBot extends Client {
 			} else {
 				console.log("[Stats Posting] Stats successfully posted to botsfordiscord.com");
 			}
-		})
+		});
 	}
 	
 	async handlePhoneMessage(message) {
@@ -240,11 +240,11 @@ class KFSDiscordBot extends Client {
 		
 		let affected = 0,
 			toSend = message.cleanContent.replace(/https?:\/\/\S+\.\S+/gi, "")
-			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
+				.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
 		
 		phoneCache.lastMsgTime = Number(new Date());
 		phoneCache.msgCount++;
-		setTimeout(() => {phoneCache.msgCount--;}, 5000);
+		setTimeout(() => {phoneCache.msgCount--}, 5000);
 		if (message.channel.id == phoneCache.channels[0].id) affected = 1;
 		if (toSend.length > 1500) toSend = `${toSend.slice(0, 1500)}...`;
 
@@ -281,7 +281,7 @@ class KFSDiscordBot extends Client {
 		phoneCache.channels = [];
 		
 		let phoneTimeout = phoneCache.timeout;
-		if (phoneTimeout) {clearTimeout(phoneTimeout); phoneTimeout = null;}
+		if (phoneTimeout) {clearTimeout(phoneTimeout); phoneTimeout = null}
 	}
 }
 

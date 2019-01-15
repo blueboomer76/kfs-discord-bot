@@ -27,19 +27,19 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			message.channel.send(new RichEmbed()
-			.setAuthor("About this bot", bot.user.avatarURL)
-			.setDescription("This is an actively developed bot that not only has fun, moderation, utility commands, but a phone command for calling other servers, and combines features from popular bots.")
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`Bot ID: ${bot.user.id}`)
-			.addField("Library", `Discord.js v${version}`, true)
-			.addField("Bot Version", packageInfo.version, true)
-			.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
-			.addField("Quick Stats", `${bot.cache.guildCount} Servers\n${bot.cache.userCount} Users\n${bot.cache.channelCount} Channels`, true)
-			.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
-			.addField("Support Server", "[Go!](https://discord.gg/yB8TvWU)", true)
-			.addField("Upvote this bot", "discordbots.org: [Go!](https://discordbots.org/bots/333058410465722368/vote)" + "\n" +
-			"bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/333058410465722368)" + "\n" +
-			"botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/333058410465722368/vote)", true)
+				.setAuthor("About this bot", bot.user.avatarURL)
+				.setDescription("This is an actively developed bot that not only has fun, moderation, utility commands, but a phone command for calling other servers, and combines features from popular bots.")
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setFooter(`Bot ID: ${bot.user.id}`)
+				.addField("Library", `Discord.js v${version}`, true)
+				.addField("Bot Version", packageInfo.version, true)
+				.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
+				.addField("Quick Stats", `${bot.cache.guildCount} Servers\n${bot.cache.userCount} Users\n${bot.cache.channelCount} Channels`, true)
+				.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
+				.addField("Support Server", "[Go!](https://discord.gg/yB8TvWU)", true)
+				.addField("Upvote this bot", "discordbots.org: [Go!](https://discordbots.org/bots/333058410465722368/vote)" + "\n" +
+				"bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/333058410465722368)" + "\n" +
+				"botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/333058410465722368/vote)", true)
 			);
 		}
 	},
@@ -103,20 +103,20 @@ module.exports = [
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter("Don't include the usage symbols when running the command.")
 					.addField("Category", command.category)
-					.addField("Description", command.description)
-				if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "))
-				if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"))
-				helpEmbed.addField("Usage", "`" + bot.prefix + command.usage + "`")
-				if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.join("\n"))
-				if (command.allowDMs) helpEmbed.addField("Allows DMs", "Yes")
+					.addField("Description", command.description);
+				if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "));
+				if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"));
+				helpEmbed.addField("Usage", "`" + bot.prefix + command.usage + "`");
+				if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.join("\n"));
+				if (command.allowDMs) helpEmbed.addField("Allows DMs", "Yes");
 				if (commandPerms.bot.length > 0 || commandPerms.user.length > 0 || commandPerms.role || commandPerms.level > 0) {
-					helpEmbed.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`)
+					helpEmbed.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`);
 				}
-				helpEmbed.addField("Cooldown", command.cooldown.time != 0 ? `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}` : "None")
+				helpEmbed.addField("Cooldown", command.cooldown.time != 0 ? `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}` : "None");
 			}
 			if (flags.some(f => f.name == "dm")) {
 				message.member.send(helpEmbed)
-				.catch(() => message.channel.send("Failed to send a help message as a DM. Check your settings and try again."));
+					.catch(() => message.channel.send("Failed to send a help message as a DM. Check your settings and try again."));
 			} else {
 				message.channel.send(helpEmbed);
 			}
@@ -190,7 +190,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const category = capitalize(args[0]), commandName = args[1].toLowerCase();
 			
-			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."}
+			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."};
 			try {
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
 				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
@@ -241,7 +241,7 @@ module.exports = [
 					if (phoneCache.channels.length == 2) {
 						phoneMsg0 = "The other side has picked up the phone! Greet the other side!";
 					} else {
-						phoneMsg0 = "Looks like someone else picked up the phone."
+						phoneMsg0 = "Looks like someone else picked up the phone.";
 						phoneCache.channels.shift().send("☎ Someone else is now using the phone...");
 					}
 					phoneCache.channels[0].send(`☎ ${phoneMsg0}`);
@@ -275,9 +275,9 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			message.channel.send("Ping?")
-			.then(msg => {
-				msg.edit(`🏓 **Pong!**\nLatency: ${msg.createdTimestamp - message.createdTimestamp}ms\nAPI Latency: ${Math.round(bot.ping)}ms`)
-			})
+				.then(msg => {
+					msg.edit(`🏓 **Pong!**\nLatency: ${msg.createdTimestamp - message.createdTimestamp}ms\nAPI Latency: ${Math.round(bot.ping)}ms`);
+				});
 		}
 	},
 	class ReloadCommand extends Command {
@@ -310,7 +310,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let command = args[0],
+			const command = args[0],
 				commandName = command.name,
 				category = command.category;
 			try {
@@ -404,7 +404,7 @@ module.exports = [
 			setTimeout(() => {
 				bot.destroy();
 				process.exit(0);
-			}, 10000)
+			}, 10000);
 		}
 	},
 	class StatsCommand extends Command {
@@ -437,11 +437,11 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const statsEmbed = new RichEmbed()
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setTimestamp(message.createdAt)
-
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setTimestamp(message.createdAt);
+			
 			if (args[0] == "processor") {
-				statsEmbed.setAuthor("Bot Stats - Processor", bot.user.avatarURL)
+				statsEmbed.setAuthor("Bot Stats - Processor", bot.user.avatarURL);
 				this.getProcessorStats(message, statsEmbed);
 			} else {
 				const storedStats = require("../modules/stats.json"),
@@ -459,14 +459,14 @@ module.exports = [
 				for (const usageCacheEntry of bot.cache.stats.commandUsages) {
 					commandCurrentTotal += usageCacheEntry.uses;
 				}
-				let sessionCommands = bot.cache.stats.commandSessionTotal + commandCurrentTotal,
+				const sessionCommands = bot.cache.stats.commandSessionTotal + commandCurrentTotal,
 					totalCommands = storedStats.commandTotal + commandCurrentTotal,
 					sessionCalls = bot.cache.stats.callSessionTotal + bot.cache.stats.callCurrentTotal,
 					totalCalls = storedStats.callTotal + bot.cache.stats.callCurrentTotal,
 					sessionMessages = bot.cache.stats.messageSessionTotal + bot.cache.stats.messageCurrentTotal,
 					totalMessages = storedStats.messageTotal + bot.cache.stats.messageCurrentTotal;
 				
-				let endEval = new Date();
+				const endEval = new Date();
 				
 				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL)
 					.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
@@ -474,30 +474,30 @@ module.exports = [
 					.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
 					.addField("Last Ready", getDuration(bot.readyTimestamp), true)
 					.addField("Servers", 
-					`Total: ${serverCount.toLocaleString()}` + "\n" +
-					`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
-					, true)
-					.addField("Users", 
-					`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
-					`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(1)}%)`
-					, true)
-					.addField("Channels", 
-					`Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
-					`Voice: ${voiceChannelCount.toLocaleString()} (${(voiceChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
-					`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
-					, true)
+						`Total: ${serverCount.toLocaleString()}` + "\n" +
+						`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
+						, true)
+					.addField("Users",
+						`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
+						`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(1)}%)`
+						, true)
+					.addField("Channels",
+						`Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
+						`Voice: ${voiceChannelCount.toLocaleString()} (${(voiceChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
+						`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
+						, true)
 					.addField("Commands",
-					`Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, processUptime)})` + "\n" +
-					`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, duration)})`
-					, true)
+						`Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, processUptime)})` + "\n" +
+						`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, duration)})`
+						, true)
 					.addField("Phone Connections",
-					`Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, processUptime)})` + "\n" +
-					`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, duration)})`
-					, true)
+						`Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, processUptime)})` + "\n" +
+						`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, duration)})`
+						, true)
 					.addField("Messages Seen",
-					`Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, processUptime)})` + "\n" +
-					`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, duration)})`
-					, true)
+						`Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, processUptime)})` + "\n" +
+						`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, duration)})`
+						, true);
 				message.channel.send(statsEmbed);
 			}
 		}
@@ -529,7 +529,7 @@ module.exports = [
 				cpuUsage1.push({
 					idle: cpu.times.idle,
 					nonidle: Object.values(cpu.times).reduce((prev, val) => prev + val) - cpu.times.idle
-				})
+				});
 			}
 			
 			processorEmbed.setDescription("Here's some detailed stats about the host that this bot is on!")
@@ -538,9 +538,9 @@ module.exports = [
 				`Used: ${(processMemoryUsage.heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
 				.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB` + "\n" +
 				`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)` + "\n" +
-				`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true)
+				`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true);
 			
-			setTimeout(this.postProcessorStats, 250, message, processorEmbed, cpuUsage1)
+			setTimeout(this.postProcessorStats, 250, message, processorEmbed, cpuUsage1);
 		}
 		
 		postProcessorStats(message, processorEmbed, cpuUsage1) {
@@ -549,19 +549,19 @@ module.exports = [
 				cpuUsage2.push({
 					idle: cpu.times.idle,
 					nonidle: Object.values(cpu.times).reduce((prev, val) => prev + val) - cpu.times.idle
-				})
+				});
 			}
 			
 			const usagePercentages = [];
 			for (let i = 0; i < cpus.length; i++) {
-				let idleDif = cpuUsage2[i].idle - cpuUsage1[i].idle, nonidleDif = cpuUsage2[i].nonidle - cpuUsage1[i].nonidle;
-				usagePercentages.push(nonidleDif / (idleDif + nonidleDif))
+				const idleDif = cpuUsage2[i].idle - cpuUsage1[i].idle, nonidleDif = cpuUsage2[i].nonidle - cpuUsage1[i].nonidle;
+				usagePercentages.push(nonidleDif / (idleDif + nonidleDif));
 			}
 			
 			processorEmbed.addField("CPU Usage", `${(usagePercentages.reduce((prev, val) => prev + val) / cpus.length * 100).toFixed(1)}%`, true)
-			.addField("Processor", cpus[0].model)
-			.addField("Number of Cores", cpus.length)
-			message.channel.send(processorEmbed)
+				.addField("Processor", cpus[0].model)
+				.addField("Number of Cores", cpus.length);
+			message.channel.send(processorEmbed);
 		}
 	},
 	class SuggestCommand extends Command {
@@ -608,12 +608,12 @@ module.exports = [
 					}
 				}]
 			})
-			.then(() => {
-				message.channel.send("The suggestion has been sent.");
-			})
-			.catch(() => {
-				message.channel.send("⚠ Failed to send the suggestion.");
-			})
+				.then(() => {
+					message.channel.send("The suggestion has been sent.");
+				})
+				.catch(() => {
+					message.channel.send("⚠ Failed to send the suggestion.");
+				});
 		}
 	},
 	class UnloadCommand extends Command {

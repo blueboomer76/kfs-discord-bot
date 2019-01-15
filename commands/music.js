@@ -92,7 +92,7 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			let mvChannel = message.member.voiceChannel;
+			const mvChannel = message.member.voiceChannel;
 			if (!mvChannel) return {cmdErr: "You are not in a voice channel! Join one first."};
 			if (!mvChannel.permissionsFor(bot.user).has("CONNECT")) return {cmdWarn: "I need the `Connect` permission in your voice channel to play audio."};
 
@@ -100,37 +100,37 @@ module.exports = [
 			let cmdErr;
 			if (!gvConnection) {
 				await mvChannel.join()
-				.then(connection => {
-					gvConnection = connection;
-					gvConnection.nowPlaying = null;
-					gvConnection.queue = [];
-					message.channel.send("Successfully joined the voice channel!");
-				})
-				.catch(() => cmdErr = true)
+					.then(connection => {
+						gvConnection = connection;
+						gvConnection.nowPlaying = null;
+						gvConnection.queue = [];
+						message.channel.send("Successfully joined the voice channel!");
+					})
+					.catch(() => cmdErr = true);
 			}
 
 			// Check for errors
 			if (cmdErr) return {cmdErr: "Failed to connect to the voice channel."};
 			if (mvChannel.id != gvConnection.channel.id) {
-				return {cmdErr: "You need to be in the same voice channel as me to play audio."}
+				return {cmdErr: "You need to be in the same voice channel as me to play audio."};
 			}
 
 			if (gvConnection.queue.length > 10) return {cmdErr: "The maximum queue limit has been reached. No more audio can be queued."};
 			if (gvConnection.queue.includes(args[0])) {
-				return {cmdErr: "That audio is already in the queue."}
+				return {cmdErr: "That audio is already in the queue."};
 			}
-			try {ytdl(args[0])} catch (err) {cmdErr = true;}
+			try {ytdl(args[0])} catch (err) {cmdErr = true}
 			if (cmdErr) return {cmdErr: "You have provided an invalid YouTube URL."};
 
 			if (!gvConnection.nowPlaying) {
 				gvConnection.nowPlaying = args[0];
-				let seekFlag = flags.find(f => f.name == "seek");
-				let seek = seekFlag ? seekFlag.args : 0;
+				const seekFlag = flags.find(f => f.name == "seek"),
+					seek = seekFlag ? seekFlag.args : 0;
 				this.playQueue(message, seek);
-				message.channel.send("That audio is now playing.")
+				message.channel.send("That audio is now playing.");
 			} else {
 				gvConnection.queue.push(args[0]);
-				message.channel.send("That audio has been added to the queue.")
+				message.channel.send("That audio has been added to the queue.");
 			}
 		}
 
@@ -151,10 +151,10 @@ module.exports = [
 					} else {
 						gvConnection.nowPlaying = gvConnection.queue.shift();
 						this.playQueue(msg, 0);
-						msg.channel.send(`Now playing: \`${gvConnection.nowPlaying}\``)
+						msg.channel.send(`Now playing: \`${gvConnection.nowPlaying}\``);
 					}
 				}
-			})
+			});
 		}
 	},
 	class QueueCommand extends Command {
@@ -185,7 +185,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const gvConnection = message.guild.voiceConnection;
-			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"}
+			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
 			const queue = gvConnection.queue;
 			if (!gvConnection.nowPlaying) return {cmdWarn: "There is no music in the queue."};
 			
@@ -193,7 +193,7 @@ module.exports = [
 			paginator.paginate(message, {title: `Music Queue - ${message.guild.name}`}, entries, {
 				limit: 5,
 				numbered: true,
-				page: args[0] ? args[0] : 1,
+				page: args[0] || 1,
 				params: null,
 				pinnedMsg: `Now playing: ${gvConnection.nowPlaying}\n\n**Next up:**\n`
 			});

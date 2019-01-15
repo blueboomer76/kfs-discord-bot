@@ -4,18 +4,16 @@ const memberRegex = /^<@!?\d{17,19}>$/;
 
 async function getMember(message, id) {
 	let member;
-	await message.guild.fetchMember(id)
-	.then(mem => member = mem)
-	.catch(() => member = null)
+	await message.guild.fetchMember(id).then(mem => member = mem).catch(() => member = null);
 	return member;
 }
 
 module.exports.resolve = async (bot, message, obj, type, params) => {
-	let lowerObj = obj.toLowerCase();
+	const lowerObj = obj.toLowerCase();
 	let list;
 	switch (type) {
 		case "boolean":
-			let truthy = ["yes", "y", "true", "enable"], falsy = ["no", "n", "false", "disable"];
+			const truthy = ["yes", "y", "true", "enable"], falsy = ["no", "n", "false", "disable"];
 			if (truthy.includes(lowerObj)) {
 				return true;
 			} else if (falsy.includes(lowerObj)) {
@@ -35,14 +33,15 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			}
 
 			list = guildChannels.array().filter(chnl => {
-				return chnl.name.toLowerCase().includes(lowerObj)
+				return chnl.name.toLowerCase().includes(lowerObj);
 			});
 			if (list.length > 0) {return list} else {return null}
 		case "command":
 			const command = bot.commands.get(lowerObj) || bot.commands.get(bot.aliases.get(lowerObj));
 			if (command) {return command} else {return null}
 		case "emoji":
-			let emoji, emojiRegex = /^<a?:[0-9A-Za-z_]{2,}:\d{17,19}>$/, guildEmojis = message.guild.emojis;
+			const emojiRegex = /^<a?:[0-9A-Za-z_]{2,}:\d{17,19}>$/, guildEmojis = message.guild.emojis;
+			let emoji;
 			if (emojiRegex.test(obj)) {
 				emoji = guildEmojis.get(obj.match(/\d+/)[0]);
 				if (emoji) {return [emoji]} else {return null}
@@ -52,7 +51,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			}
 
 			list = guildEmojis.array().filter(emoji => {
-				return emoji.name.toLowerCase().includes(lowerObj)
+				return emoji.name.toLowerCase().includes(lowerObj);
 			});
 			if (list.length > 0) {return list} else {return null}
 		case "function":
@@ -63,7 +62,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 					member = guildMembers.get(obj.match(/\d+/)[0]);
 				if (member) {
-					return member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
+					return member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`;
 				} else {
 					return null;
 				}
@@ -86,11 +85,11 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			list = guildMembers.filter(mem => {
 				return mem.user.tag.toLowerCase().includes(lowerObj) ||
 				mem.user.username.toLowerCase().includes(lowerObj) ||
-				mem.displayName.toLowerCase().includes(lowerObj)
+				mem.displayName.toLowerCase().includes(lowerObj);
 			}).array();
 			if (list.length > 0) {return list} else {return null}
 		case "number":
-			let num = Math.floor(obj);
+			const num = Math.floor(obj);
 			if (!isNaN(num) && num >= params.min && num <= params.max) {return num} else {return null}
 		case "oneof":
 			if (params.list.includes(lowerObj)) {return lowerObj} else {return null}
@@ -107,7 +106,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			}
 
 			list = guildRoles.array().filter(role => {
-				return role.name.toLowerCase().includes(lowerObj)
+				return role.name.toLowerCase().includes(lowerObj);
 			});
 			if (list.length > 0) {return list} else {return null}
 		case "string":
@@ -115,4 +114,4 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 		default:
 			throw new Error("Invalid argument type to check");
 	}
-}
+};

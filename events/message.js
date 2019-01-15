@@ -3,9 +3,9 @@ const cdChecker = require("../modules/cooldownChecker.js"),
 	argParser = require("../utils/argsParser.js");
 
 async function execCommand(runCommand, bot, message, args) {
-	if (runCommand.disabled) return {cmdErr: "This command is currently disabled."}
-	if (!message.guild && !runCommand.allowDMs) return {cmdErr: "This command cannot be used in Direct Messages."}
-	if (message.guild && runCommand.nsfw && !message.channel.nsfw) return {cmdErr: "Please go to a NSFW channel to use this command."}
+	if (runCommand.disabled) return {cmdErr: "This command is currently disabled."};
+	if (!message.guild && !runCommand.allowDMs) return {cmdErr: "This command cannot be used in Direct Messages."};
+	if (message.guild && runCommand.nsfw && !message.channel.nsfw) return {cmdErr: "Please go to a NSFW channel to use this command."};
 	if (message.guild && message.guild.large && !message.member) await message.guild.fetchMember(message.author);
 
 	const requiredPerms = runCommand.perms;
@@ -14,7 +14,7 @@ async function execCommand(runCommand, bot, message, args) {
 		if (requiredPerms.bot.length > 0) {
 			for (const perm of requiredPerms.bot) {
 				if (!message.channel.permissionsFor(bot.user).has(perm)) {
-					faultMsg += `I need these permissions to run this command:\n${requiredPerms.bot.map(p => parsePerm(p)).join(", ")}`
+					faultMsg += `I need these permissions to run this command:\n${requiredPerms.bot.map(p => parsePerm(p)).join(", ")}`;
 					break;
 				}
 			}
@@ -28,13 +28,13 @@ async function execCommand(runCommand, bot, message, args) {
 				}
 			}
 		}
-		if (requiredPerms.role) roleAllowed = message.author.id == message.guild.owner.id || message.member.roles.some(role => role.name.toLowerCase() == requiredPerms.role.toLowerCase())
+		if (requiredPerms.role) roleAllowed = message.author.id == message.guild.owner.id || message.member.roles.some(role => role.name.toLowerCase() == requiredPerms.role.toLowerCase());
 		if (userPermsAllowed == false && roleAllowed == null) {
-			faultMsg += `\nYou need these permissions to run this command:\n${requiredPerms.user.map(p => parsePerm(p)).join(", ")}`
+			faultMsg += `\nYou need these permissions to run this command:\n${requiredPerms.user.map(p => parsePerm(p)).join(", ")}`;
 		} else if (userPermsAllowed == false && roleAllowed == false) {
-			faultMsg += `\nYou need to have these permissions, be the server owner, or have a role named **${requiredPerms.role}** to run this command:\n${requiredPerms.user.map(p => parsePerm(p)).join(", ")}`
+			faultMsg += `\nYou need to have these permissions, be the server owner, or have a role named **${requiredPerms.role}** to run this command:\n${requiredPerms.user.map(p => parsePerm(p)).join(", ")}`;
 		} else if (userPermsAllowed == null && roleAllowed == false) {
-			faultMsg += `\nYou need to be the server owner or have a role named **${requiredPerms.role}** to run this command.`
+			faultMsg += `\nYou need to be the server owner or have a role named **${requiredPerms.role}** to run this command.`;
 		}
 	}
 	if (requiredPerms.level > 0) {
@@ -44,7 +44,7 @@ async function execCommand(runCommand, bot, message, args) {
 			if (permLevels[i].validate(message)) userLevel = i;
 		}
 		if (userLevel < requiredPerms.level) {
-			let faultDesc = permLevels[requiredPerms.level].desc ? ` (${permLevels[requiredPerms.level].desc})` : "";
+			const faultDesc = permLevels[requiredPerms.level].desc ? ` (${permLevels[requiredPerms.level].desc})` : "";
 			faultMsg += `\nYou need to be a ${bot.permLevels[requiredPerms.level].name} to run this command${faultDesc}`;
 		}
 	}
@@ -52,7 +52,7 @@ async function execCommand(runCommand, bot, message, args) {
 
 	let flags = [];
 	if (runCommand.flags.length > 0) {
-		let parsedFlags = await argParser.parseFlags(bot, message, args, runCommand.flags);
+		const parsedFlags = await argParser.parseFlags(bot, message, args, runCommand.flags);
 		if (parsedFlags.error) {
 			if (parsedFlags.error.startsWith("Multiple")) return {cmdErr: `**${parsedFlags.error}**\n${parsedFlags.message}`};
 			return {cmdErr: `**${parsedFlags.error}**\n${parsedFlags.message}\n*The correct usage is:* \`${runCommand.usage}\``};
@@ -79,7 +79,7 @@ module.exports = async (bot, message) => {
 			bot.handlePhoneMessage(message);
 		}
 	} else {
-		let prefixLength = mentionMatch ? mentionMatch[0].length : bot.prefix.length,
+		const prefixLength = mentionMatch ? mentionMatch[0].length : bot.prefix.length,
 			args = message.content.slice(prefixLength).trim().split(/ +/g),
 			command = args.shift().toLowerCase(),
 			runCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
@@ -89,39 +89,53 @@ module.exports = async (bot, message) => {
 		if (cdChecker.check(bot, message, runCommand) == false) return;
 
 		execCommand(runCommand, bot, message, args)
-		.then(runRes => {
-			/*
-				runRes is sometimes returned as an object like this:
-				{
-					cmdTitle: "Error title",
-					cmdErr: "Some error",
-					cooldown: {time: 90000},
-					noLog: true
-				}
-			*/
-			
-			if (runRes) {
-				if (runRes.cmdWarn) {
-					const errTitle = runRes.errTitle ? `**${runRes.errTitle}**\n` : ""
-					message.channel.send(`⚠ ${errTitle}${runRes.cmdWarn}`)
-				} else if (runRes.cmdErr) {
-					const errTitle = runRes.errTitle ? `**${runRes.errTitle}**\n` : ""
-					message.channel.send(`❗ ${errTitle}${runRes.cmdErr}`)
-				}
-			}
-			
-			if (!bot.ownerIDs.includes(message.author.id) && runCommand.cooldown.time != 0 && (!runRes || runRes.cooldown)) {
-				const cdOverrides = {name: runCommand.cooldown.name ? runCommand.cooldown.name : null};
-				if (runRes) {
-					cdOverrides.time = runRes.cooldown && runRes.cooldown.time ? runRes.cooldown.time : null;
-				}
-				cdChecker.addCooldown(bot, message, runCommand, cdOverrides);
-			}
-			
-			/*
-				This is the code if owners and select commands are to be ignored.
+			.then(runRes => {
+				/*
+					runRes is sometimes returned as an object like this:
+					{
+						cmdTitle: "Error title",
+						cmdErr: "Some error",
+						cooldown: {time: 90000},
+						noLog: true
+					}
+				*/
 				
-				if ((!runRes || (!runRes.noLog && !runRes.cmdWarn && !runRes.cmdErr)) && runCommand.name != "help" && runCommand.name != "phone" && !bot.ownerIDs.includes(message.author.id)) {
+				if (runRes) {
+					if (runRes.cmdWarn) {
+						const errTitle = runRes.errTitle ? `**${runRes.errTitle}**\n` : "";
+						message.channel.send(`⚠ ${errTitle}${runRes.cmdWarn}`);
+					} else if (runRes.cmdErr) {
+						const errTitle = runRes.errTitle ? `**${runRes.errTitle}**\n` : "";
+						message.channel.send(`❗ ${errTitle}${runRes.cmdErr}`);
+					}
+				}
+				
+				if (!bot.ownerIDs.includes(message.author.id) && runCommand.cooldown.time != 0 && (!runRes || runRes.cooldown)) {
+					const cdOverrides = {name: runCommand.cooldown.name ? runCommand.cooldown.name : null};
+					if (runRes) {
+						cdOverrides.time = runRes.cooldown && runRes.cooldown.time ? runRes.cooldown.time : null;
+					}
+					cdChecker.addCooldown(bot, message, runCommand, cdOverrides);
+				}
+				
+				/*
+					This is the code if owners and select commands are to be ignored.
+					
+					if ((!runRes || (!runRes.noLog && !runRes.cmdWarn && !runRes.cmdErr)) && runCommand.name != "help" && runCommand.name != "phone" && !bot.ownerIDs.includes(message.author.id)) {
+						const commandUsage = bot.cache.stats.commandUsages.find(u => u.command == runCommand.name);
+						if (commandUsage) {
+							commandUsage.uses++;
+						} else {
+							bot.cache.stats.commandUsages.push({
+								command: runCommand.name,
+								uses: 1
+							})
+						}
+					} else {
+						bot.cache.stats.commandCurrentTotal++;
+					}
+				*/
+				if (!runRes || (!runRes.noLog && !runRes.cmdWarn && !runRes.cmdErr)) {
 					const commandUsage = bot.cache.stats.commandUsages.find(u => u.command == runCommand.name);
 					if (commandUsage) {
 						commandUsage.uses++;
@@ -129,30 +143,16 @@ module.exports = async (bot, message) => {
 						bot.cache.stats.commandUsages.push({
 							command: runCommand.name,
 							uses: 1
-						})
+						});
 					}
 				} else {
 					bot.cache.stats.commandCurrentTotal++;
-				}
-			*/
-			if (!runRes || (!runRes.noLog && !runRes.cmdWarn && !runRes.cmdErr)) {
-				const commandUsage = bot.cache.stats.commandUsages.find(u => u.command == runCommand.name);
-				if (commandUsage) {
-					commandUsage.uses++;
-				} else {
-					bot.cache.stats.commandUsages.push({
-						command: runCommand.name,
-						uses: 1
-					})
-				}
-			} else {
-				bot.cache.stats.commandCurrentTotal++;
-			}			
-		})
-		.catch(err => {
-			let e = err && err.stack ? err.stack : err;
-			if (e && e.length > 1500) e = e.slice(0, 1500) + "...";
-			message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${e}\`\`\``);
-		})
+				}			
+			})
+			.catch(err => {
+				let e = err && err.stack ? err.stack : err;
+				if (e && e.length > 1500) e = e.slice(0, 1500) + "...";
+				message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${e}\`\`\``);
+			});
 	}
 };

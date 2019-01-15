@@ -17,24 +17,24 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."}
+			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
 			
-			let inputText = args[0].replace(/\n/g, " ");
+			const inputText = args[0].replace(/\n/g, " ");
 			let cowsayLines = [
-					"        \\   ^__^",
-					"         \\  (oo)\\_______",
-					"            (__)\\       )\\/\\",
-					"               ||----w |",
-					"               ||     ||"
-				]
+				"        \\   ^__^",
+				"         \\  (oo)\\_______",
+				"            (__)\\       )\\/\\",
+				"               ||----w |",
+				"               ||     ||"
+			];
 
 			if (inputText.length <= 50) {
 				cowsayLines.unshift(` ${"_".repeat(inputText.length + 2)}`,
-				`< ${inputText} >`,
-				` ${"-".repeat(inputText.length + 2)}`
-				)
+					`< ${inputText} >`,
+					` ${"-".repeat(inputText.length + 2)}`
+				);
 			} else {
-				let lines = [];
+				const lines = [];
 				let remainText = inputText;
 				while (remainText.length > 0) {
 					let currLine = remainText.slice(0, 50);
@@ -55,8 +55,8 @@ module.exports = [
 				for (let i = 0; i < lines.length; i++) {
 					lines[i] = lines[i].padEnd(50, " ");
 				}
-
-				let toDisplayLines = [];
+	
+				const toDisplayLines = [];
 				toDisplayLines.push(` ${"_".repeat(52)}`, `/ ${lines[0]} \\`);
 				if (lines.length > 2) {
 					for (let i = 1; i < lines.length - 1; i++) {
@@ -67,7 +67,7 @@ module.exports = [
 				cowsayLines = toDisplayLines.concat(cowsayLines);
 			}
 			
-			message.channel.send(`\`\`\`${cowsayLines.join("\n")}\`\`\``)
+			message.channel.send(`\`\`\`${cowsayLines.join("\n")}\`\`\``);
 		}
 	},
 	class EmojifyCommand extends Command {
@@ -153,11 +153,11 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."}
+			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
 			const chars = args[0].split("");
 			let reversed = "";
 			for (let i = chars.length - 1; i >= 0; i--) reversed += chars[i];
 			message.channel.send(reversed);
 		}
 	}
-]
+];

@@ -14,11 +14,13 @@ module.exports = {
 		if (isNaN(time1)) throw new Error("Time 1 is not a valid timestamp");
 		if (time2 != undefined && isNaN(time2)) throw new Error("Time 2 is not a valid timestamp");
 
-		let date1 = new Date(time1), date2;
+		const date1 = new Date(time1);
+		let date2;
 		if (!time2) {date2 = new Date()} else {date2 = new Date(time2)}
-		let ts1 = Number(date1), ts2 = Number(date2);
+		const ts1 = Number(date1), ts2 = Number(date2);
 
-		let timeDif = Math.abs((ts2 - ts1) / 1000), suffix = "ago";
+		const timeDif = Math.abs((ts2 - ts1) / 1000);
+		let suffix = "ago";
 		if (ts1 > ts2) suffix = "left";
 
 		let baseStr1 = "", baseStr2 = "";
@@ -38,15 +40,15 @@ module.exports = {
 				let yrDif = date2.getFullYear() - date1.getFullYear(),
 					moDif = date2.getMonth() - date1.getMonth(),
 					dayDif = date2.getDate() - date1.getDate();
-				if ((moDif == 0 && dayDif < 0) || moDif < 0) {yrDif--; moDif += 12;}
-				if (dayDif < 0) {moDif--; dayDif += 30;}
+				if ((moDif == 0 && dayDif < 0) || moDif < 0) {yrDif--; moDif += 12}
+				if (dayDif < 0) {moDif--; dayDif += 30}
 				if (yrDif == 0) {
 					baseStr1 = `${moDif} month`;
 					baseStr2 = `${dayDif} day`;
 				} else {
 					if (dayDif >= 20) {
 						moDif++;
-						if (moDif > 11) {moDif = 0; yrDif++;}
+						if (moDif > 11) {moDif = 0; yrDif++}
 					}
 					baseStr1 = `${yrDif} year`;
 					baseStr2 = `${moDif} month`;
@@ -59,7 +61,7 @@ module.exports = {
 				baseStr2 += " ";
 			}
 		} else {
-			baseStr1 = `${Math.round((timeDif - 5256000) / 31536000)} years`
+			baseStr1 = `${Math.round((timeDif - 5256000) / 31536000)} years`;
 		}
 		
 		if (simple) {
@@ -71,4 +73,4 @@ module.exports = {
 	parsePerm: perm => {
 		return perm.split("_").map(p => capitalize(p.toLowerCase())).join(" ");
 	}
-}
+};
