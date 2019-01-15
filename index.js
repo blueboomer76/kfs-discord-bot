@@ -26,12 +26,12 @@ try {
 		callTotal: 0,
 		messageTotal: 0,
 		commandUsages: []
-	}
+	};
 }
 
 require("fs").writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {
 	if (err) throw err;
-})
+});
 
 const bot = new KFSDiscordBot({
 	disableEveryone: true,
@@ -45,13 +45,13 @@ bot.loadCommands();
 bot.loadEvents();
 
 process.on("uncaughtException", err => {
-	console.error(`[Exception] ${new Date()}:`)
+	console.error(`[Exception] ${new Date()}:`);
 	console.error(err.stack);
 	if (!bot.user) process.exit(1);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-	console.error(`[Promise Rejection] ${new Date()}:`)
+	console.error(`[Promise Rejection] ${new Date()}:`);
 	console.error(promise);
 });
 

@@ -28,7 +28,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0] || message.member,
-				avatarURL = member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
+				avatarURL = member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`;
 			message.channel.send(new RichEmbed()
 				.setTitle(`Avatar - ${member.user.tag}`)
 				.setDescription(`Avatar URL: ${avatarURL}`)
@@ -73,7 +73,7 @@ module.exports = [
 					.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
 					.addField("Type", capitalize(channel.type), true)
 					.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
-					.addField("Accessible to everyone", channel.permissionsFor(message.guild.roles.find(r => r.calculatedPosition == 0)).has("VIEW_CHANNEL") ? "Yes" : "No", true)
+					.addField("Accessible to everyone", channel.permissionsFor(message.guild.roles.find(r => r.calculatedPosition == 0)).has("VIEW_CHANNEL") ? "Yes" : "No", true);
 			
 			const channelPositions = message.guild.channels.filter(c => c.type == channel.type).map(c => c.calculatedPosition);
 			channelPositions.sort((a, b) => a - b);
@@ -81,10 +81,10 @@ module.exports = [
 
 			if (channel.type == "text") {
 				channelEmbed.addField("NSFW", channel.nsfw ? "Yes" : "No")
-				.addField("Topic", channel.topic ? channel.topic : "No topic set")
+					.addField("Topic", channel.topic ? channel.topic : "No topic set");
 			} else if (channel.type == "voice") {
 				channelEmbed.addField("User Limit", channel.userLimit == 0 ? "No limit" : channel.userLimit, true)
-				.addField("Bitrate", `${channel.bitrate} bits`, true)
+					.addField("Bitrate", `${channel.bitrate} bits`, true);
 			}
 	
 			message.channel.send(channelEmbed);
@@ -228,8 +228,8 @@ module.exports = [
 	
 			const createdDate = new Date(role.createdTimestamp),
 				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
-				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id));
-			let nearbyRoles = [];
+				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id)),
+				nearbyRoles = [];
 			for (let i = rolePos + 2; i > rolePos - 3; i--) {
 				if (i <= 0 || i > guildRoles.length) continue;
 				const roleName = guildRoles.find(r => r.calculatedPosition == i).name;
@@ -242,8 +242,8 @@ module.exports = [
 				.setFooter(`ID: ${role.id}`)
 				.addField("Role created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
 				.addField(`Members in Role [${roleMembers.size} total]`,
-				`${roleMembers.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
-				true)
+					`${roleMembers.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
+					true)
 				.addField("Color", role.hexColor, true)
 				.addField("Position from top", `${guildRoles.length - rolePos + 1} / ${guildRoles.length}`, true)
 				.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No", true)
@@ -287,7 +287,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const orderedFlag = flags.find(f => f.name == "ordered");
-			let roles = message.guild.roles.array();
+			const roles = message.guild.roles.array();
 			roles.splice(roles.findIndex(r => r.calculatedPosition == 0), 1);
 			if (orderedFlag) roles.sort((a, b) => b.calculatedPosition - a.calculatedPosition);
 			paginator.paginate(message, {title: `List of roles - ${message.guild.name}`}, [roles.map(role => role.name)], {
@@ -366,8 +366,8 @@ module.exports = [
 			const guild = message.guild,
 				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members;
 			
-			let createdDate = new Date(guild.createdTimestamp),
-				guildVerif;
+			const createdDate = new Date(guild.createdTimestamp);
+			let guildVerif;
 			switch (guild.verificationLevel) {
 				case 0:
 					guildVerif = "None";
@@ -400,15 +400,15 @@ module.exports = [
 				.addField("Verification", guildVerif, true)
 				.addField("Explicit Filter", guild.explicitContentFilter == 0 ? "None" : (guild.explicitContentFilter == 1 ? "Low" : "High"), true)
 				.addField(`Members [${guild.memberCount} total]`,
-				`${onlineCount} Online (${(onlineCount / guild.memberCount * 100).toFixed(1)}%)\n` +
-				`${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,
-				true)
+					`${onlineCount} Online (${(onlineCount / guild.memberCount * 100).toFixed(1)}%)\n` +
+					`${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,
+					true)
 				.addField(`Roles [${guild.roles.size - 1} total]`, "Use `rolelist` to see all roles", true)
 				.addField(`Channels [${guild.channels.size} total]`,
-				`${guild.channels.filter(chnl => chnl.type == "text").size} Text\n` +
-				`${guild.channels.filter(chnl => chnl.type == "voice").size} Voice\n` +
-				`${guild.channels.filter(chnl => chnl.type == "category").size} Categories`,
-				true)
+					`${guild.channels.filter(chnl => chnl.type == "text").size} Text\n` +
+					`${guild.channels.filter(chnl => chnl.type == "voice").size} Voice\n` +
+					`${guild.channels.filter(chnl => chnl.type == "category").size} Categories`,
+					true)
 			);
 		}
 	},
@@ -441,10 +441,11 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const member = args[0] || message.member;
 
-			let createdDate = new Date(member.user.createdTimestamp);
-			let joinedDate = new Date(member.joinedTimestamp);
+			const createdDate = new Date(member.user.createdTimestamp),
+				joinedDate = new Date(member.joinedTimestamp);
 
-			let rawPresence = member.presence, presence;
+			const rawPresence = member.presence;
+			let presence;
 			if (rawPresence.status == "online") {
 				presence = "Online";
 			} else if (rawPresence.status == "idle") {
@@ -460,8 +461,8 @@ module.exports = [
 				guildMemArray = guildMembers.array();
 			guildMemArray.sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
 
-			const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp);
-			let nearbyMems = [];
+			const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp),
+				nearbyMems = [];
 			for (let i = joinPos - 2; i < joinPos + 3; i++) {
 				if (i < 0 || i >= message.guild.memberCount) continue;
 				nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
@@ -490,4 +491,4 @@ module.exports = [
 			message.channel.send(userEmbed);
 		}
 	}
-]
+];

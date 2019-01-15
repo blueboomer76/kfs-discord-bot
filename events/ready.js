@@ -42,7 +42,7 @@ module.exports = async bot => {
 			}
 		}
 		bot.user.setActivity(`${bot.prefix}help | ${newBotGame}`);
-	}, 1000 * 300)
+	}, 1000 * 300);
 	
 	setInterval(() => {
 		bot.logStats();

@@ -35,7 +35,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
-			if (member.roles.has(role.id)) return {cmdWarn: `That user already has the role **${role.name}**.`}
+			if (member.roles.has(role.id)) return {cmdWarn: `That user already has the role **${role.name}**.`};
 			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
 				return {cmdWarn: `Role **${role.name}** cannot be added to **${member.user.tag}** since its position is at or higher than yours (overrides with server owner)`};
 			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
@@ -45,8 +45,8 @@ module.exports = [
 			}
 	
 			member.addRole(role)
-			.then(() => message.channel.send(`✅ Role **${role.name}** has been added to the user **${member.user.tag}**.`))
-			.catch(err => message.channel.send("An error has occurred while trying to add the role: `" + err + "`"))
+				.then(() => message.channel.send(`✅ Role **${role.name}** has been added to the user **${member.user.tag}**.`))
+				.catch(err => message.channel.send("An error has occurred while trying to add the role: `" + err + "`"));
 		}
 	},
 	class BanCommand extends Command {
@@ -115,8 +115,8 @@ module.exports = [
 				days: daysFlag ? daysFlag.args : 0,
 				reason: reasonFlag ? reasonFlag.args : null
 			})
-			.then(() => message.channel.send(`✅ The user **${member.user.tag}** was banned from the server.`))
-			.catch(err => message.channel.send("An error has occurred while trying to ban the user: `" + err + "`"))
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was banned from the server.`))
+				.catch(err => message.channel.send("An error has occurred while trying to ban the user: `" + err + "`"));
 		}
 	},
 	class CreateChannelCommand extends Command {
@@ -148,8 +148,8 @@ module.exports = [
 			if (channelNameRegex.test(channelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
 				
 			message.guild.createChannel(channelName, {type: "text"})
-			.then(() => message.channel.send(`✅ The text channel **${channelName}** has been created.`))
-			.catch(err => message.channel.send("An error has occurred while trying to create the channel: `" + err + "`"))
+				.then(() => message.channel.send(`✅ The text channel **${channelName}** has been created.`))
+				.catch(err => message.channel.send("An error has occurred while trying to create the channel: `" + err + "`"));
 		}
 	},
 	class CreateRoleCommand extends Command {
@@ -178,10 +178,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let roleName = args[0];
+			const roleName = args[0];
 			message.guild.createRole({name: roleName})
-			.then(() => message.channel.send(`✅ Role **${roleName}** has been created.`))
-			.catch(err => message.channel.send("An error has occurred while trying to create the role: `" + err + "`"))
+				.then(() => message.channel.send(`✅ Role **${roleName}** has been created.`))
+				.catch(err => message.channel.send("An error has occurred while trying to create the role: `" + err + "`"));
 		}
 	},
 	class DeleteChannelCommand extends Command {
@@ -218,13 +218,13 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const channel = args[0];
 			if (channel.createdTimestamp + 1.5552e+10 < Number(new Date()) && !flags.some(f => f.name == "yes")) {
-				const promptRes = await promptor.prompt(message, `You are about to delete the channel **${channel.name}** (ID ${channel.id}), which is more than 180 days old.`)
+				const promptRes = await promptor.prompt(message, `You are about to delete the channel **${channel.name}** (ID ${channel.id}), which is more than 180 days old.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
 			
 			channel.delete()
-			.then(() => message.channel.send(`✅ The channel **${channel.name}** has been deleted.`))
-			.catch(err => message.channel.send("An error has occurred while trying to delete the channel: `" + err + "`"))
+				.then(() => message.channel.send(`✅ The channel **${channel.name}** has been deleted.`))
+				.catch(err => message.channel.send("An error has occurred while trying to delete the channel: `" + err + "`"));
 		}
 	},
 	class DeleteRoleCommand extends Command {
@@ -269,13 +269,13 @@ module.exports = [
 			}
 
 			if (role.members.size > 10 && role.members.size > message.guild.memberCount / 10 && !flags.some(f => f.name == "yes")) {
-				const promptRes = await promptor.prompt(message, `You are about to delete the role **${role.name}** (ID ${role.id}), which more than 10% of the members in this server have.`)
+				const promptRes = await promptor.prompt(message, `You are about to delete the role **${role.name}** (ID ${role.id}), which more than 10% of the members in this server have.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
 
 			role.delete()
-			.then(() => message.channel.send(`✅ The role **${role.name}** has been deleted.`))
-			.catch(err => message.channel.send("An error has occurred while trying to delete the role: `" + err + "`"))
+				.then(() => message.channel.send(`✅ The role **${role.name}** has been deleted.`))
+				.catch(err => message.channel.send("An error has occurred while trying to delete the role: `" + err + "`"));
 		}
 	},
 	class HackbanCommand extends Command {
@@ -331,8 +331,8 @@ module.exports = [
 				guildMembers = message.guild.members;
 			} else {
 				await message.guild.fetchMembers()
-				.then(g => guildMembers = g.members)
-				.catch(err => cmdErr = `Failed to fetch members: ${err}`);
+					.then(g => guildMembers = g.members)
+					.catch(err => cmdErr = `Failed to fetch members: ${err}`);
 			}
 			if (cmdErr) return {cmdWarn: cmdErr};
 
@@ -349,8 +349,8 @@ module.exports = [
 				days: daysFlag ? daysFlag.args : 0,
 				reason: reasonFlag ? reasonFlag.args : null
 			})
-			.then(() => message.channel.send(`✅ The user with ID **${userID}** was hackbanned from the server.`))
-			.catch(() => message.channel.send("Could not hackban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."))
+				.then(() => message.channel.send(`✅ The user with ID **${userID}** was hackbanned from the server.`))
+				.catch(() => message.channel.send("Could not hackban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."));
 		}
 	},
 	class KickCommand extends Command {
@@ -387,7 +387,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let member = args[0],
+			const member = args[0],
 				reasonFlag = flags.find(f => f.name == "reason");
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
 			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
@@ -396,12 +396,12 @@ module.exports = [
 				return {cmdWarn: `I cannot kick the user **${member.user.tag}** since their highest role is at or higher than mine.`};
 			}
 
-			const promptRes = await promptor.prompt(message, `You are about to kick the user **${member.user.tag}** from this server.`)
+			const promptRes = await promptor.prompt(message, `You are about to kick the user **${member.user.tag}** from this server.`);
 			if (promptRes) return {cmdWarn: promptRes};
 
 			member.kick(reasonFlag ? reasonFlag.args : null)
-			.then(() => message.channel.send(`✅ The user **${member.user.tag}** was kicked from the server.`))
-			.catch(err => message.channel.send("An error has occurred while trying to kick the user: `" + err + "`"))
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was kicked from the server.`))
+				.catch(err => message.channel.send("An error has occurred while trying to kick the user: `" + err + "`"));
 		}
 	},
 	class PurgeCommand extends Command {
@@ -465,38 +465,38 @@ module.exports = [
 			let toDelete = args[0];
 
 			if (flags.length > 0) {
-				if (deleteLarge) return {cmdWarn: "Flags are not supported for deleting from more than 100 messages at a time."}
+				if (deleteLarge) return {cmdWarn: "Flags are not supported for deleting from more than 100 messages at a time."};
 				let fetchErr;
 				await message.channel.fetchMessages({limit: args[0]})
-				.then(messages => {
-					toDelete = messages;
-					for (const flag of flags) {
-						switch (flag.name) {
-							case "attachments":
-								toDelete = toDelete.filter(msg => msg.attachments.size > 0);
-								break;
-							case "bots":
-								toDelete = toDelete.filter(msg => msg.author.bot);
-								break;
-							case "embeds":
-								toDelete = toDelete.filter(msg => msg.embeds[0]);
-								break;
-							case "text":
-								toDelete = toDelete.filter(msg => msg.content.includes(flag.args));
-								break;
-							case "user":
-								toDelete = toDelete.filter(msg => msg.author.id == flag.args.id);
+					.then(messages => {
+						toDelete = messages;
+						for (const flag of flags) {
+							switch (flag.name) {
+								case "attachments":
+									toDelete = toDelete.filter(msg => msg.attachments.size > 0);
+									break;
+								case "bots":
+									toDelete = toDelete.filter(msg => msg.author.bot);
+									break;
+								case "embeds":
+									toDelete = toDelete.filter(msg => msg.embeds[0]);
+									break;
+								case "text":
+									toDelete = toDelete.filter(msg => msg.content.includes(flag.args));
+									break;
+								case "user":
+									toDelete = toDelete.filter(msg => msg.author.id == flag.args.id);
+							}
 						}
-					}
-					if (!toDelete.get(message.id)) toDelete.set(message.id, message);
-				})
-				.catch(err => fetchErr = err)
+						if (!toDelete.get(message.id)) toDelete.set(message.id, message);
+					})
+					.catch(err => fetchErr = err);
 				if (fetchErr) {
 					console.log(fetchErr);
 					return {cmdWarn: "Failed to fetch messages"};
 				}
 			} else if (deleteLarge) {
-				const promptRes = await promptor.prompt(message, `You are about to delete ${toDelete} messages from this channel.`)
+				const promptRes = await promptor.prompt(message, `You are about to delete ${toDelete} messages from this channel.`);
 				if (promptRes) return {cmdWarn: promptRes};
 
 				toDelete += 2;
@@ -508,17 +508,17 @@ module.exports = [
 				for (let i = 0; i < iters; i++) {
 					let deleteErr;
 					await message.channel.bulkDelete(i == iters - 1 ? toDelete % 100 : 100, true)
-					.then(messages => deleteCount += messages.size)
-					.catch(err => deleteErr = "Could not delete all messages: ```" + err + "```")
-					if (deleteErr) return {cmdWarn: deleteErr}
+						.then(messages => deleteCount += messages.size)
+						.catch(err => deleteErr = "Could not delete all messages: ```" + err + "```");
+					if (deleteErr) return {cmdWarn: deleteErr};
 				}
-				message.channel.send(`🗑 Deleted ${deleteCount} messages from this channel!`).then(m => m.delete(7500))
+				message.channel.send(`🗑 Deleted ${deleteCount} messages from this channel!`).then(m => m.delete(7500));
 			} else {
 				message.channel.bulkDelete(toDelete, true)
-				.then(messages => {
-					message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!`).then(m => m.delete(7500))
-				})
-				.catch(err => message.channel.send("An error has occurred while trying to purge the messages: `" + err + "`"))
+					.then(messages => {
+						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!`).then(m => m.delete(7500));
+					})
+					.catch(err => message.channel.send("An error has occurred while trying to purge the messages: `" + err + "`"));
 			}
 		}
 	},
@@ -565,8 +565,8 @@ module.exports = [
 			}
 	
 			member.removeRole(role)
-			.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from the user **${member.user.tag}**.`))
-			.catch(err => message.channel.send("An error has occurred while trying to remove the role: `" + err + "`"))
+				.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from the user **${member.user.tag}**.`))
+				.catch(err => message.channel.send("An error has occurred while trying to remove the role: `" + err + "`"));
 		}
 	},
 	class RenameChannelCommand extends Command {
@@ -598,8 +598,8 @@ module.exports = [
 			if (channelNameRegex.test(newChannelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
 				
 			message.channel.setName(newChannelName)
-			.then(() => message.channel.send(`✅ This channel's name has been set to **${newChannelName}**.`))
-			.catch(err => message.channel.send("An error has occurred while trying to rename this channel: `" + err + "`"))
+				.then(() => message.channel.send(`✅ This channel's name has been set to **${newChannelName}**.`))
+				.catch(err => message.channel.send("An error has occurred while trying to rename this channel: `" + err + "`"));
 		}
 	},
 	class ResetNicknameCommand extends Command {
@@ -638,8 +638,8 @@ module.exports = [
 			}
 
 			member.setNickname("")
-			.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been reset.`))
-			.catch(err => message.channel.send("An error has occurred while trying to reset the nickname: `" + err + "`"))
+				.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been reset.`))
+				.catch(err => message.channel.send("An error has occurred while trying to reset the nickname: `" + err + "`"));
 		}
 	},
 	class SetNicknameCommand extends Command {
@@ -682,8 +682,8 @@ module.exports = [
 			}
 
 			member.setNickname(newNick)
-			.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been set to **${newNick}**.`))
-			.catch(err => message.channel.send("An error has occurred while trying to set the nickname: `" + err + "`"))
+				.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been set to **${newNick}**.`))
+				.catch(err => message.channel.send("An error has occurred while trying to set the nickname: `" + err + "`"));
 		}
 	}
-]
+];

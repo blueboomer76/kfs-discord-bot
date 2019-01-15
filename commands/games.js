@@ -19,13 +19,13 @@ module.exports = [
 			const rand = Math.random();
 			let fished;
 			if (rand < 0.45) {
-				fished = commonObjs[Math.floor(Math.random() * commonObjs.length)]
+				fished = commonObjs[Math.floor(Math.random() * commonObjs.length)];
 			} else if (rand < 0.75) {
-				fished = "🐟"
+				fished = "🐟";
 			} else if (rand < 0.95) {
-				fished = uncommonObjs[Math.floor(Math.random() * uncommonObjs.length)]
+				fished = uncommonObjs[Math.floor(Math.random() * uncommonObjs.length)];
 			} else {
-				fished = rareObjs[Math.floor(Math.random() * rareObjs.length)]
+				fished = rareObjs[Math.floor(Math.random() * rareObjs.length)];
 			}
 			
 			message.channel.send(`🎣 You used a fishing pole and caught: ${fished}!`);
@@ -54,13 +54,13 @@ module.exports = [
 			let msgSuffix;
 			
 			if (userChoice == botChoice) {
-				msgSuffix = "The game is a tie"
+				msgSuffix = "The game is a tie";
 			} else {
 				let win = false;
 				if (userChoice == "rock" && botChoice == "scissors") win = !win;
 				if (userChoice == "paper" && botChoice == "rock") win = !win;
 				if (userChoice == "scissors" && botChoice == "paper") win = !win;
-				if (win) {msgSuffix = "You win"} else {msgSuffix = "The bot wins"};
+				if (win) {msgSuffix = "You win"} else {msgSuffix = "The bot wins"}
 			}
 			message.channel.send(`You chose ${userChoice} and I choose ${botChoice}. ${msgSuffix}!`);
 		}
@@ -88,16 +88,16 @@ module.exports = [
 				}
 			}
 			
-			let tQuestion = this.questions.splice(Math.floor(Math.random() * this.questions.length), 1)[0],
+			const tQuestion = this.questions.splice(Math.floor(Math.random() * this.questions.length), 1)[0],
 				tempAnswers = tQuestion.otherAnswers,
 				answers = [],
-				numAnswers = tQuestion.otherAnswers.length + 1,
-				answerLetter = null;
+				numAnswers = tQuestion.otherAnswers.length + 1;
+			let answerLetter = null;
 			
 			tempAnswers.push(tQuestion.answer);
 			
 			for (let i = tempAnswers.length; i > 0; i--) {
-				let ans = tempAnswers.splice(Math.floor(Math.random() * i), 1)[0];
+				const ans = tempAnswers.splice(Math.floor(Math.random() * i), 1)[0];
 				if (ans == tQuestion.answer) answerLetter = this.letters[numAnswers - i];
 				answers.push(ans);
 			}
@@ -105,25 +105,25 @@ module.exports = [
 			let i = -1;
 			message.channel.send("__**Trivia**__" + "\n" + tQuestion.question.replace(/&quot;/g, "\"").replace(/&#039;/g, "'") + "\n\n" + answers.map(a => {
 				i++;
-				return `${this.letters[i]} - ${a}`
+				return `${this.letters[i]} - ${a}`;
 			}).join("\n") + "\n\n" + "*Answer with the letter of your choice.*")
-			.then(msg => {
-				msg.channel.awaitMessages(msg2 => msg2.author.id == message.author.id && (["A", "B", "C", "D"]).includes(msg2.content.toUpperCase()), {
-					max: 1,
-					time: 30000,
-					errors: ["time"]
-				})
-				.then(collected => {
-					if (!msg.deleted) {
-						msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer! (You chose ${collected.array()[0].content.toUpperCase()})`)
-					}
-				})
-				.catch(err => {
-					if (!msg.deleted) {
-						msg.edit(msg.content + "\n\n" + "*You did not answer in time, try again!*")
-					}
-				})
-			})
+				.then(msg => {
+					msg.channel.awaitMessages(msg2 => msg2.author.id == message.author.id && (["A", "B", "C", "D"]).includes(msg2.content.toUpperCase()), {
+						max: 1,
+						time: 30000,
+						errors: ["time"]
+					})
+						.then(collected => {
+							if (!msg.deleted) {
+								msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer! (You chose ${collected.array()[0].content.toUpperCase()})`);
+							}
+						})
+						.catch(() => {
+							if (!msg.deleted) {
+								msg.edit(msg.content + "\n\n" + "*You did not answer in time, try again!*");
+							}
+						});
+				});
 		}
 		
 		getQuestions() {
@@ -144,11 +144,11 @@ module.exports = [
 							question: r.question,
 							answer: r.correct_answer,
 							otherAnswers: r.incorrect_answers
-						}
-					})
+						};
+					});
 					resolve(results);
-				})
-			})
+				});
+			});
 		}
 	}
-]
+];

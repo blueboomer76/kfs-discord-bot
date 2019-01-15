@@ -19,13 +19,13 @@ class Command {
 		this.usage = props.usage || this.name;
 		
 		if (props.args) {
-			for (const arg of props.args) this.args.push(new Argument(arg))
+			for (const arg of props.args) this.args.push(new Argument(arg));
 		}
 		if (props.flags) {
-			for (const flag of props.flags) this.flags.push(new Flag(flag))
+			for (const flag of props.flags) this.flags.push(new Flag(flag));
 		}
 		if (props.subcommands) {
-			for (const scmd of props.subcommands) this.subcommands.push(new SubCommand(scmd))
+			for (const scmd of props.subcommands) this.subcommands.push(new SubCommand(scmd));
 		}
 	}
 	
@@ -40,7 +40,7 @@ class SubCommand {
 		this.args = [];
 
 		if (props.args) {
-			for (const arg of props.args) this.args.push(new Argument(arg))
+			for (const arg of props.args) this.args.push(new Argument(arg));
 		}
 	}
 }

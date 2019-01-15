@@ -20,7 +20,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let magicMsgs = [
+			const magicMsgs = [
 				"Certainly",
 				"It is decidedly so",
 				"Without a doubt",
@@ -41,7 +41,7 @@ module.exports = [
 				"My sources say no",
 				"Outlook not so good",
 				"Very doubtful"
-			]
+			];
 			if (!args[0].match(/ +/g)) {
 				message.channel.send("🎱 You need to provide an actual question...");
 			} else {
@@ -94,14 +94,15 @@ module.exports = [
 			if (iters == 1) {
 				let res;
 				if (Math.random() < 0.5) {res = "Heads"} else {res = "Tails"}
-				message.channel.send(`I flipped a coin and got ${res}`)
+				message.channel.send(`I flipped a coin and got ${res}`);
 			} else {
-				let res = [], heads = 0;
+				const res = [];
+				let heads = 0;
 				for (let i = 0; i < iters; i++) {
 					if (Math.random() < 0.5) {res.push("Heads"); heads++} else {res.push("Tails")}
 				}
-				message.channel.send(`I flipped ${iters} coins and got: ${res.join(", ")}` +
-				`\n(${heads} heads and ${iters-heads} tails)`)
+				message.channel.send(`I flipped ${iters} coins and got: ${res.join(", ")}` + "\n" +
+				`(${heads} heads and ${iters-heads} tails)`);
 			}
 		}
 	},
@@ -160,10 +161,10 @@ module.exports = [
 			}
 
 			message.channel.send(new RichEmbed()
-			.setTitle("Joke Time!")
-			.setDescription(embedDesc)
-			.setColor(Math.floor(Math.random() * 16777216))
-			)
+				.setTitle("Joke Time!")
+				.setDescription(embedDesc)
+				.setColor(Math.floor(Math.random() * 16777216))
+			);
 		}
 		
 		getJokes() {
@@ -187,11 +188,11 @@ module.exports = [
 								id: r.data.id,
 								score: r.data.score,
 								comments: r.data.num_comments
-							}
-						})
+							};
+						});
 					resolve(results);
-				})
-			})
+				});
+			});
 		}
 	},
 	class QuoteCommand extends Command {
@@ -237,24 +238,24 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			if (args[0] == "message") {
 				message.channel.fetchMessage(args[1])
-				.then(msg => {
-					const quoteEmbed = new RichEmbed()
-						.setDescription(msg.content)
-						.setAuthor(msg.author.tag, msg.author.avatarURL || `https://cdn.discordapp.com/embed/avatars/${msg.author.discriminator % 5}.png`)
-						.setFooter("Sent")
-						.setTimestamp(msg.createdAt)
-						.addField("Jump to message", `[Click or tap here](https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${msg.id})`);
-					if (msg.member) quoteEmbed.setColor(msg.member.displayColor);
-					message.channel.send(quoteEmbed);
-				})
-				.catch(() => message.channel.send("⚠ A message with that ID was not found in this channel."))
+					.then(msg => {
+						const quoteEmbed = new RichEmbed()
+							.setDescription(msg.content)
+							.setAuthor(msg.author.tag, msg.author.avatarURL || `https://cdn.discordapp.com/embed/avatars/${msg.author.discriminator % 5}.png`)
+							.setFooter("Sent")
+							.setTimestamp(msg.createdAt)
+							.addField("Jump to message", `[Click or tap here](https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${msg.id})`);
+						if (msg.member) quoteEmbed.setColor(msg.member.displayColor);
+						message.channel.send(quoteEmbed);
+					})
+					.catch(() => message.channel.send("⚠ A message with that ID was not found in this channel."));
 			} else {
 				const member = args[0];
 				message.channel.send(new RichEmbed()
 					.setDescription(args[1])
 					.setAuthor(member.user.tag, member.user.avatarURL)
 					.setColor(Math.floor(Math.random() * 16777216))
-				)
+				);
 			}
 		}
 	},
@@ -277,7 +278,7 @@ module.exports = [
 			const memberRegex = /<@!?\d+>/;
 			let hash = 0, toRate = args[0];
 			if (memberRegex.test(toRate)) {
-				const memberRegex2 = /\d+/, member = message.guild.members.get(args[0].match(memberRegex2)[0])
+				const memberRegex2 = /\d+/, member = message.guild.members.get(args[0].match(memberRegex2)[0]);
 				toRate = member ? member.user.tag : args[0];
 			} else if (toRate == "me") {
 				toRate = message.member.user.tag;
@@ -329,11 +330,11 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			await message.delete();
 			if (flags.some(f => f.name == "embed")) {
-				if (!message.guild.me.hasPermission("EMBED_LINKS")) return {cmdWarn: "To post an embed, the bot requires the `Embed Links` permission."}
+				if (!message.guild.me.hasPermission("EMBED_LINKS")) return {cmdWarn: "To post an embed, the bot requires the `Embed Links` permission."};
 				message.channel.send(new RichEmbed()
-				.setColor(Math.floor(Math.random() * 16777216))
-				.setDescription(args[0])
-				)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setDescription(args[0])
+				);
 			} else {
 				message.channel.send(args[0]);
 			}
@@ -363,11 +364,11 @@ module.exports = [
 			const memberRegex = /<@!?\d+>/, memberRegex2 = /\d+/;
 			let hash = 0, toShip1 = args[0], toShip2 = args[1], member;
 			if (memberRegex.test(toShip1)) {
-				member = message.guild.members.get(args[0].match(memberRegex2)[0])
+				member = message.guild.members.get(args[0].match(memberRegex2)[0]);
 				toShip1 = member ? member.user.username : args[0];
 			}
 			if (memberRegex.test(toShip2)) {
-				member = message.guild.members.get(args[1].match(memberRegex2)[0])
+				member = message.guild.members.get(args[1].match(memberRegex2)[0]);
 				toShip2 = member ? member.user.username : args[1];
 			}
 			for (let i = 0; i < toShip1.length; i++) {
@@ -381,7 +382,7 @@ module.exports = [
 				hash |= 0; // Convert to 32-bit integer
 			}
 			
-			message.channel.send(`I would rate the ship between \`${toShip1}\` and \`${toShip2}\` a ${(Math.abs(hash % 90 / 10) + 1).toFixed(1)}/10`)
+			message.channel.send(`I would rate the ship between \`${toShip1}\` and \`${toShip2}\` a ${(Math.abs(hash % 90 / 10) + 1).toFixed(1)}/10`);
 		}
 	}
 ];

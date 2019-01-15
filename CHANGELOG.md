@@ -2,6 +2,10 @@
 
 # 1.X (current)
 
+## 1.3.38
+- Added ESLint to dependencies and formatted code to its rules
+- Fixed bugs and added more utility to commands
+
 ## 1.3.35
 - Added grouped cooldown support
 

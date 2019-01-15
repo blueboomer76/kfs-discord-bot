@@ -67,11 +67,12 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let subreddit, compact = flags.some(f => f.name == "squeeze");
+			const compact = flags.some(f => f.name == "squeeze");
+			let subreddit;
 			if (args[0]) {
 				const foundRedirSub = redirSubreddits.find(e => e.name == args[0].toLowerCase());
 				if (foundRedirSub) return bot.commands.get(foundRedirSub.goTo).run(bot, message);
-				subreddit = args[0].replace(/^\/?[Rr]\//, "")
+				subreddit = args[0].replace(/^\/?[Rr]\//, "");
 				if (subreddit.length < 3 || subreddit.length > 21) return {cmdWarn: "Subreddit names should have in between 3 and 21 characters."};
 				if (!(/^[0-9A-Za-z_]+$/).test(subreddit)) return {cmdWarn: "Subreddit names should be alphanumeric with underscores only."};
 			} else {
@@ -102,38 +103,39 @@ module.exports = [
 			}, (err, res) => {
 				if (err) return message.channel.send(`⚠ Could not request to Reddit: ${err.message}`);
 				if (!res) return message.channel.send("⚠ No response was received from Reddit.");
-				if (res.statusCode == 403) return message.channel.send("⚠ Unfortunately, that subreddit is inaccessible.")
+				if (res.statusCode == 403) return message.channel.send("⚠ Unfortunately, that subreddit is inaccessible.");
 				if (res.statusCode >= 400) return message.channel.send(`⚠ The request to Reddit failed with status code ${res.statusCode} (${res.statusMessage})`);
 				
 				let results = res.body.data.children;
-				if (!results[0]) return message.channel.send("⚠ A subreddit with that name does not exist, or it has no posts yet.")
+				if (!results[0]) return message.channel.send("⚠ A subreddit with that name does not exist, or it has no posts yet.");
 				if (results[0].kind != "t3") return message.channel.send("⚠ A subreddit with that name does not exist, but these related subreddits were found: " + "\n" + results.map(r => {
-					return r.data.display_name
-				}).join(", "))
+					return r.data.display_name;
+				}).join(", "));
 
 				results = results.filter(r => !r.data.stickied);
 				if (!message.channel.nsfw) results = results.filter(r => !r.data.over_18);
 				if (results.length == 0) return message.channel.send("⚠ No results found in the subreddit. *(You may try going to an NSFW channel to see all results)*");
 				
-				let entries = [[]], viewAll = false;
+				const entries = [[]];
+				let viewAll = false;
 				if (!args[0] || args[0] == "all" || args[0] == "popular") viewAll = true;
 								
 				if (compact) {
 					for (const post of results) {
-						let postData = post.data,
+						const postData = post.data,
 							postTitle = postData.title.length > 150 ? `${postData.title.slice(0, 150)}...` : postData.title;
-							toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
-						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`
+						let toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
+						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`;
 						entries[0].push(toDisplay);
 					}
 				} else {
 					for (const post of results) {
-						let postData = post.data,
-							postTitle = postData.title.length > 200 ? `${postData.title.slice(0, 200)}...` : postData.title,
-							toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
-						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`
-						let postFlair = postData.link_flair_text;
-						if (postFlair) toDisplay += ` [${postData.link_flair_text}]`
+						const postData = post.data,
+							postTitle = postData.title.length > 200 ? `${postData.title.slice(0, 200)}...` : postData.title;
+						let toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
+						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`;
+						const postFlair = postData.link_flair_text;
+						if (postFlair) toDisplay += ` [${postData.link_flair_text}]`;
 
 						entries[0].push(`${toDisplay}\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author.replace(/_/g, "\\_")} | ${getDuration(postData.created_utc * 1000, null, true)}`);
 					}
@@ -148,7 +150,7 @@ module.exports = [
 					embedTitle += `r/${subreddit}`;
 				}
 				
-				if (postSort != "hot") embedTitle += ` (${capitalize(postSort)} Posts)` 
+				if (postSort != "hot") embedTitle += ` (${capitalize(postSort)} Posts)`;
 				
 				paginator.paginate(message, {
 					title: embedTitle,
@@ -162,7 +164,7 @@ module.exports = [
 					page: 1,
 					params: null
 				});
-			})
+			});
 		}
 	},
 	class UrbanCommand extends Command {
@@ -229,10 +231,10 @@ module.exports = [
 									value: `👍 ${def.thumbs_up} / 👎 ${def.thumbs_down}`,
 									inline: true
 								}
-							]
+							];
 						})
 					];
-					let pageFlag = flags.find(f => f.name == "page");
+					const pageFlag = flags.find(f => f.name == "page");
 					paginator.paginate(message, {
 						thumbnail: {url: "https://i.imgur.com/Bg54V46.png"}
 					}, entries, {
@@ -244,7 +246,7 @@ module.exports = [
 				} else {
 					message.channel.send("⚠ No definition found for that term.");
 				}
-			})
+			});
 		}
 	},
 	class WikipediaCommand extends Command {
@@ -290,9 +292,9 @@ module.exports = [
 				let resultText = result.extract;
 				if (!resultText) return message.channel.send("⚠ No Wikipedia article exists for that term. *(Make sure to check capitalization)*");
 				
-				let firstSectionIndex = resultText.indexOf("==");
+				const firstSectionIndex = resultText.indexOf("==");
 				if (firstSectionIndex > 2000) {
-					resultText = resultText.slice(0, 2000) + "..."
+					resultText = resultText.slice(0, 2000) + "...";
 				} else if (firstSectionIndex > 1000) {
 					resultText = resultText.slice(0, firstSectionIndex);
 				} else {
@@ -306,7 +308,7 @@ module.exports = [
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
 				);
-			})
+			});
 		}
 	},
 	class XKCDCommand extends Command {
@@ -344,22 +346,22 @@ module.exports = [
 					if (args[0] == "random") {
 						comicNum = Math.ceil(Math.random() * currComic.num);
 					} else {
-						let chosenComicNum = parseInt(args[0]);
+						const chosenComicNum = parseInt(args[0]);
 						if (chosenComicNum > currComic.num) return message.channel.send("Invalid comic number provided.");
 						comicNum = chosenComicNum;
 					}
 					request.get(`https://xkcd.com/${comicNum}/info.0.json`, (err2, res2) => {
 						if (err2 || !res2 || res2.statusCode >= 400) {
-							this.postComic(message, currComic, "Current ", true)
+							this.postComic(message, currComic, "Current ", true);
 							return;
 						}
-						let chosenComic = JSON.parse(res2.body);
-						this.postComic(message, chosenComic, args[0] == "random" ? "Random " : "")
-					})
+						const chosenComic = JSON.parse(res2.body);
+						this.postComic(message, chosenComic, args[0] == "random" ? "Random " : "");
+					});
 				} else {
-					this.postComic(message, currComic, "Current ")
+					this.postComic(message, currComic, "Current ");
 				}
-			})
+			});
 		}
 		
 		postComic(message, comic, titlePrefix, isFallback) {
@@ -367,9 +369,9 @@ module.exports = [
 				.setTitle(`${titlePrefix}XKCD Comic - ${comic.title} (#${comic.num})`)
 				.setDescription(comic.alt)
 				.setColor(Math.floor(Math.random() * 16777216))
-				.setImage(comic.img)
+				.setImage(comic.img);
 			
-			if (isFallback) xkcdEmbed.description = `*Failed to fetch from XKCD, defaulting to the current one.*\n\n${comic.alt}`
+			if (isFallback) xkcdEmbed.description = `*Failed to fetch from XKCD, defaulting to the current one.*\n\n${comic.alt}`;
 			message.channel.send(xkcdEmbed);
 		}
 	}
