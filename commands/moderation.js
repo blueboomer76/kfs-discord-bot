@@ -685,5 +685,49 @@ module.exports = [
 				.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been set to **${newNick}**.`))
 				.catch(err => message.channel.send("An error has occurred while trying to set the nickname: `" + err + "`"));
 		}
+	},
+	class UnbanCommand extends Command {
+		constructor() {
+			super({
+				name: "unban",
+				description: "Unbans a user",
+				args: [
+					{
+						errorMsg: "You need to provide a valid user ID.",
+						type: "function",
+						testFunction: obj => /^\d{17,19}$/.test(obj)
+					}
+				],
+				cooldown: {
+					time: 25000,
+					type: "user"
+				},
+				flags: [
+					{
+						name: "reason",
+						desc: "Reason to put in the audit log",
+						arg: {
+							type: "string"
+						}
+					}
+				],
+				perms: {
+					bot: ["BAN_MEMBERS"],
+					user: ["BAN_MEMBERS"],
+					level: 0
+				},
+				usage: "unban <user ID> [--reason <reason>]"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			const userID = args[0],
+				reasonFlag = flags.find(f => f.name == "reason");
+			if (userID == message.author.id || userID == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
+
+			message.guild.unban(userID, reasonFlag ? reasonFlag.args : null)
+				.then(() => message.channel.send(`✅ The user with ID **${userID}** was unbanned from the server.`))
+				.catch(() => message.channel.send("Could not unban the user with that ID. Make sure to check for typos in the ID and that the user is in the ban list."));
+		}
 	}
 ];

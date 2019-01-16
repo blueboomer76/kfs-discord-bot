@@ -52,9 +52,9 @@ function getPosts(url, checkNsfw) {
 }
 
 function sendRedditEmbed(message, postData) {
-	const title = postData.title.replace(/&amp;/g, "&");
+	const embedTitle = postData.title.replace(/&amp;/g, "&");
 	message.channel.send(new RichEmbed()
-		.setTitle(title.length > 250 ? `${title.slice(0, 250)}...` : title)
+		.setTitle(embedTitle.length > 250 ? `${embedTitle.slice(0, 250)}...` : embedTitle)
 		.setURL(`https://reddit.com${postData.url}`)
 		.setColor(Math.floor(Math.random() * 16777216))
 		.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
@@ -63,6 +63,41 @@ function sendRedditEmbed(message, postData) {
 }
 
 module.exports = [
+	class AntiMemeCommand extends Command {
+		constructor() {
+			super({
+				name: "antimeme",
+				description: "Not actually memes",
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				}
+			});
+			this.cachedPosts = [];
+			this.lastChecked = 0;
+		}
+		
+		async run(bot, message, args, flags) {
+			let cmdErr;
+			if (new Date() > this.lastChecked + 1000*3600 || this.cachedPosts.length == 0) {
+				await getPosts("https://reddit.com/r/antimeme/hot.json", false)
+					.then(posts => {
+						this.lastChecked = Number(new Date());
+						this.cachedPosts = posts;
+					})
+					.catch(err => cmdErr = err);
+				if (cmdErr) return message.channel.send(cmdErr);
+			}
+			
+			const postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1);
+			sendRedditEmbed(message, postData[0]);
+		}
+	},
 	class BirbCommand extends Command {
 		constructor() {
 			super({

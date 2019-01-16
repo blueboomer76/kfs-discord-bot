@@ -2,7 +2,8 @@ const {Client, Collection, WebhookClient} = require("discord.js"),
 	{capitalize} = require("./modules/functions.js"),
 	config = require("./config.json"),
 	fs = require("fs"),
-	request = require("request");
+	request = require("request"),
+	Parser = require("rss-parser");
 
 class KFSDiscordBot extends Client {
 	constructor(options) {
@@ -231,6 +232,14 @@ class KFSDiscordBot extends Client {
 		});
 	}
 	
+	postRSSFeed() {
+		const parser = new Parser();
+		parser.parseURL(config.rssFeedWebsites[Math.floor(Math.random() * config.rssFeedWebsites.length)])
+			.then(feed => {
+				this.channels.get(config.rssFeedChannel).send(feed.items[Math.floor(Math.random() * feed.items.length)].link);
+			});
+	}
+
 	async handlePhoneMessage(message) {
 		const phoneCache = this.cache.phone;
 		if (phoneCache.channels[0].deleted || phoneCache.channels[1].deleted) {
