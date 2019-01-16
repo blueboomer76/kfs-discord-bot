@@ -47,15 +47,10 @@ module.exports = async bot => {
 	setInterval(() => {
 		bot.logStats();
 		if (new Date() % (1000*10800) < 1000*3600) {
-			if (config.botsOnDiscordToken) {
-				bot.postBotsOnDiscordStats(bot);
-			}
-			if (config.botsForDiscordToken) {
-				bot.postBotsForDiscordStats(bot);
-			}
-			if (config.discordBotsOrgToken) {
-				bot.postDiscordBotsOrgStats(bot);
-			}
+			if (config.botsOnDiscordToken) bot.postBotsOnDiscordStats(bot);
+			if (config.botsForDiscordToken) bot.postBotsForDiscordStats(bot);
+			if (config.discordBotsOrgToken) bot.postDiscordBotsOrgStats(bot);
+			if (config.ownerServer && config.ownerServer.rssFeed) bot.postRssFeed(bot);
 		}
 	}, 1000*3600);
 };

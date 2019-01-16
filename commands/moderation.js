@@ -287,7 +287,10 @@ module.exports = [
 					{
 						errorMsg: "Please provide a valid user ID.",
 						type: "function",
-						testFunction: obj => {return obj.length >= 17 && obj.length < 19 && !isNaN(obj)}
+						testFunction: obj => {
+							const objInt = parseInt(obj);
+							return !isNaN(obj) && objInt.length >= 17 && objInt.length < 19;
+						}
 					}
 				],
 				cooldown: {
@@ -641,6 +644,53 @@ module.exports = [
 			member.setNickname(newNick)
 				.then(message.channel.send(`✅ Nickname of **${member.user.tag}** has been set to **${newNick}.**`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
+		}
+	},
+	class UnbanCommand extends Command {
+		constructor() {
+			super({
+				name: "unban",
+				description: "Unbans a user. It will be logged if a modlog channel was set",
+				args: [
+					{
+						errorMsg: "Please provide a valid user ID.",
+						type: "function",
+						testFunction: obj => {
+							const objInt = parseInt(obj);
+							return !isNaN(obj) && objInt.length >= 17 && objInt.length < 19;
+						}
+					}
+				],
+				cooldown: {
+					time: 25000,
+					type: "user"
+				},
+				flags: [
+					{
+						name: "reason",
+						desc: "Reason to put in the audit log",
+						arg: {
+							num: 1,
+							type: "string"
+						}
+					}
+				],
+				perms: {
+					bot: ["BAN_MEMBERS"],
+					user: ["BAN_MEMBERS"],
+					level: 0
+				},
+				usage: "unban <user id> [--reason <reason>]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const userId = parseInt(args[0]),
+				reasonFlag = flags.find(f => f.name == "reason");
+				
+			message.guild.unban(userId, reasonFlag ? reasonFlag.args[0] : null)
+				.then(() => message.channel.send(`✅ The user with ID **${userId}** was unbanned from the guild.`))
+				.catch(() => message.channel.send("Could not unban the user with that ID. Make sure to check for typos in the ID and that the user is in the ban list."));
 		}
 	}
 ];

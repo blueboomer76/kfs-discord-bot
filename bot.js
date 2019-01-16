@@ -2,6 +2,7 @@ const {Client, Collection, WebhookClient} = require("discord.js"),
 	config = require("./config.json"),
 	{capitalize} = require("./modules/functions.js"),
 	fs = require("fs"),
+	Parser = require("rss-parser"),
 	request = require("request");
 
 class KendraBot extends Client {
@@ -221,6 +222,14 @@ class KendraBot extends Client {
 		});
 	}
 	
+	postRssFeed() {
+		const parser = new Parser();
+		parser.parseURL(config.rssFeedWebsites[Math.floor(Math.random() * config.rssFeedWebsites.length)])
+			.then(feed => {
+				this.channels.get(config.ownerServer.rssFeed).send(feed.items[Math.floor(Math.random() * feed.items.length)].link);
+			});
+	}
+
 	async handlePhoneMessage(message) {
 		const phoneCache = this.cache.phone;
 		if (phoneCache.channels[0].deleted || phoneCache.channels[1].deleted) {
