@@ -17,3 +17,6 @@ stats.json
 # Test directory and command
 test/
 test.js
+
+# Visual Studio Code
+.vscode/
