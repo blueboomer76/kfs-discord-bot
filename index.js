@@ -55,4 +55,11 @@ process.on("unhandledRejection", (reason, promise) => {
 	console.error(promise);
 });
 
+// Emitted by Ctrl+C in the command line
+process.on("SIGINT", async () => {
+	console.log("Logging stats and exiting process in 5 seconds due to a SIGINT received");
+	bot.logStats();
+	setTimeout(() => process.exit(1), 5000);
+});
+
 bot.login(token);

@@ -8,7 +8,7 @@ This is an **actively developed bot** that not only has fun, moderation, utility
 
 ## How to Install
 
-*Note: You need to have Node.js 8 or newer installed before you can start the bot*
+*Note: You need to have Node.js 8 or newer installed before you can start the bot, and it is recommended to have a 64-bit operating system when running it*
 
 1. Install a program that can clone GitHub repositories, such as Git Bash for Windows
 2. Run `git clone` with this repository's clone URL
