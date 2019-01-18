@@ -69,7 +69,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (new Date() > this.lastChecked + 1000*3600 || this.cachedPosts.length == 0) {
+			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				try {
 					this.cachedPosts = await this.getAntiJokes();
 				} catch (err) {
@@ -197,7 +197,7 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (new Date() > this.lastChecked + 1000*3600 || this.cachedPosts.length == 0) {
+			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				try {
 					this.cachedPosts = await this.getJokes();
 				} catch (err) {
@@ -206,8 +206,8 @@ module.exports = [
 			}
 
 			let embedDesc = "", postData;
-			while (embedDesc.length < 1000) {
-				if (this.cachedPosts.length == 0) {
+			while (embedDesc.length < 1500) {
+				if (this.cachedPosts.length < 5) {
 					try {
 						this.cachedPosts = await this.getJokes();
 					} catch (err) {
@@ -216,21 +216,37 @@ module.exports = [
 				}
 
 				postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0];
-				let toDisplayDesc = postData.desc;
 
-				if (embedDesc.length == 0 && toDisplayDesc.length >= 1500) {
-					toDisplayDesc = `${toDisplayDesc}...`;
-				} else if (embedDesc.length + toDisplayDesc.length > 1500) {
-					toDisplayDesc = `${toDisplayDesc.slice(0, 1500 - embedDesc.length)}...`;
+				const toDisplayDesc = `**[${postData.title.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})**` + "\n" +
+					postData.desc + "\n" +
+					`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
+
+				if (embedDesc.length == 0 && postData.desc.length >= 1500) {
+					embedDesc += `**[${postData.title.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})**` + "\n" +
+						postData.desc + "..." + "\n" +
+						`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
+					break;
+				} else if (embedDesc.length + toDisplayDesc.length > 2000) {
+					if (toDisplayDesc.length / (1500 - embedDesc.length) > 2) {
+						if (embedDesc.length < 1000) {
+							this.cachedPosts.push(postData);
+							continue;
+						} else {
+							break;
+						}
+					} else {
+						embedDesc += `**[${postData.title.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})**` + "\n" +
+							postData.desc.slice(0, postData.desc.length - ((embedDesc.length + toDisplayDesc.length) - 2000)) + "..." + "\n" +
+							`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
+						break;
+					}
+				} else {
+					embedDesc += toDisplayDesc;
 				}
-
-				embedDesc += `**[${postData.title.replace(/&amp;/g, "&")}](https://reddit.com${postData.id})**` + "\n" +
-					toDisplayDesc + "\n" +
-					`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";	
 			}
 
 			message.channel.send(new RichEmbed()
-				.setTitle("Joke Time!")
+				.setTitle("Here's some jokes!")
 				.setDescription(embedDesc)
 				.setColor(Math.floor(Math.random() * 16777216))
 			);
@@ -284,7 +300,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (new Date() > this.lastChecked + 1000*3600 || this.cachedPosts.length == 0) {
+			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				try {
 					this.cachedPosts = await this.getPuns();
 				} catch (err) {
