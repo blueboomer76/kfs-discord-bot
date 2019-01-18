@@ -1,4 +1,4 @@
-const {Client, Collection, WebhookClient} = require("discord.js"),
+const {Client, Collection, RichEmbed, WebhookClient} = require("discord.js"),
 	{capitalize} = require("./modules/functions.js"),
 	config = require("./config.json"),
 	fs = require("fs"),
@@ -168,6 +168,7 @@ class KFSDiscordBot extends Client {
 		});
 	}
 
+	// Optional functions
 	async postDiscordBotsOrgStats() {
 		request.post({
 			url: `https://discordbots.org/api/bots/${this.user.id}/stats`,
@@ -232,14 +233,39 @@ class KFSDiscordBot extends Client {
 		});
 	}
 	
-	postRSSFeed() {
+	postMeme() {
+		request.get({
+			url: "https://reddit.com/r/memes/hot.json",
+			json: true
+		}, (err, res) => {
+			if (err || !res || res.statusCode >= 400) {
+				console.error("Failed to obtain a meme from Reddit.");
+				return;
+			}
+			const entry = res.body.data.children.filter(r => !r.data.stickied)[0];
+			this.channels.get(config.memeFeedChannel).send(new RichEmbed()
+				.setTitle(entry.data.title)
+				.setURL(`https://reddit.com${entry.data.permalink}`)
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setFooter(`👍 ${entry.data.score} | 💬 ${entry.data.num_comments} | By: ${entry.data.author}`)
+				.setImage(entry.data.url)
+			);
+		});
+	}
+
+	postRSSFeed(amt = 1) {
 		const parser = new Parser();
 		parser.parseURL(config.rssFeedWebsites[Math.floor(Math.random() * config.rssFeedWebsites.length)])
 			.then(feed => {
-				this.channels.get(config.rssFeedChannel).send(feed.items[Math.floor(Math.random() * feed.items.length)].link);
+				const urlList = [];
+				for (let i = 0; i < amt; i++) {
+					urlList.push(feed.items.splice(Math.floor(Math.random() * feed.items.length), 1)[0].link);
+				}
+				this.channels.get(config.rssFeedChannel).send(urlList.join("\n"));
 			});
 	}
 
+	// Functions related to the phone command
 	async handlePhoneMessage(message) {
 		const phoneCache = this.cache.phone;
 		if (phoneCache.channels[0].deleted || phoneCache.channels[1].deleted) {
