@@ -204,8 +204,8 @@ module.exports = [
 			}
 			
 			let embedDesc = "", postData;
-			while (embedDesc.length < 1000) {
-				if (this.cachedPosts.length == 0) {
+			while (embedDesc.length < 1500) {
+				if (this.cachedPosts.length < 5) {
 					try {
 						this.cachedPosts = await this.getJokes();
 					} catch(err) {
@@ -214,22 +214,35 @@ module.exports = [
 				}
 				
 				postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0];
-				let toDisplayDesc = postData.desc;
-				
-				if (embedDesc.length == 0 && toDisplayDesc.length >= 1500) {
-					toDisplayDesc = `${toDisplayDesc}...`;
-				} else if (toDisplayDesc.length > 1500 - embedDesc.length && embedDesc.length > 200) {
-					if (toDisplayDesc.length < 750) break;
-					toDisplayDesc = `${toDisplayDesc.slice(0, 1500 - embedDesc.length)}...`;
-				}
 
-				embedDesc += `**[${postData.title.replace(/&amp;/g, "&")}](https://reddit.com${postData.url})**` + "\n" +
-					toDisplayDesc + "\n" +
-					`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";	
+				const toDisplayDesc = `**[${postData.title.replace(/&amp;/g, "&")}](https://reddit.com${postData.url})**` + "\n" +
+					postData.desc + "\n" +
+					`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
+
+				if (embedDesc.length == 0 && postData.desc.length >= 1500) {
+					embedDesc += toDisplayDesc;
+					break;
+				} else if (embedDesc.length + toDisplayDesc.length > 2000) {
+					if (toDisplayDesc.length / (1500 - embedDesc.length) > 2) {
+						if (embedDesc.length < 1000) {
+							this.cachedPosts.push(postData);
+							continue;
+						} else {
+							break;
+						}
+					} else {
+						embedDesc += `**[${postData.title.replace(/&amp;/g, "&")}](https://reddit.com${postData.url})**` + "\n" +
+							postData.desc.slice(0, 1500 - embedDesc.length) + "..." + "\n" +
+							`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
+						break;
+					}
+				} else {
+					embedDesc += toDisplayDesc;
+				}
 			}
 			
 			message.channel.send(new RichEmbed()
-				.setTitle("Joke Time!")
+				.setTitle("Here's some jokes!")
 				.setDescription(embedDesc)
 				.setColor(Math.floor(Math.random() * 16777216))
 			);
@@ -251,7 +264,7 @@ module.exports = [
 							const rDesc = r.data.selftext.replace(/&amp;/g, "&").trim();
 							return {
 								title: r.data.title,
-								desc: rDesc.length > 1500 ? rDesc.slice(0,1500) : rDesc,
+								desc: rDesc.length > 1900 ? rDesc.slice(0, 1900) : rDesc,
 								url: r.data.permalink,
 								score: r.data.score,
 								comments: r.data.num_comments,

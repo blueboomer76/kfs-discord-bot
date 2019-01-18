@@ -56,7 +56,7 @@ module.exports = [
 			if (member.roles.has(role.id)) return {cmdWarn: `That member already has the role **${role.name}**.`};
 				
 			member.addRole(role)
-				.then(message.channel.send(`✅ Role **${role.name}** has been added to **${member.user.tag}**.`))
+				.then(() => message.channel.send(`✅ Role **${role.name}** has been added to **${member.user.tag}**.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -116,14 +116,14 @@ module.exports = [
 			
 			if (!flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to ban the user **${member.user.tag}** from this guild.`);
-				if (promptRes) return message.channel.send(promptRes);
+				if (promptRes) return {cmdWarn: promptRes};
 			}
 			
 			member.ban({
 				days: daysFlag ? daysFlag.args[0] : 0,
 				reason: reasonFlag ? reasonFlag.args[0] : null
 			})
-				.then(message.channel.send(`✅ The user **${member.user.tag}** was banned from the guild.`))
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was banned from the guild.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -230,7 +230,7 @@ module.exports = [
 			}
 			
 			channel.delete()
-				.then(message.channel.send(`✅ The channel **${channel.name}** has been deleted.`))
+				.then(() => message.channel.send(`✅ The channel **${channel.name}** has been deleted.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -274,7 +274,7 @@ module.exports = [
 			}
 			
 			role.delete()
-				.then(message.channel.send(`✅ The role **${args[0].name}** has been deleted.`))
+				.then(() => message.channel.send(`✅ The role **${role.name}** has been deleted.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -335,7 +335,7 @@ module.exports = [
 				days: daysFlag ? daysFlag.args[0] : 0,
 				reason: reasonFlag ? reasonFlag.args[0] : null
 			})
-				.then(message.channel.send(`✅ The user with ID **${userId}** was banned from the guild.`))
+				.then(() => message.channel.send(`✅ The user with ID **${userId}** was banned from the guild.`))
 				.catch(() => message.channel.send("Could not ban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."));
 		}
 	},
@@ -381,7 +381,7 @@ module.exports = [
 			if (promptRes) return {cmdWarn: promptRes};
 			
 			member.kick(reasonFlag ? reasonFlag.args[0] : null)
-				.then(message.channel.send(`✅ The user **${member.user.tag}** was kicked from the guild.`))
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was kicked from the guild.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -494,8 +494,8 @@ module.exports = [
 				message.channel.send(`🗑 Deleted ${args[0]} messages from this channel!`).then(m => m.delete(7500));
 			} else {
 				message.channel.bulkDelete(toDelete, true)
-					.then(() => {
-						message.channel.send(`🗑 Deleted ${args[0]} messages from this channel!`).then(m => m.delete(7500));
+					.then(messages => {
+						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!`).then(m => m.delete(7500));
 					})
 					.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 			}
@@ -537,7 +537,7 @@ module.exports = [
 			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return message.channel.send(`I cannot remove the role **${role.name}** from **${member.user.tag}** because its position is at or higher than mine.`);
 				
 			member.removeRole(role)
-				.then(message.channel.send(`✅ Role **${role.name}** has been removed from **${member.user.tag}**.`))
+				.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from **${member.user.tag}**.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -570,7 +570,7 @@ module.exports = [
 			if (channelNameRegex.test(newChannelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
 				
 			message.channel.setName(newChannelName)
-				.then(message.channel.send(`✅ This channel's name has been set to **${newChannelName}**.`))
+				.then(() => message.channel.send(`✅ This channel's name has been set to **${newChannelName}**.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -604,7 +604,7 @@ module.exports = [
 			if (member.nickname == null) return {cmdWarn: `**${member.user.tag}** does not have a nickname in this guild.`};
 				
 			member.setNickname("")
-				.then(message.channel.send(`✅ Nickname of **${member.user.tag}** has been reset.`))
+				.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been reset.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -642,7 +642,7 @@ module.exports = [
 			const member = args[0], newNick = args[1];
 			
 			member.setNickname(newNick)
-				.then(message.channel.send(`✅ Nickname of **${member.user.tag}** has been set to **${newNick}.**`))
+				.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been set to **${newNick}.**`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},

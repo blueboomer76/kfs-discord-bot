@@ -1,7 +1,11 @@
 const config = require("../config.json"), {version} = require("../package.json");
 
+const rssFeedSitesLen = config.rssFeedWebsites.length;
+const rssFeedPostInt = rssFeedSitesLen < 100 ? (3 - Math.floor(rssFeedSitesLen / 50)) * 3600 : 3600,
+	rssFeedPostAmt = rssFeedSitesLen < 40 ? Math.ceil(rssFeedSitesLen / 10) : 5;
+
 module.exports = async bot => {
-	console.log(`Bot started successfully on ${new Date()}`);
+	console.log(`Bot has entered ready state on ${new Date()}`);
 	
 	bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
 	bot.user.setActivity(`${bot.prefix}help | with you in ${bot.guilds.size} servers`);
@@ -47,10 +51,15 @@ module.exports = async bot => {
 	setInterval(() => {
 		bot.logStats();
 		if (new Date() % (1000*10800) < 1000*3600) {
-			if (config.botsOnDiscordToken) bot.postBotsOnDiscordStats(bot);
-			if (config.botsForDiscordToken) bot.postBotsForDiscordStats(bot);
-			if (config.discordBotsOrgToken) bot.postDiscordBotsOrgStats(bot);
-			if (config.ownerServer && config.ownerServer.rssFeed) bot.postRssFeed(bot);
+			if (config.botsOnDiscordToken) bot.postBotsOnDiscordStats();
+			if (config.botsForDiscordToken) bot.postBotsForDiscordStats();
+			if (config.discordBotsOrgToken) bot.postDiscordBotsOrgStats();
+		}
+		if (config.ownerServer && config.ownerServer.rssFeed && (rssFeedPostInt == 3600 || new Date() % (1000 * rssFeedPostInt) < 1000*3600)) {
+			bot.postRssFeed(rssFeedPostAmt);
+		}
+		if (config.ownerServer && config.ownerServer.memeFeed && new Date() % (1000*21600) < 1000*3600) {
+			bot.postMeme();
 		}
 	}, 1000*3600);
 };

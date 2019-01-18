@@ -1,40 +1,26 @@
 const Jimp = require("jimp");
 
 module.exports = {
-	resolveImageUrl: message => {
-		return new Promise(async (resolve, reject) => {
-			await message.channel.fetchMessages({limit: 25})
-				.then(msgs => {
-					const imgObjs = msgs.filter(msg => {
-						return (msg.embeds[0] && (msg.embeds[0].type == "image" || msg.embeds[0].image != null)) ||
-							msg.attachments.size != 0;
-					}).map(msg => {
-						return {
-							embeds: msg.embeds[0],
-							attachments: msg.attachments
-						};
-					});
-					let imageURL;
-					for (const obj of imgObjs) {
-						if (obj.embeds && obj.embeds.type == "image") {
-							imageURL = obj.embeds.url;
-							break;
-						} else if (obj.embeds && obj.embeds.image) {
-							imageURL = obj.embeds.image.url;
-							break;
-						} else if (obj.attachments.size != 0) {
-							imageURL = obj.attachments.last().url;
-							break;
-						}
+	resolveImageUrl: async message => {
+		let imageURL = null;
+		await message.channel.fetchMessages({limit: 25})
+			.then(msgs => {
+				msgs = msgs.array();
+				for (const msg of msgs) {
+					if (msg.embeds[0] && msg.embeds[0].type == "image") {
+						imageURL = msg.embeds[0].url;
+						break;
+					} else if (msg.embeds[0] && msg.embeds[0].image) {
+						imageURL = msg.embeds[0].image.url;
+						break;
+					} else if (msg.attachments.size != 0) {
+						imageURL = msg.attachments.last().url;
+						break;
 					}
-					if (imageURL) {
-						resolve(imageURL);
-					} else {
-						reject("No image attachment found in recent messages.");
-					}
-				})
-				.catch(err => reject("Failed while trying to fetch messages:" + "\n" + err));
-		});
+				}
+			})
+			.catch(err => console.log("Failed to fetch messages while resolving an image URL:", err));
+		return imageURL;
 	},
 	postImage: (msg, img, fileName) => {
 		img.getBufferAsync(Jimp.MIME_PNG)

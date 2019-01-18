@@ -1,4 +1,4 @@
-const {Client, Collection, WebhookClient} = require("discord.js"),
+const {Client, Collection, RichEmbed, WebhookClient} = require("discord.js"),
 	config = require("./config.json"),
 	{capitalize} = require("./modules/functions.js"),
 	fs = require("fs"),
@@ -164,13 +164,14 @@ class KendraBot extends Client {
 		}, 1000);
 	}
 	
-	async postBotsOnDiscordStats(bot) {
+	// Optional functions
+	async postBotsOnDiscordStats() {
 		request.post({
-			url: `https://bots.ondiscord.xyz/bot-api/bots/${bot.user.id}/guilds`,
+			url: `https://bots.ondiscord.xyz/bot-api/bots/${this.user.id}/guilds`,
 			headers: {
 				"Authorization": config.botsOnDiscordToken
 			},
-			body: {"guildCount": bot.guilds.size},
+			body: {"guildCount": this.guilds.size},
 			json: true
 		}, (err, res) => {
 			if (err) {
@@ -183,14 +184,14 @@ class KendraBot extends Client {
 		});
 	}
 	
-	async postBotsForDiscordStats(bot) {
+	async postBotsForDiscordStats() {
 		request.post({
-			url: `https://botsfordiscord.com/api/bot/${bot.user.id}`,
+			url: `https://botsfordiscord.com/api/bot/${this.user.id}`,
 			headers: {
 				"Content-Type": "application/json",
-				"Authorization": config.discordBotsOrgToken
+				"Authorization": config.botsForDiscordToken
 			},
-			body: {"server_count": bot.guilds.size},
+			body: {"server_count": this.guilds.size},
 			json: true
 		}, (err, res) => {
 			if (err) {
@@ -203,13 +204,13 @@ class KendraBot extends Client {
 		});
 	}
 	
-	async postDiscordBotsOrgStats(bot) {
+	async postDiscordBotsOrgStats() {
 		request.post({
-			url: `https://discordbots.org/api/bots/${bot.user.id}/stats`,
+			url: `https://discordbots.org/api/bots/${this.user.id}/stats`,
 			headers: {
 				"Authorization": config.discordBotsOrgToken
 			},
-			body: {"server_count": bot.guilds.size},
+			body: {"server_count": this.guilds.size},
 			json: true
 		}, (err, res) => {
 			if (err) {
@@ -222,14 +223,36 @@ class KendraBot extends Client {
 		});
 	}
 	
-	postRssFeed() {
+	postMeme() {
+		request.get({
+			url: "https://reddit.com/r/memes/hot.json",
+			json: true
+		}, (err, res) => {
+			if (err) {console.log(err); return}
+			const entry = res.body.data.children[0];
+			this.channels.get(config.ownerServer.memeFeed).send(new RichEmbed()
+				.setTitle(entry.data.title)
+				.setURL(`https://reddit.com${entry.data.permalink}`)
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setFooter(`👍 ${entry.data.score} | 💬 ${entry.data.num_comments} | By: ${entry.data.author}`)
+				.setImage(entry.data.url)
+			);
+		});
+	}
+
+	postRssFeed(amt = 1) {
 		const parser = new Parser();
 		parser.parseURL(config.rssFeedWebsites[Math.floor(Math.random() * config.rssFeedWebsites.length)])
 			.then(feed => {
-				this.channels.get(config.ownerServer.rssFeed).send(feed.items[Math.floor(Math.random() * feed.items.length)].link);
+				const urlList = [];
+				for (let i = 0; i < amt; i++) {
+					urlList.push(feed.items.splice(Math.floor(Math.random() * feed.items.length), 1)[0].link);
+				}
+				this.channels.get(config.ownerServer.rssFeed).send(urlList.join("\n"));
 			});
 	}
 
+	// Functions related to the phone command
 	async handlePhoneMessage(message) {
 		const phoneCache = this.cache.phone;
 		if (phoneCache.channels[0].deleted || phoneCache.channels[1].deleted) {

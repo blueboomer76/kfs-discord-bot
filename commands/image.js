@@ -52,12 +52,16 @@ function getPosts(url, checkNsfw) {
 function sendRedditEmbed(message, postData) {
 	const embedTitle = postData.title.replace(/&amp;/g, "&");
 	message.channel.send(new RichEmbed()
-		.setTitle(embedTitle.length > 250 ? `${embedTitle}...` : embedTitle)
+		.setTitle(embedTitle.length > 250 ? `${embedTitle.slice(0,250)}...` : embedTitle)
 		.setURL(`https://reddit.com${postData.url}`)
 		.setColor(Math.floor(Math.random() * 16777216))
 		.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
 		.setImage(postData.imageURL)
 	);
+}
+
+function getPixelFactor(img) {
+	return (img.bitmap.width > img.bitmap.height ? img.bitmap.width : img.bitmap.height) / 100;
 }
 
 module.exports = [
@@ -84,7 +88,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let cmdErr;
-			if (new Date() > this.lastChecked + 1000*3600 || this.cachedSfwPosts.length == 0) {
+			if (new Date() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
 				this.lastChecked = Number(new Date());
 				await getPosts("https://reddit.com/r/Animemes/hot.json", true)
 					.then(posts => {
@@ -133,7 +137,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let cmdErr;
-			if (new Date() > this.lastChecked + 1000*3600 || this.cachedSfwPosts.length == 0) {
+			if (new Date() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
 				this.lastChecked = Number(new Date());
 				await getPosts("https://reddit.com/r/anime_irl/hot.json", true)
 					.then(posts => {
@@ -181,7 +185,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let cmdErr;
-			if (new Date() > this.lastChecked + 1000*3600 || this.cachedPosts.length == 0) {
+			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				await getPosts("https://reddit.com/r/antimeme/hot.json", false)
 					.then(posts => {
 						this.lastChecked = Number(new Date());
@@ -249,8 +253,7 @@ module.exports = [
 						desc: "The level to blur the image",
 						arg: {
 							type: "number",
-							min: 1,
-							max: 10
+							min: 1
 						}
 					}
 				],
@@ -259,23 +262,27 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "blur [image URL or mention] [--level <1-10>]"
+				usage: "blur [image URL or mention] [--level <number>]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0], cmdErr;
+			let imageURL = args[0];
 			if (!imageURL) {
-				await imageManager.resolveImageUrl(message)
-					.then(url => imageURL = url)
-					.catch(err => cmdErr = err);
-				if (cmdErr) return message.channel.send(cmdErr);
+				imageURL = await imageManager.resolveImageUrl(message);
+				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
 			}
 			
 			Jimp.read(imageURL)
 				.then(img => {
 					const levelFlag = flags.find(f => f.name == "level");
-					imageManager.postImage(message, img.blur(levelFlag ? levelFlag.args[0] : 2), "blur.png");
+					let blurLevel;
+					if (levelFlag) {
+						blurLevel = levelFlag.args[0];
+					} else {
+						blurLevel = getPixelFactor(img);
+					}
+					imageManager.postImage(message, img.blur(blurLevel), "blur.png");
 				})
 				.catch(() => {
 					message.channel.send("⚠ Failed to get image for that URL.");
@@ -368,12 +375,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0], cmdErr;
+			let imageURL = args[0];
 			if (!imageURL) {
-				await imageManager.resolveImageUrl(message)
-					.then(url => imageURL = url)
-					.catch(err => cmdErr = err);
-				if (cmdErr) return message.channel.send(cmdErr);
+				imageURL = await imageManager.resolveImageUrl(message);
+				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
 			}
 			
 			Jimp.read(imageURL)
@@ -411,12 +416,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0], cmdErr;
+			let imageURL = args[0];
 			if (!imageURL) {
-				await imageManager.resolveImageUrl(message)
-					.then(url => imageURL = url)
-					.catch(err => cmdErr = err);
-				if (cmdErr) return message.channel.send(cmdErr);
+				imageURL = await imageManager.resolveImageUrl(message);
+				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
 			}
 			
 			Jimp.read(imageURL)
@@ -455,12 +458,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0], cmdErr;
+			let imageURL = args[0];
 			if (!imageURL) {
-				await imageManager.resolveImageUrl(message)
-					.then(url => imageURL = url)
-					.catch(err => cmdErr = err);
-				if (cmdErr) return message.channel.send(cmdErr);
+				imageURL = await imageManager.resolveImageUrl(message);
+				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
 			}
 			
 			Jimp.read(imageURL)
@@ -498,12 +499,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0], cmdErr;
+			let imageURL = args[0];
 			if (!imageURL) {
-				await imageManager.resolveImageUrl(message)
-					.then(url => imageURL = url)
-					.catch(err => cmdErr = err);
-				if (cmdErr) return message.channel.send(cmdErr);
+				imageURL = await imageManager.resolveImageUrl(message);
+				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
 			}
 			
 			Jimp.read(imageURL)
@@ -536,7 +535,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			let cmdErr;
-			if (new Date() > this.lastChecked + 1000*3600 || this.cachedPosts.length == 0) {
+			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				await getPosts("https://reddit.com/r/memes/hot.json", false)
 					.then(posts => {
 						this.lastChecked = Number(new Date());
@@ -582,13 +581,11 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const type = args[1];
-			let imageURL = args[0], cmdErr;
+			let imageURL = args[0];
 			
 			if (!imageURL) {
-				await imageManager.resolveImageUrl(message)
-					.then(url => imageURL = url)
-					.catch(err => cmdErr = err);
-				if (cmdErr) return message.channel.send(cmdErr);
+				imageURL = await imageManager.resolveImageUrl(message);
+				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
 			}
 			
 			Jimp.read(imageURL)
@@ -670,12 +667,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0], cmdErr;
+			let imageURL = args[0];
 			if (!imageURL) {
-				await imageManager.resolveImageUrl(message)
-					.then(url => imageURL = url)
-					.catch(err => cmdErr = err);
-				if (cmdErr) return message.channel.send(cmdErr);
+				imageURL = await imageManager.resolveImageUrl(message);
+				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
 			}
 			
 			Jimp.read(imageURL)
@@ -726,17 +721,15 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0], cmdErr;
+			let imageURL = args[0];
 			if (!imageURL) {
-				await imageManager.resolveImageUrl(message)
-					.then(url => imageURL = url)
-					.catch(err => cmdErr = err);
-				if (cmdErr) return message.channel.send(cmdErr);
+				imageURL = await imageManager.resolveImageUrl(message);
+				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
 			}
 			
 			Jimp.read(imageURL)
 				.then(img => {
-					imageManager.postImage(message, img.pixelate(10), "pixelate.png");
+					imageManager.postImage(message, img.pixelate(getPixelFactor(img)), "pixelate.png");
 				})
 				.catch(() => {
 					message.channel.send("⚠ Failed to get image for that URL.");
@@ -769,12 +762,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0], cmdErr;
+			let imageURL = args[0];
 			if (!imageURL) {
-				await imageManager.resolveImageUrl(message)
-					.then(url => imageURL = url)
-					.catch(err => cmdErr = err);
-				if (cmdErr) return message.channel.send(cmdErr);
+				imageURL = await imageManager.resolveImageUrl(message);
+				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
 			}
 			
 			Jimp.read(imageURL)

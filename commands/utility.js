@@ -472,7 +472,7 @@ module.exports = [
 				.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
 				.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`)
 				.addField("Status", userPresence, true)
-				.addField("Nickname", member.nickname ? member.nickname : "None", true)
+				.addField("Nickname", member.nickname || "None", true)
 				.addField("Bot user", member.user.bot ? "Yes" : "No", true)
 				.addField("Member #", joinPos + 1, true)
 				.addField("Join order", `${nearbyMems.join(" > ")}`)
