@@ -38,13 +38,13 @@ function setEmbed(genEmbed, displayed, options) {
 	return genEmbed;
 }
 
-function paginateOnEdit(sentMessage, entries, options) {
-	if (sentMessage.deleted) return;
+function paginateOnEdit(message, sentMessage, entries, options) {
+	if (!message.channel.messages.has(sentMessage.id)) return;
 	
 	const entryObj = setEntries(entries, options), sentEmbed = sentMessage.embeds[0];
 	let embedToEdit = {
 		title: sentEmbed.title,
-		author: sentEmbed.author ? sentEmbed.author : undefined,
+		author: sentEmbed.author || undefined,
 		color: sentEmbed.color,
 		footer: {
 			text: `Page ${entryObj.page} / ${entryObj.maxPage} [${entries[0].length} entries]`
@@ -95,7 +95,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 	};
 	genEmbed = setEmbed(genEmbed, entryObj.entries, options);
 	
-	message.channel.send(options.embedText ? options.embedText : "", {embed: genEmbed})
+	message.channel.send(options.embedText || "", {embed: genEmbed})
 		.then(newMessage => {
 			if (entries[0].length > options.limit) {
 				newMessage.lastReactionTime = Number(new Date());
@@ -115,47 +115,45 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 					pgCollector.lastReactionTime = Number(new Date());
 					const page = Number(newMessage.embeds[0].footer.text.match(/\d+/)[0]);
 					switch (reaction.emoji.name) {
-					case "⬅":
-						options.page = page - 1;
-						paginateOnEdit(pgCollector.message, entries, options);
-						reaction.remove(message.author.id);
-						break;
-					case "➡":
-						options.page = page + 1;
-						paginateOnEdit(pgCollector.message, entries, options);
-						reaction.remove(message.author.id);
-						break;
-					case "⏹":
-						pgCollector.stop();
-						newMessage.delete();
-						break;
-					case "🔢":
-						const newMessage2 = await message.channel.send("What page do you want to go to?");
-						reaction.remove(message.author.id);
-						message.channel.awaitMessages(msg => msg.author.id == message.author.id, {
-							max: 1,
-							time: 30000,
-							errors: ["time"]
-						})
-							.then(collected => {
-								const cMsg = collected.array()[0], goToPage = parseInt(cMsg.content);
-								if (isNaN(goToPage)) {
+						case "⬅":
+							options.page = page - 1;
+							paginateOnEdit(message, pgCollector.message, entries, options);
+							reaction.remove(message.author.id);
+							break;
+						case "➡":
+							options.page = page + 1;
+							paginateOnEdit(message, pgCollector.message, entries, options);
+							reaction.remove(message.author.id);
+							break;
+						case "⏹":
+							pgCollector.stop();
+							newMessage.delete();
+							break;
+						case "🔢":
+							const newMessage2 = await message.channel.send("What page do you want to go to?");
+							reaction.remove(message.author.id);
+							message.channel.awaitMessages(msg => msg.author.id == message.author.id && !isNaN(msg.content), {
+								max: 1,
+								time: 30000,
+								errors: ["time"]
+							})
+								.then(collected => {
+									const cMsg = collected.array()[0], goToPage = parseInt(cMsg.content);
 									options.page = goToPage;
-									paginateOnEdit(pgCollector.message, entries, options);
+									paginateOnEdit(message, pgCollector.message, entries, options);
 									
 									const toDelete = [];
-									if (!newMessage2.deleted) toDelete.push(newMessage2.id);
-									if (!cMsg.deleted) toDelete.push(cMsg.id);
+									if (message.channel.messages.has(newMessage2.id)) toDelete.push(newMessage2.id);
+									if (message.channel.messages.has(cMsg.id)) toDelete.push(cMsg.id);
 									if (toDelete.length > 0) message.channel.bulkDelete(toDelete);
-								}
-							})
-							.catch(() => {});
+								})
+								.catch(() => {});
 					}
 				});
 				pgCollector.on("end", () => {
-					if (!newMessage.deleted) newMessage.clearReactions();
+					if (message.channel.messages.has(newMessage.id)) newMessage.clearReactions();
 				});
-				setTimeout(checkReaction, 30000, pgCollector, options.reactTimeLimit ? options.reactTimeLimit : 30000);
+				setTimeout(checkReaction, 30000, pgCollector, options.reactTimeLimit || 30000);
 			}
 		});
 };

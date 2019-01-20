@@ -69,10 +69,7 @@ class KendraBot extends Client {
 				commandSessionTotal: 0,
 				commandUsage: []
 			},
-			status: {
-				randomIters: 0,
-				pos: 0
-			}
+			status: {randomIters: 0, pos: 0}
 		};
 		if (config.ideaWebhook) {
 			this.ideaWebhook = new WebhookClient(config.ideaWebhook.id, config.ideaWebhook.token);
@@ -131,37 +128,36 @@ class KendraBot extends Client {
 		if (require.cache[require.resolve("./modules/stats.json")]) {
 			await delete require.cache[require.resolve("./modules/stats.json")];
 		}
-		setTimeout(() => {
-			const stats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8")),
-				stats2 = this.cache.stats;
-			stats.duration = stats.duration + (Number(new Date()) - stats2.lastCheck);
-			stats.messageTotal += stats2.messageCurrentTotal;
+		const stats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8")),
+			stats2 = this.cache.stats;
+		stats.duration = stats.duration + (Number(new Date()) - stats2.lastCheck);
+		stats.messageTotal += stats2.messageCurrentTotal;
 
-			const distrib = stats.commandDistrib,
-				usageCache = stats2.commandUsage;
-			let commandCurrentTotal = stats2.commandCurrentTotal;
-			for (const entry of usageCache) {
-				const cmdIndex = distrib.findIndex(u => u.command == entry.command);
-				if (cmdIndex != -1) {
-					distrib[cmdIndex].uses += entry.uses;
-				} else {
-					distrib.push({command: entry.command, uses: entry.uses});
-				}
-				commandCurrentTotal += entry.uses;
+		const distrib = stats.commandDistrib,
+			usageCache = stats2.commandUsage;
+		let commandCurrentTotal = stats2.commandCurrentTotal;
+		for (const entry of usageCache) {
+			const cmdIndex = distrib.findIndex(u => u.command == entry.command);
+			if (cmdIndex != -1) {
+				distrib[cmdIndex].uses += entry.uses;
+			} else {
+				distrib.push({command: entry.command, uses: entry.uses});
 			}
-			stats.callTotal += stats2.callCurrentTotal;
-			stats.commandTotal += commandCurrentTotal;
-			fs.writeFile("modules/stats.json", JSON.stringify(stats, null, 4), err => {if (err) throw err;});
+			commandCurrentTotal += entry.uses;
+		}
+		stats.callTotal += stats2.callCurrentTotal;
+		stats.commandTotal += commandCurrentTotal;
+		distrib.sort((a,b) => b.uses - a.uses);
+		fs.writeFileSync("modules/stats.json", JSON.stringify(stats, null, 4), err => {if (err) throw err;});
 
-			stats2.messageSessionTotal += stats2.messageCurrentTotal;
-			stats2.messageCurrentTotal = 0;
-			stats2.callSessionTotal += stats2.callCurrentTotal;
-			stats2.callCurrentTotal = 0;
-			stats2.commandSessionTotal += commandCurrentTotal;
-			stats2.commandCurrentTotal = 0;
-			stats2.lastCheck = Number(new Date());
-			stats2.commandUsage = [];
-		}, 1000);
+		stats2.messageSessionTotal += stats2.messageCurrentTotal;
+		stats2.messageCurrentTotal = 0;
+		stats2.callSessionTotal += stats2.callCurrentTotal;
+		stats2.callCurrentTotal = 0;
+		stats2.commandSessionTotal += commandCurrentTotal;
+		stats2.commandCurrentTotal = 0;
+		stats2.lastCheck = Number(new Date());
+		stats2.commandUsage = [];
 	}
 	
 	// Optional functions
@@ -255,10 +251,7 @@ class KendraBot extends Client {
 	// Functions related to the phone command
 	async handlePhoneMessage(message) {
 		const phoneCache = this.cache.phone;
-		if (phoneCache.channels[0].deleted || phoneCache.channels[1].deleted) {
-			this.resetPhone(this);
-			return;
-		}
+		if (this.checkDeletedPhoneChannels(this)) return;
 		
 		const toSend = message.cleanContent.replace(/https?:\/\/\S+\.\S+/gi, "")
 			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
@@ -276,7 +269,10 @@ class KendraBot extends Client {
 	}
 	
 	async checkPhone(bot) {
-		const phoneCache = bot.cache.phone, dif = Number(new Date()) - phoneCache.lastMsgTime;
+		const phoneCache = bot.cache.phone;
+		if (bot.checkDeletedPhoneChannels(bot)) return;
+
+		const dif = Number(new Date()) - phoneCache.lastMsgTime;
 		if (dif < 1000*3595) {
 			phoneCache.timeout = setTimeout(bot.checkPhone, dif, bot);
 		} else {
@@ -294,6 +290,23 @@ class KendraBot extends Client {
 		
 		let phoneTimeout = phoneCache.timeout;
 		if (phoneTimeout) {clearTimeout(phoneTimeout); phoneTimeout = null}
+	}
+
+	checkDeletedPhoneChannels(bot) {
+		const phoneCache = bot.cache.phone,
+			ch0deleted = phoneCache.channels[0] ? (phoneCache.channels[0].deleted ? true : false) : null,
+			ch1deleted = phoneCache.channels[1] ? (phoneCache.channels[1].deleted ? true : false) : null;
+		if (ch0deleted == true || ch1deleted == true) {
+			const phoneMsg = "⚠ The other side has deleted their channel for which the phone call was made.";
+			if (ch0deleted == true && ch1deleted == false) {
+				phoneCache.channels[1].send(phoneMsg);
+			} else if (ch0deleted == false && ch1deleted == true) {
+				phoneCache.channels[0].send(phoneMsg);
+			}
+			bot.resetPhone(bot);
+			return true;
+		}
+		return false;
 	}
 }
 

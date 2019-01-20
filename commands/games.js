@@ -58,18 +58,17 @@ module.exports = [
 			
 			if (state == "start") {
 				if (playerValue == 21) {
-					if (game.botMessage.deleted) return;
 					game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\nBLACKJACK!`);
 				} else {		
 					return `${toDisplayDealer}\n${toDisplayPlayer}\n\n` + 
 					"Type `stand` to end your turn, or `hit` to draw another card.";
 				}
 			} else if (state == "drawing") {
-				if (game.botMessage.deleted) return;
+				if (!game.message.channel.messages.has(game.botMessage.id)) return;
 				game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\n` + 
 				"Type `stand` to end your turn, or `hit` to draw another card.");
 			} else {
-				if (game.botMessage.deleted) return;
+				if (!game.message.channel.messages.has(game.botMessage.id)) return;
 				
 				let result = "Tied";
 				if (playerValue > 21) {
@@ -281,12 +280,12 @@ module.exports = [
 						errors: ["time"]
 					})
 						.then(collected => {
-							if (!msg.deleted) {
+							if (message.channel.messages.has(msg.id)) {
 								msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer! (You chose ${collected.array()[0].content.toUpperCase()})`);
 							}
 						})
 						.catch(() => {
-							if (!msg.deleted) {
+							if (message.channel.messages.has(msg.id)) {
 								msg.edit(msg.content + "\n\n" + "*You did not answer in time, try again!*");
 							}
 						});

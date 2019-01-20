@@ -81,7 +81,7 @@ module.exports = [
 			
 			if (channel.type == "text") {
 				channelEmbed.addField("NSFW", channel.nsfw ? "Yes" : "No")
-					.addField("Topic", channel.topic.length > 0 ? channel.topic : "No topic set");
+					.addField("Topic", channel.topic || "No topic set");
 			} else if (channel.type == "voice") {
 				channelEmbed.addField("Limit", channel.userLimit == 0 ? "No limit" : channel.userLimit, true)
 					.addField("Bitrate", `${channel.bitrate} bits`, true);

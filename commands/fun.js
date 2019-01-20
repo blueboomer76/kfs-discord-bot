@@ -195,7 +195,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (new Date() > this.lastChecked + 1000*3600 || this.cachedPosts.length == 0) {
+			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				try {
 					this.cachedPosts = await this.getJokes();
 				} catch(err) {
@@ -204,7 +204,7 @@ module.exports = [
 			}
 			
 			let embedDesc = "", postData;
-			while (embedDesc.length < 1500) {
+			while (embedDesc.length < 1600) {
 				if (this.cachedPosts.length < 5) {
 					try {
 						this.cachedPosts = await this.getJokes();
@@ -215,15 +215,17 @@ module.exports = [
 				
 				postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0];
 
-				const toDisplayDesc = `**[${postData.title.replace(/&amp;/g, "&")}](https://reddit.com${postData.url})**` + "\n" +
+				const toDisplayDesc = `**[${postData.title.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})**` + "\n" +
 					postData.desc + "\n" +
 					`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
 
-				if (embedDesc.length == 0 && postData.desc.length >= 1500) {
-					embedDesc += toDisplayDesc;
+				if (embedDesc.length == 0 && postData.desc.length >= 1600) {
+					embedDesc += `**[${postData.title.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})**` + "\n" +
+						postData.desc + "..." + "\n" +
+						`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
 					break;
 				} else if (embedDesc.length + toDisplayDesc.length > 2000) {
-					if (toDisplayDesc.length / (1500 - embedDesc.length) > 2) {
+					if (toDisplayDesc.length / (1600 - embedDesc.length) > 2) {
 						if (embedDesc.length < 1000) {
 							this.cachedPosts.push(postData);
 							continue;
@@ -231,8 +233,8 @@ module.exports = [
 							break;
 						}
 					} else {
-						embedDesc += `**[${postData.title.replace(/&amp;/g, "&")}](https://reddit.com${postData.url})**` + "\n" +
-							postData.desc.slice(0, 1500 - embedDesc.length) + "..." + "\n" +
+						embedDesc += `**[${postData.title.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})**` + "\n" +
+							postData.desc.slice(0, 1600 - embedDesc.length) + "..." + "\n" +
 							`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
 						break;
 					}
@@ -264,8 +266,8 @@ module.exports = [
 							const rDesc = r.data.selftext.replace(/&amp;/g, "&").trim();
 							return {
 								title: r.data.title,
-								desc: rDesc.length > 1900 ? rDesc.slice(0, 1900) : rDesc,
-								url: r.data.permalink,
+								desc: rDesc.length > 1600 ? rDesc.slice(0, 1600) : rDesc,
+								id: r.data.id,
 								score: r.data.score,
 								comments: r.data.num_comments,
 							};
@@ -295,7 +297,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (new Date() > this.lastChecked + 1000*3600 || this.cachedPosts.length == 0) {
+			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				try {
 					this.cachedPosts = await this.getPuns();
 				} catch(err) {
