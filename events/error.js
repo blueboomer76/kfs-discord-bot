@@ -3,6 +3,6 @@ module.exports = async (bot, error) => {
 	console.error(error);
 	console.log("The bot will shut down and bot data will be logged.");
 
-	bot.logStats();
-	setTimeout(() => process.exit(1), 10000);
+	await bot.logStats();
+	process.exit(1);
 };

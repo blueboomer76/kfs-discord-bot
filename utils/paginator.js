@@ -35,8 +35,8 @@ function setEmbed(genEmbed, displayed, options) {
 	return genEmbed;
 }
 
-function paginateOnEdit(sentMessage, entries, options) {
-	if (sentMessage.deleted) return;
+function paginateOnEdit(message, sentMessage, entries, options) {
+	if (!message.channel.messages.has(sentMessage.id)) return;
 	
 	const entryObj = setEntries(entries, options), sentEmbed = sentMessage.embeds[0];
 	let embedToEdit = {
@@ -61,7 +61,7 @@ function paginateOnEdit(sentMessage, entries, options) {
 	}
 	embedToEdit = setEmbed(embedToEdit, entryObj.entries, options);
 	
-	sentMessage.edit(options.embedText ? options.embedText : "", {embed: embedToEdit});
+	sentMessage.edit(options.embedText || "", {embed: embedToEdit});
 }
 
 function checkReaction(collector, limit) {
@@ -99,7 +99,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 	};
 	genEmbed = setEmbed(genEmbed, entryObj.entries, options);
 	
-	message.channel.send(options.embedText ? options.embedText : "", {embed: genEmbed})
+	message.channel.send(options.embedText || "", {embed: genEmbed})
 		.then(newMessage => {
 			if (entries[0].length > options.limit) {
 				newMessage.lastReactionTime = Number(new Date());
@@ -121,12 +121,12 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 					switch (reaction.emoji.name) {
 						case "⬅":
 							options.page = page - 1;
-							paginateOnEdit(pgCollector.message, entries, options);
+							paginateOnEdit(message, pgCollector.message, entries, options);
 							reaction.remove(message.author.id);
 							break;
 						case "➡":
 							options.page = page + 1;
-							paginateOnEdit(pgCollector.message, entries, options);
+							paginateOnEdit(message, pgCollector.message, entries, options);
 							reaction.remove(message.author.id);
 							break;
 						case "⏹":
@@ -144,20 +144,20 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 								.then(collected => {
 									const cMsg = collected.array()[0], goToPage = parseInt(cMsg.content);
 									options.page = goToPage;
-									paginateOnEdit(pgCollector.message, entries, options);
+									paginateOnEdit(message, pgCollector.message, entries, options);
 									
 									const toDelete = [];
-									if (!newMessage2.deleted) toDelete.push(newMessage2.id);
-									if (!cMsg.deleted) toDelete.push(cMsg.id);
+									if (message.channel.messages.has(newMessage2.id)) toDelete.push(newMessage2.id);
+									if (message.channel.messages.has(cMsg.id)) toDelete.push(cMsg.id);
 									if (toDelete.length > 0) message.channel.bulkDelete(toDelete);
 								})
 								.catch(() => {});
 					}
 				});
 				pgCollector.on("end", reactions => {
-					if (!newMessage.deleted && !reactions.has("⏹")) newMessage.clearReactions();
+					if (message.channel.messages.has(newMessage.id) && !reactions.has("⏹")) newMessage.clearReactions();
 				});
-				setTimeout(checkReaction, 30000, pgCollector, options.reactTimeLimit ? options.reactTimeLimit : 30000);
+				setTimeout(checkReaction, 30000, pgCollector, options.reactTimeLimit || 30000);
 			}
 		});
 };

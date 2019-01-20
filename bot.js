@@ -129,43 +129,39 @@ class KFSDiscordBot extends Client {
 	async logStats() {
 		delete require.cache[require.resolve("./modules/stats.json")];
 
-		fs.readFile("modules/stats.json", {encoding: "utf8"}, (err, data) => {
-			if (err) {console.error(err); return}
-			const storedStats = JSON.parse(data),
-				cachedStats = this.cache.stats;
+		const storedStats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8")),
+			cachedStats = this.cache.stats;
 
-			storedStats.duration += Number(new Date()) - cachedStats.lastCheck;
+		storedStats.duration += Number(new Date()) - cachedStats.lastCheck;
 
-			const storedUsages = storedStats.commandUsages,
-				cachedUsages = cachedStats.commandUsages;
-			let commandCurrentTotal = cachedStats.commandCurrentTotal;
-			for (const entry of cachedUsages) {
-				const cmdIndex = storedUsages.findIndex(u => u.command == entry.command);
-				if (cmdIndex != -1) {
-					storedUsages[cmdIndex].uses += entry.uses;
-				} else {
-					storedUsages.push({
-						command: entry.command,
-						uses: entry.uses
-					});
-				}
-				commandCurrentTotal += entry.uses;
+		const storedUsages = storedStats.commandUsages,
+			cachedUsages = cachedStats.commandUsages;
+		let commandCurrentTotal = cachedStats.commandCurrentTotal;
+		for (const entry of cachedUsages) {
+			const cmdIndex = storedUsages.findIndex(u => u.command == entry.command);
+			if (cmdIndex != -1) {
+				storedUsages[cmdIndex].uses += entry.uses;
+			} else {
+				storedUsages.push({command: entry.command, uses: entry.uses});
 			}
-			storedStats.commandTotal += commandCurrentTotal;
-			storedStats.callTotal += cachedStats.callCurrentTotal;
-			storedStats.messageTotal += cachedStats.messageCurrentTotal;
+			commandCurrentTotal += entry.uses;
+		}
+		storedStats.commandTotal += commandCurrentTotal;
+		storedStats.callTotal += cachedStats.callCurrentTotal;
+		storedStats.messageTotal += cachedStats.messageCurrentTotal;
 
-			fs.writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {if (err) throw err;});
+		storedUsages.sort((a, b) => b.uses - a.uses);
 
-			cachedStats.commandSessionTotal += commandCurrentTotal;
-			cachedStats.commandCurrentTotal = 0;
-			cachedStats.callSessionTotal += cachedStats.callCurrentTotal;
-			cachedStats.callCurrentTotal = 0;
-			cachedStats.messageSessionTotal += cachedStats.messageCurrentTotal;
-			cachedStats.messageCurrentTotal = 0;
-			cachedStats.commandUsages = [];
-			cachedStats.lastCheck = Number(new Date());
-		});
+		fs.writeFileSync("modules/stats.json", JSON.stringify(storedStats, null, 4));
+
+		cachedStats.commandSessionTotal += commandCurrentTotal;
+		cachedStats.commandCurrentTotal = 0;
+		cachedStats.callSessionTotal += cachedStats.callCurrentTotal;
+		cachedStats.callCurrentTotal = 0;
+		cachedStats.messageSessionTotal += cachedStats.messageCurrentTotal;
+		cachedStats.messageCurrentTotal = 0;
+		cachedStats.commandUsages = [];
+		cachedStats.lastCheck = Number(new Date());
 	}
 
 	// Optional functions
@@ -268,10 +264,7 @@ class KFSDiscordBot extends Client {
 	// Functions related to the phone command
 	async handlePhoneMessage(message) {
 		const phoneCache = this.cache.phone;
-		if (phoneCache.channels[0].deleted || phoneCache.channels[1].deleted) {
-			this.resetPhone(this);
-			return;
-		}
+		if (this.checkDeletedPhoneChannels()) return;
 		
 		let affected = 0,
 			toSend = message.cleanContent.replace(/https?:\/\/\S+\.\S+/gi, "")
@@ -290,7 +283,10 @@ class KFSDiscordBot extends Client {
 	}
 	
 	async checkPhone() {
-		const phoneCache = this.cache.phone, dif = Number(new Date()) - phoneCache.lastMsgTime;
+		const phoneCache = this.cache.phone;
+		if (this.checkDeletedPhoneChannels()) return;
+
+		const dif = Number(new Date()) - phoneCache.lastMsgTime;
 		if (dif < 1000*3595) {
 			phoneCache.timeout = setTimeout(() => {this.checkPhone()}, dif);
 		} else {
@@ -317,6 +313,23 @@ class KFSDiscordBot extends Client {
 		
 		let phoneTimeout = phoneCache.timeout;
 		if (phoneTimeout) {clearTimeout(phoneTimeout); phoneTimeout = null}
+	}
+
+	checkDeletedPhoneChannels() {
+		const phoneCache = this.cache.phone,
+			ch0deleted = phoneCache.channels[0] ? (phoneCache.channels[0].deleted ? true : false) : null,
+			ch1deleted = phoneCache.channels[1] ? (phoneCache.channels[1].deleted ? true : false) : null;
+		if (ch0deleted == true || ch1deleted == true) {
+			const phoneMsg = "⚠ The other side has deleted their channel for which the phone call was made.";
+			if (ch0deleted == true && ch1deleted == false) {
+				phoneCache.channels[1].send(phoneMsg);
+			} else if (ch0deleted == false && ch1deleted == true) {
+				phoneCache.channels[0].send(phoneMsg);
+			}
+			this.resetPhone();
+			return true;
+		}
+		return false;
 	}
 }
 
