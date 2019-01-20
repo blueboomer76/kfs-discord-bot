@@ -57,9 +57,9 @@ process.on("unhandledRejection", (reason, promise) => {
 
 // Emitted by Ctrl+C in the command line
 process.on("SIGINT", async () => {
-	console.log("Logging stats and exiting process in 5 seconds due to a SIGINT received");
-	bot.logStats();
-	setTimeout(() => process.exit(1), 5000);
+	console.log("Logging stats and exiting process due to a SIGINT received");
+	await bot.logStats();
+	process.exit(1);
 });
 
 bot.login(token);

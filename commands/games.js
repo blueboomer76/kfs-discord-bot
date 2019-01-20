@@ -114,12 +114,12 @@ module.exports = [
 						errors: ["time"]
 					})
 						.then(collected => {
-							if (!msg.deleted) {
+							if (message.channel.messages.has(msg.id)) {
 								msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer! (You chose ${collected.array()[0].content.toUpperCase()})`);
 							}
 						})
 						.catch(() => {
-							if (!msg.deleted) {
+							if (message.channel.messages.has(msg.id)) {
 								msg.edit(msg.content + "\n\n" + "*You did not answer in time, try again!*");
 							}
 						});

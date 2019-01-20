@@ -227,12 +227,13 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const phoneCache = bot.cache.phone;
-			let phoneMsg, phoneMsg0;
+			bot.checkDeletedPhoneChannels(bot);
 			if (!phoneCache.channels.some(c => c.id == message.channel.id)) {
 				phoneCache.channels.push(message.channel);
 				if (phoneCache.channels.length == 1) {
 					message.react("☎");
 				} else {
+					let phoneMsg0;
 					bot.cache.stats.callCurrentTotal++;
 					phoneCache.lastMsgTime = Number(new Date());
 					phoneCache.timeout = setTimeout(bot.checkPhone, 1000*3600, bot);
@@ -247,11 +248,11 @@ module.exports = [
 					phoneCache.channels[0].send(`☎ ${phoneMsg0}`);
 				}
 			} else {
+				let phoneMsg;
 				if (phoneCache.channels.length == 1) {
 					phoneMsg = "There was no response from the phone, hanging it up.";
 				} else {
-					let affected = 0;
-					if (message.channel.id == phoneCache.channels[0].id) affected = 1;
+					const affected = message.channel.id == phoneCache.channels[0].id ? 1 : 0;
 					phoneMsg = "You have hung up the phone.";
 					phoneCache.channels[affected].send("☎ The other side hung up the phone.");
 				}
@@ -399,12 +400,9 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			message.channel.send("Shutting down the bot in 10 seconds...");
-			bot.logStats();
-			setTimeout(() => {
-				bot.destroy();
-				process.exit(0);
-			}, 10000);
+			await message.channel.send("Logging stats and shutting down the bot...");
+			await bot.logStats();
+			process.exit(0);
 		}
 	},
 	class StatsCommand extends Command {
@@ -681,10 +679,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const storedUsages = require("../modules/stats.json").commandUsages;
-			storedUsages.sort((a, b) => b.uses - a.uses);
-
-			const entries = [storedUsages.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
+			const storedUsages = require("../modules/stats.json").commandUsages,
+				entries = [storedUsages.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
 			paginator.paginate(message, {title: "Most Popular Bot Commands"}, entries, {
 				limit: 25,
 				noStop: true,
