@@ -144,8 +144,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const channelName = args[0].toLowerCase(), channelNameRegex = /[^0-9a-z-_]/;
-			if (channelNameRegex.test(channelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
+			const channelName = args[0].toLowerCase();
+			if (/[^0-9a-z-_]/.test(channelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
 				
 			message.guild.createChannel(channelName, {type: "text"})
 				.then(() => message.channel.send(`✅ The text channel **${channelName}** has been created.`))
@@ -461,7 +461,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			await message.delete();
 
-			const deleteLarge = args[0] > 100 ? true : false;
+			const deleteLarge = args[0] > 100;
 			let toDelete = args[0];
 
 			if (flags.length > 0) {
@@ -594,8 +594,8 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const newChannelName = args[0].toLowerCase(), channelNameRegex = /[^0-9a-z-_]/;
-			if (channelNameRegex.test(newChannelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
+			const newChannelName = args[0].toLowerCase();
+			if (/[^0-9a-z-_]/.test(newChannelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
 				
 			message.channel.setName(newChannelName)
 				.then(() => message.channel.send(`✅ This channel's name has been set to **${newChannelName}**.`))

@@ -50,9 +50,9 @@ process.on("uncaughtException", err => {
 	if (!bot.user) process.exit(1);
 });
 
-process.on("unhandledRejection", (reason, promise) => {
-	console.error(`[Promise Rejection] ${new Date()}:`);
-	console.error(promise);
+process.on("unhandledRejection", reason => {
+	const reasonStack = reason instanceof Error && reason.stack ? reason.stack : reason;
+	console.error(`[Promise Rejection] ${new Date()}:` + "\n" + reasonStack);
 });
 
 // Emitted by Ctrl+C in the command line

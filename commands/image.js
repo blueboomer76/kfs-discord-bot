@@ -52,18 +52,25 @@ function getPosts(url, checkNsfw) {
 }
 
 function sendRedditEmbed(message, postData) {
-	const embedTitle = postData.title.replace(/&amp;/g, "&");
-	message.channel.send(new RichEmbed()
-		.setTitle(embedTitle.length > 250 ? `${embedTitle.slice(0, 250)}...` : embedTitle)
-		.setURL(`https://reddit.com${postData.url}`)
-		.setColor(Math.floor(Math.random() * 16777216))
-		.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
-		.setImage(postData.imageURL)
-	);
+	const embedTitle = postData.title.replace(/&amp;/g, "&"),
+		imageURL = postData.imageURL,
+		redditEmbed = new RichEmbed()
+			.setTitle(embedTitle.length > 250 ? `${embedTitle.slice(0, 250)}...` : embedTitle)
+			.setURL(`https://reddit.com${postData.url}`)
+			.setColor(Math.floor(Math.random() * 16777216))
+			.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`);
+
+	if (/\.(gif|jpe?g|png)$/.test(imageURL)) {
+		redditEmbed.setImage(imageURL);
+	} else {
+		redditEmbed.setDescription(imageURL);
+	}
+
+	message.channel.send(redditEmbed);
 }
 
 function getPixelFactor(img) {
-	return (img.bitmap.width > img.bitmap.height ? img.bitmap.width : img.bitmap.height) / 100;
+	return Math.ceil(img.bitmap.width > img.bitmap.height ? img.bitmap.width : img.bitmap.height) / 100;
 }
 
 module.exports = [
