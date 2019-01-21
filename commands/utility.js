@@ -2,7 +2,8 @@ const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	{capitalize, getDuration} = require("../modules/functions.js"),
 	fetchMembers = require("../modules/memberFetcher.js"),
-	paginator = require("../utils/paginator.js");
+	paginator = require("../utils/paginator.js"),
+	util = require("util");
 
 module.exports = [
 	class AvatarCommand extends Command {
@@ -151,6 +152,10 @@ module.exports = [
 					{
 						name: "console",
 						desc: "Puts the result in the console"
+					},
+					{
+						name: "inspect",
+						desc: "Inspect the result using utils"
 					}
 				],
 				hidden: true,
@@ -159,7 +164,7 @@ module.exports = [
 					user: [],
 					level: 5
 				},
-				usage: "eval <code> [--console]"
+				usage: "eval <code> [--console] [--inspect]"
 			});
 		}
 		
@@ -170,28 +175,32 @@ module.exports = [
 				beginEval = Number(new Date());
 				res = eval(args[0]);
 			} catch (err) {
-				res = err.stack;
-				if (!consoleFlag) res = `${res.split("    ", 3).join("    ")}    ...`;
+				res = consoleFlag ? res.split("    ", 3).join("    ") + "    ..." : err.stack;
 			} finally {
 				endEval = Number(new Date());
 			}
+
 			if (consoleFlag) {
 				if (typeof res == "function") res = res.toString();
 				console.log(res);
 				message.react("✅");
 			} else {
-				const toEval = args[0].length < 1000 ? args[0] : args[0].slice(0,1000);
-				if (res != undefined && res != null && res.toString().length > 1000) {
-					res = `${res.toString().slice(0,1000)}...`;
+				const toEval = args[0].length < 1000 ? args[0] : args[0].slice(0,1000),
+					resToSend = flags.some(f => f.name == "inspect") ? util.inspect(res) : res,
+					evalEmbed = new RichEmbed()
+						.setTitle("discord.js Evaluator")
+						.setColor(Math.floor(Math.random() * 16777216))
+						.setTimestamp(message.createdAt)
+						.setFooter(`Execution took: ${endEval - beginEval}ms`)
+						.addField("Your code", "```javascript" + "\n" + toEval + "```");
+				if (resToSend != undefined && resToSend != null && resToSend.toString().length > 1000) {
+					console.log(res);
+					evalEmbed.addField("Result", "```javascript" + "\n" + resToSend.toString().slice(0,1000) + "..." + "```")
+						.addField("Note", "The full result has been logged in the console.");
+				} else {
+					evalEmbed.addField("Result", "```javascript" + "\n" + resToSend + "```");
 				}
-				message.channel.send(new RichEmbed()
-					.setTitle("discord.js Evaluator")
-					.setColor(Math.floor(Math.random() * 16777216))
-					.setTimestamp(message.createdAt)
-					.setFooter(`Execution took: ${endEval - beginEval}ms`)
-					.addField("Your code", "```javascript" + "\n" + toEval + "```")
-					.addField("Result", "```javascript" + "\n" + res + "```")
-				);
+				message.channel.send(evalEmbed);
 			}
 		}
 	},

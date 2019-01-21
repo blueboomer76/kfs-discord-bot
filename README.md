@@ -13,10 +13,12 @@ Kendra is an **actively developed bot** that not only has fun, moderation, utili
 
 1. Install a program that can clone GitHub repositories, such as Git Bash for Windows
 2. Run `git clone https://github.com/blueboomer76/kendraBot.git`
-3. Open the Command Prompt and run `cd ../path/to/directory` (Windows only) or similar if necessary to move the directory to the kendraBot repository.
+3. Open Command Prompt (Windows), Terminal (Mac), or other program and run `cd ../path/to/directory` or similar if necessary to move the directory to the kendraBot repository.
 4. Rename the file `config.example.json` to `config.json` and replace everything in angle braces (`<` and `>`) with the correct values. If you do not have a value available, put `null` in place of it. (For `ideaWebhook`, put `null` as a value for that key.)
 5. Install the dependencies with `npm install`
 6. Run `node index.js`
+
+You can update the bot by running `git pull` to get the latest features.
 
 ## References
 Link to invite the bot: [Go!](https://discordapp.com/oauth2/authorize?client_id=429807759144386572&permissions=403041398&scope=bot)

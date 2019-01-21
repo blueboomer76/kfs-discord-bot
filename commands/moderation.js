@@ -224,9 +224,9 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const channel = args[0];
-			if (args[0].createdTimestamp + 1.5552e+10 < Number(new Date()) && !flags.some(f => f.name == "yes")) {
+			if (channel.createdTimestamp + 1.5552e+10 < Number(new Date()) && !flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to delete the channel **${channel.name}** (ID ${channel.id}), which is more than 180 days old.`);
-				if (promptRes) return message.channel.send(promptRes);
+				if (promptRes) return {cmdWarn: promptRes};
 			}
 			
 			channel.delete()
@@ -375,7 +375,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0], reasonFlag = flags.find(f => f.name == "reason");
-			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return message.channel.send(`I cannot kick the member **${member.user.tag}** because their highest role is at or higher than mine.`);
+			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot kick the member **${member.user.tag}** because their highest role is at or higher than mine.`};
 			
 			const promptRes = await promptor.prompt(message, `You are about to kick the user **${args[0].user.tag}** from this guild.`);
 			if (promptRes) return {cmdWarn: promptRes};
@@ -444,7 +444,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			await message.delete();
 
-			const deleteLarge = args[0] > 100 ? true : false,
+			const deleteLarge = args[0] > 100,
 				iters = Math.ceil(args[0] / 100);
 			let toDelete = args[0];
 
@@ -533,8 +533,8 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
-			if (!member.roles.has(role.id)) return message.channel.send(`**${member.user.tag}** does not have a role named **${role.name}**.`);
-			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return message.channel.send(`I cannot remove the role **${role.name}** from **${member.user.tag}** because its position is at or higher than mine.`);
+			if (!member.roles.has(role.id)) return {cmdWarn: `**${member.user.tag}** does not have a role named **${role.name}**.`};
+			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot remove the role **${role.name}** from **${member.user.tag}** because its position is at or higher than mine.`};
 				
 			member.removeRole(role)
 				.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from **${member.user.tag}**.`))
@@ -566,8 +566,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const channelNameRegex = /[^0-9a-z-_]+/, newChannelName = args[0].toLowerCase();
-			if (channelNameRegex.test(newChannelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
+			const newChannelName = args[0].toLowerCase();
+			if (/^[0-9a-z-_]+$/.test(newChannelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
 				
 			message.channel.setName(newChannelName)
 				.then(() => message.channel.send(`✅ This channel's name has been set to **${newChannelName}**.`))
