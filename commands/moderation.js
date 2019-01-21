@@ -459,7 +459,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			await message.delete().catch(() => {});
 
-			const deleteLarge = args[0] > 100 ? true : false;
+			const deleteLarge = args[0] > 100;
 			let toDelete = args[0];
 
 			if (flags.length > 0) {

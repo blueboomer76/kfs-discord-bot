@@ -315,7 +315,13 @@ module.exports = [
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`);
 			if (postData.desc) punEmbed.setDescription(postData.desc);
-			if (postData.imageURL) punEmbed.setImage(postData.imageURL);
+			if (postData.imageURL) {
+				if (/\.(gif|jpe?g|png)$/.test(postData.imageURL)) {
+					punEmbed.setImage(postData.imageURL);
+				} else {
+					punEmbed.setDescription(postData.imageURL);
+				}
+			}
 
 			message.channel.send(punEmbed);
 		}

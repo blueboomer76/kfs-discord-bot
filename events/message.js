@@ -150,8 +150,8 @@ module.exports = async (bot, message) => {
 				}			
 			})
 			.catch(err => {
-				let e = err && err.stack ? err.stack : err;
-				if (e && e.length > 1500) e = e.slice(0, 1500) + "...";
+				let e = err instanceof Error && err.stack ? err.stack : err;
+				if (typeof e == "string" && e.length > 1500) e = e.slice(0, 1500) + "...";
 				message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${e}\`\`\``);
 			});
 	}
