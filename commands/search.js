@@ -7,7 +7,13 @@ const {RichEmbed} = require("discord.js"),
 const redirSubreddits = [
 	{name: "anime_irl", goTo: "animeirl"},
 	{name: "animemes", goTo: "animeme"},
-	{name: "memes", goTo: "meme"}
+	{name: "antijokes", goTo: "antijoke"},
+	{name: "antimeme", goTo: "antimeme"},
+	{name: "jokes", goTo: "joke"},
+	{name: "me_irl", goTo: "meirl"},
+	{name: "memes", goTo: "meme"},
+	{name: "puns", goTo: "pun"},
+	{name: "wholesomeanimemes", goTo: "wholesome"}
 ];
 
 module.exports = [
