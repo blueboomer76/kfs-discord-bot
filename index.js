@@ -45,8 +45,7 @@ bot.loadCommands();
 bot.loadEvents();
 
 process.on("uncaughtException", err => {
-	console.error(`[Exception] ${new Date()}:`);
-	console.error(err.stack);
+	console.error(`[Exception] ${new Date()}:` + "\n" + err.stack);
 	if (!bot.user) process.exit(1);
 });
 

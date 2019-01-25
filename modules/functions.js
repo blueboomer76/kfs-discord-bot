@@ -11,17 +11,15 @@ module.exports = {
 	capitalize: capitalize,
 	getDuration: (time1, time2, simple) => {
 		if (!time1) throw new Error("Time 1 is required");
-		if (isNaN(time1)) throw new Error("Time 1 is not a valid timestamp");
-		if (time2 && isNaN(time2)) throw new Error("Time 2 is not a valid timestamp");
-
-		const date1 = new Date(time1);
-		let date2;
-		if (!time2) {date2 = new Date()} else {date2 = new Date(time2)}
+		if (isNaN(time1)) throw new TypeError("Time 1 is not a valid timestamp");
+		if (time2 && isNaN(time2)) throw new TypeError("Time 2 is not a valid timestamp");
+		
+		const date1 = new Date(time1),
+			date2 = time2 ? new Date(time2) : new Date();
 		const ts1 = Number(date1), ts2 = Number(date2);
 
-		const timeDif = Math.abs((ts2 - ts1) / 1000);
-		let suffix = "ago";
-		if (ts1 > ts2) suffix = "left";
+		const timeDif = Math.abs((ts2 - ts1) / 1000),
+			suffix = ts1 <= ts2 ? "ago" : "left";
 
 		let baseStr1 = "", baseStr2 = "";
 		if (timeDif < 60) {
