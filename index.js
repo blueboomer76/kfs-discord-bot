@@ -31,13 +31,12 @@ bot.loadCommands();
 bot.loadEvents();
 
 process.on("uncaughtException", err => {
-	console.error(`[Exception]\n${new Date()}\n${err.stack}`);
+	console.error(`[Exception] ${new Date()}:` + "\n" + err.stack);
 	if (!bot.user) process.exit(2);
 });
 
-process.on("unhandledRejection", (err, promise) => {
-	console.log(`At ${new Date()}:`);
-	console.error(promise);
+process.on("unhandledRejection", reason => {
+	console.error(`[Promise Rejection] ${new Date()}:` + "\n" + reason);
 });
 
 // Emitted by Ctrl+C in the command line

@@ -89,7 +89,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 		entries[0] = entries[0].map(e => {i++; return `${i}. ${e}`});
 	}
 	const entryObj = setEntries(entries, options);
-	genEmbed.color = options.embedColor != undefined ? options.embedColor : Math.floor(Math.random() * 16777216);
+	genEmbed.color = options.embedColor || Math.floor(Math.random() * 16777216);
 	genEmbed.footer = {
 		text: `Page ${entryObj.page} / ${entryObj.maxPage} [${entries[0].length} entries]`
 	};
@@ -150,8 +150,8 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 								.catch(() => {});
 					}
 				});
-				pgCollector.on("end", () => {
-					if (message.channel.messages.has(newMessage.id)) newMessage.clearReactions();
+				pgCollector.on("end", reactions => {
+					if (!reactions.has("⏹")) newMessage.clearReactions();
 				});
 				setTimeout(checkReaction, 30000, pgCollector, options.reactTimeLimit || 30000);
 			}

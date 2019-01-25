@@ -175,7 +175,7 @@ module.exports = [
 				beginEval = Number(new Date());
 				res = eval(args[0]);
 			} catch (err) {
-				res = consoleFlag ? res.split("    ", 3).join("    ") + "    ..." : err.stack;
+				res = consoleFlag ? err.stack.split("    ", 3).join("    ") + "    ..." : err.stack;
 			} finally {
 				endEval = Number(new Date());
 			}

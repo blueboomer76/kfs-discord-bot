@@ -141,7 +141,7 @@ module.exports = [
 						const postFlair = postData.link_flair_text;
 						if (postFlair) toDisplay += ` [${postFlair}]`;
 						
-						entries[0].push(`${toDisplay}\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author} | ${getDuration(postData.created_utc * 1000, null, true)}`);
+						entries[0].push(`${toDisplay}\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author.replace(/_/g, "\\_")} | ${getDuration(postData.created_utc * 1000, null, true)}`);
 					}
 				}
 				
@@ -163,7 +163,7 @@ module.exports = [
 					}
 				}, entries, {
 					limit: compact ? 10 : 5,
-					noStop: viewAll ? true : false,
+					noStop: viewAll,
 					numbered: true,
 					page: 1,
 					params: null

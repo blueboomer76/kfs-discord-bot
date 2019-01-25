@@ -110,7 +110,7 @@ module.exports = async (bot, message) => {
 				}
 				
 				if (!bot.ownerIds.includes(message.author.id) && runCommand.cooldown.time != 0 && (!runRes || runRes.cooldown)) {
-					const cdOverrides = {name: runCommand.cooldown.name ? runCommand.cooldown.name : null};
+					const cdOverrides = {name: runCommand.cooldown.name || null};
 					if (runRes) cdOverrides.time = runRes.cooldown;
 					cdChecker.addCooldown(bot, message, runCommand, cdOverrides);
 				}
@@ -147,6 +147,6 @@ module.exports = async (bot, message) => {
 				};
 				*/
 			})
-			.catch(err => message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${err.stack}\`\`\`I am too cute to output this, so come to the official server to discuss this bug.`));
+			.catch(err => message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${err.stack}\`\`\`If this keeps happening, come to the official server to discuss this bug.`));
 	}
 };
