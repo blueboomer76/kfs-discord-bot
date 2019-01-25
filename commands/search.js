@@ -162,7 +162,7 @@ module.exports = [
 					}
 				}, entries, {
 					limit: compact ? 10 : 5,
-					noStop: viewAll ? true : false,
+					noStop: viewAll,
 					numbered: true,
 					page: 1,
 					params: null
