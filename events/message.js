@@ -147,6 +147,10 @@ module.exports = async (bot, message) => {
 				};
 				*/
 			})
-			.catch(err => message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${err.stack}\`\`\`If this keeps happening, come to the official server to discuss this bug.`));
+			.catch(err => {
+				let errMsg = "⚠ **Something went wrong with this command**" + "```javascript" + "\n" + err.stack + "```";
+				if (!bot.ownerIds.includes(message.author.id)) errMsg += "If this keeps happening, come to the official server to discuss this bug.";
+				message.channel.send(errMsg);
+			});
 	}
 };

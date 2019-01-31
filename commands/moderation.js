@@ -385,6 +385,41 @@ module.exports = [
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
+	class MuteCommand extends Command {
+		constructor() {
+			super({
+				name: "mute",
+				description: "Mutes a user from sending messages in this channel",
+				args: [
+					{
+						infiniteArgs: true,
+						type: "member"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MUTE_MEMBERS"],
+					user: ["MUTE_MEMBERS"],
+					level: 0
+				},
+				usage: "mute <user>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const member = args[0];
+			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot mute the member **${member.user.tag}** because their highest role is at or higher than mine.`};
+			if (!message.channel.permissionsFor(member).has("SEND_MESSAGES")) return {cmdWarn: `**${member.user.tag}** is already muted or cannot see the channel.`};
+			message.channel.overwritePermissions(member, {
+				SEND_MESSAGES: false
+			})
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was muted in this channel.`))
+				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
+		}
+	},
 	class PurgeCommand extends Command {
 		constructor() {
 			super({

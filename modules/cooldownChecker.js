@@ -73,7 +73,7 @@ module.exports = {
 					toSend += "This command";
 				}
 				const cdTime = ((checkedCd.resets - Number(new Date())) / 1000).toFixed(1);
-				toSend += ` cannot be used again for **${cdTime > 0 ? cdTime : 0.1} seconds**`;
+				toSend += ` is on cooldown for **${cdTime > 0 ? cdTime : 0.1} more seconds**`;
 				if (cdType == "channel") {
 					toSend += " in this channel";
 				} else if (cdType == "guild") {

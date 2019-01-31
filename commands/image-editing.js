@@ -1,6 +1,10 @@
 const Command = require("../structures/command.js"),
 	imageManager = require("../utils/imageManager.js"),
+	Canvas = require("canvas"),
+	gifencoder = require("gifencoder"),
 	Jimp = require("jimp");
+
+Canvas.registerFont("assets/Oswald-Regular.ttf", {family: "Oswald"});
 
 function getPixelFactor(img) {
 	return Math.ceil(img.bitmap.width > img.bitmap.height ? img.bitmap.width : img.bitmap.height) / 100;
@@ -63,6 +67,149 @@ module.exports = [
 				.catch(() => {
 					message.channel.send("⚠ Failed to get image for that URL.");
 				});
+		}
+	},
+	class CreateMemeCommand extends Command {
+		constructor() {
+			super({
+				name: "creatememe",
+				description: "Makes a custom meme based on an image and some text",
+				aliases: ["custommeme", "makememe", "memecreate"],
+				args: [
+					{
+						optional: true,
+						shiftable: true,
+						type: "image"
+					},
+					{
+						infiniteArgs: true,
+						type: "string"
+					}
+				],
+				cooldown: {
+					name: "image-editing",
+					time: 15000,
+					type: "channel"
+				},
+				flags: [
+					{
+						name: "disablecaps",
+						desc: "Allow lowercase letters in the meme"
+					}
+				],
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "creatememe [image URL] <top text> | [bottom text] [--disable-caps]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			if (args[1].length > 400) return {cmdWarn: "The top and bottom text cannot be more than 400 characters in total."};
+
+			const pipeRegex = / ?\| /,
+				disableCapsFlag = flags.some(f => f.name == "disablecaps");
+			let topText, bottomText;
+			if (pipeRegex.test(args[1])) {
+				const memeTexts = args[1].split(/ ?\| /, 2);
+				topText = memeTexts[0];
+				bottomText = memeTexts[1];
+			} else {
+				const topText2 = args[1].slice(0, Math.floor(args[1].length / 2)),
+					lastIndex2 = topText2.lastIndexOf(" ");
+				
+				if (lastIndex2 != -1) {
+					topText = args[1].slice(0, lastIndex2);
+					bottomText = args[1].slice(lastIndex2);
+				} else {
+					const lastIndex3 = args[1].lastIndexOf(" ");
+					if (lastIndex3 != -1) {
+						topText = args[1].slice(0, lastIndex3);
+						bottomText = args[1].slice(lastIndex3);
+					} else {
+						topText = args[1];
+					}
+				}
+			}
+			topText = disableCapsFlag ? topText : topText.toUpperCase();
+			bottomText = disableCapsFlag || !bottomText ? bottomText : bottomText.toUpperCase();
+
+			const imageURL = args[0] || await imageManager.resolveImageUrl(message);
+			if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
+			
+			const img = new Canvas.Image();
+
+			img.onload = () => {
+				if (img.width < 100 || img.height < 100) return message.channel.send("Your image is too small, please enlarge it first or try another image.");
+
+				const canvas = Canvas.createCanvas(img.width, img.height),
+					ctx = canvas.getContext("2d"),
+					topTextFontSize = (topText.length > 100 ? 3600 / topText.length : 36) * (img.width / 500);
+
+				ctx.drawImage(img, 0, 0);
+
+				ctx.fillStyle = "#ffffff";
+				ctx.font = `semibold ${topTextFontSize}px Oswald`;
+				ctx.lineWidth = 4;
+				ctx.strokeStyle = "#000000";
+				ctx.textAlign = "center";
+
+				const breakAt = Math.floor(topText.length * img.width * 0.8 / ctx.measureText(topText).width);
+				let remainTopText = topText, i = 1;
+				while (remainTopText.length > 0) {
+					let currLine = remainTopText.slice(0, breakAt);
+					if (remainTopText.length > breakAt) {
+						const lastIndex = currLine.lastIndexOf(" ");
+						if (lastIndex != -1) {
+							currLine = currLine.slice(0, lastIndex);
+							remainTopText = remainTopText.slice(lastIndex);
+						} else {
+							remainTopText = remainTopText.slice(breakAt);
+						}
+					} else {
+						remainTopText = "";
+					}
+
+					ctx.strokeText(currLine, canvas.width / 2, topTextFontSize * i * 1.2 + 10);
+					ctx.fillText(currLine, canvas.width / 2, topTextFontSize * i * 1.2 + 10);
+					i++;
+				}
+				if (bottomText) {
+					const bottomTextFontSize = (bottomText.length > 100 ? 3600 / bottomText.length : 36) * (img.width / 500);
+					ctx.font = `semibold ${bottomTextFontSize}px Oswald`;
+
+					let remainBottomText = bottomText, j = Math.floor(bottomText.length / breakAt);
+					while (remainBottomText.length > 0) {
+						let currLine = remainBottomText.slice(0, breakAt);
+						if (remainBottomText.length > breakAt) {
+							const lastIndex = currLine.lastIndexOf(" ");
+							if (lastIndex != -1) {
+								currLine = currLine.slice(0, lastIndex);
+								remainBottomText = remainBottomText.slice(lastIndex);
+							} else {
+								remainBottomText = remainBottomText.slice(breakAt);
+							}
+						} else {
+							remainBottomText = "";
+						}
+
+						ctx.strokeText(currLine, canvas.width / 2, bottomTextFontSize * j * -1.2 + img.height - 10);
+						ctx.fillText(currLine, canvas.width / 2, bottomTextFontSize * j * -1.2 + img.height - 10);
+						j--;
+					}
+				}
+
+				message.channel.send("", {
+					files: [{
+						attachment: canvas.toBuffer(),
+						name: "meme.png"
+					}]
+				});
+			};
+
+			imageManager.getCanvasImage(img, imageURL);
 		}
 	},
 	class FlipCommand extends Command {
@@ -416,6 +563,59 @@ module.exports = [
 				});
 		}
 	},
+	class RotateCommand extends Command {
+		constructor() {
+			super({
+				name: "rotate",
+				description: "Rotate an image",
+				args: [
+					{
+						optional: true,
+						type: "image"
+					},
+				],
+				cooldown: {
+					name: "image-editing",
+					time: 15000,
+					type: "channel"
+				},
+				flags: [
+					{
+						name: "degrees",
+						desc: "The amount of rotation to apply to the image",
+						arg: {
+							type: "number",
+							min: 1,
+							max: 359
+						}
+					}
+				],
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "rotate [image URL or mention] [--degrees <1-359>]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			let imageURL = args[0];
+			if (!imageURL) {
+				imageURL = await imageManager.resolveImageUrl(message);
+				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
+			}
+			
+			Jimp.read(imageURL)
+				.then(img => {
+					const levelFlag = flags.find(f => f.name == "degrees");
+					imageManager.postImage(message, img.rotate(levelFlag ? levelFlag.args[0] : 90), "rotate.png");
+				})
+				.catch(() => {
+					message.channel.send("⚠ Failed to get image for that URL.");
+				});
+		}
+	},
 	class SepiaCommand extends Command {
 		constructor() {
 			super({
@@ -455,6 +655,95 @@ module.exports = [
 				.catch(() => {
 					message.channel.send("⚠ Failed to get image for that URL.");
 				});
+		}
+	},
+	class TriggeredCommand extends Command {
+		constructor() {
+			super({
+				name: "triggered",
+				description: "Makes a triggered GIF!",
+				aliases: ["trigger"],
+				args: [
+					{
+						optional: true,
+						type: "image"
+					},
+				],
+				cooldown: {
+					name: "image-editing",
+					time: 15000,
+					type: "channel"
+				},
+				flags: [
+					{
+						name: "level",
+						desc: "Sets trigger intensity",
+						arg: {
+							type: "number",
+							min: 1,
+							max: 5
+						}
+					}
+				],
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "triggered [image URL or mention] [--level <1-5>]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const imageURL = args[0] || await imageManager.resolveImageUrl(message);
+			if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
+
+			const levelFlag = flags.find(f => f.name == "level"),
+				multiplier = levelFlag ? levelFlag.args[0] * 20 : 60,
+				multiplier2 = multiplier - 20,
+				triggerImg = await Canvas.loadImage("resources/images/triggered.png"),
+				img = new Canvas.Image();
+			
+			img.onload = () => {
+				let imgScale = 1,
+					imgWidth = img.width,
+					imgHeight = img.height,
+					imgY = 0;
+				if (img.width < 250) {
+					imgScale = 250 / img.width;
+				} else if (img.width > 800) {
+					imgScale = 800 / img.width;
+				}
+				imgWidth = img.width * imgScale;
+				imgHeight = img.height * imgScale;
+				if (imgHeight > 800) imgY = -((imgHeight - 800) / 2);
+				const triggerHeight = imgHeight > 350 ? 150 : (imgHeight > 250 ? (imgHeight - 250) * 0.5 + 100 : 100),
+					canvasWidth = Math.floor(imgWidth),
+					canvasHeight = Math.floor((imgHeight < 800 ? imgHeight : 800) + triggerHeight),
+					canvas = Canvas.createCanvas(canvasWidth, canvasHeight),
+					ctx = canvas.getContext("2d"),
+					encoder = new gifencoder(canvasWidth, canvasHeight),
+					stream = encoder.createReadStream();
+				
+				encoder.start();
+				encoder.setRepeat(0);
+				encoder.setDelay(40);
+				for (let i = 0; i < 8; i++) {
+					ctx.drawImage(img, Math.floor(multiplier * (Math.random() - 0.5)), imgY + Math.floor(multiplier * (Math.random() - 0.5)), Math.floor(imgWidth), Math.floor(imgHeight));
+					ctx.drawImage(triggerImg, Math.floor(multiplier2 * (Math.random() - 0.5)), Math.floor(multiplier2 * (Math.random() - 0.5)) + canvasHeight - triggerHeight, canvasWidth, triggerHeight);
+					encoder.addFrame(ctx);
+					ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+				}
+				encoder.finish();
+
+				message.channel.send("", {
+					files: [{
+						attachment: stream,
+						name: "triggered.gif"
+					}]
+				});
+			};
+			imageManager.getCanvasImage(img, imageURL);
 		}
 	}
 ];

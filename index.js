@@ -36,7 +36,8 @@ process.on("uncaughtException", err => {
 });
 
 process.on("unhandledRejection", reason => {
-	console.error(`[Promise Rejection] ${new Date()}:` + "\n" + reason);
+	const reasonStack = reason && (reason.stack ? reason.stack : reason);
+	console.error(`[Promise Rejection] ${new Date()}:` + "\n" + reasonStack);
 });
 
 // Emitted by Ctrl+C in the command line

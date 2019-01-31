@@ -160,5 +160,37 @@ module.exports = [
 			for (let i = chars.length - 1; i > -1; i--) reversed += chars[i];
 			message.channel.send(reversed);
 		}
+	},
+	class WeebifyCommand extends Command {
+		constructor() {
+			super({
+				name: "weebify",
+				description: "Makes text sound like anime :3",
+				args: [
+					{
+						infiniteArgs: true,
+						type: "string"
+					}
+				],
+				usage: "weebify <text>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters.", cooldown: null, noLog: true};
+			
+			const weebifySuffixes = ["owo", "OWO", "uwu", "UwU", "X3", ":3", "***notices bulge** OwO, what's this?*"];
+			let weebified = args[0].toLowerCase();
+
+			weebified = weebified
+				.replace(/[lr]+/g, "w")
+				.replace(/n/g, "ny")
+				.split(" ")
+				.map(word => {
+					return Math.random() < 0.25 ? `${word.charAt(0)}-${word}` : word;
+				})
+				.join(" ");
+			message.channel.send(weebified + " " + weebifySuffixes[Math.floor(Math.random() * weebifySuffixes.length)]);
+		}
 	}
 ];
