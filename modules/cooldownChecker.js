@@ -66,12 +66,12 @@ module.exports = {
 				let toSend = `⛔ **Cooldown:**\n*${cdMessages[Math.floor(Math.random() * cdMessages.length)]}*` + "\n";
 
 				if (command.cooldown.name) {
-					toSend += `${capitalize(command.cooldown.name, true)} commands`;
+					toSend += `${capitalize(command.cooldown.name, true)} commands are`;
 				} else {
-					toSend += "This command";
+					toSend += "This command is";
 				}
 				const cdTime = ((checkedCd.resets - Number(new Date())) / 1000).toFixed(1);
-				toSend += ` cannot be used again for **${cdTime > 0 ? cdTime : 0.1} seconds**`;
+				toSend += ` on cooldown for **${cdTime > 0 ? cdTime : 0.1} more seconds**`;
 				if (message.guild) {
 					if (cdType == "channel") {
 						toSend += " in this channel";

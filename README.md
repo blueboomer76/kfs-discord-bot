@@ -19,8 +19,10 @@ This is an **actively developed bot** that not only has fun, moderation, utility
 
 You can update the bot by running `git pull` to get the latest features.
 
-## References
+## Other Information
 
-Link to invite the bot: [Go!](https://discordapp.com/oauth2/authorize?client_id=333058410465722368&permissions=405921878&scope=bot)
+*`assets/Oswald-Regular.ttf` in this repository is an open sourced [Google Font](https://developers.google.com/fonts) used in some image-based commands.*
 
-Link to official server: [Go!](https://discord.gg/yB8TvWU)
+[Bot Invite](https://discordapp.com/oauth2/authorize?client_id=333058410465722368&permissions=405921878&scope=bot)
+
+Official Discord Server: [![Server Widget](https://discordapp.com/api/guilds/308063187696091140/widget.png)](https://discord.gg/yB8TvWU)

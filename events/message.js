@@ -83,11 +83,11 @@ module.exports = async (bot, message) => {
 			args = message.content.slice(prefixLength).trim().split(/ +/g),
 			command = args.shift().toLowerCase(),
 			runCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
-
+		
 		if (!runCommand) return;
 		if (message.guild && !message.channel.permissionsFor(bot.user).has(["VIEW_CHANNEL", "SEND_MESSAGES"])) return;
 		if (cdChecker.check(bot, message, runCommand) == false) return;
-
+		
 		execCommand(runCommand, bot, message, args)
 			.then(runRes => {
 				/*
@@ -152,7 +152,7 @@ module.exports = async (bot, message) => {
 			.catch(err => {
 				let e = err instanceof Error && err.stack ? err.stack : err;
 				if (typeof e == "string" && e.length > 1500) e = e.slice(0, 1500) + "...";
-				message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${e}\`\`\``);
+				message.channel.send("⚠ **Something went wrong with this command**" + "```javascript" + "\n" + e + "```");
 			});
 	}
 };

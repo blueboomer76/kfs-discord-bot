@@ -1,4 +1,5 @@
-const Jimp = require("jimp");
+const Jimp = require("jimp"),
+	request = require("request");
 
 module.exports = {
 	resolveImageURL: async message => {
@@ -24,6 +25,21 @@ module.exports = {
 			})
 			.catch(err => console.log("Failed to fetch messages while resolving an image URL:", err));
 		return imageURL;
+	},
+	getCanvasImage: (img, url) => {
+		img.onerror = () => {
+			console.log("Failed to load the image.");
+		};
+		request.get({
+			url: url,
+			encoding: null
+		}, (err, res) => {
+			if (err || !res || res.statusCode >= 400) {
+				console.log("Failed to get URL while trying to assign the source to the canvas image.");
+			} else {
+				img.src = res.body;
+			}
+		});
 	},
 	postImage: (msg, img, fileName) => {
 		img.getBufferAsync(Jimp.MIME_PNG)
