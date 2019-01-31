@@ -151,7 +151,7 @@ module.exports = async (bot, message) => {
 			})
 			.catch(err => {
 				const e = err instanceof Error && err.stack ? err.stack : err;
-				message.channel.send(`⚠ **Something went wrong with this command**\`\`\`javascript\n${e}\`\`\``);
+				message.channel.send("⚠ **Something went wrong with this command**" + "```javascript" + "\n" + e + "```");
 			});
 	}
 };

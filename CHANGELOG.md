@@ -2,6 +2,19 @@
 
 # 1.X (current)
 
+## 1.4.0
+- Added more advanced image commands with customizable text
+- Added more commands in many categories
+- Changed the wording in some error messages
+- Moved some commands in Image category into a new category Image Editing
+
+## 1.3.41
+- Fixed many bugs in the code in various parts
+- Changed object deletion detection methods to those such as `message.channel.messages.has("some message ID")`
+
+## 1.3.40
+- Added bot methods for posting memes and RSS feeds along with their configs
+
 ## 1.3.38
 - Added ESLint to dependencies and formatted code to its rules
 - Fixed bugs and added more utility to commands

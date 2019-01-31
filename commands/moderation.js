@@ -1,4 +1,5 @@
-const Command = require("../structures/command.js"),
+const {Permissions} = require("discord.js"),
+	Command = require("../structures/command.js"),
 	promptor = require("../modules/codePromptor.js");
 
 module.exports = [
@@ -402,6 +403,50 @@ module.exports = [
 			member.kick(reasonFlag ? reasonFlag.args : null)
 				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was kicked from the server.`))
 				.catch(err => message.channel.send("An error has occurred while trying to kick the user: `" + err + "`"));
+		}
+	},
+	class MuteCommand extends Command {
+		constructor() {
+			super({
+				name: "mute",
+				description: "Mutes a user from sending messages in this channel",
+				args: [
+					{
+						infiniteArgs: true,
+						type: "member"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_CHANNELS"],
+					user: ["MANAGE_CHANNELS"],
+					level: 0
+				},
+				usage: "mute <user>"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			const member = args[0];
+			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
+			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
+				return {cmdWarn: `User **${member.user.tag}** cannot be muted since their highest role is at or higher than yours (overrides with server owner)`};
+			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
+				return {cmdWarn: `I cannot mute the user **${member.user.tag}** since their highest role is at or higher than mine.`};
+			}
+			
+			const mcOverwrites = message.channel.permissionOverwrites.get(member.user.id);
+			if (mcOverwrites && new Permissions(mcOverwrites.deny).has("SEND_MESSAGES")) {
+				return {cmdWarn: `**${member.user.tag}** is already muted in this channel.`};
+			}
+			message.channel.overwritePermissions(member, {
+				SEND_MESSAGES: false
+			})
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was muted in this channel.`))
+				.catch(err => message.channel.send("An error has occurred while trying to mute the user: `" + err + "`"));
 		}
 	},
 	class PurgeCommand extends Command {

@@ -1,10 +1,12 @@
+# KFS Discord Bot
 [![discordbots.org Bot Widget](https://discordbots.org/api/widget/333058410465722368.svg)](https://discordbots.org/bots/333058410465722368)
 
 [![bots.ondiscord.xyz Bot Widget](https://bots.ondiscord.xyz/bots/333058410465722368/embed)](https://bots.ondiscord.xyz/bots/333058410465722368)
 
 [![botsfordiscord.com Bot Widget](https://botsfordiscord.com/api/bot/333058410465722368/widget)](https://botsfordiscord.com/bots/333058410465722368)
 
-# KFS Discord Bot
+[![Server Widget](https://discordapp.com/api/guilds/308063187696091140/widget.png)](https://discord.gg/yB8TvWU)
+
 A multipurpose Discord bot for fun, utility, and more, written in discord.js.
 
 ## Description
@@ -22,7 +24,10 @@ This is an **actively developed bot** that not only has fun, moderation, utility
 
 You can update the bot by running `git pull` to get the latest features.
 
-## References
-Link to invite the bot: [Go!](https://discordapp.com/oauth2/authorize?client_id=333058410465722368&permissions=405921878&scope=bot)
+## Other Information
 
-Link to official server: [Go!](https://discord.gg/yB8TvWU)
+*`assets/Oswald-Regular.ttf` in this repository is an open sourced [Google Font](https://developers.google.com/fonts) used in some image-based commands.*
+
+[Bot Invite](https://discordapp.com/oauth2/authorize?client_id=333058410465722368&permissions=405921878&scope=bot)
+
+[Official Discord Server](https://discord.gg/yB8TvWU)
