@@ -119,8 +119,11 @@ module.exports = [
 			if (gvConnection.queue.includes(args[0])) {
 				return {cmdErr: "That audio is already in the queue."};
 			}
-			try {ytdl(args[0])} catch (err) {cmdErr = true}
-			if (cmdErr) return {cmdErr: "You have provided an invalid YouTube URL."};
+			try {
+				ytdl(args[0]);
+			} catch (err) {
+				return {cmdErr: "You have provided an invalid YouTube URL."};
+			}
 
 			if (!gvConnection.nowPlaying) {
 				gvConnection.nowPlaying = args[0];

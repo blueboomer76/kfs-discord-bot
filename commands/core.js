@@ -195,20 +195,16 @@ module.exports = [
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
 				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[2] ? args[2].toLowerCase() : commandName));
-				let newCommand;
-				try {
-					newCommand = new CommandClass();
-				} catch (err2) {
-					return {cmdWarn: "Command not found. If the command class name does not start with the command name, provide a third argument for the class name."};
-				}
+				if (!CommandClass) return {cmdWarn: "Command not found. If the command class name does not start with the command name, provide a third argument for the class name."};
+				const newCommand = new CommandClass();
 				newCommand.category = capitalize(category, true);
 				bot.commands.set(commandName, newCommand);
 				if (newCommand.aliases.length > 0) {
 					for (const alias of newCommand.aliases) bot.aliases.set(alias, newCommand.name);
 				}
-				message.channel.send(`The command ${commandName} was loaded.`);
+				message.channel.send(`The command **${commandName}** was loaded.`);
 			} catch (err) {
-				message.channel.send(`A problem has occurred: \`${err}\``);
+				return {cmdWarn: `A problem has occurred while trying to load the command **${commandName}**: \`${err}\``};
 			}
 		}
 	},
@@ -318,12 +314,8 @@ module.exports = [
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
 				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[1] ? args[1].toLowerCase() : commandName));
-				let newCommand;
-				try {
-					newCommand = new CommandClass();
-				} catch (err2) {
-					return {cmdWarn: "Command not found. If the command class name does not start with the command name, provide a second argument for the class name."};
-				}
+				if (!CommandClass) return {cmdWarn: "Command not found. If the command class name does not start with the command name, provide a second argument for the class name."};
+				const newCommand = new CommandClass();
 				newCommand.category = category;
 				bot.commands.set(commandName, newCommand);
 				if (newCommand.aliases.length > 0) {
@@ -337,7 +329,7 @@ module.exports = [
 				}
 				message.react("✅");
 			} catch (err) {
-				message.channel.send(`An error has occurred: \`${err}\``);
+				return {cmdWarn: `A problem has occurred while trying to reload the command: \`${err}\``};
 			}
 		}
 	},
@@ -607,7 +599,7 @@ module.exports = [
 				}]
 			})
 				.then(() => {
-					message.channel.send("The suggestion has been sent.");
+					message.channel.send("✅ The suggestion has been sent.");
 				})
 				.catch(() => {
 					message.channel.send("⚠ Failed to send the suggestion.");
@@ -646,9 +638,9 @@ module.exports = [
 			bot.commands.delete(commandName);
 			if (command.aliases.length > 0) {
 				const toRemoveAliases = bot.aliases.filter(alias => alias == command.name);
-				for (const alias of toRemoveAliases.keys()) {bot.aliases.delete(alias)}
+				for (const alias of toRemoveAliases.keys()) bot.aliases.delete(alias);
 			}
-			message.channel.send(`The command ${commandName} was unloaded.`);
+			message.channel.send(`The command **${commandName}** was unloaded.`);
 		}
 	},
 	class UsageCommand extends Command {
@@ -685,7 +677,7 @@ module.exports = [
 				limit: 25,
 				noStop: true,
 				numbered: true,
-				page: args[0] ? args[0] : 1,
+				page: args[0] || 1,
 				params: null
 			});
 		}

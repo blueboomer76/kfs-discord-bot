@@ -84,7 +84,7 @@ module.exports = [
 				channelEmbed.addField("NSFW", channel.nsfw ? "Yes" : "No")
 					.addField("Topic", channel.topic || "No topic set");
 			} else if (channel.type == "voice") {
-				channelEmbed.addField("User Limit", channel.userLimit == 0 ? "No limit" : channel.userLimit, true)
+				channelEmbed.addField("User Limit", channel.userLimit == 0 ? "None" : channel.userLimit, true)
 					.addField("Bitrate", `${channel.bitrate} bits`, true);
 			}
 	
@@ -417,6 +417,7 @@ module.exports = [
 				.addField("Region", guild.region, true)
 				.addField("Verification", guildVerif, true)
 				.addField("Explicit Filter", guild.explicitContentFilter == 0 ? "None" : (guild.explicitContentFilter == 1 ? "Low" : "High"), true)
+				.addField("2-Factor Auth Required", guild.mfaLevel == 0 ? "No" : "Yes", true)
 				.addField(`Members [${guild.memberCount} total]`,
 					`${onlineCount} Online (${(onlineCount / guild.memberCount * 100).toFixed(1)}%)\n` +
 					`${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,

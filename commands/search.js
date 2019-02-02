@@ -298,11 +298,10 @@ module.exports = [
 				const firstSectionIndex = resultText.indexOf("==");
 				if (firstSectionIndex > 2000) {
 					resultText = resultText.slice(0, 2000) + "...";
-				} else if (firstSectionIndex > 1000) {
+				} else if (firstSectionIndex > 750) {
 					resultText = resultText.slice(0, firstSectionIndex);
 				} else {
-					resultText = resultText.slice(0, 1000);
-					if (result.extract.length > 1000) resultText += "...";
+					resultText = resultText.slice(0, firstSectionIndex + 500) + "...";
 				}
 
 				message.channel.send(new RichEmbed()
@@ -310,6 +309,7 @@ module.exports = [
 					.setDescription(resultText)
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
+					.addField("Article URL", `https://en.wikipedia.org/wiki/${result.title.replace(/ /g, "_")}`)
 				);
 			});
 		}

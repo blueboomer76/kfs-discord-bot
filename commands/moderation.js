@@ -529,7 +529,7 @@ module.exports = [
 									toDelete = toDelete.filter(msg => msg.author.id == flag.args.id);
 							}
 						}
-						if (!toDelete.get(message.id)) toDelete.set(message.id, message);
+						if (!toDelete.has(message.id)) toDelete.set(message.id, message);
 					})
 					.catch(err => fetchErr = err);
 				if (fetchErr) {
