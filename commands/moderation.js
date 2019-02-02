@@ -533,7 +533,7 @@ module.exports = [
 									toDelete = toDelete.filter(msg => msg.author.id == flag.args.id);
 							}
 						}
-						if (!toDelete.get(message.id)) toDelete.set(message.id, message);
+						if (!toDelete.has(message.id)) toDelete.set(message.id, message);
 					})
 					.catch(err => fetchErr = err);
 				if (fetchErr) {
@@ -561,7 +561,7 @@ module.exports = [
 			} else {
 				message.channel.bulkDelete(toDelete, true)
 					.then(messages => {
-						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!`).then(m => m.delete(7500));
+						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!`).then(m => m.delete(7500).catch(() => {}));
 					})
 					.catch(err => message.channel.send("An error has occurred while trying to purge the messages: `" + err + "`"));
 			}
