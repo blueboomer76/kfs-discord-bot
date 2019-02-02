@@ -190,26 +190,22 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const category = args[0], commandName = args[1];
-			let newCommand;
 			
 			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."};
 			try {
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
 				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
-					CommandClass = commandClasses.find(c => c.name.toLowerCase().startsWith(args[2] ? args[2].toLowerCase() : args[1].toLowerCase()));
-				try {
-					newCommand = new CommandClass();
-				} catch(err2) {
-					return {cmdWarn: "Please provide a third argument for the class name, replacing all numbers in the command with the word."};
-				}
+					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[2] || args[1]));
+				if (!CommandClass) return {cmdWarn: "Please provide a second argument for the class name, replacing all numbers in the command with the word."};
+				const newCommand = new CommandClass();
 				newCommand.category = capitalize(category, true);
 				bot.commands.set(commandName, newCommand);
 				if (newCommand.aliases.length > 0) {
 					for (const alias of newCommand.aliases) {bot.aliases.set(alias, newCommand.name)}
 				}
-				message.channel.send(`The command ${commandName} was loaded.`);
+				message.channel.send(`The command **${commandName}** was loaded.`);
 			} catch(err) {
-				message.channel.send(`A problem has occurred: \`${err}\``);
+				return {cmdWarn: `A problem has occurred while trying to load the command **${commandName}**: \`${err}\``};
 			}
 		}
 	},
@@ -313,16 +309,12 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const command = args[0], commandName = command.name, category = command.category;
-			let newCommand;
 			try {
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
 				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[1] || args[0].name));
-				try {
-					newCommand = new CommandClass();
-				} catch(err2) {
-					return {cmdWarn: "Please provide a second argument for the class name, replacing all numbers in the command with the word."};
-				}
+				if (!CommandClass) return {cmdWarn: "Please provide a second argument for the class name, replacing all numbers in the command with the word."};
+				const newCommand = new CommandClass();
 				newCommand.category = category;
 				bot.commands.set(commandName, newCommand);
 				if (newCommand.aliases.length > 0) {
@@ -336,7 +328,7 @@ module.exports = [
 				}
 				message.react("✅");
 			} catch(err) {
-				message.channel.send(`An error has occurred: \`${err}\``);
+				return {cmdWarn: `A problem has occurred while trying to reload the command: \`${err}\``};
 			}
 		}
 	},
@@ -438,7 +430,7 @@ module.exports = [
 				.setTimestamp(message.createdAt);
 			
 			if (args[0] == "processor") {
-				statsEmbed.setAuthor("Kendra Bot Stats - Processor", bot.user.avatarURL);
+				statsEmbed.setAuthor("Bot Stats - Processor", bot.user.avatarURL);
 				this.getProcessorStats(message, statsEmbed);
 			} else {
 				const beginEval = new Date(),
@@ -461,7 +453,7 @@ module.exports = [
 					totalCommands = stats.commandTotal + commandCurrentTotal,
 					endEval = new Date();
 				
-				statsEmbed.setAuthor("Kendra Bot Stats", bot.user.avatarURL)
+				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL)
 					.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
 					.setDescription("Here's some detailed stats about the Kendra bot! *To see stats about the bot host, use `k,stats processor`*")
 					.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
@@ -519,7 +511,7 @@ module.exports = [
 				});
 			}
 			
-			processorEmbed.setDescription("Here's some detailed stats about the host that Kendra is on!")
+			processorEmbed.setDescription("Here's some detailed stats about the host that this bot is on!")
 				.addField("Total Resident Set (RSS)", `${(processMemoryUsage.rss / 1048576).toFixed(2)} MB`, true)
 				.addField("Heap Usage", `Total: ${(processMemoryUsage.heapTotal / 1048576).toFixed(2)} MB`+ "\n" + 
 				`Used: ${(processMemoryUsage.heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
@@ -560,8 +552,8 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
+						infiniteArgs: true,
 						missingArgMsg: "You must provide a suggestion or problem to send to the official bot server.",
-						num: Infinity,
 						type: "string"
 					}
 				],
@@ -591,7 +583,7 @@ module.exports = [
 				.then(() => {
 					message.channel.send("✅ Your suggestion has been sent to the support server.");
 				}).catch(() => {
-					return {cmdWarn: "⚠ Failed to send suggestion to support server."};
+					message.channel.send("⚠ Failed to send suggestion to support server.");
 				});
 		}
 	},
@@ -627,9 +619,9 @@ module.exports = [
 			bot.commands.delete(command.name);
 			if (command.aliases.length > 0) {
 				const toRemoveAliases = bot.aliases.filter(alias => alias == command.name);
-				for (const alias of toRemoveAliases.keys()) {bot.aliases.delete(alias)}
+				for (const alias of toRemoveAliases.keys()) bot.aliases.delete(alias);
 			}
-			message.channel.send(`The command ${command.name} was unloaded.`);
+			message.channel.send(`The command **${command.name}** was unloaded.`);
 		}
 	},
 	class UsageCommand extends Command {
@@ -666,7 +658,7 @@ module.exports = [
 				limit: 25,
 				noStop: true,
 				numbered: true,
-				page: args[0] ? args[0] : 1,
+				page: args[0] || 1,
 				params: null
 			});
 		}

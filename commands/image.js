@@ -6,6 +6,7 @@ function getPosts(url, checkNsfw) {
 	return new Promise((resolve, reject) => {
 		request.get({
 			url: url,
+			qs: {raw_json: 1},
 			json: true
 		}, (err, res) => {
 			if (err || res.statusCode >= 400) reject(`Failed to fetch from Reddit. (status code ${res.statusCode})`);
@@ -48,11 +49,11 @@ function getPosts(url, checkNsfw) {
 }
 
 function sendRedditEmbed(message, postData) {
-	const embedTitle = postData.title.replace(/&amp;/g, "&"),
+	const embedTitle = postData.title,
 		imageURL = postData.imageURL,
 		redditEmbed = new RichEmbed()
-			.setTitle(embedTitle.length > 250 ? `${embedTitle.slice(0,250)}...` : embedTitle)
-			.setURL(`https://reddit.com${postData.url}`)
+			.setTitle(embedTitle.length > 250 ? embedTitle.slice(0,250) + "..." : embedTitle)
+			.setURL("https://reddit.com" + postData.url)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`);
 

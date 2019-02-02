@@ -701,7 +701,7 @@ module.exports = [
 			const levelFlag = flags.find(f => f.name == "level"),
 				multiplier = levelFlag ? levelFlag.args[0] * 20 : 60,
 				multiplier2 = multiplier - 20,
-				triggerImg = await Canvas.loadImage("resources/images/triggered.png"),
+				triggerImg = await Canvas.loadImage("assets/images/triggered.png"),
 				img = new Canvas.Image();
 			
 			img.onload = () => {

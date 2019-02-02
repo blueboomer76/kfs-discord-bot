@@ -290,16 +290,15 @@ module.exports = [
 				
 				const result = Object.values(res.body.query.pages)[0];
 				let resultText = result.extract;
-				if (!resultText) return message.channel.send("⚠ Failed to find a Wikipedia article for that term.");
+				if (!resultText) return message.channel.send("⚠ Failed to find a Wikipedia article for that term. *(Make sure to check your capitalization)*");
 				
 				const firstSectionIndex = resultText.indexOf("==");
 				if (firstSectionIndex > 2000) {
 					resultText = resultText.slice(0, 2000) + "...";
-				} else if (firstSectionIndex > 1000) {
+				} else if (firstSectionIndex > 750) {
 					resultText = resultText.slice(0, firstSectionIndex);
 				} else {
-					resultText = resultText.slice(0, 1000);
-					if (resultText.length > 1000) resultText += "...";
+					resultText = resultText.slice(0, firstSectionIndex + 500) + "...";
 				}
 				
 				message.channel.send(new RichEmbed()
@@ -307,6 +306,7 @@ module.exports = [
 					.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setDescription(resultText)
+					.addField("Article URL", `https://en.wikipedia.org/wiki/${result.title.replace(/ /g, "_")}`)
 				);
 			});
 		}
@@ -361,7 +361,7 @@ module.exports = [
 				.setDescription(comic.alt)
 				.setImage(comic.img);
 			
-			if (fallbackCode) xkcdEmbed.description = `*Failed to fetch from XKCD, defaulting to the current one. (status code ${fallbackCode})*\n\n${comic.alt}`;
+			if (fallbackCode) xkcdEmbed.description = `*Failed to fetch from XKCD, showing the current one instead. (status code ${fallbackCode})*\n\n${comic.alt}`;
 			message.channel.send(xkcdEmbed);
 		}
 	}

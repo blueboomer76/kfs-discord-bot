@@ -412,7 +412,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const member = args[0];
 			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot mute the member **${member.user.tag}** because their highest role is at or higher than mine.`};
-			if (!message.channel.permissionsFor(member).has("SEND_MESSAGES")) return {cmdWarn: `**${member.user.tag}** is already muted or cannot see the channel.`};
+			if (!message.channel.permissionsFor(member).has("SEND_MESSAGES")) return {cmdWarn: `**${member.user.tag}** is already muted or cannot send messages in this channel.`};
 			message.channel.overwritePermissions(member, {
 				SEND_MESSAGES: false
 			})
@@ -507,7 +507,7 @@ module.exports = [
 									toDelete = toDelete.filter(msg => msg.member == flag.args[0]);
 							}
 						}
-						if (!toDelete.get(message.id)) toDelete.set(message.id, message);
+						if (!toDelete.has(message.id)) toDelete.set(message.id, message);
 					})
 					.catch(err => fetchErr = err);
 				if (fetchErr) {
@@ -530,7 +530,7 @@ module.exports = [
 			} else {
 				message.channel.bulkDelete(toDelete, true)
 					.then(messages => {
-						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!`).then(m => m.delete(7500));
+						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!`).then(m => m.delete(7500).catch(() => {}));
 					})
 					.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 			}

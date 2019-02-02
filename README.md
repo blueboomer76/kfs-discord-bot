@@ -5,7 +5,7 @@
 <img src="https://botsfordiscord.com/api/bot/429807759144386572/widget">
 </div>
 
-[<img src="https://img.shields.io/discord/308063187696091140.svg?logo=discord">](https://discord.gg/yB8TvWU) [<img src="https://david-dm.org/blueboomer76/KendraBot.svg">](https://david-dm.org/blueboomer76/KendraBot)
+[<img src="https://discordapp.com/api/guilds/308063187696091140/widget.png">](https://discord.gg/yB8TvWU) [<img src="https://david-dm.org/blueboomer76/KendraBot.svg">](https://david-dm.org/blueboomer76/KendraBot)
 
 A multipurpose Discord bot for fun, utility, and more, coded in discord.js.
 

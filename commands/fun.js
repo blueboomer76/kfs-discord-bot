@@ -43,11 +43,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (!args[0].match(/ +/g)) {
-				message.channel.send("🎱 You need to provide an actual question...");
-			} else {
-				message.channel.send(`🎱 ${magicMsgs[Math.floor(Math.random() * 20)]}`);
-			}
+			message.channel.send("🎱 " + (args[0].includes(" ") ? magicMsgs[Math.floor(Math.random() * 20)] : "You need to provide an actual question..."));
 		}
 	},
 	class AntiJokeCommand extends Command {
@@ -70,7 +66,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (new Date() > this.lastChecked + 1000*3600 || this.cachedPosts.length == 0) {
+			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				try {
 					this.cachedPosts = await this.getAntiJokes();
 				} catch(err) {
@@ -82,7 +78,7 @@ module.exports = [
 
 			message.channel.send(new RichEmbed()
 				.setTitle(postData.title.length > 250 ? `${postData.title.slice(0,250)}...` : postData.title)
-				.setURL(`https://reddit.com${postData.url}`)
+				.setURL("https://reddit.com" + postData.url)
 				.setDescription(postData.desc)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
@@ -93,6 +89,7 @@ module.exports = [
 			return new Promise((resolve, reject) => {
 				request.get({
 					url: "https://reddit.com/r/antijokes/hot.json",
+					qs: {raw_json: 1},
 					json: true
 				}, (err, res) => {
 					if (err || res.statusCode >= 400) reject(`Failed to fetch from Reddit. (status code ${res.statusCode})`);
@@ -101,7 +98,7 @@ module.exports = [
 					const results = res.body.data.children
 						.filter(r => !r.data.stickied)
 						.map(r => {
-							const rDesc = r.data.selftext.replace(/&amp;/g, "&").trim();
+							const rDesc = r.data.selftext.trim();
 							return {
 								title: r.data.title,
 								desc: rDesc.length > 2000 ? rDesc.slice(0,2000) : rDesc,
@@ -135,7 +132,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			if (args.length < 2) return {cmdWarn: "You need to provide at least 2 choices for me to choose from!", cooldown: null, noLog: true};
-			message.channel.send(`I choose: ${args[Math.floor(Math.random() * args.length)]}`);
+			message.channel.send(`I choose: **${args[Math.floor(Math.random() * args.length)]}**`);
 		}
 	},
 	class CoinFlipCommand extends Command {
@@ -161,7 +158,7 @@ module.exports = [
 			if (iters == 1) {
 				let res;
 				if (Math.random() < 0.5) {res = "Heads"} else {res = "Tails"}
-				message.channel.send(`I flipped a coin and got ${res}`);
+				message.channel.send("I flipped a coin and got " + res);
 			} else {
 				const res = [];
 				let heads = 0;
@@ -254,7 +251,7 @@ module.exports = [
 			return new Promise((resolve, reject) => {
 				request.get({
 					url: "https://reddit.com/r/jokes/hot.json",
-					qs: {limit: 50},
+					qs: {limit: 50, raw_json: 1},
 					json: true
 				}, (err, res) => {
 					if (err || res.statusCode >= 400) reject(`Failed to fetch from Reddit. (status code ${res.statusCode})`);
@@ -321,6 +318,7 @@ module.exports = [
 			return new Promise((resolve, reject) => {
 				request.get({
 					url: "https://reddit.com/r/puns/hot.json",
+					qs: {raw_json: 1},
 					json: true
 				}, (err, res) => {
 					if (err || res.statusCode >= 400) reject(`Failed to fetch from Reddit. (status code ${res.statusCode})`);
@@ -398,7 +396,7 @@ module.exports = [
 				message.channel.send(new RichEmbed()
 					.setAuthor(member.user.tag, member.user.avatarURL)
 					.setDescription(args[1])
-					.setColor(Math.floor(Math.random() * 16777216))
+					.setColor(member.displayColor)
 				);
 			}
 		}
