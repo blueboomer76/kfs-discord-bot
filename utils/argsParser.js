@@ -215,11 +215,17 @@ module.exports = {
 			if (commandFlag.arg) {
 				const flagArgToCheck = flags[i].args.join(" ");
 				if (flagArgToCheck.length == 0) {
-					const neededType = commandFlag.arg.type == "oneof" ? "value" : commandFlag.arg.type;
-					return {
-						error: `Missing flag argument at flag name ${commandFlag.name}`,
-						message: commandFlag.arg.errMsg ? commandFlag.arg.errMsg : `A valid ${neededType} must be provided.`
-					};
+					if (!commandFlag.arg.optional) {
+						const neededType = commandFlag.arg.type == "oneof" ? "value" : commandFlag.arg.type;
+						return {
+							error: `Missing flag argument at flag name ${commandFlag.name}`,
+							message: commandFlag.arg.errMsg ? commandFlag.arg.errMsg : `A valid ${neededType} must be provided.`
+						};
+					} else {
+						flags[i].args = null;
+						parsedFlags.push(flags[i]);
+						continue;
+					}
 				}
 				const parsedFlagArg = await checkArgs(bot, message, flagArgToCheck, commandFlag.arg);
 				if (parsedFlagArg.error) {
