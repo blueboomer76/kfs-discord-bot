@@ -768,5 +768,47 @@ module.exports = [
 				.then(() => message.channel.send(`✅ The user with ID **${userID}** was unbanned from the server.`))
 				.catch(() => message.channel.send("Could not unban the user with that ID. Make sure to check for typos in the ID and that the user is in the ban list."));
 		}
+	},
+	class UnmuteCommand extends Command {
+		constructor() {
+			super({
+				name: "unmute",
+				description: "Allows a muted user to send messages in this channel",
+				args: [
+					{
+						infiniteArgs: true,
+						type: "member"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_ROLES"],
+					user: ["MANAGE_CHANNELS"],
+					level: 0
+				},
+				usage: "unmute <user>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const member = args[0];
+			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
+			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
+				return {cmdWarn: `User **${member.user.tag}** cannot be unmuted since their highest role is at or higher than yours (overrides with server owner)`};
+			}
+			
+			const mcOverwrites = message.channel.permissionOverwrites.get(member.user.id);
+			if (!mcOverwrites || !new Permissions(mcOverwrites.deny).has("SEND_MESSAGES")) {
+				return {cmdWarn: `**${member.user.tag}** is not muted in this channel.`};
+			}
+			message.channel.overwritePermissions(member, {
+				SEND_MESSAGES: null
+			})
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was unmuted in this channel.`))
+				.catch(err => message.channel.send("An error has occurred while trying to unmute the user: `" + err + "`"));
+		}
 	}
 ];
