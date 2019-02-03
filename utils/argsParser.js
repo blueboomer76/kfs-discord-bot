@@ -206,11 +206,17 @@ module.exports = {
 			const commandFlag = commandFlags[flagLongNames.indexOf(flags[i].name)];
 			if (commandFlag.arg) {
 				if (!flags[i].args[0]) {
-					const neededType = commandFlag.arg.type == "oneof" ? "value" : commandFlag.arg.type;
-					return {
-						error: `Missing flag argument at flag name ${commandFlag.name}`,
-						message: commandFlag.arg.errMsg ? commandFlag.arg.errMsg : `A valid ${neededType} must be provided.`
-					};
+					if (!commandFlag.arg.optional) {
+						const neededType = commandFlag.arg.type == "oneof" ? "value" : commandFlag.arg.type;
+						return {
+							error: `Missing flag argument at flag name ${commandFlag.name}`,
+							message: commandFlag.arg.errMsg ? commandFlag.arg.errMsg : `A valid ${neededType} must be provided.`
+						};
+					} else {
+						flags[i].args[0] = null;
+						parsedFlags.push(flags[i]);
+						continue;
+					}
 				}
 				for (let j = 0; j < flags[i].args.length; j++) {
 					const parsedFlagArg = await checkArgs(bot, message, flags[i].args[j], commandFlag.arg);

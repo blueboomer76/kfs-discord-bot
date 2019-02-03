@@ -657,6 +657,102 @@ module.exports = [
 				});
 		}
 	},
+	class SpinCommand extends Command {
+		constructor() {
+			super({
+				name: "spin",
+				description: "Spin someone or something!",
+				aliases: ["rotategif"],
+				args: [
+					{
+						optional: true,
+						type: "image"
+					},
+				],
+				cooldown: {
+					name: "image-editing",
+					time: 15000,
+					type: "channel"
+				},
+				flags: [
+					{
+						name: "speed",
+						desc: "Sets GIF speed",
+						arg: {
+							type: "number",
+							min: 1,
+							max: 5
+						}
+					}
+				],
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "spin [image URL or mention] [--speed <1-5>]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const imageURL = args[0] || await imageManager.resolveImageUrl(message);
+			if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
+
+			const speedFlag = flags.find(f => f.name == "speed"),
+				img = new Canvas.Image();
+			
+			img.onload = () => {
+				let canvasDim = img.width < img.height ? img.width : img.height,
+					imgScale = 1,
+					imgX = 0,
+					imgY = 0;
+				if (canvasDim < 250) {
+					imgScale = 250 / canvasDim;
+				} else if (canvasDim > 800) {
+					imgScale = 800 / canvasDim;
+				}
+				const imgWidth = img.width * imgScale, imgHeight = img.height * imgScale;
+				canvasDim *= imgScale;
+				if (imgWidth > imgHeight) {
+					imgX = -Math.floor((imgWidth - canvasDim) / 2);
+				} else if (imgHeight > imgWidth) {
+					imgY = -Math.floor((imgHeight - canvasDim) / 2);
+				}
+
+				const canvas = Canvas.createCanvas(canvasDim, canvasDim),
+					ctx = canvas.getContext("2d"),
+					encoder = new gifencoder(canvasDim, canvasDim),
+					stream = encoder.createReadStream();
+				
+				encoder.start();
+				encoder.setRepeat(0);
+				encoder.setDelay(speedFlag ? (6 - speedFlag.args[0]) * 20 : 60);
+				ctx.beginPath();
+				ctx.arc(canvasDim / 2, canvasDim / 2, canvasDim / 2, 0, Math.PI*2);
+				ctx.stroke();
+				ctx.closePath();
+				ctx.clip();
+
+				for (let i = 0; i < 24; i++) {
+					ctx.translate(imgX + imgWidth / 2, imgY + imgHeight / 2);
+					ctx.rotate(Math.PI / 12);
+					ctx.translate(-(imgX + imgWidth / 2), -(imgY + imgHeight / 2));
+					ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+					encoder.addFrame(ctx);
+					ctx.fillRect(0, 0, canvasDim, canvasDim);
+				}
+				encoder.finish();
+
+				message.channel.send("", {
+					files: [{
+						attachment: stream,
+						name: "spin.gif"
+					}]
+				});
+			};
+			imageManager.getCanvasImage(img, imageURL);
+		}
+	},
 	class TriggeredCommand extends Command {
 		constructor() {
 			super({

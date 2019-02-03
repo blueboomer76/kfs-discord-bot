@@ -196,7 +196,7 @@ module.exports = [
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
 				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[2] || args[1]));
-				if (!CommandClass) return {cmdWarn: "Please provide a second argument for the class name, replacing all numbers in the command with the word."};
+				if (!CommandClass) return {cmdWarn: "Please provide a second argument for the full class name before \"Command\", replacing all numbers in the command with the word."};
 				const newCommand = new CommandClass();
 				newCommand.category = capitalize(category, true);
 				bot.commands.set(commandName, newCommand);
@@ -313,7 +313,7 @@ module.exports = [
 				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
 				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[1] || args[0].name));
-				if (!CommandClass) return {cmdWarn: "Please provide a second argument for the class name, replacing all numbers in the command with the word."};
+				if (!CommandClass) return {cmdWarn: "Please provide a second argument for the full class name before \"Command\", replacing all numbers in the command with the word."};
 				const newCommand = new CommandClass();
 				newCommand.category = category;
 				bot.commands.set(commandName, newCommand);

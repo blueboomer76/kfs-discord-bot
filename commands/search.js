@@ -1,6 +1,6 @@
 const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
-	{capitalize, getDuration} = require("../modules/functions.js"),
+	{getDuration} = require("../modules/functions.js"),
 	paginator = require("../utils/paginator.js"),
 	request = require("request");
 
@@ -36,12 +36,18 @@ module.exports = [
 				examples: [
 					"reddit funny",
 					"reddit aww --new",
-					"reddit gaming --more"
+					"reddit gaming --more",
+					"reddit todayilearned --top week"
 				],
 				flags: [
 					{
 						name: "controversial",
-						desc: "Whether to see controversial posts"
+						desc: "See controversial posts within an optional time period",
+						arg: {
+							type: "oneof",
+							optional: true,
+							allowedValues: ["hour", "day", "week", "month", "year", "all"]
+						}
 					},
 					{
 						name: "more",
@@ -61,7 +67,12 @@ module.exports = [
 					},
 					{
 						name: "top",
-						desc: "Whether to show top posts"
+						desc: "See top posts within an optional time period",
+						arg: {
+							type: "oneof",
+							optional: true,
+							allowedValues: ["hour", "day", "week", "month", "year", "all"]
+						}
 					}
 				],
 				perms: {
@@ -69,7 +80,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "reddit [subreddit] [--(controversial|new|rising|top)] [--more] [--squeeze]"
+				usage: "reddit [subreddit] [--((controversial|top) [hour|day|week|month|year|all] | (new|rising))] [--more] [--squeeze]"
 			});
 		}
 		
@@ -90,17 +101,22 @@ module.exports = [
 					limit: flags.some(f => f.name == "more") ? numToDisplay * 2 : numToDisplay,
 					raw_json: 1
 				};
-			let postSort = "hot";
-				
-			if (flags.some(f => f.name == "top")) {
+			let postSort = "hot", timeSort;
+			
+			const topFlag = flags.find(f => f.name == "top"),
+				controversialFlag = flags.find(f => f.name == "controversial");
+			if (topFlag) {
 				postSort = "top";
-				reqQuery.t = "week";
+				timeSort = topFlag.args[0] || "week";
+				reqQuery.t = timeSort;
 			} else if (flags.some(f => f.name == "new")) {
 				postSort = "new";
 			} else if (flags.some(f => f.name == "rising")) {
 				postSort = "rising";
-			} else if (flags.some(f => f.name == "controversial")) {
+			} else if (controversialFlag) {
 				postSort = "controversial";
+				timeSort = controversialFlag.args[0] || "day";
+				reqQuery.t = timeSort;
 			}
 			
 			request.get({
@@ -151,10 +167,17 @@ module.exports = [
 				} else if (viewAll) {
 					embedTitle += "All subreddits";
 				} else {
-					embedTitle += `r/${subreddit}`;
+					embedTitle += "r/" + subreddit;
 				}
 				
-				if (postSort != "hot") embedTitle += ` (${capitalize(postSort)} Posts)`;
+				if (postSort != "hot") {
+					if (postSort == "top" || postSort == "controversial") {
+						timeSort = timeSort == "all" ? "all-time" : "past " + timeSort;
+						embedTitle += ` (${postSort} posts, ${timeSort})`;
+					} else {
+						embedTitle += ` (${postSort} posts)`;
+					}
+				}
 				
 				paginator.paginate(message, {
 					title: embedTitle,

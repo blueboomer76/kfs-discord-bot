@@ -225,7 +225,7 @@ class KendraBot extends Client {
 			json: true
 		}, (err, res) => {
 			if (err) {console.log(err); return}
-			const entry = res.body.data.children[0];
+			const entry = res.body.data.children.filter(r => !r.data.stickied)[0];
 			this.channels.get(config.ownerServer.memeFeed).send(new RichEmbed()
 				.setTitle(entry.data.title)
 				.setURL(`https://reddit.com${entry.data.permalink}`)

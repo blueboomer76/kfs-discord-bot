@@ -2,10 +2,27 @@ const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	request = require("request");
 
-function getPosts(url, checkNsfw) {
+async function setCommandPosts(command, subreddit, checkNsfw) {
+	let fetchRes;
+	command.lastChecked = Number(new Date());
+	await getPosts(subreddit, checkNsfw)
+		.then(posts => {
+			if (checkNsfw) {
+				command.lastChecked = Number(new Date());
+				command.cachedSfwPosts = posts.sfw;
+				command.cachedNsfwPosts = posts.nsfw;
+			} else {
+				command.cachedPosts = posts;
+			}
+		})
+		.catch(err => fetchRes = err);
+	return fetchRes;
+}
+
+function getPosts(subreddit, checkNsfw) {
 	return new Promise((resolve, reject) => {
 		request.get({
-			url: url,
+			url: `https://reddit.com/r/${subreddit}/hot.json`,
 			qs: {raw_json: 1},
 			json: true
 		}, (err, res) => {
@@ -48,7 +65,24 @@ function getPosts(url, checkNsfw) {
 	});
 }
 
-function sendRedditEmbed(message, postData) {
+function sendRedditEmbed(command, message, checkNsfw) {
+	let postData;
+	if (checkNsfw) {
+		if (!message.channel.nsfw) {
+			postData = command.cachedSfwPosts.splice(Math.floor(Math.random() * command.cachedSfwPosts.length), 1);
+		} else {
+			const postPos = Math.floor(Math.random() * (command.cachedSfwPosts.length + command.cachedNsfwPosts.length));
+			if (postPos < command.cachedSfwPosts.length) {
+				postData = command.cachedSfwPosts.splice(postPos, 1);
+			} else {
+				postData = command.cachedNsfwPosts.splice(postPos - command.cachedSfwPosts.length, 1);
+			}
+		}
+	} else {
+		postData = command.cachedPosts.splice(Math.floor(Math.random() * command.cachedPosts.length), 1);
+	}
+	postData = postData[0];
+
 	const embedTitle = postData.title,
 		imageURL = postData.imageURL,
 		redditEmbed = new RichEmbed()
@@ -89,32 +123,11 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let cmdErr;
 			if (new Date() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
-				this.lastChecked = Number(new Date());
-				await getPosts("https://reddit.com/r/Animemes/hot.json", true)
-					.then(posts => {
-						this.lastChecked = Number(new Date());
-						this.cachedSfwPosts = posts.sfw;
-						this.cachedNsfwPosts = posts.nsfw;
-					})
-					.catch(err => cmdErr = err);
-				if (cmdErr) return {cmdWarn: cmdErr};
+				const fetchRes = await setCommandPosts(this, "Animemes", true);
+				if (fetchRes) return {cmdWarn: fetchRes};
 			}
-			
-			let postData;
-			if (!message.channel.nsfw) {
-				postData = this.cachedSfwPosts.splice(Math.floor(Math.random() * this.cachedSfwPosts.length), 1);
-			} else {
-				const postPos = Math.floor(Math.random() * (this.cachedSfwPosts.length + this.cachedNsfwPosts.length));
-				if (postPos < this.cachedSfwPosts.length) {
-					postData = this.cachedSfwPosts.splice(postPos, 1);
-				} else {
-					postData = this.cachedNsfwPosts.splice(postPos - this.cachedSfwPosts.length, 1);
-				}
-			}
-			
-			sendRedditEmbed(message, postData[0]);
+			sendRedditEmbed(this, message, true);
 		}
 	},
 	class AnimeIRLCommand extends Command {
@@ -138,32 +151,11 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let cmdErr;
 			if (new Date() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
-				this.lastChecked = Number(new Date());
-				await getPosts("https://reddit.com/r/anime_irl/hot.json", true)
-					.then(posts => {
-						this.lastChecked = Number(new Date());
-						this.cachedSfwPosts = posts.sfw;
-						this.cachedNsfwPosts = posts.nsfw;
-					})
-					.catch(err => cmdErr = err);
-				if (cmdErr) return {cmdWarn: cmdErr};
+				const fetchRes = await setCommandPosts(this, "anime_irl", true);
+				if (fetchRes) return {cmdWarn: fetchRes};
 			}
-			
-			let postData;
-			if (!message.channel.nsfw) {
-				postData = this.cachedSfwPosts.splice(Math.floor(Math.random() * this.cachedSfwPosts.length), 1);
-			} else {
-				const postPos = Math.floor(Math.random() * (this.cachedSfwPosts.length + this.cachedNsfwPosts.length));
-				if (postPos < this.cachedSfwPosts.length) {
-					postData = this.cachedSfwPosts.splice(postPos, 1);
-				} else {
-					postData = this.cachedNsfwPosts.splice(postPos - this.cachedSfwPosts.length, 1);
-				}
-			}
-			
-			sendRedditEmbed(message, postData[0]);
+			sendRedditEmbed(this, message, true);
 		}
 	},
 	class AntiMemeCommand extends Command {
@@ -186,20 +178,11 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let cmdErr;
 			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
-				await getPosts("https://reddit.com/r/antimeme/hot.json", false)
-					.then(posts => {
-						this.lastChecked = Number(new Date());
-						this.cachedPosts = posts;
-					})
-					.catch(err => cmdErr = err);
-				if (cmdErr) return message.channel.send(cmdErr);
+				const fetchRes = await setCommandPosts(this, "antimeme", false);
+				if (fetchRes) return {cmdWarn: fetchRes};
 			}
-			
-			const postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1);
-			
-			sendRedditEmbed(message, postData[0]);
+			sendRedditEmbed(this, message, false);
 		}
 	},
 	class BirbCommand extends Command {
@@ -283,7 +266,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get("http://random.dog/woof.json", (err, res) => {
-				if (err) {return message.channel.send(`⚠ Failed to retrieve from random.dog. (status code ${res.statusCode})`)}
+				if (err) return message.channel.send(`⚠ Failed to retrieve from random.dog. (status code ${res.statusCode})`);
 				message.channel.send(new RichEmbed()
 					.setTitle("Here's your random dog!")
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -314,32 +297,11 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let cmdErr;
-			if (new Date() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
-				this.lastChecked = Number(new Date());
-				await getPosts("https://reddit.com/r/me_irl/hot.json", true)
-					.then(posts => {
-						this.lastChecked = Number(new Date());
-						this.cachedSfwPosts = posts.sfw;
-						this.cachedNsfwPosts = posts.nsfw;
-					})
-					.catch(err => cmdErr = err);
-				if (cmdErr) return {cmdWarn: cmdErr};
+			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
+				const fetchRes = await setCommandPosts(this, "me_irl", false);
+				if (fetchRes) return {cmdWarn: fetchRes};
 			}
-			
-			let postData;
-			if (!message.channel.nsfw) {
-				postData = this.cachedSfwPosts.splice(Math.floor(Math.random() * this.cachedSfwPosts.length), 1);
-			} else {
-				const postPos = Math.floor(Math.random() * (this.cachedSfwPosts.length + this.cachedNsfwPosts.length));
-				if (postPos < this.cachedSfwPosts.length) {
-					postData = this.cachedSfwPosts.splice(postPos, 1);
-				} else {
-					postData = this.cachedNsfwPosts.splice(postPos - this.cachedSfwPosts.length, 1);
-				}
-			}
-			
-			sendRedditEmbed(message, postData[0]);
+			sendRedditEmbed(this, message, false);
 		}
 	},
 	class MemeCommand extends Command {
@@ -362,20 +324,11 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let cmdErr;
 			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
-				await getPosts("https://reddit.com/r/memes/hot.json", false)
-					.then(posts => {
-						this.lastChecked = Number(new Date());
-						this.cachedPosts = posts;
-					})
-					.catch(err => cmdErr = err);
-				if (cmdErr) return message.channel.send(cmdErr);
+				const fetchRes = await setCommandPosts(this, "memes", false);
+				if (fetchRes) return {cmdWarn: fetchRes};
 			}
-			
-			const postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1);
-			
-			sendRedditEmbed(message, postData[0]);
+			sendRedditEmbed(this, message, false);
 		}
 	},
 	class WholesomeCommand extends Command {
@@ -400,32 +353,11 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			let cmdErr;
 			if (new Date() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
-				this.lastChecked = Number(new Date());
-				await getPosts("https://reddit.com/r/wholesomeanimemes/hot.json", true)
-					.then(posts => {
-						this.lastChecked = Number(new Date());
-						this.cachedSfwPosts = posts.sfw;
-						this.cachedNsfwPosts = posts.nsfw;
-					})
-					.catch(err => cmdErr = err);
-				if (cmdErr) return {cmdWarn: cmdErr};
+				const fetchRes = await setCommandPosts(this, "wholesomeanimemes", true);
+				if (fetchRes) return {cmdWarn: fetchRes};
 			}
-			
-			let postData;
-			if (!message.channel.nsfw) {
-				postData = this.cachedSfwPosts.splice(Math.floor(Math.random() * this.cachedSfwPosts.length), 1);
-			} else {
-				const postPos = Math.floor(Math.random() * (this.cachedSfwPosts.length + this.cachedNsfwPosts.length));
-				if (postPos < this.cachedSfwPosts.length) {
-					postData = this.cachedSfwPosts.splice(postPos, 1);
-				} else {
-					postData = this.cachedNsfwPosts.splice(postPos - this.cachedSfwPosts.length, 1);
-				}
-			}
-			
-			sendRedditEmbed(message, postData[0]);
+			sendRedditEmbed(this, message, true);
 		}
 	}
 ];
