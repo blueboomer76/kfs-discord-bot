@@ -1,6 +1,9 @@
-const fetchMembers = require("../modules/memberFetcher.js");
+const fs = require("fs"),
+	twemoji = require("twemoji"),
+	fetchMembers = require("../modules/memberFetcher.js");
 
-const memberRegex = /<@!?\d+>/;
+const emojiRegex = /<a?:.{2,}:\d+>/,
+	memberRegex = /<@!?\d+>/;
 
 function getMember(message, id) {
 	let member;
@@ -19,10 +22,11 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				return false;
 			} else {return null}
 		case "channel":
-			const channelRegex = /<#\d+>/, guildChannels = message.guild.channels;
+			const guildChannels = message.guild.channels,
+				channelMatch = obj.match(/<#\d+>/)[0];
 			let channel;
-			if (channelRegex.test(obj)) {
-				return [guildChannels.get(obj.match(/\d+/)[0])];
+			if (channelMatch) {
+				return [guildChannels.get(channelMatch.match(/\d+/)[0])];
 			} else {
 				channel = guildChannels.get(obj);
 			}
@@ -41,10 +45,11 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			// Coming soon
 			break;
 		case "emoji":
-			const emojiRegex = /<:.{2,}:\d+>/, guildEmojis = message.guild.emojis;
+			const guildEmojis = message.guild.emojis,
+				emojiMatch = emojiRegex.match(obj);
 			let emoji;
-			if (emojiRegex.test(obj)) {
-				return [guildEmojis.get(obj.match(/\d+/)[0])];
+			if (emojiMatch) {
+				return [guildEmojis.get(emojiMatch[0].match(/\d+/)[0])];
 			} else {
 				emoji = guildEmojis.get(obj);
 			}
@@ -71,19 +76,42 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 					return null;
 				}
 			}
-			const imageRegex = /^https?:\/\/.+\.(gif|jpe?g|png)$/i;
-			if (imageRegex.test(obj)) {return obj} else {return null}
+			if (/^https?:\/\/.+\.(gif|jpe?g|png)$/i.test(obj)) return obj;
+			const emojiMatch2 = obj.match(emojiRegex);
+			if (emojiMatch2) {
+				const emojiId = emojiMatch2[0].match(/\d+/)[0],
+					emojiExtension = /^<a:/.test(emojiMatch2[0]) ? "gif" : "png";
+				return `https://cdn.discordapp.com/emojis/${emojiId}.${emojiExtension}`;
+			}
+
+			const twemojiResults = [];
+			twemoji.replace(obj, match => {
+				twemojiResults.push(match);
+				return match;
+			});
+			if (twemojiResults.length == 0) return null;
+			const twemojiCode = twemoji.convert.toCodePoint(twemojiResults[0]),
+				file = `node_modules/twemoji/2/svg/${twemojiCode}.svg`;
+			if (fs.existsSync(file)) {
+				return {
+					isEmoji: true,
+					content: fs.readFileSync(file)
+				};
+			} else {
+				return null;
+			}
 		case "member":
+			const memberMatch = obj.match(memberRegex);
 			let member;
 
-			if (memberRegex.test(obj)) {
-				member = message.guild.large ? getMember(obj.match(/\d+/)[0]) : message.guild.members.get(obj.match(/\d+/)[0]);
+			if (memberMatch) {
+				member = message.guild.large ? getMember(memberMatch[0].match(/\d+/)[0]) : message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
 				return member ? [member] : null;
 			}
 			member = message.guild.members.get(obj);
 
 			if (member) {
-				member = message.guild.large ? getMember(obj.match(/\d+/)[0]) : message.guild.members.get(obj.match(/\d+/)[0]);
+				member = message.guild.large ? getMember(memberMatch[0].match(/\d+/)[0]) : message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
 				return member ? [member] : null;
 			} else {
 				const guildMembers = message.guild.large ? fetchMembers(message) : message.guild.members,
@@ -104,10 +132,10 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			break;
 		case "role":
 			if (obj == "everyone" || obj == message.guild.id) return null;
-			const roleRegex = /<@&\d+>/, guildRoles = message.guild.roles;
+			const roleMatch = obj.match(/<@&\d+>/), guildRoles = message.guild.roles;
 			let role;
-			if (roleRegex.test(obj)) {
-				return [guildRoles.get(obj.match(/\d+/)[0])];
+			if (roleMatch) {
+				return [guildRoles.get(roleMatch[0].match(/\d+/)[0])];
 			} else {
 				role = guildRoles.get(obj);
 			}

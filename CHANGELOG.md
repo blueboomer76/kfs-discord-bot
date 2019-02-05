@@ -2,6 +2,9 @@
 
 # 1.X (current)
 
+## 1.4.3
+- Added emoji support (both custom and default) for inputs to image commands
+
 ## 1.4.0
 - Added more advanced image commands with customizeable text and GIFs
 - Added more commands in many categories

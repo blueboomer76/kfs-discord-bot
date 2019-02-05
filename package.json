@@ -1,6 +1,6 @@
 {
   "name": "kendrabot",
-  "version": "1.4.0",
+  "version": "1.4.3",
   "description": "Multipurpose bot for utility, fun, and more",
   "main": "index.js",
   "dependencies": {
@@ -17,6 +17,8 @@
     "request": "^2.88.0",
     "rethinkdbdash": "^2.3.31",
     "rss-parser": "^3.6.0",
+    "svg2png": "^4.1.1",
+    "twemoji": "^11.3.0",
     "ytdl-core": "^0.28.3"
   },
   "devDependencies": {

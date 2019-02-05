@@ -6,10 +6,6 @@ const Command = require("../structures/command.js"),
 
 Canvas.registerFont("assets/Oswald-Regular.ttf", {family: "Oswald"});
 
-function getPixelFactor(img) {
-	return Math.ceil(img.bitmap.width > img.bitmap.height ? img.bitmap.width : img.bitmap.height) / 100;
-}
-
 module.exports = [
 	class BlurCommand extends Command {
 		constructor() {
@@ -42,31 +38,16 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "blur [image URL or mention] [--level <number>]"
+				usage: "blur [image URL/mention/emoji] [--level <number>]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0];
-			if (!imageURL) {
-				imageURL = await imageManager.resolveImageUrl(message);
-				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
-			}
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 			
-			Jimp.read(imageURL)
-				.then(img => {
-					const levelFlag = flags.find(f => f.name == "level");
-					let blurLevel;
-					if (levelFlag) {
-						blurLevel = levelFlag.args[0];
-					} else {
-						blurLevel = getPixelFactor(img);
-					}
-					imageManager.postImage(message, img.blur(blurLevel), "blur.png");
-				})
-				.catch(() => {
-					message.channel.send("⚠ Failed to get image for that URL.");
-				});
+			const levelFlag = flags.find(f => f.name == "level");
+			imageManager.applyJimpFilterAndPost(message, imgResolvable, "blur", {blur: levelFlag ? levelFlag.args[0] : null});
 		}
 	},
 	class CreateMemeCommand extends Command {
@@ -136,8 +117,8 @@ module.exports = [
 			topText = disableCapsFlag ? topText : topText.toUpperCase();
 			bottomText = disableCapsFlag || !bottomText ? bottomText : bottomText.toUpperCase();
 
-			const imageURL = args[0] || await imageManager.resolveImageUrl(message);
-			if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 			
 			const img = new Canvas.Image();
 
@@ -209,7 +190,7 @@ module.exports = [
 				});
 			};
 
-			imageManager.getCanvasImage(img, imageURL);
+			imageManager.getCanvasImage(img, imgResolvable, args[0].isEmoji);
 		}
 	},
 	class FlipCommand extends Command {
@@ -233,24 +214,15 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "flip [image URL or mention]"
+				usage: "flip [image URL/mention/emoji]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0];
-			if (!imageURL) {
-				imageURL = await imageManager.resolveImageUrl(message);
-				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
-			}
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 			
-			Jimp.read(imageURL)
-				.then(img => {
-					imageManager.postImage(message, img.mirror(true, false), "flip.png");
-				})
-				.catch(() => {
-					message.channel.send("⚠ Failed to get image for that URL.");
-				});
+			imageManager.applyJimpFilterAndPost(message, imgResolvable, "flip");
 		}
 	},
 	class FlopCommand extends Command {
@@ -274,24 +246,15 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "flop [image URL or mention]"
+				usage: "flop [image URL/mention/emoji]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0];
-			if (!imageURL) {
-				imageURL = await imageManager.resolveImageUrl(message);
-				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
-			}
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 			
-			Jimp.read(imageURL)
-				.then(img => {
-					imageManager.postImage(message, img.mirror(false, true), "flop.png");
-				})
-				.catch(() => {
-					message.channel.send("⚠ Failed to get image for that URL.");
-				});
+			imageManager.applyJimpFilterAndPost(message, imgResolvable, "flop");
 		}
 	},
 	class GreyscaleCommand extends Command {
@@ -316,24 +279,15 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "greyscale <image URL or mention>"
+				usage: "greyscale <image URL/mention/emoji>"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0];
-			if (!imageURL) {
-				imageURL = await imageManager.resolveImageUrl(message);
-				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
-			}
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 			
-			Jimp.read(imageURL)
-				.then(img => {
-					imageManager.postImage(message, img.greyscale(), "greyscale.png");
-				})
-				.catch(() => {
-					message.channel.send("⚠ Failed to get image for that URL.");
-				});
+			imageManager.applyJimpFilterAndPost(message, imgResolvable, "greyscale");
 		}
 	},
 	class InvertCommand extends Command {
@@ -357,24 +311,15 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "invert <image URL or mention>"
+				usage: "invert <image URL/mention/emoji>"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0];
-			if (!imageURL) {
-				imageURL = await imageManager.resolveImageUrl(message);
-				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
-			}
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 			
-			Jimp.read(imageURL)
-				.then(img => {
-					imageManager.postImage(message, img.invert(), "invert.png");
-				})
-				.catch(() => {
-					message.channel.send("⚠ Failed to get image for that URL.");
-				});
+			imageManager.applyJimpFilterAndPost(message, imgResolvable, "invert");
 		}
 	},
 	class MirrorCommand extends Command {
@@ -402,20 +347,16 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "mirror [image URL or mention] <[haah | right-to-left] | [hooh | bottom-to-top] | [waaw | left-to-right] | [woow | top-to-bottom]>"
+				usage: "mirror [image URL/mention/emoji] <[haah | right-to-left] | [hooh | bottom-to-top] | [waaw | left-to-right] | [woow | top-to-bottom]>"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			
 			const type = args[1];
-			let imageURL = args[0];
-			
-			if (!imageURL) {
-				imageURL = await imageManager.resolveImageUrl(message);
-				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
-			}
-			
-			Jimp.read(imageURL)
+			Jimp.read(imgResolvable)
 				.then(img => {
 					const imgClone1 = img.clone(),
 						imgClone2 = img.clone(),
@@ -430,7 +371,7 @@ module.exports = [
 						new Jimp(imgWidth, imgHeight, (err, img2) => {
 							img2.composite(imgClone1,imgWidth/2,0);
 							img2.composite(imgClone2,0,0);
-							imageManager.postImage(message, img2, "mirror-haah.png");
+							imageManager.postJimpImage(message, img2, "mirror-haah.png");
 						});
 						return;
 					} else if (type == "hooh" || type == "bottom-to-top") {
@@ -440,7 +381,7 @@ module.exports = [
 						
 						new Jimp(imgWidth, imgHeight, (err, img2) => {
 							img2.composite(imgClone1,0,imgHeight/2).composite(imgClone2,0,0);
-							imageManager.postImage(message, img2, "mirror-hooh.png");
+							imageManager.postJimpImage(message, img2, "mirror-hooh.png");
 						});
 					} else if (type == "waaw" || type == "left-to-right") {
 						imgClone1.crop(0,0,imgWidth/2,imgHeight);
@@ -449,7 +390,7 @@ module.exports = [
 						
 						new Jimp(imgWidth, imgHeight, (err, img2) => {
 							img2.composite(imgClone1,0,0).composite(imgClone2,imgWidth/2,0);
-							imageManager.postImage(message, img2, "mirror-waaw.png");
+							imageManager.postJimpImage(message, img2, "mirror-waaw.png");
 						});
 					} else {
 						imgClone1.crop(0,0,imgWidth,imgHeight/2);
@@ -458,7 +399,7 @@ module.exports = [
 						
 						new Jimp(imgWidth, imgHeight, (err, img2) => {
 							img2.composite(imgClone1,0,0).composite(imgClone2,0,imgHeight/2);
-							imageManager.postImage(message, img2, "mirror-woow.png");
+							imageManager.postJimpImage(message, img2, "mirror-woow.png");
 						});
 					}
 				})
@@ -484,32 +425,27 @@ module.exports = [
 					time: 15000,
 					type: "channel"
 				},
+				disabled: true,
 				perms: {
 					bot: ["ATTACH_FILES"],
 					user: [],
 					level: 0
 				},
-				usage: "needsmorejpeg [image URL or mention]"
+				usage: "needsmorejpeg [image URL/mention/emoji]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0];
-			if (!imageURL) {
-				imageURL = await imageManager.resolveImageUrl(message);
-				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
-			}
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 			
-			Jimp.read(imageURL)
+			Jimp.read(imgResolvable)
 				.then(img => {
 					img.quality(1)
 						.getBufferAsync(Jimp.MIME_JPEG)
 						.then(imgToSend => {
 							message.channel.send({
-								files: [{
-									attachment: imgToSend,
-									name: "needsmorejpeg.jpg"
-								}]
+								files: [{attachment: imgToSend, name: "needsmorejpeg.jpg"}]
 							});
 						})
 						.catch(() => {
@@ -538,29 +474,28 @@ module.exports = [
 					time: 15000,
 					type: "channel"
 				},
+				flags: [
+					{
+						name: "pixels",
+						type: "number",
+						min: 1
+					}
+				],
 				perms: {
 					bot: ["ATTACH_FILES"],
 					user: [],
 					level: 0
 				},
-				usage: "pixelate [image URL or mention]"
+				usage: "pixelate [image URL/mention/emoji] [--pixels <number>]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0];
-			if (!imageURL) {
-				imageURL = await imageManager.resolveImageUrl(message);
-				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
-			}
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 			
-			Jimp.read(imageURL)
-				.then(img => {
-					imageManager.postImage(message, img.pixelate(getPixelFactor(img)), "pixelate.png");
-				})
-				.catch(() => {
-					message.channel.send("⚠ Failed to get image for that URL.");
-				});
+			const pixelsFlag = flags.find(f => f.name == "pixels");
+			imageManager.applyJimpFilterAndPost(message, imgResolvable, "pixelate", {pixels: pixelsFlag ? pixelsFlag.args[0] : null});
 		}
 	},
 	class RotateCommand extends Command {
@@ -595,25 +530,16 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "rotate [image URL or mention] [--degrees <1-359>]"
+				usage: "rotate [image URL/mention/emoji] [--degrees <1-359>]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0];
-			if (!imageURL) {
-				imageURL = await imageManager.resolveImageUrl(message);
-				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
-			}
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 			
-			Jimp.read(imageURL)
-				.then(img => {
-					const levelFlag = flags.find(f => f.name == "degrees");
-					imageManager.postImage(message, img.rotate(levelFlag ? levelFlag.args[0] : 90), "rotate.png");
-				})
-				.catch(() => {
-					message.channel.send("⚠ Failed to get image for that URL.");
-				});
+			const degreesFlag = flags.find(f => f.name == "degrees");
+			imageManager.applyJimpFilterAndPost(message, imgResolvable, "rotate", {rotation: degreesFlag ? degreesFlag.args[0] : null});
 		}
 	},
 	class SepiaCommand extends Command {
@@ -637,24 +563,15 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "sepia [image URL or mention]"
+				usage: "sepia [image URL/mention/emoji]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			let imageURL = args[0];
-			if (!imageURL) {
-				imageURL = await imageManager.resolveImageUrl(message);
-				if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
-			}
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 			
-			Jimp.read(imageURL)
-				.then(img => {
-					imageManager.postImage(message, img.sepia(), "sepia.png");
-				})
-				.catch(() => {
-					message.channel.send("⚠ Failed to get image for that URL.");
-				});
+			imageManager.applyJimpFilterAndPost(message, imgResolvable, "sepia");
 		}
 	},
 	class SpinCommand extends Command {
@@ -690,13 +607,13 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "spin [image URL or mention] [--speed <1-5>]"
+				usage: "spin [image URL/mention/emoji] [--speed <1-5>]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			const imageURL = args[0] || await imageManager.resolveImageUrl(message);
-			if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 
 			const speedFlag = flags.find(f => f.name == "speed"),
 				img = new Canvas.Image();
@@ -750,7 +667,7 @@ module.exports = [
 					}]
 				});
 			};
-			imageManager.getCanvasImage(img, imageURL);
+			imageManager.getCanvasImage(img, imgResolvable, args[0].isEmoji);
 		}
 	},
 	class TriggeredCommand extends Command {
@@ -786,13 +703,13 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "triggered [image URL or mention] [--level <1-5>]"
+				usage: "triggered [image URL/mention/emoji] [--level <1-5>]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			const imageURL = args[0] || await imageManager.resolveImageUrl(message);
-			if (!imageURL) return {cmdWarn: "No image attachment found in recent messages"};
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 
 			const levelFlag = flags.find(f => f.name == "level"),
 				multiplier = levelFlag ? levelFlag.args[0] * 20 : 60,
@@ -839,7 +756,7 @@ module.exports = [
 					}]
 				});
 			};
-			imageManager.getCanvasImage(img, imageURL);
+			imageManager.getCanvasImage(img, imgResolvable, args[0].isEmoji);
 		}
 	}
 ];
