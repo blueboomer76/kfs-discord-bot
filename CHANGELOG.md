@@ -2,6 +2,12 @@
 
 # 1.X (current)
 
+## 1.4.3
+
+- Added emoji support (both custom and default) for inputs to image commands
+- Added `gifencoder`, `svg2png`, and `twemoji` dependencies
+- Moved some code into the image manager
+
 ## 1.4.0
 
 - Added more advanced image commands with customizable text
