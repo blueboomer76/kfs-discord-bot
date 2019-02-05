@@ -54,7 +54,7 @@ async function checkArgs(bot, message, args, cmdArg) {
 				argErrorMsg = cmdArg.errorMsg;
 			} else {
 				if (arg.type == "image") {
-					argErrorMsg = "A valid mention or image URL must be provided";
+					argErrorMsg = "A valid mention, image URL, or emoji must be provided";
 				} else if (arg.type == "number") {
 					argErrorMsg += "\nThe argument must be a number that is ";
 					if (arg.min && arg.max) {

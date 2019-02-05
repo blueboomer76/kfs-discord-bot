@@ -1,6 +1,9 @@
-const {fetchMembers} = require("../modules/memberFetcher.js");
+const {fetchMembers} = require("../modules/memberFetcher.js"),
+	fs = require("fs"),
+	twemoji = require("twemoji");
 
-const memberRegex = /<@!?\d{17,19}>/;
+const emojiRegex = /<a?:[0-9A-Za-z_]{2,}:\d{17,19}>/,
+	memberRegex = /<@!?\d{17,19}>/;
 
 async function getMember(message, id) {
 	let member;
@@ -22,10 +25,11 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				return null;
 			}
 		case "channel":
-			const channelRegex = /<#\d{17,19}>/, guildChannels = message.guild.channels;
+			const guildChannels = message.guild.channels,
+				channelMatch = obj.match(/<#\d{17,19}>/);
 			let channel;
-			if (channelRegex.test(obj)) {
-				channel = guildChannels.get(obj.match(/\d+/)[0]);
+			if (channelMatch) {
+				channel = guildChannels.get(channelMatch[0].match(/\d+/)[0]);
 				if (channel) {return [channel]} else {return null}
 			} else {
 				channel = guildChannels.get(obj);
@@ -40,10 +44,11 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			const command = bot.commands.get(lowerObj) || bot.commands.get(bot.aliases.get(lowerObj));
 			if (command) {return command} else {return null}
 		case "emoji":
-			const emojiRegex = /<a?:[0-9A-Za-z_]{2,}:\d{17,19}>/, guildEmojis = message.guild.emojis;
+			const guildEmojis = message.guild.emojis,
+				emojiMatch = obj.match(emojiRegex);
 			let emoji;
-			if (emojiRegex.test(obj)) {
-				emoji = guildEmojis.get(obj.match(/\d+/)[0]);
+			if (emojiMatch) {
+				emoji = guildEmojis.get(emojiMatch[0].match(/\d+/)[0]);
 				if (emoji) {return [emoji]} else {return null}
 			} else {
 				emoji = guildEmojis.get(obj);
@@ -67,16 +72,46 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 					return null;
 				}
 			}
-			const imageRegex = /^https?:\/\/.+\.(gif|jpe?g|png)$/i;
-			if (imageRegex.test(obj)) {return obj} else {return null}
+			if (/^https?:\/\/.+\.(gif|jpe?g|png)$/i.test(obj)) return obj;
+			const emojiMatch2 = obj.match(emojiRegex);
+			if (emojiMatch2) {
+				const emojiID = emojiMatch2[0].match(/\d+/)[0],
+					emojiExtension = /^<a:/.test(emojiMatch2[0]) ? "gif" : "png";
+				return `https://cdn.discordapp.com/emojis/${emojiID}.${emojiExtension}`;
+			}
+
+			const twemojiResults = [];
+			twemoji.replace(obj, match => {
+				twemojiResults.push(match);
+				return match;
+			});
+			if (twemojiResults.length == 0) return null;
+			const twemojiCode = twemoji.convert.toCodePoint(twemojiResults[0]);
+			let file = `node_modules/twemoji/2/svg/${twemojiCode}.svg`;
+			if (fs.existsSync(file)) {
+				return {
+					isEmoji: true,
+					content: fs.readFileSync(file)
+				};
+			} else {
+				file = `node_modules/twemoji/2/svg/${twemojiCode.split("-", 1)}.svg`;
+				if (fs.existsSync(file)) {
+					return {
+						isEmoji: true,
+						content: fs.readFileSync(file)
+					};
+				} else {
+					return null;
+				}
+			}
 		case "member":
-			const idRegex = /^\d{17,19}$/;
+			const memberMatch = obj.match(memberRegex);
 			let member;
 
-			if (memberRegex.test(obj)) {
-				member = message.guild.large ? await getMember(message, obj.match(/\d+/)[0]) : message.guild.members.get(obj.match(/\d+/)[0]);
+			if (memberMatch) {
+				member = message.guild.large ? await getMember(message, memberMatch[0].match(/\d+/)[0]) : message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
 				return member ? [member] : null;
-			} else if (idRegex.test(obj)) {
+			} else if (/^\d{17,19}$/.test(obj)) {
 				member = message.guild.large ? await getMember(message, obj.match(/\d+/)[0]) : message.guild.members.get(obj.match(/\d+/)[0]);
 				if (member) return [member];
 			}
@@ -94,11 +129,13 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 		case "oneof":
 			if (params.list.includes(lowerObj)) {return lowerObj} else {return null}
 		case "role":
-			const roleRegex = /<@&\d{17,19}>/, guildRoles = message.guild.roles.clone();
+			const guildRoles = message.guild.roles.clone();
 			guildRoles.delete(guildRoles.find(role => role.calculatedPosition == 0).id);
+
+			const roleMatch = obj.match(/<@&\d{17,19}>/);
 			let role;
-			if (roleRegex.test(obj)) {
-				role = guildRoles.get(obj.match(/\d+/)[0]);
+			if (roleMatch) {
+				role = guildRoles.get(roleMatch[0].match(/\d+/)[0]);
 				if (role) {return [role]} else {return null}
 			} else {
 				role = guildRoles.get(obj);
