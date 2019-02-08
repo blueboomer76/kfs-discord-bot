@@ -41,9 +41,9 @@ function findCooldown(bot, id, name, findIndex) {
 */
 function addCooldown(bot, message, command, overrides) {
 	if (!overrides) overrides = {};
-	const cdName = overrides.name ? overrides.name : command.name,
-		cdTime = overrides.time ? overrides.time : command.cooldown.time,
-		cdId = getIdByType(message, overrides.type ? overrides.type : command.cooldown.type);
+	const cdName = overrides.name || command.name,
+		cdTime = overrides.time || command.cooldown.time,
+		cdId = getIdByType(message, overrides.type || command.cooldown.type);
 
 	bot.cache.recentCommands.push({
 		id: cdId,
@@ -61,7 +61,7 @@ function removeCooldown(bot, id, name) {
 module.exports = {
 	check: (bot, message, command) => {
 		const cdType = command.cooldown.type,
-			checkedCd = findCooldown(bot, getIdByType(message, cdType), command.cooldown.name ? command.cooldown.name : command.name, false);
+			checkedCd = findCooldown(bot, getIdByType(message, cdType), command.cooldown.name || command.name, false);
 		if (checkedCd) {
 			if (!checkedCd.notified) {
 				checkedCd.notified = true;

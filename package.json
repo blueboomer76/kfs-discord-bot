@@ -1,11 +1,12 @@
 {
   "name": "kendrabot",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Multipurpose bot for utility, fun, and more",
   "main": "index.js",
   "dependencies": {
     "canvas": "^2.2.0",
     "cheerio": "^1.0.0-rc.2",
+    "color-convert": "^2.0.0",
     "discord.js": "^11.4.2",
     "ffmpeg-binaries": "^4.0.0",
     "gifencoder": "^2.0.1",

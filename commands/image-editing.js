@@ -83,7 +83,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "creatememe [image URL] <top text> | [bottom text] [--disable-caps]"
+				usage: "creatememe [image URL] <text> | [bottom text] [--disable-caps]"
 			});
 		}
 		
@@ -190,7 +190,7 @@ module.exports = [
 				});
 			};
 
-			imageManager.getCanvasImage(img, imgResolvable, args[0].isEmoji);
+			imageManager.getCanvasImage(img, imgResolvable, args[0] && args[0].isEmoji);
 		}
 	},
 	class FlipCommand extends Command {
@@ -279,7 +279,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "greyscale <image URL/mention/emoji>"
+				usage: "greyscale [image URL/mention/emoji]"
 			});
 		}
 		
@@ -311,7 +311,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "invert <image URL/mention/emoji>"
+				usage: "invert [image URL/mention/emoji]"
 			});
 		}
 		
@@ -347,7 +347,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "mirror [image URL/mention/emoji] <[haah | right-to-left] | [hooh | bottom-to-top] | [waaw | left-to-right] | [woow | top-to-bottom]>"
+				usage: "mirror [image URL/mention/emoji] <(haah | right-to-left) | (hooh | bottom-to-top) | (waaw | left-to-right) | (woow | top-to-bottom)>"
 			});
 		}
 		
@@ -667,7 +667,7 @@ module.exports = [
 					}]
 				});
 			};
-			imageManager.getCanvasImage(img, imgResolvable, args[0].isEmoji);
+			imageManager.getCanvasImage(img, imgResolvable, args[0] && args[0].isEmoji);
 		}
 	},
 	class TriggeredCommand extends Command {
@@ -712,8 +712,8 @@ module.exports = [
 			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 
 			const levelFlag = flags.find(f => f.name == "level"),
-				multiplier = levelFlag ? levelFlag.args[0] * 20 : 60,
-				multiplier2 = multiplier - 20,
+				multiplier = levelFlag ? levelFlag.args[0] * 15 : 45,
+				multiplier2 = multiplier - 15,
 				triggerImg = await Canvas.loadImage("assets/images/triggered.png"),
 				img = new Canvas.Image();
 			
@@ -756,7 +756,7 @@ module.exports = [
 					}]
 				});
 			};
-			imageManager.getCanvasImage(img, imgResolvable, args[0].isEmoji);
+			imageManager.getCanvasImage(img, imgResolvable, args[0] && args[0].isEmoji);
 		}
 	}
 ];

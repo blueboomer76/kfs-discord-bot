@@ -294,8 +294,8 @@ class KendraBot extends Client {
 
 	checkDeletedPhoneChannels(bot) {
 		const phoneCache = bot.cache.phone,
-			ch0deleted = phoneCache.channels[0] ? (phoneCache.channels[0].deleted ? true : false) : null,
-			ch1deleted = phoneCache.channels[1] ? (phoneCache.channels[1].deleted ? true : false) : null;
+			ch0deleted = phoneCache.channels[0] ? phoneCache.channels[0].deleted : null,
+			ch1deleted = phoneCache.channels[1] ? phoneCache.channels[1].deleted : null;
 		if (ch0deleted == true || ch1deleted == true) {
 			const phoneMsg = "⚠ The other side has deleted their channel for which the phone call was made.";
 			if (ch0deleted == true && ch1deleted == false) {

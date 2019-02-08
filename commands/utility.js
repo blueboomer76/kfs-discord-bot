@@ -3,6 +3,7 @@ const {RichEmbed} = require("discord.js"),
 	{capitalize, getDuration} = require("../modules/functions.js"),
 	fetchMembers = require("../modules/memberFetcher.js"),
 	paginator = require("../utils/paginator.js"),
+	convert = require("color-convert"),
 	util = require("util");
 
 module.exports = [
@@ -93,11 +94,106 @@ module.exports = [
 			// Others found: Disabled command(s) & features
 		}
 	},
+	class ColorCommand extends Command {
+		constructor() {
+			super({
+				name: "color",
+				description: "Get information about a color",
+				aliases: ["colour"],
+				args: [
+					{
+						type: "string"
+					}
+				],
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				},
+				usage: "color <hex color | rgb(0-255,0-255,0-255) | color name | 0-255,0-255,0-255 | hsl(0-359,0-100,0-100)>"
+			});
+			this.colorRegexes = [
+				/#?[0-9a-f]{6}/i,
+				/rgb\((\d{1,3},){2}\d{1,3}\)/,
+				/^[a-z]+/i,
+				/(\d{1,3},){2}\d{1,3}/,
+				/hsl\((\d{1,3},){2}\d{1,3}\)/,
+				/c(my|ym)k\((\d{1,3},){2}\d{1,3}\)/,
+			];
+		}
+		
+		async run(bot, message, args, flags) {
+			const argWithNoSpaces = args[0].replace(/[ %]/g, "");
+			let i, colorRegexMatch;
+			for (i = 0; i < this.colorRegexes.length; i++) {
+				const matched = argWithNoSpaces.match(this.colorRegexes[i]);
+				if (matched) {colorRegexMatch = matched[0]; break}
+			}
+			if (colorRegexMatch) {
+				let colorName, cmykValues, hexValue, hslValues, rgbValues;
+
+				switch (i) {
+					case 0: // #rrggbb or rrggbb | e.g. #112233 or 112233
+						hexValue = colorRegexMatch.replace("#", "");
+						rgbValues = [
+							parseInt(hexValue.slice(0,2), 16),
+							parseInt(hexValue.slice(2,4), 16),
+							parseInt(hexValue.slice(4,6), 16)
+						];
+						break;
+					case 1: // rgb(r,g,b) | e.g. rgb(1,2,3)
+						rgbValues = colorRegexMatch.slice(4, colorRegexMatch.length - 1).split(",");
+						break;
+					case 2: // CSS color name | e.g. blue
+						colorName = colorRegexMatch;
+						rgbValues = convert.keyword.rgb(colorName);
+						if (!rgbValues) return {cmdWarn: "Invalid color name"};
+						break;
+					case 3: // r,g,b | e.g. 1,2,3
+						rgbValues = colorRegexMatch.split(/, ?/);
+						break;
+					case 4: // hsl(h,s,l) | e.g. hsl(1,2,3)
+						hslValues = colorRegexMatch.slice(4, colorRegexMatch.length - 1).split(",");
+						rgbValues = convert.hsl.rgb(hslValues);
+						break;
+					case 5: // cmyk(c,m,y,k) | e.g. cmyk(1,2,3,4)
+						cmykValues = colorRegexMatch.slice(4, colorRegexMatch.length - 1).split(",");
+						rgbValues = convert.cmyk.rgb(cmykValues);
+				}
+
+				if (i != 2) colorName = convert.rgb.keyword(rgbValues);
+				if (i != 5) cmykValues = convert.rgb.cmyk(rgbValues);
+				const decimalValue = 65536 * rgbValues[0] + 256 * rgbValues[1] + 1 * rgbValues[2];
+				if (i != 0) hexValue = convert.rgb.hex(rgbValues);
+				if (i != 4) hslValues = convert.rgb.hsl(rgbValues);
+				const hsvValues = convert.rgb.hsv(rgbValues);
+				const xyzValues = convert.rgb.xyz(rgbValues);
+				const greyscaleValue = convert.rgb.gray(rgbValues);
+				
+				message.channel.send(new RichEmbed()
+					.setTitle("Color - " + argWithNoSpaces)
+					.setDescription(`**Nearest CSS Color Name**: ${colorName}` + "\n" +
+					`**Hexadecimal (Hex)**: #${hexValue}` + "\n" +
+					`**RGB**: rgb(${rgbValues.join(", ")})` + "\n" + 
+					`**Decimal (Integer)**: ${decimalValue}` + "\n" +
+					`**HSL**: hsl(${hslValues[0]}, ${hslValues[1]}%, ${hslValues[2]}%)` + "\n" +
+					`**CMYK**: cmyk(${cmykValues[0]}%, ${cmykValues[1]}%, ${cmykValues[2]}%, ${cmykValues[3]}%)` + "\n" +
+					`**HSV**: hsv(${hsvValues[0]}, ${hsvValues[1]}%, ${hsvValues[2]}%)` + "\n" +
+					`**XYZ**: XYZ(${xyzValues.join(", ")})`)
+					.setColor(decimalValue)
+					.addField("Related colors", `**Greyscale**: rgb(${(greyscaleValue + ",").repeat(2) + greyscaleValue})` + "\n" +
+					`**Inverted**: rgb(${rgbValues.map(v => 255 - v).join(", ")})`)
+				);
+			} else {
+				return {cmdWarn: "Invalid color."};
+			}
+		}
+	},
 	class EmojiCommand extends Command {
 		constructor() {
 			super({
 				name: "emoji",
-				description: "Get an enlarged emoji along with info",
+				description: "Get a custom emoji along with info",
 				aliases: ["emojiinfo"],
 				args: [
 					{
@@ -113,7 +209,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "emoji <emoji>"
+				usage: "emoji <custom emoji>"
 			});
 		}
 		
@@ -170,23 +266,23 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const consoleFlag = flags.some(f => f.name == "console");
-			let res, beginEval, endEval;
+			let rawRes, beginEval, endEval;
 			try {
 				beginEval = Number(new Date());
-				res = eval(args[0]);
+				rawRes = eval(args[0]);
 			} catch (err) {
-				res = consoleFlag ? err.stack : err.stack.split("    ", 3).join("    ") + "    ...";
+				rawRes = consoleFlag ? err.stack : err.stack.split("    ", 3).join("    ") + "    ...";
 			} finally {
 				endEval = Number(new Date());
 			}
 
+			const res = typeof rawRes == "function" ? rawRes.toString() : rawRes;
 			if (consoleFlag) {
-				if (typeof res == "function") res = res.toString();
 				console.log(res);
 				message.react("✅");
 			} else {
-				const toEval = args[0].length < 1000 ? args[0] : args[0].slice(0,1000),
-					resToSend = flags.some(f => f.name == "inspect") ? util.inspect(res) : res,
+				const toEval = args[0].length < 1000 ? args[0] : args[0].slice(0,1000) + "...",
+					resToSend = flags.some(f => f.name == "inspect") && typeof rawRes != "function" ? util.inspect(res) : res,
 					evalEmbed = new RichEmbed()
 						.setTitle("discord.js Evaluator")
 						.setColor(Math.floor(Math.random() * 16777216))
@@ -253,7 +349,7 @@ module.exports = [
 				.addField(`Members in Role [${roleMembers.size} total]`,
 					`${roleMembers.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
 					true)
-				.addField("Color", role.hexColor, true)
+				.addField("Color", `Hex: ${role.hexColor}` + "\n" + `Decimal: ${role.color}`, true)
 				.addField("Position from top", `${message.guild.roles.size - rolePos} / ${message.guild.roles.size}`, true)
 				.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No", true)
 				.addField("Mentionable", role.mentionable ? "Yes" : "No", true)
