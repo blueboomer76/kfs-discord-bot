@@ -3,6 +3,7 @@ const {RichEmbed} = require("discord.js"),
 	{capitalize, getDuration} = require("../modules/functions.js"),
 	{fetchMembers} = require("../modules/memberFetcher.js"),
 	paginator = require("../utils/paginator.js"),
+	convert = require("color-convert"),
 	util = require("util");
 
 module.exports = [
@@ -91,11 +92,116 @@ module.exports = [
 			message.channel.send(channelEmbed);
 		}
 	},
+	class ColorCommand extends Command {
+		constructor() {
+			super({
+				name: "color",
+				description: "Get information about a color",
+				aliases: ["colour"],
+				args: [
+					{
+						infiniteArgs: true,
+						type: "string"
+					}
+				],
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				},
+				usage: "color <hex color | rgb(0-255,0-255,0-255) | 0-255,0-255,0-255 | color name | hsl(0-359,0-100,0-100) | cmyk(0-100,0-100,0-100,0-100)>"
+			});
+			this.colorRegexes = [
+				/^#?[0-9a-f]{6}$/i,
+				/^rgb\((\d{1,3},){2}\d{1,3}\)$/i,
+				/^hsl\((\d{1,3},){2}\d{1,3}\)$/i,
+				/^c(my|ym)k\((\d{1,3},){3}\d{1,3}\)$/i,
+				/^(\d{1,3},){2}\d{1,3}$/,
+				/^[a-z]+$/i
+			];
+		}
+		
+		async run(bot, message, args, flags) {
+			const argWithNoSpaces = args[0].replace(/[ %]/g, "");
+			let i, colorRegexMatch;
+			for (i = 0; i < this.colorRegexes.length; i++) {
+				const matched = argWithNoSpaces.match(this.colorRegexes[i]);
+				if (matched) {colorRegexMatch = matched[0]; break}
+			}
+			if (colorRegexMatch) {
+				let colorName, cmykValues, hexValue, hslValues, rgbValues;
+
+				switch (i) {
+					case 0: // #rrggbb or rrggbb | e.g. #112233 or 112233
+						hexValue = colorRegexMatch.replace("#", "");
+						rgbValues = [
+							parseInt(hexValue.slice(0, 2), 16),
+							parseInt(hexValue.slice(2, 4), 16),
+							parseInt(hexValue.slice(4, 6), 16)
+						];
+						break;
+					case 1: // rgb(r,g,b) | e.g. rgb(1,2,3)
+						rgbValues = colorRegexMatch.slice(4, colorRegexMatch.length - 1).split(",").map(val => {
+							return parseInt(val);
+						});
+						if (rgbValues.some(value => value > 255)) return {cmdWarn: "RGB values must be between 0 and 255"};
+						break;
+					case 2: // hsl(h,s,l) | e.g. hsl(1,2,3)
+						hslValues = colorRegexMatch.slice(4, colorRegexMatch.length - 1).split(",");
+						if (hslValues[1] >= 360) return {cmdWarn: "The first HSL value must be between 0 and 359"};
+						if (hslValues[1] > 100 || hslValues[2] > 100) return {cmdWarn: "The second and third HSL values must be between 0 and 100"};
+						rgbValues = convert.hsl.rgb(hslValues);
+						break;
+					case 3: // cmyk(c,m,y,k) | e.g. cmyk(1,2,3,4)
+						cmykValues = colorRegexMatch.slice(4, colorRegexMatch.length - 1).split(",");
+						if (cmykValues.some(value => value > 100)) return {cmdWarn: "CMYK values must be between 0 and 100"};
+						rgbValues = convert.cmyk.rgb(cmykValues);
+						break;
+					case 4: // r,g,b | e.g. 1,2,3
+						rgbValues = colorRegexMatch.split(",").map(val => {
+							return parseInt(val);
+						});
+						if (rgbValues.some(value => value > 255)) return {cmdWarn: "RGB values must be between 0 and 255"};
+						break;
+					case 5: // CSS color name | e.g. blue
+						colorName = colorRegexMatch;
+						rgbValues = convert.keyword.rgb(colorName);
+						if (!rgbValues) return {cmdWarn: "Invalid color name"};
+				}
+
+				if (i != 5) colorName = convert.rgb.keyword(rgbValues);
+				if (i != 3) cmykValues = convert.rgb.cmyk(rgbValues);
+				const decimalValue = 65536 * rgbValues[0] + 256 * rgbValues[1] + 1 * rgbValues[2];
+				if (i != 0) hexValue = convert.rgb.hex(rgbValues);
+				if (i != 2) hslValues = convert.rgb.hsl(rgbValues);
+				const hsvValues = convert.rgb.hsv(rgbValues);
+				const xyzValues = convert.rgb.xyz(rgbValues);
+				const grayscaleValue = Math.round(convert.rgb.gray.raw(rgbValues) * 2.55);
+
+				message.channel.send(new RichEmbed()
+					.setTitle("Color - " + argWithNoSpaces)
+					.setDescription(`**Nearest CSS Color Name**: ${colorName}` + "\n" +
+					`**Hexadecimal (Hex)**: #${hexValue}` + "\n" +
+					`**RGB**: rgb(${rgbValues.join(", ")})` + "\n" + 
+					`**Decimal (Integer)**: ${decimalValue}` + "\n" +
+					`**HSL**: hsl(${hslValues[0]}, ${hslValues[1]}%, ${hslValues[2]}%)` + "\n" +
+					`**CMYK**: cmyk(${cmykValues[0]}%, ${cmykValues[1]}%, ${cmykValues[2]}%, ${cmykValues[3]}%)` + "\n" +
+					`**HSV**: hsv(${hsvValues[0]}, ${hsvValues[1]}%, ${hsvValues[2]}%)` + "\n" +
+					`**XYZ**: XYZ(${xyzValues.join(", ")})`)
+					.setColor(decimalValue)
+					.addField("Related colors", `**Grayscale**: rgb(${(grayscaleValue + ", ").repeat(2) + grayscaleValue})` + "\n" +
+					`**Inverted**: rgb(${rgbValues.map(v => 255 - v).join(", ")})`)
+				);
+			} else {
+				return {cmdWarn: "Invalid color."};
+			}
+		}
+	},
 	class EmojiCommand extends Command {
 		constructor() {
 			super({
 				name: "emoji",
-				description: "Get an enlarged emoji along with info",
+				description: "Get a custom emoji along with info",
 				aliases: ["emojiinfo"],
 				args: [
 					{
@@ -112,7 +218,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "emoji <emoji>"
+				usage: "emoji <custom emoji>"
 			});
 		}
 		
@@ -179,23 +285,23 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const consoleFlag = flags.some(f => f.name == "console");
-			let result, beginEvalDate, endEvalDate;
+			let rawRes, beginEvalDate, endEvalDate;
 			try {
 				beginEvalDate = Number(new Date());
-				result = eval(args[0]);
+				rawRes = eval(args[0]);
 			} catch (err) {
-				result = err instanceof Error && err.stack && !consoleFlag ? err.stack.split("    ", 3).join("    ") + "    ..." : err;
+				rawRes = err instanceof Error && err.stack && !consoleFlag ? err.stack.split("    ", 3).join("    ") + "    ..." : err;
 			} finally {
 				endEvalDate = Number(new Date());
 			}
 
+			const res = typeof rawRes == "function" ? rawRes.toString() : rawRes;
 			if (consoleFlag) {
-				if (typeof result == "function") result = result.toString();
-				console.log(result);
+				console.log(res);
 				message.react("✅");
 			} else {
-				const toEval = args[0].length > 1000 ? `${args[0].slice(0, 1000)}...` : args[0],
-					resToSend = flags.some(f => f.name == "inspect") ? util.inspect(result) : result,
+				const toEval = args[0].length > 1000 ? args[0].slice(0, 1000) + "..." : args[0],
+					resToSend = flags.some(f => f.name == "inspect") && typeof rawRes != "function" ? util.inspect(res) : res,
 					evalEmbed = new RichEmbed()
 						.setTitle("discord.js Evaluator")
 						.setColor(Math.floor(Math.random() * 16777216))
@@ -203,7 +309,7 @@ module.exports = [
 						.setTimestamp(message.createdAt)
 						.addField("Your code", "```javascript" + "\n" + toEval + "```");
 				if (resToSend != undefined && resToSend != null && resToSend.toString().length > 1000) {
-					console.log(result);
+					console.log(res);
 					evalEmbed.addField("Result", "```javascript" + "\n" + resToSend.toString().slice(0, 1000) + "..." + "```")
 						.addField("Note", "The full result has been logged in the console.");
 				} else {
@@ -262,7 +368,7 @@ module.exports = [
 				.addField(`Members in Role [${roleMembers.size} total]`,
 					`${roleMembers.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
 					true)
-				.addField("Color", role.hexColor, true)
+				.addField("Color", `Hex: ${role.hexColor}` + "\n" + `Decimal: ${role.color}`, true)
 				.addField("Position from top", `${guildRoles.length - rolePos + 1} / ${guildRoles.length}`, true)
 				.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No", true)
 				.addField("Mentionable", role.mentionable ? "Yes" : "No", true)

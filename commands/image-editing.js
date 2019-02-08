@@ -83,7 +83,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "creatememe [image URL] <top text> | [bottom text] [--disable-caps]"
+				usage: "creatememe [image URL] <text> | [bottom text] [--disable-caps]"
 			});
 		}
 		
@@ -348,7 +348,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "mirror [image URL/mention/emoji] <[haah | left-to-right] | [hooh | bottom-to-top] | [waaw | right-to-left] | [woow | top-to-bottom]>"
+				usage: "mirror [image URL/mention/emoji] <(haah | left-to-right) | (hooh | bottom-to-top) | (waaw | right-to-left) | (woow | top-to-bottom)>"
 			});
 		}
 
