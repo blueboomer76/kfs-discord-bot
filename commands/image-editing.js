@@ -74,7 +74,7 @@ module.exports = [
 				},
 				flags: [
 					{
-						name: "disablecaps",
+						name: "disable-caps",
 						desc: "Allow lowercase letters in the meme"
 					}
 				],
@@ -91,7 +91,7 @@ module.exports = [
 			if (args[1].length > 400) return {cmdWarn: "The top and bottom text cannot be more than 400 characters in total."};
 
 			const pipeRegex = / ?\| /,
-				disableCapsFlag = flags.some(f => f.name == "disablecaps");
+				disableCapsFlag = flags.some(f => f.name == "disable-caps");
 			let topText, bottomText;
 			if (pipeRegex.test(args[1])) {
 				const memeTexts = args[1].split(/ ?\| /, 2);
