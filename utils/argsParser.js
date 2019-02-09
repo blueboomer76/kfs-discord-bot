@@ -3,8 +3,8 @@ const resolver = require("./objResolver.js");
 const listableTypes = ["channel", "emoji", "member", "role"];
 
 function parseArgQuotes(args, findAll) {
-	const beginMatches = args.filter(a => a.match(/^"\S/)),
-		endMatches = args.filter(a => a.match(/\S"$/));
+	const beginMatches = args.filter(a => /^"\S/.test(a)),
+		endMatches = args.filter(a => /\S"$/.test(a));
 	if (beginMatches && endMatches) {
 		const beginIndexes = [], endIndexes = [];
 		for (let i = 0; i < beginMatches.length; i++) {
@@ -38,7 +38,7 @@ async function checkArgs(bot, message, args, cmdArg) {
 	if (arg.type == "function") {
 		params = {testFunction: arg.testFunction};
 	} else if (arg.type == "number") {
-		params = {min: arg.min ? arg.min : -Infinity, max: arg.max ? arg.max : Infinity};
+		params = {min: arg.min || -Infinity, max: arg.max || Infinity};
 	} else if (arg.type == "oneof") {
 		params = {list: arg.allowedValues};
 	}
@@ -75,17 +75,10 @@ async function checkArgs(bot, message, args, cmdArg) {
 		if (toResolve.length == 1) {
 			return toResolve[0];
 		} else {
-			let endMsg = "", list = toResolve.slice(0, 20);
-			if (toResolve.length > 20) endMsg = `...and ${toResolve.length - 20} more.`;
-			if (arg.type == "channel") {
-				list = list.map(chnl => `${chnl.name} (${chnl.id})`);
-			} else if (arg.type == "emoji") {
-				list = list.map(emoji => `${emoji.name} (${emoji.id})`);
-			} else if (arg.type == "member") {
-				list = list.map(mem => `${mem.user.tag} (${mem.user.id})`);
-			} else {
-				list = list.map(role => `${role.name} (${role.id})`);
-			}
+			const endMsg = toResolve.length > 20 ? `...and ${toResolve.length - 20} more.` : "";
+			let list = toResolve.slice(0, 20);			
+			list = arg.type == "member" ? list.map(mem => `${mem.user.tag} (${mem.user.id})`) : list.map(obj => `${obj.name} (${obj.id})`);
+			
 			return {
 				error: `Multiple ${arg.type}s found`,
 				message: `These ${arg.type}s were matched:\n` + "```" + list.join("\n") + "```" + endMsg
@@ -126,7 +119,7 @@ module.exports = {
 			const arg = commandArgs[i];
 			if (arg.infiniteArgs) {
 				if (arg.allowQuotes) {
-					const findAll = arg.parseSeparately ? true : false, newArgs = parseArgQuotes(args.slice(i), findAll);
+					const newArgs = parseArgQuotes(args.slice(i), arg.parseSeparately);
 					args = args.slice(0, i).concat(newArgs);
 					if (arg.parseSeparately) return parsedArgs.concat(newArgs);
 				} else {
@@ -138,7 +131,7 @@ module.exports = {
 					const neededType = arg.type == "oneof" ? "value" : arg.type;
 					return {
 						error: `Missing argument ${i+1}`,
-						message: arg.missingArgMsg ? arg.missingArgMsg : `A valid ${neededType} must be provided.`
+						message: arg.missingArgMsg || `A valid ${neededType} must be provided.`
 					};
 				} else {
 					parsedArgs.push(null);
@@ -166,18 +159,15 @@ module.exports = {
 		// 1. Get flags
 		const flags = [],
 			flagIndexes = [],
-			flagRegex = /^(-[a-z]$|(--|—)[a-z][a-z])/i,
-			flagBases = args.filter(a => flagRegex.test(a));
+			flagBases = args.filter(a => /^(-[a-z]$|(--|—)[a-z][a-z])/i.test(a));
 
 		for (let i = 0; i < flagBases.length; i++) {
 			flagIndexes.push(args.indexOf(flagBases[i]));
-			const flagObj = {method: "short", name: "", args: []};
-			if (flagBases[i].match(/^-{2}|—/)) flagObj.method = "long";
-			if (flagBases[i].startsWith("--")) {
-				flagObj.name = flagBases[i].slice(2);
-			} else {
-				flagObj.name = flagBases[i].slice(1);
-			}
+			const flagObj = {
+				method: /^-{2}|—/.test(flagBases[i]) ? "long" : "short",
+				name: flagBases[i].slice(flagBases[i].startsWith("--") ? 2 : 1),
+				args: []
+			};
 			if (i > 0 && flagIndexes[i] - flagIndexes[i-1] > 1) {
 				flags[i-1].args = args.slice(flagIndexes[i-1] + 1, flagIndexes[i]);
 			}
@@ -191,11 +181,11 @@ module.exports = {
 		// 2. Parse flags
 		const parsedFlags = [],
 			flagShortNames = commandFlags.map(f => f.name.charAt(0)),
-			flagLongNames = commandFlags.map(f => f.name);
+			flagLongNames = commandFlags.map(f => f.name.toLowerCase());
 		for (let i = 0; i < flags.length; i++) {
 			const shortIndex = flagShortNames.indexOf(flags[i].name);
 			if (shortIndex != -1 && flags[i].method == "short") {
-				flags[i].name = flagLongNames[shortIndex];
+				flags[i].name = flagLongNames[shortIndex].toLowerCase();
 			}
 			const longNameIndex = flagLongNames.indexOf(flags[i].name);
 			if (shortIndex == -1 && longNameIndex == -1) {
@@ -218,8 +208,8 @@ module.exports = {
 					if (!commandFlag.arg.optional) {
 						const neededType = commandFlag.arg.type == "oneof" ? "value" : commandFlag.arg.type;
 						return {
-							error: `Missing flag argument at flag name ${commandFlag.name}`,
-							message: commandFlag.arg.errMsg ? commandFlag.arg.errMsg : `A valid ${neededType} must be provided.`
+							error: "Missing flag argument at flag name " + commandFlag.name,
+							message: commandFlag.arg.errMsg || `A valid ${neededType} must be provided.`
 						};
 					} else {
 						flags[i].args = null;
@@ -229,7 +219,7 @@ module.exports = {
 				}
 				const parsedFlagArg = await checkArgs(bot, message, flagArgToCheck, commandFlag.arg);
 				if (parsedFlagArg.error) {
-					if (parsedFlagArg.error == true) parsedFlagArg.error = `Flag argument error at flag name ${commandFlag.name}`;
+					if (parsedFlagArg.error == true) parsedFlagArg.error = "Flag argument error at flag name " + commandFlag.name;
 					return parsedFlagArg;
 				}
 				flags[i].args = parsedFlagArg;
