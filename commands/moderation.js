@@ -480,6 +480,26 @@ module.exports = [
 						desc: "Messages containing embeds"
 					},
 					{
+						name: "Invert",
+						desc: "Inverts the messages selected"
+					},
+					{
+						name: "invites",
+						desc: "Messages containing invites"
+					},
+					{
+						name: "links",
+						desc: "Messages containing links"
+					},
+					{
+						name: "mentions",
+						desc: "Messages containing mentions"
+					},
+					{
+						name: "reactions",
+						desc: "Messages containing reactions"
+					},
+					{
 						name: "text",
 						desc: "Messages containing given text",
 						arg: {
@@ -499,7 +519,7 @@ module.exports = [
 					user: ["MANAGE_MESSAGES"],
 					level: 0
 				},
-				usage: "purge <1-500> OR purge <1-100> [--user <user>] [--text <text>] [--attachments] [--bots] [--embeds]"
+				usage: "purge <1-500> OR purge <1-100> [--user <user>] [--text <text>] [--attachments] [--bots] [--embeds] [--invites] [--links] [--mentions] [--reactions] [--invert]"
 			});
 		}
 		
@@ -512,28 +532,53 @@ module.exports = [
 			if (flags.length > 0) {
 				if (deleteLarge) return {cmdWarn: "Flags are not supported for deleting from more than 100 messages at a time."};
 				let fetchErr;
-				await message.channel.fetchMessages({limit: args[0]})
+				await message.channel.fetchMessages({limit: toDelete})
 					.then(messages => {
-						toDelete = messages;
+						let toDelete2 = messages;
 						for (const flag of flags) {
+							let filter;
 							switch (flag.name) {
 								case "attachments":
-									toDelete = toDelete.filter(msg => msg.attachments.size > 0);
+									filter = msg => msg.attachments.size > 0;
 									break;
 								case "bots":
-									toDelete = toDelete.filter(msg => msg.author.bot);
+									filter = msg => msg.author.bot;
 									break;
 								case "embeds":
-									toDelete = toDelete.filter(msg => msg.embeds[0]);
+									filter = msg => msg.embeds[0];
+									break;
+								case "invites":
+									filter = msg => /(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi.test(msg.content);
+									break;
+								case "links":
+									filter = msg => /https?:\/\/\S+\.\S+/gi.test(msg.content) || (msg.embeds[0] && msg.embeds.some(e => e.type == "article" || e.type == "link"));
+									break;
+								case "mentions":
+									filter = msg => {
+										const mentions = msg.mentions;
+										return mentions.everyone || mentions.members.size > 0 || mentions.roles.size > 0 || mentions.users.size > 0;
+									};
+									break;
+								case "reactions":
+									filter = msg => msg.reactions.size > 0;
 									break;
 								case "text":
-									toDelete = toDelete.filter(msg => msg.content.includes(flag.args));
+									filter = msg => msg.content.includes(flag.args);
 									break;
 								case "user":
-									toDelete = toDelete.filter(msg => msg.author.id == flag.args.id);
+									filter = msg => msg.author.id == flag.args.id;
+									break;
+								default:
+									continue;
 							}
+							toDelete2 = toDelete2.filter(filter);
 						}
-						if (!toDelete.has(message.id)) toDelete.set(message.id, message);
+						if (flags.some(f => f.name == "invert")) {
+							const toDeleteIDs = toDelete2.map(m => m.id);
+							toDelete = messages.map(m => m.id).filter(id => !toDeleteIDs.includes(id));
+						} else {
+							toDelete = toDelete2;
+						}
 					})
 					.catch(err => fetchErr = err);
 				if (fetchErr) {
@@ -561,7 +606,16 @@ module.exports = [
 			} else {
 				message.channel.bulkDelete(toDelete, true)
 					.then(messages => {
-						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!`).then(m => m.delete(7500).catch(() => {}));
+						const msgAuthors = messages.map(m => m.author.tag), deleteDistrib = {};
+						let breakdown = "";
+						for (const author of msgAuthors) {
+							deleteDistrib[author] = (deleteDistrib[author] || 0) + 1;
+						}
+						for (const author in deleteDistrib) {
+							breakdown += ` **\`${author}\`** - ${deleteDistrib[author]}` + "\n";
+						}
+						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!` + "\n\n" + "__**Breakdown**__:" + "\n" + breakdown)
+							.then(m => m.delete(7500).catch(() => {}));
 					})
 					.catch(err => message.channel.send("An error has occurred while trying to purge the messages: `" + err + "`"));
 			}

@@ -74,7 +74,7 @@ module.exports = [
 				},
 				flags: [
 					{
-						name: "disablecaps",
+						name: "disable-caps",
 						desc: "Allow lowercase letters in the meme"
 					}
 				],
@@ -92,7 +92,7 @@ module.exports = [
 			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
 
 			const pipeRegex = / ?\| /,
-				disableCapsFlag = flags.some(f => f.name == "disablecaps");
+				disableCapsFlag = flags.some(f => f.name == "disable-caps");
 			let topText, bottomText;
 			if (pipeRegex.test(args[1])) {
 				const memeTexts = args[1].split(pipeRegex, 2);

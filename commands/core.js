@@ -90,7 +90,7 @@ module.exports = [
 					helpEmbed.addField(bot.categories[i], cmdsInCat.join(", "));
 				}
 			} else {
-				const commandFlags = command.flags.map(f => `\`--${f.name}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`),
+				const commandFlags = command.flags.map(f => `\`--${f.name.toLowerCase()}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`),
 					commandPerms = command.perms,
 					permReq = {
 						bot: commandPerms.bot.length > 0 ? commandPerms.bot.map(p => parsePerm(p)).join(", ") : "None",
