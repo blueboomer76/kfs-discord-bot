@@ -98,7 +98,17 @@ module.exports = [
 					const results = res.body.data.children
 						.filter(r => !r.data.stickied)
 						.map(r => {
-							const rDesc = r.data.selftext.trim().replace(/#x200B;/g, "").replace(/\n{3,}/g, "\n\n");
+							const rCrossposts = r.data.crosspost_parent_list;
+							let rDesc;
+							if (r.data.selftext) {
+								rDesc = r.data.selftext;
+							} else if (rCrossposts) {
+								rDesc = rCrossposts[0].selftext || "";
+							} else {
+								rDesc = "";
+							}
+							rDesc = rDesc.trim().replace(/#x200B;/g, "").replace(/\n{3,}/g, "\n\n");
+
 							return {
 								title: r.data.title,
 								desc: rDesc.length > 2000 ? `${rDesc.slice(0, 2000)}...` : rDesc,
@@ -110,6 +120,40 @@ module.exports = [
 						});
 					resolve(results);
 				});
+			});
+		}
+	},
+	class CatFactsCommand extends Command {
+		constructor() {
+			super({
+				name: "catfacts",
+				description: "Get some cat facts!",
+				aliases: ["catfact"],
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				}
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			request.get({
+				url: "https://catfact.ninja/facts",
+				qs: {limit: 3},
+				json: true
+			}, (err, res) => {
+				const requestRes = bot.checkRemoteRequest("Cat Facts API", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
+				message.channel.send(new RichEmbed()
+					.setTitle("🐱 Cat Facts")
+					.setDescription(res.body.data.map(entry => entry.fact).join("\n\n"))
+					.setColor(Math.floor(Math.random() * 16777216))
+				);
 			});
 		}
 	},
@@ -170,6 +214,40 @@ module.exports = [
 				message.channel.send(`I flipped ${iters} coins and got: ${res.join(", ")}` + "\n" +
 				`(${heads} heads and ${iters-heads} tails)`);
 			}
+		}
+	},
+	class DogFactsCommand extends Command {
+		constructor() {
+			super({
+				name: "dogfacts",
+				description: "Get some dog facts!",
+				aliases: ["dogfact"],
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				}
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			request.get({
+				url: "http://dog-api.kinduff.com/api/facts",
+				qs: {number: 3},
+				json: true
+			}, (err, res) => {
+				const requestRes = bot.checkRemoteRequest("Dog Facts API", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
+				message.channel.send(new RichEmbed()
+					.setTitle("🐶 Dog Facts")
+					.setDescription(res.body.facts.join("\n\n"))
+					.setColor(Math.floor(Math.random() * 16777216))
+				);
+			});
 		}
 	},
 	class JokeCommand extends Command {
@@ -311,12 +389,18 @@ module.exports = [
 					.setURL(`https://reddit.com${postData.url}`)
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`);
+
 			if (postData.desc) punEmbed.setDescription(postData.desc);
 			if (postData.imageURL) {
-				if (/\.(gif|jpe?g|png)$/.test(postData.imageURL)) {
-					punEmbed.setImage(postData.imageURL);
+				if (/^https?:\/\/(imgur\.com|v\.redd\.it)/.test(postData.imageURL) || /\.gifv$/.test(postData.imageURL)) {
+					message.channel.send(`${postData.imageURL} (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author})`);
+					return;
 				} else {
-					punEmbed.setDescription(postData.imageURL);
+					if (/^https:\/\/external-/.test(postData.imageURL) || /\.(gif|jpe?g|png)$/.test(postData.imageURL)) {
+						punEmbed.setImage(postData.imageURL);
+					} else {
+						punEmbed.setDescription(postData.imageURL);
+					}
 				}
 			}
 
@@ -343,6 +427,13 @@ module.exports = [
 								punText = r.data.selftext.trim().replace(/#x200B;/g, "").replace(/\n{3,}/g, "\n\n");
 								if (punText.length > 2000) punText = `${punText}...`;
 							}
+
+							let imageURL = null;
+							if (r.data.thumbnail != "self") {
+								imageURL = r.data.url;
+								if (/v\.redd\.it/.test(r.data.url) && r.data.preview) imageURL = r.data.preview.images[0].source.url;
+							}
+
 							return {
 								title: r.data.title,
 								desc: punText,
@@ -350,7 +441,7 @@ module.exports = [
 								score: r.data.score,
 								comments: r.data.num_comments,
 								author: r.data.author,
-								imageURL: r.data.thumbnail != "self" ? r.data.url : null
+								imageURL: imageURL
 							};
 						});
 					resolve(results);

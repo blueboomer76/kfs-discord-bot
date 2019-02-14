@@ -163,6 +163,13 @@ class KFSDiscordBot extends Client {
 		cachedStats.commandUsages = [];
 		cachedStats.lastCheck = Number(new Date());
 	}
+	
+	checkRemoteRequest(site, err, res) {
+		if (err) return `Could not request to ${site}: ${err.message}`;
+		if (!res) return `No response was received from ${site}.`;
+		if (res.statusCode >= 400) return `The request to ${site} failed with status code ${res.statusCode} (${res.statusMessage})`;
+		return true;
+	}
 
 	// Optional functions
 	async postDiscordBotsOrgStats() {
@@ -174,12 +181,9 @@ class KFSDiscordBot extends Client {
 			body: {"server_count": this.guilds.size},
 			json: true
 		}, (err, res) => {
-			if (err) {
-				console.log(`[Stats Posting] Could not request to discordbots.org: ${err.message}`);
-			} else if (!res) {
-				console.log("[Stats Posting] No response was received from discordbots.org.");
-			} else if (res.statusCode >= 400) {
-				console.log(`[Stats Posting] The request to discordbots.org failed with status code ${res.statusCode} (${res.statusMessage})`);
+			const requestRes = this.checkRemoteRequest("discordbots.org", err, res);
+			if (requestRes != true) {
+				console.log(`[Stats Posting] ${requestRes}`);
 			} else {
 				console.log("[Stats Posting] Stats successfully posted to discordbots.org");
 			}
@@ -195,12 +199,9 @@ class KFSDiscordBot extends Client {
 			body: {"guildCount": this.guilds.size},
 			json: true
 		}, (err, res) => {
-			if (err) {
-				console.log(`[Stats Posting] Could not request to bots.ondiscord.xyz: ${err.message}`);
-			} else if (!res) {
-				console.log("[Stats Posting] No response was received from bots.ondiscord.xyz.");
-			} else if (res.statusCode >= 400) {
-				console.log(`[Stats Posting] The request to bots.ondiscord.xyz failed with status code ${res.statusCode} (${res.statusMessage})`);
+			const requestRes = this.checkRemoteRequest("bots.ondiscord.xyz", err, res);
+			if (requestRes != true) {
+				console.log(`[Stats Posting] ${requestRes}`);
 			} else {
 				console.log("[Stats Posting] Stats successfully posted to bots.ondiscord.xyz");
 			}
@@ -217,12 +218,9 @@ class KFSDiscordBot extends Client {
 			body: {"server_count": this.guilds.size},
 			json: true
 		}, (err, res) => {
-			if (err) {
-				console.log(`[Stats Posting] Could not request to botsfordiscord.com: ${err.message}`);
-			} else if (!res) {
-				console.log("[Stats Posting] No response was received from botsfordiscord.com.");
-			} else if (res.statusCode >= 400) {
-				console.log(`[Stats Posting] The request to botsfordiscord.com failed with status code ${res.statusCode} (${res.statusMessage})`);
+			const requestRes = this.checkRemoteRequest("botsfordiscord.com", err, res);
+			if (requestRes != true) {
+				console.log(`[Stats Posting] ${requestRes}`);
 			} else {
 				console.log("[Stats Posting] Stats successfully posted to botsfordiscord.com");
 			}
@@ -234,18 +232,19 @@ class KFSDiscordBot extends Client {
 			url: "https://reddit.com/r/memes/hot.json",
 			json: true
 		}, (err, res) => {
-			if (err || !res || res.statusCode >= 400) {
-				console.error("Failed to obtain a meme from Reddit.");
-				return;
+			const requestRes = this.checkRemoteRequest("Reddit", err, res);
+			if (requestRes != true) {
+				console.error(`Failed to obtain a meme from Reddit: ${requestRes}`);
+			} else {
+				const entry = res.body.data.children.filter(r => !r.data.stickied)[0];
+				this.channels.get(config.memeFeedChannel).send(new RichEmbed()
+					.setTitle(entry.data.title)
+					.setURL(`https://reddit.com${entry.data.permalink}`)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter(`👍 ${entry.data.score} | 💬 ${entry.data.num_comments} | By: ${entry.data.author}`)
+					.setImage(/v\.redd\.it/.test(entry.data.url) && entry.data.preview ? entry.data.preview.images[0].source.url : entry.data.url)
+				);
 			}
-			const entry = res.body.data.children.filter(r => !r.data.stickied)[0];
-			this.channels.get(config.memeFeedChannel).send(new RichEmbed()
-				.setTitle(entry.data.title)
-				.setURL(`https://reddit.com${entry.data.permalink}`)
-				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter(`👍 ${entry.data.score} | 💬 ${entry.data.num_comments} | By: ${entry.data.author}`)
-				.setImage(entry.data.url)
-			);
 		});
 	}
 

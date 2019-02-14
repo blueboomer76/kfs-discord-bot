@@ -40,7 +40,7 @@ function getPosts(subreddit, checkNsfw) {
 						score: result.data.score,
 						comments: result.data.num_comments,
 						author: result.data.author,
-						imageURL: result.data.url
+						imageURL: /v\.redd\.it/.test(result.data.url) && result.data.preview ? result.data.preview.images[0].source.url : result.data.url
 					};
 					if (result.data.over_18) {
 						nsfwResults.push(postObj);
@@ -58,7 +58,7 @@ function getPosts(subreddit, checkNsfw) {
 						score: r.data.score,
 						comments: r.data.num_comments,
 						author: r.data.author,
-						imageURL: r.data.url
+						imageURL: /v\.redd\.it/.test(r.data.url) && r.data.preview ? r.data.preview.images[0].source.url : r.data.url
 					};
 				}));
 			}
@@ -84,21 +84,24 @@ function sendRedditEmbed(command, message, checkNsfw) {
 	}
 	postData = postData[0];
 
-	const embedTitle = postData.title,
-		imageURL = postData.imageURL,
-		redditEmbed = new RichEmbed()
+	const embedTitle = postData.title, imageURL = postData.imageURL;
+	if (/^https?:\/\/(imgur\.com|v\.redd\.it)/.test(imageURL) || /\.gifv$/.test(imageURL)) {
+		message.channel.send(`${imageURL} (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author})`);
+	} else {
+		const redditEmbed = new RichEmbed()
 			.setTitle(embedTitle.length > 250 ? embedTitle.slice(0, 250) + "..." : embedTitle)
 			.setURL("https://reddit.com" + postData.url)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`);
 
-	if (/\.(gif|jpe?g|png)$/.test(imageURL)) {
-		redditEmbed.setImage(imageURL);
-	} else {
-		redditEmbed.setDescription(imageURL);
-	}
+		if (/^https:\/\/external-/.test(imageURL) || /\.(gif|jpe?g|png)$/.test(imageURL)) {
+			redditEmbed.setImage(imageURL);
+		} else {
+			redditEmbed.setDescription(imageURL);
+		}
 
-	message.channel.send(redditEmbed);
+		message.channel.send(redditEmbed);
+	}
 }
 
 module.exports = [
@@ -149,10 +152,8 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get("http://random.birb.pw/tweet.json", (err, res) => {
-				if (err) return message.channel.send(`Could not request to random.birb.pw: ${err.message}`);
-				if (!res) return message.channel.send("No response was received from random.birb.pw.");
-				if (res.statusCode >= 400) return message.channel.send(`The request to random.birb.pw failed with status code ${res.statusCode} (${res.statusMessage})`);
-				
+				const requestRes = bot.checkRemoteRequest("random.birb.pw", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 				message.channel.send(new RichEmbed()
 					.setTitle("Here's your random birb!")
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -182,9 +183,8 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get("http://aws.random.cat/meow", (err, res) => {
-				if (err) return message.channel.send(`Could not request to random.cat: ${err.message}`);
-				if (!res) return message.channel.send("No response was received from random.cat.");
-				if (res.statusCode >= 400) return message.channel.send(`The request to random.cat failed with status code ${res.statusCode} (${res.statusMessage})`);
+				const requestRes = bot.checkRemoteRequest("random.cat", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 				message.channel.send(new RichEmbed()
 					.setTitle("Here's your random cat!")
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -214,9 +214,8 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get("http://random.dog/woof.json", (err, res) => {
-				if (err) return message.channel.send(`Could not request to random.dog: ${err.message}`);
-				if (!res) return message.channel.send("No response was received from random.dog.");
-				if (res.statusCode >= 400) return message.channel.send(`The request to random.dog failed with status code ${res.statusCode} (${res.statusMessage})`);
+				const requestRes = bot.checkRemoteRequest("random.dog", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 				message.channel.send(new RichEmbed()
 					.setTitle("Here's your random dog!")
 					.setColor(Math.floor(Math.random() * 16777216))

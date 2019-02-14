@@ -232,9 +232,8 @@ module.exports = [
 				qs: {term: args[0]},
 				json: true
 			}, (err, res) => {
-				if (err) return message.channel.send(`Could not request to the Urban Dictionary: ${err.message}`);
-				if (!res) return message.channel.send("No response was received from the Urban Dictionary.");
-				if (res.statusCode >= 400) return message.channel.send(`The request to the Urban Dictionary failed with status code ${res.statusCode} (${res.statusMessage})`);
+				const requestRes = bot.checkRemoteRequest("the Urban Dictionary", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 
 				const defs = res.body;
 				if (defs.list.length > 0) {
@@ -310,9 +309,8 @@ module.exports = [
 				},
 				json: true
 			}, (err, res) => {
-				if (err) return message.channel.send(`Could not request to Wikipedia: ${err.message}`);
-				if (!res) return message.channel.send("No response was received from Wikipedia.");
-				if (res.statusCode >= 400) return message.channel.send(`The request to Wikipedia failed with status code ${res.statusCode} (${res.statusMessage})`);
+				const requestRes = bot.checkRemoteRequest("Wikipedia", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 
 				const result = Object.values(res.body.query.pages)[0];
 				let resultText = result.extract;
@@ -362,9 +360,8 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			if (args[0]) args[0] = args[0].toLowerCase();
 			request.get("https://xkcd.com/info.0.json", (err, res) => {
-				if (err) return message.channel.send(`Could not request to XKCD: ${err.message}`);
-				if (!res) return message.channel.send("No response was received from XKCD.");
-				if (res.statusCode >= 400) return message.channel.send(`The request to XKCD failed with status code ${res.statusCode} (${res.statusMessage})`);
+				const requestRes = bot.checkRemoteRequest("XKCD", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 				
 				const currComic = JSON.parse(res.body);
 				if (args[0] == "random" || parseInt(args[0]) > 0) {
