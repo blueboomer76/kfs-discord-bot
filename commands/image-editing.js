@@ -425,7 +425,6 @@ module.exports = [
 					time: 15000,
 					type: "channel"
 				},
-				disabled: true,
 				perms: {
 					bot: ["ATTACH_FILES"],
 					user: [],

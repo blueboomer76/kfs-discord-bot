@@ -5,9 +5,9 @@ const fs = require("fs"),
 const emojiRegex = /<a?:.{2,}:\d+>/,
 	memberRegex = /<@!?\d+>/;
 
-function getMember(message, id) {
+async function getMember(message, id) {
 	let member;
-	message.guild.fetchMember(id).then(mem => member = mem).catch(() => member = null);
+	await message.guild.fetchMember(id).then(mem => member = mem).catch(() => member = null);
 	return member;
 }
 
@@ -15,18 +15,16 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 	let list;
 	switch (type) {
 		case "boolean":
-			const truthy = ["yes", "y", "true", "enable"], falsy = ["no", "n", "false", "disable"];
-			if (truthy.includes(obj)) {
+			if (["yes", "y", "true", "enable"].includes(obj)) {
 				return true;
-			} else if (falsy.includes(obj)) {
+			} else if (["no", "n", "false", "disable"].includes(obj)) {
 				return false;
 			} else {return null}
 		case "channel":
-			const guildChannels = message.guild.channels,
-				channelMatch = obj.match(/<#\d+>/)[0];
+			const guildChannels = message.guild.channels, channelMatch = obj.match(/<#\d+>/);
 			let channel;
 			if (channelMatch) {
-				return [guildChannels.get(channelMatch.match(/\d+/)[0])];
+				return [guildChannels.get(channelMatch[0].match(/\d+/)[0])];
 			} else {
 				channel = guildChannels.get(obj);
 			}
@@ -45,8 +43,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			// Coming soon
 			break;
 		case "emoji":
-			const guildEmojis = message.guild.emojis,
-				emojiMatch = emojiRegex.match(obj);
+			const guildEmojis = message.guild.emojis, emojiMatch = emojiRegex.match(obj);
 			let emoji;
 			if (emojiMatch) {
 				return [guildEmojis.get(emojiMatch[0].match(/\d+/)[0])];
@@ -105,13 +102,12 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			let member;
 
 			if (memberMatch) {
-				member = message.guild.large ? getMember(memberMatch[0].match(/\d+/)[0]) : message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
+				member = message.guild.large ? await getMember(memberMatch[0].match(/\d+/)[0]) : message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
 				return member ? [member] : null;
 			}
 			member = message.guild.members.get(obj);
 
 			if (member) {
-				member = message.guild.large ? getMember(memberMatch[0].match(/\d+/)[0]) : message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
 				return member ? [member] : null;
 			} else {
 				const guildMembers = message.guild.large ? fetchMembers(message) : message.guild.members,
@@ -124,7 +120,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			}
 			if (list.length > 0) {return list} else {return null}
 		case "number":
-			if (!isNaN(obj) && obj >= params.min && obj <= params.max) {return Math.floor(obj)} else {return null}
+			if (!isNaN(obj) && obj >= params.min && obj <= params.max) {return parseInt(obj)} else {return null}
 		case "oneof":
 			if (params.list.includes(obj)) {return obj} else {return null}
 		case "regex":
@@ -132,7 +128,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			break;
 		case "role":
 			if (obj == "everyone" || obj == message.guild.id) return null;
-			const roleMatch = obj.match(/<@&\d+>/), guildRoles = message.guild.roles;
+			const guildRoles = message.guild.roles, roleMatch = obj.match(/<@&\d+>/);
 			let role;
 			if (roleMatch) {
 				return [guildRoles.get(roleMatch[0].match(/\d+/)[0])];

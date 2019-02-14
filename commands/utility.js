@@ -82,7 +82,7 @@ module.exports = [
 			channelEmbed.addField(`Relative position to ${posInfo} channels`, channelPosition + 1, true);
 			
 			if (channel.type == "text") {
-				channelEmbed.addField("NSFW", channel.nsfw ? "Yes" : "No")
+				channelEmbed.addField("NSFW", channel.nsfw ? "Yes" : "No", true)
 					.addField("Topic", channel.topic || "No topic set");
 			} else if (channel.type == "voice") {
 				channelEmbed.addField("User Limit", channel.userLimit == 0 ? "None" : channel.userLimit, true)
@@ -110,9 +110,10 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "color <hex color | rgb(0-255,0-255,0-255) | color name | 0-255,0-255,0-255 | hsl(0-359,0-100,0-100)>"
+				usage: "color <hex color | rgb(0-255,0-255,0-255) | color name | 0-255,0-255,0-255 | decimal:0-16777215 | hsl(0-359,0-100,0-100)>"
 			});
 			this.colorRegexes = [
+				/decimal:\d{1,8}/,
 				/#?[0-9a-f]{6}/i,
 				/rgb\((\d{1,3},){2}\d{1,3}\)/,
 				/^[a-z]+/i,
@@ -130,10 +131,15 @@ module.exports = [
 				if (matched) {colorRegexMatch = matched[0]; break}
 			}
 			if (colorRegexMatch) {
-				let colorName, cmykValues, hexValue, hslValues, rgbValues;
+				let colorName, cmykValues, decimalValue, hexValue, hslValues, rgbValues;
 
 				switch (i) {
-					case 0: // #rrggbb or rrggbb | e.g. #112233 or 112233
+					case 0: // decimal:number | e.g. decimal:1234
+						decimalValue = parseInt(colorRegexMatch.slice(8));
+						if (decimalValue > 16777215) return {cmdWarn: "Decimal value must be between 0 and 16777215."};
+						rgbValues = [Math.floor(decimalValue / 65536), Math.floor(decimalValue / 256) % 256, decimalValue % 256];
+						break;
+					case 1: // #rrggbb or rrggbb | e.g. #112233 or 112233
 						hexValue = colorRegexMatch.replace("#", "");
 						rgbValues = [
 							parseInt(hexValue.slice(0,2), 16),
@@ -141,31 +147,31 @@ module.exports = [
 							parseInt(hexValue.slice(4,6), 16)
 						];
 						break;
-					case 1: // rgb(r,g,b) | e.g. rgb(1,2,3)
+					case 2: // rgb(r,g,b) | e.g. rgb(1,2,3)
 						rgbValues = colorRegexMatch.slice(4, colorRegexMatch.length - 1).split(",");
 						break;
-					case 2: // CSS color name | e.g. blue
+					case 3: // CSS color name | e.g. blue
 						colorName = colorRegexMatch;
 						rgbValues = convert.keyword.rgb(colorName);
 						if (!rgbValues) return {cmdWarn: "Invalid color name"};
 						break;
-					case 3: // r,g,b | e.g. 1,2,3
+					case 4: // r,g,b | e.g. 1,2,3
 						rgbValues = colorRegexMatch.split(/, ?/);
 						break;
-					case 4: // hsl(h,s,l) | e.g. hsl(1,2,3)
+					case 5: // hsl(h,s,l) | e.g. hsl(1,2,3)
 						hslValues = colorRegexMatch.slice(4, colorRegexMatch.length - 1).split(",");
 						rgbValues = convert.hsl.rgb(hslValues);
 						break;
-					case 5: // cmyk(c,m,y,k) | e.g. cmyk(1,2,3,4)
+					case 6: // cmyk(c,m,y,k) | e.g. cmyk(1,2,3,4)
 						cmykValues = colorRegexMatch.slice(4, colorRegexMatch.length - 1).split(",");
 						rgbValues = convert.cmyk.rgb(cmykValues);
 				}
 
-				if (i != 2) colorName = convert.rgb.keyword(rgbValues);
-				if (i != 5) cmykValues = convert.rgb.cmyk(rgbValues);
-				const decimalValue = 65536 * rgbValues[0] + 256 * rgbValues[1] + 1 * rgbValues[2];
-				if (i != 0) hexValue = convert.rgb.hex(rgbValues);
-				if (i != 4) hslValues = convert.rgb.hsl(rgbValues);
+				if (i != 3) colorName = convert.rgb.keyword(rgbValues);
+				if (i != 6) cmykValues = convert.rgb.cmyk(rgbValues);
+				if (i != 0) decimalValue = 65536 * rgbValues[0] + 256 * rgbValues[1] + 1 * rgbValues[2];
+				if (i != 1) hexValue = convert.rgb.hex(rgbValues);
+				if (i != 5) hslValues = convert.rgb.hsl(rgbValues);
 				const hsvValues = convert.rgb.hsv(rgbValues);
 				const xyzValues = convert.rgb.xyz(rgbValues);
 				const greyscaleValue = convert.rgb.gray(rgbValues);

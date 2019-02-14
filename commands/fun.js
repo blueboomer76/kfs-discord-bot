@@ -101,7 +101,7 @@ module.exports = [
 							const rDesc = r.data.selftext.trim();
 							return {
 								title: r.data.title,
-								desc: rDesc.length > 2000 ? rDesc.slice(0,2000) : rDesc,
+								desc: rDesc.length > 2000 ? `${rDesc.slice(0,2000)}...` : rDesc,
 								url: r.data.permalink,
 								score: r.data.score,
 								comments: r.data.num_comments,
@@ -212,12 +212,12 @@ module.exports = [
 				
 				postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0];
 
-				const toDisplayDesc = `**[${postData.title.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})**` + "\n" +
+				const toDisplayDesc = `**[${postData.title}](https://redd.it/${postData.id})**` + "\n" +
 					postData.desc + "\n" +
 					`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
 
 				if (embedDesc.length == 0 && postData.desc.length >= 1600) {
-					embedDesc += `**[${postData.title.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})**` + "\n" +
+					embedDesc += `**[${postData.title}](https://redd.it/${postData.id})**` + "\n" +
 						postData.desc + "..." + "\n" +
 						`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
 					break;
@@ -230,7 +230,7 @@ module.exports = [
 							break;
 						}
 					} else {
-						embedDesc += `**[${postData.title.replace(/&amp;/g, "&")}](https://redd.it/${postData.id})**` + "\n" +
+						embedDesc += `**[${postData.title}](https://redd.it/${postData.id})**` + "\n" +
 							postData.desc.slice(0, 1600 - embedDesc.length) + "..." + "\n" +
 							`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
 						break;
@@ -250,7 +250,7 @@ module.exports = [
 		getJokes() {
 			return new Promise((resolve, reject) => {
 				request.get({
-					url: "https://reddit.com/r/jokes/hot.json",
+					url: "https://reddit.com/r/Jokes/hot.json",
 					qs: {limit: 50, raw_json: 1},
 					json: true
 				}, (err, res) => {
@@ -258,9 +258,9 @@ module.exports = [
 					
 					this.lastChecked = Number(new Date());
 					const results = res.body.data.children
-						.filter(r => !r.data.stickied)
+						.filter(r => !r.data.stickied && !r.data.over_18)
 						.map(r => {
-							const rDesc = r.data.selftext.replace(/&amp;/g, "&").trim();
+							const rDesc = r.data.selftext.trim();
 							return {
 								title: r.data.title,
 								desc: rDesc.length > 1600 ? rDesc.slice(0, 1600) : rDesc,
@@ -329,7 +329,7 @@ module.exports = [
 						.map(r => {
 							return {
 								title: r.data.title,
-								desc: r.data.selftext != "" ? r.data.selftext.replace(/&amp;/g, "&").trim() : null,
+								desc: r.data.selftext != "" ? r.data.selftext.trim() : null,
 								url: r.data.permalink,
 								score: r.data.score,
 								comments: r.data.num_comments,
