@@ -98,7 +98,8 @@ module.exports = [
 					const results = res.body.data.children
 						.filter(r => !r.data.stickied)
 						.map(r => {
-							const rDesc = r.data.selftext.trim();
+							const rCrossposts = r.data.crosspost_parent_list,
+								rDesc = r.data.selftext || (rCrossposts ? (rCrossposts[0].selftext || "") : "");
 							return {
 								title: r.data.title,
 								desc: rDesc.length > 2000 ? `${rDesc.slice(0, 2000)}...` : rDesc,
@@ -110,6 +111,41 @@ module.exports = [
 						});
 					resolve(results);
 				});
+			});
+		}
+	},
+	class CatFactsCommand extends Command {
+		constructor() {
+			super({
+				name: "catfacts",
+				description: "Get some cat facts!",
+				aliases: ["catfact"],
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				}
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			request.get({
+				url: "https://catfact.ninja/facts",
+				qs: {limit: 3},
+				json: true
+			}, (err, res) => {
+				const requestRes = bot.checkRemoteRequest("Cat Facts API", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
+				
+				message.channel.send(new RichEmbed()
+					.setTitle("🐱 Cat Facts")
+					.setDescription(res.body.data.map(entry => entry.fact).join("\n\n"))
+					.setColor(Math.floor(Math.random() * 16777216))
+				);
 			});
 		}
 	},
@@ -168,6 +204,41 @@ module.exports = [
 				message.channel.send(`I flipped ${iters} coins and got: ${res.join(", ")}` + "\n" +
 				`(${heads} heads and ${iters-heads} tails)`);
 			}
+		}
+	},
+	class DogFactsCommand extends Command {
+		constructor() {
+			super({
+				name: "dogfacts",
+				description: "Get some dog facts!",
+				aliases: ["dogfact"],
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				}
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			request.get({
+				url: "http://dog-api.kinduff.com/api/facts",
+				qs: {number: 3},
+				json: true
+			}, (err, res) => {
+				const requestRes = bot.checkRemoteRequest("Dog Facts API", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
+				
+				message.channel.send(new RichEmbed()
+					.setTitle("🐶 Dog Facts")
+					.setDescription(res.body.facts.join("\n\n"))
+					.setColor(Math.floor(Math.random() * 16777216))
+				);
+			});
 		}
 	},
 	class JokeCommand extends Command {
