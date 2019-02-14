@@ -9,6 +9,7 @@ const redirSubreddits = [
 	{name: "animemes", goTo: "animeme"},
 	{name: "antijokes", goTo: "antijoke"},
 	{name: "antimeme", goTo: "antimeme"},
+	{name: "awwnime", goTo: "awwnime"},
 	{name: "jokes", goTo: "joke"},
 	{name: "me_irl", goTo: "meirl"},
 	{name: "memes", goTo: "meme"},
@@ -124,8 +125,9 @@ module.exports = [
 				qs: reqQuery,
 				json: true
 			}, (err, res) => {
-				if (res.statusCode == 403) return message.channel.send("⚠ Unfortunately, that subreddit is inaccessible.");
-				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to fetch from Reddit. (status code ${res.statusCode})`);
+				if (err) return message.channel.send(`Could not request to Reddit: ${err.message} (${err.code})`);
+				if (res.statusCode == 403) return message.channel.send(`⚠ Unfortunately, that subreddit is inaccessible because it is ${res.body.reason}.`);
+				if (res.statusCode >= 400) return message.channel.send(`⚠ An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode})`);
 				
 				let results = res.body.data.children;
 				if (!results[0]) return message.channel.send("⚠ A subreddit with that name does not exist, or it has no posts yet.");
@@ -234,7 +236,7 @@ module.exports = [
 				qs: {term: args[0]},
 				json: true
 			}, (err, res) => {
-				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to fetch from the Urban Dictionary. (status code ${res.statusCode})`);
+				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "the Urban Dictionary", err, res);
 				const defs = res.body;
 				if (defs.list.length > 0) {
 					const entries = [
@@ -309,7 +311,7 @@ module.exports = [
 				},
 				json: true
 			}, (err, res) => {
-				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to fetch from Wikipedia. (status code ${res.statusCode})`);
+				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "Wikipedia", err, res);
 				
 				const result = Object.values(res.body.query.pages)[0];
 				let resultText = result.extract;
@@ -358,7 +360,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get("https://xkcd.com/info.0.json", (err, res) => {
-				if (err || res.statusCode >= 400) return message.channel.send(`Failed to fetch from XKCD. (status code ${res.statusCode})`);
+				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "XKCD", err, res);
 				
 				const currComic = JSON.parse(res.body);
 				if (args[0] == "random" || args[0] > 0) {

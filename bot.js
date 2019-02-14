@@ -160,6 +160,10 @@ class KendraBot extends Client {
 		stats2.commandUsage = [];
 	}
 	
+	handleRemoteSiteError(message, site, err, res) {
+		message.channel.send(err ? `⚠ Could not request to ${site}: ${err.message} (${err.code})` : `⚠ An error has been returned from ${site}: ${res.statusMessage} (${res.statusCode})`);
+	}
+
 	// Optional functions
 	async postBotsOnDiscordStats() {
 		request.post({

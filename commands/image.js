@@ -26,7 +26,8 @@ function getPosts(subreddit, checkNsfw) {
 			qs: {raw_json: 1},
 			json: true
 		}, (err, res) => {
-			if (err || res.statusCode >= 400) reject(`Failed to fetch from Reddit. (status code ${res.statusCode})`);
+			if (err) reject(`Could not request to Reddit: ${err.message} (${err.code})`);
+			if (res.statusCode >= 400) reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode})`);
 			const results = res.body.data.children.filter(r => !r.data.stickied);
 		
 			if (checkNsfw) {
@@ -39,7 +40,7 @@ function getPosts(subreddit, checkNsfw) {
 						score: result.data.score,
 						comments: result.data.num_comments,
 						author: result.data.author,
-						imageURL: result.data.url
+						imageURL: /v\.redd\.it/.test(result.data.url) ? result.data.preview.images[0].source.url : result.data.url
 					};
 					if (result.data.over_18) {
 						nsfwResults.push(postObj);
@@ -83,21 +84,24 @@ function sendRedditEmbed(command, message, checkNsfw) {
 	}
 	postData = postData[0];
 
-	const embedTitle = postData.title,
-		imageURL = postData.imageURL,
-		redditEmbed = new RichEmbed()
+	const embedTitle = postData.title, imageURL = postData.imageURL;
+	if (/^https:\/\/imgur.com/.test(imageURL) || /\.gifv$/.test(imageURL)) {
+		message.channel.send(`${imageURL} (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author})`);
+	} else {
+		const redditEmbed = new RichEmbed()
 			.setTitle(embedTitle.length > 250 ? embedTitle.slice(0,250) + "..." : embedTitle)
 			.setURL("https://reddit.com" + postData.url)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`);
 
-	if (/\.(gif|jpe?g|png)$/.test(imageURL)) {
-		redditEmbed.setImage(imageURL);
-	} else {
-		redditEmbed.setDescription(imageURL);
-	}
+		if (/^https:\/\/external-/.test(imageURL) || /\.(gif|jpe?g|png)$/.test(imageURL)) {
+			redditEmbed.setImage(imageURL);
+		} else {
+			redditEmbed.setDescription(imageURL);
+		}
 
-	message.channel.send(redditEmbed);
+		message.channel.send(redditEmbed);
+	}
 }
 
 module.exports = [
@@ -185,6 +189,35 @@ module.exports = [
 			sendRedditEmbed(this, message, false);
 		}
 	},
+	class AwwnimeCommand extends Command {
+		constructor() {
+			super({
+				name: "awwnime",
+				description: "Cute anime",
+				aliases: ["awwanime", "cuteanime"],
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				}
+			});
+			this.cachedSfwPosts = [];
+			this.cachedNsfwPosts = [];
+			this.lastChecked = 0;
+		}
+		
+		async run(bot, message, args, flags) {
+			if (new Date() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
+				const fetchRes = await setCommandPosts(this, "awwnime", true);
+				if (fetchRes) return {cmdWarn: fetchRes};
+			}
+			sendRedditEmbed(this, message, true);
+		}
+	},
 	class BirbCommand extends Command {
 		constructor() {
 			super({
@@ -205,7 +238,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get("http://random.birb.pw/tweet.json", (err, res) => {
-				if (err || res.statusCode >= 400) return message.channel.send(`⚠ Failed to retrieve from random.birb. (status code ${res.statusCode})`);
+				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "random.birb.pw", err, res);
 				
 				message.channel.send(new RichEmbed()
 					.setTitle("Here's your random birb!")
@@ -236,7 +269,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get("http://aws.random.cat/meow", (err, res) => {
-				if (err) return message.channel.send(`⚠ Failed to retrieve from random.cat. (status code ${res.statusCode})`);
+				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "random.cat", err, res);
 				message.channel.send(new RichEmbed()
 					.setTitle("Here's your random cat!")
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -266,7 +299,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			request.get("http://random.dog/woof.json", (err, res) => {
-				if (err) return message.channel.send(`⚠ Failed to retrieve from random.dog. (status code ${res.statusCode})`);
+				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "random.dog", err, res);
 				message.channel.send(new RichEmbed()
 					.setTitle("Here's your random dog!")
 					.setColor(Math.floor(Math.random() * 16777216))

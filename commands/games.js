@@ -299,7 +299,8 @@ module.exports = [
 					qs: {amount: 10},
 					json: true
 				}, (err, res) => {
-					if (err || res.statusCode >= 400) reject(`Failed to fetch from Open Trivia Database. (status code ${res.statusCode})`);
+					if (err) reject(`Could not request to Open Trivia Database: ${err.message} (${err.code})`);
+					if (res.statusCode >= 400) reject(`An error has been returned from Open Trivia Database: ${res.statusMessage} (${res.statusCode})`);
 					
 					const results = res.body.results.map(r => {
 						return {

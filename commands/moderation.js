@@ -724,6 +724,72 @@ module.exports = [
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
+	class SoftbanCommand extends Command {
+		constructor() {
+			super({
+				name: "softban",
+				description: "Bans a user, deletes messages, then unbans that user",
+				args: [
+					{
+						allowQuotes: true,
+						infiniteArgs: true,
+						type: "member"
+					},
+					{
+						missingArgMsg: "You need to provide a number of days to delete messages. Use `ban` without the `days` option instead if you do not want to delete any messages, or `kick` to simply remove the member.",
+						type: "number",
+						min: 1,
+						max: 14
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				flags: [
+					{
+						name: "reason",
+						desc: "Reason to put in the audit log",
+						arg: {
+							num: 1,
+							type: "string"
+						}
+					},
+					{
+						name: "yes",
+						desc: "Skips the confirmation dialog"
+					}
+				],
+				perms: {
+					bot: ["BAN_MEMBERS"],
+					user: ["BAN_MEMBERS"],
+					level: 0
+				},
+				usage: "softban <user> <days: 1-14> [--reason <reason>] [--yes]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const member = args[0], reasonFlag = flags.find(f => f.name == "reason");
+			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot softban the member **${member.user.tag}** because their highest role is at or higher than mine.`};
+			
+			if (!flags.some(f => f.name == "yes")) {
+				const promptRes = await promptor.prompt(message, `You are about to softban the user **${member.user.tag}** in this guild.`);
+				if (promptRes) return {cmdWarn: promptRes};
+			}
+			
+			member.ban({
+				days: args[1],
+				reason: reasonFlag ? reasonFlag.args[0] : null
+			})
+				.then(() => {
+					message.guild.unban(member.user.id)
+						.then(() => message.channel.send(`✅ The user **${member.user.tag}** was softbanned.`))
+						.catch(() => message.channel.send("An error has occurred while trying to unban the member."));
+				})
+				.catch(err => message.channel.send("An error has occurred while trying to ban the member: ```" + err + "```"));
+		}
+	},
 	class UnbanCommand extends Command {
 		constructor() {
 			super({
