@@ -163,7 +163,7 @@ module.exports = [
 				let embedTitle = "Reddit - ";
 				if (args[0] == "random") {
 					embedTitle += "Random subreddit!";
-				} else if (viewAll) {
+				} else if (!args[0] || args[0] == "all") {
 					embedTitle += "All subreddits";
 				} else {
 					embedTitle += "r/" + subreddit;

@@ -16,10 +16,9 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 	let list;
 	switch (type) {
 		case "boolean":
-			const truthy = ["yes", "y", "true", "enable"], falsy = ["no", "n", "false", "disable"];
-			if (truthy.includes(lowerObj)) {
+			if (["yes", "y", "true", "enable"].includes(lowerObj)) {
 				return true;
-			} else if (falsy.includes(lowerObj)) {
+			} else if (["no", "n", "false", "disable"].includes(lowerObj)) {
 				return false;
 			} else {
 				return null;

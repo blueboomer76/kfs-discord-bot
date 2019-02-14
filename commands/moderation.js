@@ -453,13 +453,19 @@ module.exports = [
 		constructor() {
 			super({
 				name: "purge",
-				description: "Deletes messages from this channel. Flags cannot be used for deleting from more than 100 messages at a time",
+				description: "Deletes messages from this channel. You can specify options for deleting from 1-100 messages to refine the messages selected",
 				aliases: ["clear", "prune"],
 				args: [
 					{
 						type: "number",
 						min: 1,
 						max: 500
+					},
+					{
+						infiniteArgs: true,
+						optional: true,
+						parseSeperately: true,
+						type: "string"
 					}
 				],
 				cooldown: {
@@ -468,47 +474,19 @@ module.exports = [
 				},
 				flags: [
 					{
-						name: "attachments",
-						desc: "Messages containing attachments"
-					},
-					{
-						name: "bots",
-						desc: "Messages from bots"
-					},
-					{
-						name: "embeds",
-						desc: "Messages containing embeds"
-					},
-					{
-						name: "Invert",
+						name: "invert",
 						desc: "Inverts the messages selected"
 					},
 					{
-						name: "invites",
-						desc: "Messages containing invites"
-					},
-					{
-						name: "links",
-						desc: "Messages containing links"
-					},
-					{
-						name: "mentions",
-						desc: "Messages containing mentions"
-					},
-					{
-						name: "reactions",
-						desc: "Messages containing reactions"
-					},
-					{
 						name: "text",
-						desc: "Messages containing given text",
+						desc: "Filter messages containing text",
 						arg: {
 							type: "string"
 						}
 					},
 					{
 						name: "user",
-						desc: "Messages from a user",
+						desc: "Filter messages from a user",
 						arg: {
 							type: "member"
 						}
@@ -519,8 +497,9 @@ module.exports = [
 					user: ["MANAGE_MESSAGES"],
 					level: 0
 				},
-				usage: "purge <1-500> OR purge <1-100> [--user <user>] [--text <text>] [--attachments] [--bots] [--embeds] [--invites] [--links] [--mentions] [--reactions] [--invert]"
+				usage: "purge <1-500> OR purge <1-100> [attachments] [bots] [embeds] [images] [invites] [left] [links] [mentions] [reactions] [--user <user>] [--text <text>] [--invert]"
 			});
+			this.options = ["attachments", "bots", "embeds", "images", "invites", "left", "links", "mentions", "reactions"];
 		}
 		
 		async run(bot, message, args, flags) {
@@ -529,15 +508,23 @@ module.exports = [
 			const deleteLarge = args[0] > 100;
 			let toDelete = args[0];
 
-			if (flags.length > 0) {
-				if (deleteLarge) return {cmdWarn: "Flags are not supported for deleting from more than 100 messages at a time."};
+			if (args[1] || flags.length > 0) {
+				if (deleteLarge) return {cmdWarn: "Options are not supported for deleting from more than 100 messages at a time."};
+				const extraArg = args.slice(1).find(arg => !this.options.includes(arg));
+				if (extraArg) {
+					if (extraArg == "text" || extraArg == "user") {
+						return {cmdWarn: `You need to use the flag version of the \`${extraArg}\` option: \`--${extraArg}\` <query>`};
+					} else {
+						return {cmdWarn: "Invalid option specified: " + extraArg};
+					}
+				}
 				let fetchErr;
 				await message.channel.fetchMessages({limit: toDelete})
 					.then(messages => {
 						let toDelete2 = messages;
-						for (const flag of flags) {
+						for (const option of args.slice(1)) {
 							let filter;
-							switch (flag.name) {
+							switch (option) {
 								case "attachments":
 									filter = msg => msg.attachments.size > 0;
 									break;
@@ -547,8 +534,14 @@ module.exports = [
 								case "embeds":
 									filter = msg => msg.embeds[0];
 									break;
+								case "images":
+									filter = msg => msg.embeds[0] && (msg.embeds[0].type == "image" || msg.embeds[0].image);
+									break;
 								case "invites":
 									filter = msg => /(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi.test(msg.content);
+									break;
+								case "left":
+									filter = msg => msg.member == null;
 									break;
 								case "links":
 									filter = msg => /https?:\/\/\S+\.\S+/gi.test(msg.content) || (msg.embeds[0] && msg.embeds.some(e => e.type == "article" || e.type == "link"));
@@ -561,18 +554,13 @@ module.exports = [
 									break;
 								case "reactions":
 									filter = msg => msg.reactions.size > 0;
-									break;
-								case "text":
-									filter = msg => msg.content.includes(flag.args);
-									break;
-								case "user":
-									filter = msg => msg.author.id == flag.args.id;
-									break;
-								default:
-									continue;
 							}
 							toDelete2 = toDelete2.filter(filter);
 						}
+						const textFlag = flags.find(f => f.name == "text"),
+							userFlag = flags.find(f => f.name == "user");
+						if (textFlag) toDelete2 = toDelete2.filter(msg => msg.content.includes(textFlag.args));
+						if (userFlag) toDelete2 = toDelete2.filter(msg => msg.author.id == userFlag.args.id);
 						if (flags.some(f => f.name == "invert")) {
 							const toDeleteIDs = toDelete2.map(m => m.id);
 							toDelete = messages.map(m => m.id).filter(id => !toDeleteIDs.includes(id));
