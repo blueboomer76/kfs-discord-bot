@@ -6,7 +6,7 @@ async function setCommandPosts(command, subreddit, checkNsfw) {
 	let fetchRes;
 	await getPosts(subreddit, checkNsfw)
 		.then(posts => {
-			command.lastChecked = Number(new Date());
+			command.lastChecked = Date.now();
 			if (checkNsfw) {
 				command.cachedSfwPosts = posts.sfw;
 				command.cachedNsfwPosts = posts.nsfw;

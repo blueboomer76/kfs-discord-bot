@@ -1,3 +1,3 @@
 module.exports = async () => {
-	console.log("The client is attempting to reconnect to the WebSocket.");
+	console.log(`[${new Date().toJSON()}] WebSocket is attempting to reconnect to the WebSocket.`);
 };

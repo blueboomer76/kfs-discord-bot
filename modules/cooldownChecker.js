@@ -46,7 +46,7 @@ function addCooldown(bot, message, command, overrides) {
 	bot.cache.recentCommands.push({
 		id: cdID,
 		name: cdName,
-		resets: Number(new Date()) + cdTime,
+		resets: Date.now() + cdTime,
 		notified: false
 	});
 	setTimeout(removeCooldown, cdTime, bot, cdID, cdName);
@@ -70,7 +70,7 @@ module.exports = {
 				} else {
 					toSend += "This command is";
 				}
-				const cdTime = ((checkedCd.resets - Number(new Date())) / 1000).toFixed(1);
+				const cdTime = ((checkedCd.resets - Date.now()) / 1000).toFixed(1);
 				toSend += ` on cooldown for **${cdTime > 0 ? cdTime : 0.1} more seconds**`;
 				if (message.guild) {
 					if (cdType == "channel") {

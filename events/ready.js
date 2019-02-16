@@ -8,7 +8,7 @@ const rssFeedPostInt = rssFeedSitesLen < 100 ? (3 - Math.floor(rssFeedSitesLen /
 let initialized = false;
 
 module.exports = async bot => {
-	console.log(`Bot has entered ready state on ${new Date()}`);
+	console.log(`[${new Date().toJSON()}] Bot has entered ready state.`);
 	bot.user.setActivity(`${bot.prefix}help | with you in ${bot.guilds.size} servers`);
 
 	bot.cache.guildCount = bot.guilds.size;
@@ -54,15 +54,15 @@ module.exports = async bot => {
 
 		setInterval(() => {
 			bot.logStats();
-			if (Number(new Date()) % (1000*10800) < 1000*3600) {
+			if (Date.now() % (1000*10800) < 1000*3600) {
 				if (config.botsOnDiscordToken) bot.postBotsOnDiscordStats();
 				if (config.botsForDiscordToken) bot.postBotsForDiscordStats();
 				if (config.discordBotsOrgToken) bot.postDiscordBotsOrgStats();
 			}
-			if (config.rssFeedChannel && Array.isArray(config.rssFeedWebsites) && (rssFeedPostInt == 3600 || Number(new Date()) % (1000 * rssFeedPostInt) < 1000*3600)) {
+			if (config.rssFeedChannel && Array.isArray(config.rssFeedWebsites) && (rssFeedPostInt == 3600 || Date.now() % (1000 * rssFeedPostInt) < 1000*3600)) {
 				bot.postRSSFeed(rssFeedPostAmt);
 			}
-			if (config.memeFeedChannel && Number(new Date()) % (1000*21600) < 1000*3600) {
+			if (config.memeFeedChannel && Date.now() % (1000*21600) < 1000*3600) {
 				bot.postMeme();
 			}
 		}, 1000 * 3600);

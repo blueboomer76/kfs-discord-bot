@@ -216,7 +216,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const channel = args[0];
-			if (channel.createdTimestamp + 1.5552e+10 < Number(new Date()) && !flags.some(f => f.name == "yes")) {
+			if (channel.createdTimestamp + 1.5552e+10 < Date.now() && !flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to delete the channel **${channel.name}** (ID ${channel.id}), which is more than 180 days old.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}

@@ -231,7 +231,7 @@ module.exports = [
 				} else {
 					let phoneMsg0;
 					bot.cache.stats.callCurrentTotal++;
-					phoneCache.lastMsgTime = Number(new Date());
+					phoneCache.lastMsgTime = Date.now();
 					phoneCache.timeout = setTimeout(() => {bot.checkPhone()}, 1000*3600);
 					
 					message.channel.send("☎ A phone connection has started! Greet the other side!");
@@ -436,7 +436,7 @@ module.exports = [
 			} else {
 				const storedStats = require("../modules/stats.json"),
 					processUptime = process.uptime() * 1000,
-					duration = storedStats.duration + (Number(new Date()) - bot.cache.stats.lastCheck);
+					duration = storedStats.duration + (Date.now() - bot.cache.stats.lastCheck);
 				const beginEval = new Date();
 				const serverCount = bot.guilds.size,
 					bigServerCount = bot.guilds.filter(g => g.large).size,

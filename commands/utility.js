@@ -293,12 +293,12 @@ module.exports = [
 			const consoleFlag = flags.some(f => f.name == "console");
 			let rawRes, beginEvalDate, endEvalDate;
 			try {
-				beginEvalDate = Number(new Date());
+				beginEvalDate = Date.now();
 				rawRes = eval(args[0]);
 			} catch (err) {
 				rawRes = err instanceof Error && err.stack && !consoleFlag ? err.stack.split("    ", 3).join("    ") + "    ..." : err;
 			} finally {
-				endEvalDate = Number(new Date());
+				endEvalDate = Date.now();
 			}
 
 			const res = typeof rawRes == "function" ? rawRes.toString() : rawRes;
