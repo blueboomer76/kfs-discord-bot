@@ -232,7 +232,7 @@ module.exports = [
 				} else {
 					let phoneMsg0;
 					bot.cache.stats.callCurrentTotal++;
-					phoneCache.lastMsgTime = Number(new Date());
+					phoneCache.lastMsgTime = Date.now();
 					phoneCache.timeout = setTimeout(bot.checkPhone, 1000*3600, bot);
 					
 					message.channel.send("☎ A phone connection has started! Greet the other side!");
@@ -468,13 +468,13 @@ module.exports = [
 					`Voice: ${voiceChannelCount.toLocaleString()} (${(voiceChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
 					`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
 					, true)
-					.addField("Messages Seen", `Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, Number(new Date()) - bot.readyTimestamp)})` + "\n" +
+					.addField("Messages Seen", `Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, Date.now() - bot.readyTimestamp)})` + "\n" +
 					`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, stats.duration)})`
 					, true)
-					.addField("Phone Calls Made", `Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, Number(new Date()) - bot.readyTimestamp)})` + "\n" +
+					.addField("Phone Calls Made", `Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, Date.now() - bot.readyTimestamp)})` + "\n" +
 					`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, stats.duration)})`
 					, true)
-					.addField("Commands", `Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, Number(new Date()) - bot.readyTimestamp)})` + "\n" +
+					.addField("Commands", `Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, Date.now() - bot.readyTimestamp)})` + "\n" +
 					`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, stats.duration)})`
 					, true);
 				message.channel.send(statsEmbed);

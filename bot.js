@@ -60,7 +60,7 @@ class KendraBot extends Client {
 			phone: {channels: [], msgCount: 0, lastMsgTime: 0, timeout: null},
 			recentCommands: [],
 			stats: {
-				lastCheck: Number(new Date()),
+				lastCheck: Date.now(),
 				messageCurrentTotal: 0,
 				messageSessionTotal: 0,
 				callCurrentTotal: 0,
@@ -130,7 +130,7 @@ class KendraBot extends Client {
 		}
 		const stats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8")),
 			stats2 = this.cache.stats;
-		stats.duration = stats.duration + (Number(new Date()) - stats2.lastCheck);
+		stats.duration = stats.duration + (Date.now() - stats2.lastCheck);
 		stats.messageTotal += stats2.messageCurrentTotal;
 
 		const distrib = stats.commandDistrib,
@@ -156,7 +156,7 @@ class KendraBot extends Client {
 		stats2.callCurrentTotal = 0;
 		stats2.commandSessionTotal += commandCurrentTotal;
 		stats2.commandCurrentTotal = 0;
-		stats2.lastCheck = Number(new Date());
+		stats2.lastCheck = Date.now();
 		stats2.commandUsage = [];
 	}
 	
@@ -261,7 +261,7 @@ class KendraBot extends Client {
 			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
 		let affected = 0;
 		
-		phoneCache.lastMsgTime = Number(new Date());
+		phoneCache.lastMsgTime = Date.now();
 		phoneCache.msgCount++;
 		setTimeout(() => {phoneCache.msgCount--}, 5000);
 		if (message.channel.id == phoneCache.channels[0].id) affected = 1;
@@ -276,7 +276,7 @@ class KendraBot extends Client {
 		const phoneCache = bot.cache.phone;
 		if (bot.checkDeletedPhoneChannels(bot)) return;
 
-		const dif = Number(new Date()) - phoneCache.lastMsgTime;
+		const dif = Date.now() - phoneCache.lastMsgTime;
 		if (dif < 1000*3595) {
 			phoneCache.timeout = setTimeout(bot.checkPhone, dif, bot);
 		} else {

@@ -2,6 +2,12 @@
 
 # 1.X (current)
 
+## 1.4.8
+- Changed `Number(new Date())` to `Date.now()` in expressions requiring a numbered date
+- Reworded many of the event messages and added timestamps for better understanding
+- Changed system of handling remote HTTP request errors
+- Added many options to purge command
+
 ## 1.4.3
 - Added emoji support (both custom and default) for inputs to image commands
 

@@ -5,7 +5,7 @@ const rssFeedPostInt = rssFeedSitesLen < 100 ? (3 - Math.floor(rssFeedSitesLen /
 	rssFeedPostAmt = rssFeedSitesLen < 40 ? Math.ceil(rssFeedSitesLen / 10) : 5;
 
 module.exports = async bot => {
-	console.log(`Bot has entered ready state on ${new Date()}`);
+	console.log(`[${new Date().toJSON()}] Bot has entered ready state.`);
 	
 	bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
 	bot.user.setActivity(`${bot.prefix}help | with you in ${bot.guilds.size} servers`);

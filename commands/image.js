@@ -4,11 +4,11 @@ const {RichEmbed} = require("discord.js"),
 
 async function setCommandPosts(command, subreddit, checkNsfw) {
 	let fetchRes;
-	command.lastChecked = Number(new Date());
+	command.lastChecked = Date.now();
 	await getPosts(subreddit, checkNsfw)
 		.then(posts => {
 			if (checkNsfw) {
-				command.lastChecked = Number(new Date());
+				command.lastChecked = Date.now();
 				command.cachedSfwPosts = posts.sfw;
 				command.cachedNsfwPosts = posts.nsfw;
 			} else {
@@ -85,7 +85,7 @@ function sendRedditEmbed(command, message, checkNsfw) {
 	postData = postData[0];
 
 	const embedTitle = postData.title, imageURL = postData.imageURL;
-	if (/^https:\/\/imgur.com/.test(imageURL) || /\.gifv$/.test(imageURL)) {
+	if (/^https?:\/\/imgur.com/.test(imageURL) || /\.gifv$/.test(imageURL)) {
 		message.channel.send(`${imageURL} (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author})`);
 	} else {
 		const redditEmbed = new RichEmbed()

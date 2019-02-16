@@ -1,8 +1,8 @@
-module.exports = async (bot, ev) => {
-	console.log("The client has disconnected:");
-	console.error(ev);
+module.exports = async (bot, event) => {
+	console.log(`[${new Date().toJSON()}] WebSocket client has disconnected:`);
+	console.log(event);
 	console.log("The bot will shut down and bot data will be logged.");
 	
-	bot.logStats();
+	await bot.logStats();
 	process.exit(2);
 };

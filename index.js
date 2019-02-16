@@ -31,13 +31,18 @@ bot.loadCommands();
 bot.loadEvents();
 
 process.on("uncaughtException", err => {
-	console.error(`[Exception] ${new Date()}:` + "\n" + err.stack);
+	console.error(`[${new Date().toJSON()}] Exception:` + "\n" + err.stack);
 	if (!bot.user) process.exit(2);
 });
 
 process.on("unhandledRejection", reason => {
-	const reasonStack = reason && (reason.stack ? reason.stack : reason);
-	console.error(`[Promise Rejection] ${new Date()}:` + "\n" + reasonStack);
+	if (reason && reason.name == "DiscordAPIError") {
+		console.error(`[${new Date().toJSON()}] Discord API has returned an error code:` + reason.message);
+		console.debug(reason);
+	} else {
+		console.error(`[${new Date().toJSON()}] Promise Rejection:`);
+		console.error(reason);
+	}
 });
 
 // Emitted by Ctrl+C in the command line
