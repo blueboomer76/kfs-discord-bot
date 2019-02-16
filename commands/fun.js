@@ -94,7 +94,7 @@ module.exports = [
 					if (!res) return reject("No response was received from Reddit.");
 					if (res.statusCode >= 400) return reject(`The request to Reddit failed with status code ${res.statusCode} (${res.statusMessage})`);
 					
-					this.lastChecked = Number(new Date());
+					this.lastChecked = Date.now();
 					const results = res.body.data.children
 						.filter(r => !r.data.stickied)
 						.map(r => {
@@ -329,7 +329,7 @@ module.exports = [
 					if (!res) return reject("No response was received from Reddit.");
 					if (res.statusCode >= 400) return reject(`The request to Reddit failed with status code ${res.statusCode} (${res.statusMessage})`);
 					
-					this.lastChecked = Number(new Date());
+					this.lastChecked = Date.now();
 					const results = res.body.data.children
 						.filter(r => !r.data.stickied && !r.data.over_18)
 						.map(r => {
@@ -397,7 +397,7 @@ module.exports = [
 					if (!res) return reject("No response was received from Reddit.");
 					if (res.statusCode >= 400) return reject(`The request to Reddit failed with status code ${res.statusCode} (${res.statusMessage})`);
 					
-					this.lastChecked = Number(new Date());
+					this.lastChecked = Date.now();
 					const results = res.body.data.children
 						.filter(r => !r.data.stickied)
 						.map(r => {

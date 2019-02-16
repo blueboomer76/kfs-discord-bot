@@ -4,11 +4,11 @@ const {RichEmbed} = require("discord.js"),
 
 async function setCommandPosts(command, subreddit, checkNsfw) {
 	let fetchRes;
-	command.lastChecked = Number(new Date());
+	command.lastChecked = Date.now();
 	await getPosts(subreddit, checkNsfw)
 		.then(posts => {
 			if (checkNsfw) {
-				command.lastChecked = Number(new Date());
+				command.lastChecked = Date.now();
 				command.cachedSfwPosts = posts.sfw;
 				command.cachedNsfwPosts = posts.nsfw;
 			} else {

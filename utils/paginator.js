@@ -65,7 +65,7 @@ function paginateOnEdit(message, sentMessage, entries, options) {
 }
 
 function checkReaction(collector, limit) {
-	const dif = Number(new Date()) - collector.lastReactionTime;
+	const dif = Date.now() - collector.lastReactionTime;
 	if (dif < limit - 1000) {
 		setTimeout(checkReaction, dif, collector, limit);
 	} else {
@@ -103,7 +103,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 	message.channel.send(options.embedText || "", {embed: genEmbed})
 		.then(newMessage => {
 			if (entries[0].length > options.limit) {
-				newMessage.lastReactionTime = Number(new Date());
+				newMessage.lastReactionTime = Date.now();
 				const emojiList = ["⬅", "➡"];
 				if (!options.noStop) emojiList.splice(1, 0, "⏹");
 				if (Math.ceil(entries[0].length / options.limit) > 5) emojiList.push("🔢");
@@ -117,7 +117,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 					return user.id == message.author.id && emojiList.includes(reaction.emoji.name);
 				}, options.removeReactAfter ? {time: options.removeReactAfter} : {});
 				pgCollector.on("collect", async reaction => {
-					pgCollector.lastReactionTime = Number(new Date());
+					pgCollector.lastReactionTime = Date.now();
 					const page = Number(newMessage.embeds[0].footer.text.match(/\d+/)[0]);
 					switch (reaction.emoji.name) {
 						case "⬅":

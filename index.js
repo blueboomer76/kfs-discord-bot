@@ -1,4 +1,5 @@
-const KFSDiscordBot = require("./bot.js"),
+const {DiscordAPIError} = require("discord.js"),
+	KFSDiscordBot = require("./bot.js"),
 	{token} = require("./config.json");
 
 if (parseFloat(process.versions.node) < 8) {
@@ -45,13 +46,17 @@ bot.loadCommands();
 bot.loadEvents();
 
 process.on("uncaughtException", err => {
-	console.error(`[Exception] ${new Date()}:` + "\n" + err.stack);
+	console.error(`[${new Date().toJSON()}] Exception:` + "\n" + err.stack);
 	if (!bot.user) process.exit(1);
 });
 
 process.on("unhandledRejection", reason => {
-	const reasonStack = reason instanceof Error && reason.stack ? reason.stack : reason;
-	console.error(`[Promise Rejection] ${new Date()}:` + "\n" + reasonStack);
+	if (reason instanceof DiscordAPIError) {
+		console.error(`[${new Date().toJSON()}] Discord API has returned an error: ` + reason.message);
+	} else {
+		console.error(`[${new Date().toJSON()}] Promise Rejection:`);
+		console.error(reason);
+	}
 });
 
 // Emitted by Ctrl+C in the command line
