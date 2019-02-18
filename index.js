@@ -52,7 +52,8 @@ process.on("uncaughtException", err => {
 
 process.on("unhandledRejection", reason => {
 	if (reason instanceof DiscordAPIError) {
-		console.error(`[${new Date().toJSON()}] Discord API has returned an error: ` + reason.message);
+		console.error(`[${new Date().toJSON()}] Discord API has returned an error: ${reason.message}`);
+		console.error(`Details - Code: ${reason.code}, Method: ${reason.method}, Path: ${reason.path}`);
 	} else {
 		console.error(`[${new Date().toJSON()}] Promise Rejection:`);
 		console.error(reason);
