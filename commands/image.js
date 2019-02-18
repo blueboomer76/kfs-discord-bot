@@ -40,7 +40,7 @@ function getPosts(subreddit, checkNsfw) {
 						score: result.data.score,
 						comments: result.data.num_comments,
 						author: result.data.author,
-						imageURL: /v\.redd\.it/.test(result.data.url) ? result.data.preview.images[0].source.url : result.data.url
+						imageURL: /v\.redd\.it/.test(result.data.url) && result.data.preview ? result.data.preview.images[0].source.url : result.data.url
 					};
 					if (result.data.over_18) {
 						nsfwResults.push(postObj);
@@ -85,7 +85,7 @@ function sendRedditEmbed(command, message, checkNsfw) {
 	postData = postData[0];
 
 	const embedTitle = postData.title, imageURL = postData.imageURL;
-	if (/^https?:\/\/imgur.com/.test(imageURL) || /\.gifv$/.test(imageURL)) {
+	if (/^https?:\/\/(imgur\.com|v\.redd\.it)/.test(imageURL) || /\.gifv$/.test(imageURL)) {
 		message.channel.send(`${imageURL} (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author})`);
 	} else {
 		const redditEmbed = new RichEmbed()

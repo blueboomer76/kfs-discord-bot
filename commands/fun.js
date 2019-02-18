@@ -473,19 +473,19 @@ module.exports = [
 			}
 		}
 	},
-	class RateWaifuCommand extends Command {
+	class RateCommand extends Command {
 		constructor() {
 			super({
-				name: "ratewaifu",
+				name: "rate",
 				description: "Have the bot rate someone (or anything) for you",
-				aliases: ["opinion", "rate"],
+				aliases: ["opinion", "ratewaifu"],
 				args: [
 					{
 						infiniteArgs: true,
 						type: "string"
 					}
 				],
-				usage: "ratewaifu <someone or something>"
+				usage: "rate <someone or something>"
 			});
 		}
 		
@@ -506,14 +506,17 @@ module.exports = [
 			
 			let rand = (Math.abs(hash % 90 / 10) + 1).toFixed(1), toSend;
 			if (toRate.toLowerCase() == "kendra" || toRate == bot.user.tag) {
-				toSend = "I would rate myself a 10/10, of course.";
+				rand = 10;
+				return message.channel.send("I would rate myself a 10/10, of course.");
 			} else if (toRate == message.member.user.tag || toRate == "me") {
 				rand = (Math.abs(hash % 50 / 10) + 5).toFixed(1);
-				toSend = `I would rate you a ${rand}/10`;
+				toSend = "I would rate you: ";
 			} else {
-				toSend = `I would rate \`${toRate}\` a ${rand}/10`;
+				toSend = `I would rate \`${toRate}\`: `;
 			}
-			message.channel.send(toSend);
+			rand = parseFloat(rand);
+			message.channel.send(toSend + "\n" + "`" + "█".repeat(Math.floor(rand + 0.5)) + " ‍‍".repeat(10 - Math.floor(rand + 0.5)) + "` " +
+			`**${rand}**/10 `);
 		}
 	},
 	class SayCommand extends Command {
@@ -556,7 +559,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "ship",
-				description: "Ship two users, generate a name, and rate it!",
+				description: "Ships two users, or to another user if one user is provided, and generates a ship name",
 				args: [
 					{
 						allowQuotes: true,
@@ -565,36 +568,68 @@ module.exports = [
 					},
 					{
 						infiniteArgs: true,
+						optional: true,
 						type: "string"
 					}
 				],
-				usage: "ship <user 1> <user 2>"
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				},
+				usage: "ship <user 1> [user 2]"
 			});
+			this.shipStates = [
+				{max: 10, msg: "PERFECT!"},
+				{max: 9.5, msg: "Almost Perfect!"},
+				{max: 8, msg: "Great!"},
+				{max: 6, msg: "Good!"},
+				{max: 4, msg: "About Average"},
+				{max: 2, msg: "Below Average"},
+				{max: 0, msg: "Not a Match!"},
+			];
 		}
 		
 		async run(bot, message, args, flags) {
+			if (args[0].length < 2 || (args[1] && args[1].length < 2)) return {cmdWarn: "One of the ship names is too short.", noLog: true, cooldown: null};
 			const memberRegex = /<@!?\d+>/, memberRegex2 = /\d+/;
 			let hash = 0, toShip1 = args[0], toShip2 = args[1], member;
+
 			if (memberRegex.test(toShip1)) {
 				member = message.guild.members.get(args[0].match(memberRegex2)[0]);
 				toShip1 = member ? member.user.username : args[0];
 			}
-			if (memberRegex.test(toShip2)) {
-				member = message.guild.members.get(args[1].match(memberRegex2)[0]);
-				toShip2 = member ? member.user.username : args[1];
+			if (toShip2) {
+				if (memberRegex.test(toShip2)) {
+					member = message.guild.members.get(args[1].match(memberRegex2)[0]);
+					toShip2 = member ? member.user.username : args[1];
+				}
+			} else {
+				toShip2 = toShip1;
+				toShip1 = message.author.username;
 			}
+
+			const shipName = toShip1.slice(0, Math.floor(toShip1.length / 2)) + toShip2.slice(Math.floor(toShip2.length / 2));
 			for (let i = 0; i < toShip1.length; i++) {
-				const c = toShip1.charCodeAt(i);
-				hash = hash * 31 + c;
+				hash = hash * 31 + toShip1.charCodeAt(i);
 				hash |= 0; // Convert to 32-bit integer
 			}
 			for (let i = 0; i < toShip2.length; i++) {
-				const c = toShip2.charCodeAt(i);
-				hash = hash * 31 + c;
+				hash = hash * 31 + toShip1.charCodeAt(i);
 				hash |= 0; // Convert to 32-bit integer
 			}
-			
-			message.channel.send(`I would rate the ship between \`${toShip1}\` and \`${toShip2}\` a ${(Math.abs(hash % 90 / 10) + 1).toFixed(1)}/10`);
+
+			const shipRating = parseFloat((Math.abs(hash % 90) / 10 + 1).toFixed(1));
+			let shipDescription = `**Ship Name**: ${shipName}` + "\n" +
+				"**Ship Rating**:" + "\n\n" +
+				"`" + "█".repeat(Math.floor(shipRating + 0.5)) + " ‍‍".repeat(10 - Math.floor(shipRating + 0.5)) + "` " +
+				`**${shipRating}**/10 | ` + this.shipStates[this.shipStates.findIndex(state => state.max <= shipRating)].msg;
+			if (toShip1 == toShip2) shipDescription += "\n\n" + "*Forever alone!*";
+			message.channel.send(new RichEmbed()
+				.setTitle(`${toShip1} 💗 ${toShip2}`)
+				.setColor(131073 * Math.floor(shipRating * 12.5))
+				.setDescription(shipDescription)
+			);
 		}
 	}
 ];
