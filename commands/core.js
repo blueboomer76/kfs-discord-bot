@@ -101,15 +101,14 @@ module.exports = [
 					};
 				helpEmbed.setTitle(`Help - ${command.name}`)
 					.setColor(Math.floor(Math.random() * 16777216))
-					.setFooter("Don't include the usage symbols when running the command.")
-					.addField("Category", command.category)
+					.setFooter(`Category: ${command.category} | Don't include the usage symbols when running the command.`)
 					.addField("Description", command.description);
 				if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "));
 				if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"));
 				helpEmbed.addField("Usage", "`" + bot.prefix + command.usage + "`");
-				if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.join("\n"));
+				if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.map(e => "`" + e + "`").join("\n"));
 				if (commandPerms.bot.length > 0 || commandPerms.user.length > 0 || commandPerms.role || commandPerms.level > 0) {
-					helpEmbed.addField("Permissions", `Bot - ${permReq.bot}\nUser - ${permReq.user}${permReq.role}${permReq.level}`);
+					helpEmbed.addField("Permissions", `Bot - ${permReq.bot}` + "\n" + `User - ${permReq.user}${permReq.role}${permReq.level}`);
 				}
 				helpEmbed.addField("Cooldown", command.cooldown.time != 0 ? `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}` : "None");
 			}

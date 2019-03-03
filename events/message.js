@@ -3,9 +3,9 @@ const {parsePerm} = require("../modules/functions.js"),
 	argParser = require("../utils/argsParser.js");
 
 async function execCommand(runCommand, bot, message, args) {
-	if (runCommand.disabled) return {cmdErr: "This command is currently disabled."};
-	if (!message.guild && !runCommand.allowDMs) return {cmdErr: "This command cannot be used in Direct Messages."};
-	if (message.guild && runCommand.nsfw && !message.channel.nsfw) return {cmdErr: "Please go to a NSFW channel to use this command."};
+	if (runCommand.disabled) return {cmdErr: "This command is currently disabled.", noLog: true};
+	if (!message.guild && !runCommand.allowDMs) return {cmdErr: "This command cannot be used in Direct Messages.", noLog: true};
+	if (message.guild && runCommand.nsfw && !message.channel.nsfw) return {cmdErr: "Please go to a NSFW channel to use this command.", noLog: true};
 	if (message.guild && message.guild.large && !message.member) await message.guild.fetchMember(message.author);
 	
 	const requiredPerms = runCommand.perms;
@@ -48,22 +48,22 @@ async function execCommand(runCommand, bot, message, args) {
 			faultMsg += `\nYou need to be a ${bot.permLevels[requiredPerms.level].name} to run this command${faultDesc}`;
 		}
 	}
-	if (faultMsg.length > 0) return {errTitle: "Command permission error", cmdWarn: faultMsg};
+	if (faultMsg.length > 0) return {errTitle: "Command permission error", cmdWarn: faultMsg, noLog: true};
 	
 	let flags = [];
 	if (runCommand.flags.length > 0) {
 		const parsedFlags = await argParser.parseFlags(bot, message, args, runCommand.flags);
 		if (parsedFlags.error) {
-			if (parsedFlags.error.startsWith("Multiple")) return {cmdErr: `**${parsedFlags.error}**\n${parsedFlags.message}`};
-			return {cmdErr: `**${parsedFlags.error}**\n${parsedFlags.message}\n*The correct usage is:* \`${runCommand.usage}\``};
+			if (parsedFlags.error.startsWith("Multiple")) return {cmdErr: `**${parsedFlags.error}**\n${parsedFlags.message}`, noLog: true};
+			return {cmdErr: `**${parsedFlags.error}**` + "\n" + parsedFlags.message + "\n" + `▫ | Correct usage: \`${runCommand.usage}\``, noLog: true};
 		}
 		flags = parsedFlags.flags;
 		args = parsedFlags.newArgs;
 	}
 	args = await argParser.parseArgs(bot, message, args, runCommand);
 	if (args.error) {
-		if (args.error.startsWith("Multiple")) return {cmdErr: `**${args.error}**\n${args.message}`};
-		return {cmdErr: `**${args.error}**\n${args.message}\n*The correct usage is:* \`${runCommand.usage}\``};
+		if (args.error.startsWith("Multiple")) return {cmdErr: `**${args.error}**\n${args.message}`, noLog: true};
+		return {cmdErr: `**${args.error}**` + "\n" + args.message + "\n" + `▫ | Correct usage: \`${runCommand.usage}\`` + "\n" + `▫ | Get more help by using \`${bot.prefix}help ${runCommand.name}\``, noLog: true};
 	}
 		
 	return runCommand.run(bot, message, args, flags);

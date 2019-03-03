@@ -495,41 +495,43 @@ module.exports = [
 				await message.channel.fetchMessages({limit: toDelete})
 					.then(messages => {
 						let toDelete2 = messages;
-						for (const option of args.slice(1)) {
-							let filter;
-							switch (option) {
-								case "attachments":
-									filter = msg => msg.attachments.size > 0;
-									break;
-								case "bots":
-									filter = msg => msg.author.bot;
-									break;
-								case "embeds":
-									filter = msg => msg.embeds[0];
-									break;
-								case "images":
-									filter = msg => msg.embeds[0] && (msg.embeds[0].type == "image" || msg.embeds[0].image);
-									break;
-								case "invites":
-									filter = msg => /(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi.test(msg.content);
-									break;
-								case "left":
-									filter = msg => msg.member == null;
-									break;
-								case "links":
-									filter = msg => /https?:\/\/\S+\.\S+/gi.test(msg.content) || (msg.embeds[0] && msg.embeds.some(e => e.type == "article" || e.type == "link"));
-									break;
-								case "mentions":
-									filter = msg => {
-										const mentions = msg.mentions;
-										return mentions.everyone || mentions.members.size > 0 || mentions.roles.size > 0 || mentions.users.size > 0;
-									};
-									break;
-								case "reactions":
-									filter = msg => msg.reactions.size > 0;
-									break;
+						if (args[1]) {
+							for (const option of args.slice(1)) {
+								let filter;
+								switch (option) {
+									case "attachments":
+										filter = msg => msg.attachments.size > 0;
+										break;
+									case "bots":
+										filter = msg => msg.author.bot;
+										break;
+									case "embeds":
+										filter = msg => msg.embeds[0];
+										break;
+									case "images":
+										filter = msg => msg.embeds[0] && (msg.embeds[0].type == "image" || msg.embeds[0].image);
+										break;
+									case "invites":
+										filter = msg => /(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi.test(msg.content);
+										break;
+									case "left":
+										filter = msg => msg.member == null;
+										break;
+									case "links":
+										filter = msg => /https?:\/\/\S+\.\S+/gi.test(msg.content) || (msg.embeds[0] && msg.embeds.some(e => e.type == "article" || e.type == "link"));
+										break;
+									case "mentions":
+										filter = msg => {
+											const mentions = msg.mentions;
+											return mentions.everyone || mentions.members.size > 0 || mentions.roles.size > 0 || mentions.users.size > 0;
+										};
+										break;
+									case "reactions":
+										filter = msg => msg.reactions.size > 0;
+										break;
+								}
+								toDelete2 = toDelete2.filter(filter);
 							}
-							toDelete2 = toDelete2.filter(filter);
 						}
 						const textFlag = flags.find(f => f.name == "text"),
 							userFlag = flags.find(f => f.name == "user");
@@ -565,15 +567,18 @@ module.exports = [
 				message.channel.bulkDelete(toDelete, true)
 					.then(messages => {
 						const msgAuthors = messages.map(m => m.author.tag), deleteDistrib = {};
-						let breakdown = "";
+						let breakdown = "", deleteAfter = 4500;
 						for (const author of msgAuthors) {
 							deleteDistrib[author] = (deleteDistrib[author] || 0) + 1;
 						}
 						for (const author in deleteDistrib) {
 							breakdown += ` **\`${author}\`** - ${deleteDistrib[author]}` + "\n";
+							deleteAfter += 500;
 						}
 						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!` + "\n\n" + "__**Breakdown**__:" + "\n" + breakdown)
-							.then(m => m.delete(7500).catch(() => {}));
+							.then(m => {
+								m.delete(deleteAfter < 10000 ? deleteAfter : 10000).catch(() => {});
+							});
 					})
 					.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 			}
