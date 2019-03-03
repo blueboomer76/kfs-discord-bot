@@ -595,15 +595,18 @@ module.exports = [
 				message.channel.bulkDelete(toDelete, true)
 					.then(messages => {
 						const msgAuthors = messages.map(m => m.author.tag), deleteDistrib = {};
-						let breakdown = "";
+						let breakdown = "", deleteAfter = 4500;
 						for (const author of msgAuthors) {
 							deleteDistrib[author] = (deleteDistrib[author] || 0) + 1;
 						}
 						for (const author in deleteDistrib) {
 							breakdown += ` **\`${author}\`** - ${deleteDistrib[author]}` + "\n";
+							deleteAfter += 500;
 						}
 						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!` + "\n\n" + "__**Breakdown**__:" + "\n" + breakdown)
-							.then(m => m.delete(7500).catch(() => {}));
+							.then(m => {
+								m.delete(deleteAfter < 10000 ? deleteAfter : 10000).catch(() => {});
+							});
 					})
 					.catch(err => message.channel.send("An error has occurred while trying to purge the messages: `" + err + "`"));
 			}

@@ -55,7 +55,7 @@ async function execCommand(runCommand, bot, message, args) {
 		const parsedFlags = await argParser.parseFlags(bot, message, args, runCommand.flags);
 		if (parsedFlags.error) {
 			if (parsedFlags.error.startsWith("Multiple")) return {cmdErr: `**${parsedFlags.error}**\n${parsedFlags.message}`};
-			return {cmdErr: `**${parsedFlags.error}**\n${parsedFlags.message}\n*The correct usage is:* \`${runCommand.usage}\``};
+			return {cmdErr: `**${parsedFlags.error}**` + "\n" + parsedFlags.message + "\n" + `▫ | Correct usage: \`${runCommand.usage}\``};
 		}
 		flags = parsedFlags.flags;
 		args = parsedFlags.newArgs;
@@ -63,7 +63,7 @@ async function execCommand(runCommand, bot, message, args) {
 	args = await argParser.parseArgs(bot, message, args, runCommand);
 	if (args.error) {
 		if (args.error.startsWith("Multiple")) return {cmdErr: `**${args.error}**\n${args.message}`};
-		return {cmdErr: `**${args.error}**\n${args.message}\n*The correct usage is:* \`${runCommand.usage}\``};
+		return {cmdErr: `**${args.error}**` + "\n" + args.message + "\n" + `▫ | Correct usage: \`${runCommand.usage}\`` + "\n" + `▫ | Get more help by using \`${bot.prefix}help ${runCommand.name}\``};
 	}
 		
 	return runCommand.run(bot, message, args, flags);

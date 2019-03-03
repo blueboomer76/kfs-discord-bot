@@ -342,6 +342,9 @@ module.exports = [
 					time: 15000,
 					type: "channel"
 				},
+				examples: [
+					"mirror 😍 top-to-bottom"
+				],
 				perms: {
 					bot: ["ATTACH_FILES"],
 					user: [],
