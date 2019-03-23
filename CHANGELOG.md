@@ -2,6 +2,11 @@
 
 # 1.X (current)
 
+## 1.4.11
+
+- Added a way to store cumulative bot stats to its cache
+- Edited the bot method for writing bot stats
+
 ## 1.4.8
 
 - Changed `Number(new Date())` to `Date.now()` in expressions requiring a numbered date

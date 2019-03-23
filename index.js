@@ -6,6 +6,14 @@ if (parseFloat(process.versions.node) < 8) {
 	throw new Error("Incompatible Node version (Node version 8 or higher needed)");
 }
 
+const bot = new KFSDiscordBot({
+	disableEveryone: true,
+	disabledEvents: [
+		"USER_NOTE_UPDATE",
+		"USER_SETTINGS_UPDATE"
+	]
+});
+
 let storedStats;
 try {
 	storedStats = require("./modules/stats.json");
@@ -32,14 +40,7 @@ try {
 
 require("fs").writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {
 	if (err) throw err;
-});
-
-const bot = new KFSDiscordBot({
-	disableEveryone: true,
-	disabledEvents: [
-		"USER_NOTE_UPDATE",
-		"USER_SETTINGS_UPDATE"
-	]
+	bot.setCumulativeStats();
 });
 
 bot.loadCommands();

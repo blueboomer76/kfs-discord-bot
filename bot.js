@@ -60,6 +60,12 @@ class KFSDiscordBot extends Client {
 			channelCount: 0,
 			phone: {channels: [], msgCount: 0, lastMsgTime: 0, timeout: null},
 			recentCommands: [],
+			cumulativeStats: {
+				duration: 0,
+				commandTotal: 0,
+				callTotal: 0,
+				messageTotal: 0
+			},
 			stats: {
 				commandCurrentTotal: 0,
 				commandSessionTotal: 0,
@@ -153,6 +159,7 @@ class KFSDiscordBot extends Client {
 		storedUsages.sort((a, b) => b.uses - a.uses);
 
 		fs.writeFileSync("modules/stats.json", JSON.stringify(storedStats, null, 4));
+		this.setCumulativeStats(storedStats);
 
 		cachedStats.commandSessionTotal += commandCurrentTotal;
 		cachedStats.commandCurrentTotal = 0;
@@ -163,7 +170,17 @@ class KFSDiscordBot extends Client {
 		cachedStats.commandUsages = [];
 		cachedStats.lastCheck = Date.now();
 	}
-	
+
+	async setCumulativeStats(data) {
+		const storedStats = data || require("./modules/stats.json");
+		this.cache.cumulativeStats = {
+			duration: storedStats.duration,
+			commandTotal: storedStats.commandTotal,
+			callTotal: storedStats.callTotal,
+			messageTotal: storedStats.messageTotal
+		};
+	}
+
 	checkRemoteRequest(site, err, res) {
 		if (err) return `Could not request to ${site}: ${err.message}`;
 		if (!res) return `No response was received from ${site}.`;
