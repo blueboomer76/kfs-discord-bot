@@ -1,8 +1,17 @@
-const config = require("../config.json"), {version} = require("../package.json");
+const {parseLargeNumber} = require("../modules/functions.js"),
+	config = require("../config.json"),
+	{version} = require("../package.json");
 
 const rssFeedSitesLen = config.rssFeedWebsites.length;
 const rssFeedPostInt = rssFeedSitesLen < 100 ? (3 - Math.floor(rssFeedSitesLen / 50)) * 3600 : 3600,
 	rssFeedPostAmt = rssFeedSitesLen < 40 ? Math.ceil(rssFeedSitesLen / 10) : 5;
+const parserOptions = {
+	capSuffix: true,
+	maxFullShow: 1000000,
+	noSpace: true,
+	precision: 4,
+	shortSuffix: true
+};
 
 module.exports = async bot => {
 	console.log(`[${new Date().toJSON()}] Bot has entered ready state.`);
@@ -28,14 +37,17 @@ module.exports = async bot => {
 					newBotGame = `with ${bot.cache.channelCount} channels`;
 					break;
 				case 2:
-					newBotGame = `${require("../modules/stats.json").commandTotal} run commands`;
+					newBotGame = `${parseLargeNumber(bot.cache.cumulativeStats.commandTotal, parserOptions)} run commands`;
 					break;
 				case 3:
+					newBotGame = `${parseLargeNumber(bot.cache.cumulativeStats.messageTotal, parserOptions)} read messages`;
+					break;
+				case 4:
 					newBotGame = `on version ${version}`;
 					break;
 			}
 			
-			if (bot.cache.status.pos < 4) {
+			if (bot.cache.status.pos < 5) {
 				bot.cache.status.pos++;
 			} else {
 				bot.cache.status.pos = 0;

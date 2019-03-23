@@ -32,6 +32,7 @@ try {
 
 require("fs").writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {
 	if (err) throw err;
+	bot.setCumulativeStats();
 });
 
 const bot = new KFSDiscordBot({
