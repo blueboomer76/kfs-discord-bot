@@ -59,6 +59,7 @@ class KendraBot extends Client {
 			channelCount: 0,
 			phone: {channels: [], msgCount: 0, lastMsgTime: 0, timeout: null},
 			recentCommands: [],
+			cumulativeStats: undefined,
 			stats: {
 				lastCheck: Date.now(),
 				messageCurrentTotal: 0,
@@ -71,6 +72,7 @@ class KendraBot extends Client {
 			},
 			status: {randomIters: 0, pos: 0}
 		};
+		this.setCumulativeStats();
 		if (config.ideaWebhook) {
 			this.ideaWebhook = new WebhookClient(config.ideaWebhook.id, config.ideaWebhook.token);
 		}
@@ -125,17 +127,14 @@ class KendraBot extends Client {
 	}
 	
 	async logStats() {
-		if (require.cache[require.resolve("./modules/stats.json")]) {
-			await delete require.cache[require.resolve("./modules/stats.json")];
-		}
-		const stats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8")),
-			stats2 = this.cache.stats;
-		stats.duration = stats.duration + (Date.now() - stats2.lastCheck);
-		stats.messageTotal += stats2.messageCurrentTotal;
+		const storedStats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8")),
+			cachedStats = this.cache.stats;
+		storedStats.duration = storedStats.duration + (Date.now() - cachedStats.lastCheck);
+		storedStats.messageTotal += cachedStats.messageCurrentTotal;
 
-		const distrib = stats.commandDistrib,
-			usageCache = stats2.commandUsage;
-		let commandCurrentTotal = stats2.commandCurrentTotal;
+		const distrib = storedStats.commandDistrib,
+			usageCache = cachedStats.commandUsage;
+		let commandCurrentTotal = cachedStats.commandCurrentTotal;
 		for (const entry of usageCache) {
 			const cmdIndex = distrib.findIndex(u => u.command == entry.command);
 			if (cmdIndex != -1) {
@@ -145,21 +144,32 @@ class KendraBot extends Client {
 			}
 			commandCurrentTotal += entry.uses;
 		}
-		stats.callTotal += stats2.callCurrentTotal;
-		stats.commandTotal += commandCurrentTotal;
+		storedStats.callTotal += cachedStats.callCurrentTotal;
+		storedStats.commandTotal += commandCurrentTotal;
 		distrib.sort((a,b) => b.uses - a.uses);
-		fs.writeFileSync("modules/stats.json", JSON.stringify(stats, null, 4), err => {if (err) throw err;});
+		fs.writeFileSync("modules/stats.json", JSON.stringify(storedStats, null, 4));
+		this.setCumulativeStats(storedStats);
 
-		stats2.messageSessionTotal += stats2.messageCurrentTotal;
-		stats2.messageCurrentTotal = 0;
-		stats2.callSessionTotal += stats2.callCurrentTotal;
-		stats2.callCurrentTotal = 0;
-		stats2.commandSessionTotal += commandCurrentTotal;
-		stats2.commandCurrentTotal = 0;
-		stats2.lastCheck = Date.now();
-		stats2.commandUsage = [];
+		cachedStats.messageSessionTotal += cachedStats.messageCurrentTotal;
+		cachedStats.messageCurrentTotal = 0;
+		cachedStats.callSessionTotal += cachedStats.callCurrentTotal;
+		cachedStats.callCurrentTotal = 0;
+		cachedStats.commandSessionTotal += commandCurrentTotal;
+		cachedStats.commandCurrentTotal = 0;
+		cachedStats.lastCheck = Date.now();
+		cachedStats.commandUsage = [];
 	}
 	
+	async setCumulativeStats(data) {
+		const storedStats = data || require("./modules/stats.json");
+		this.cache.cumulativeStats = {
+			duration: storedStats.duration,
+			messageTotal: storedStats.messageTotal,
+			commandTotal: storedStats.commandTotal,
+			callTotal: storedStats.callTotal
+		};
+	}
+
 	handleRemoteSiteError(message, site, err, res) {
 		message.channel.send(err ? `⚠ Could not request to ${site}: ${err.message} (${err.code})` : `⚠ An error has been returned from ${site}: ${res.statusMessage} (${res.statusCode})`);
 	}
