@@ -78,18 +78,18 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const command = args[0], helpEmbed = new RichEmbed();
 			if (!command) {
-				helpEmbed.setTitle("All the commands for this bot")
-					.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\``)
-					.setColor(Math.floor(Math.random() * 16777216))
-					.setFooter(`There are ${bot.commands.size} commands in total.`);
 				let cmds = bot.commands;
 				if (!bot.ownerIds.includes(message.author.id) && !bot.adminIds.includes(message.author.id)) {
-					cmds = cmds.filter(cmd => !cmd.hidden);
+					cmds = cmds.filter(cmd => !cmd.disabled && !cmd.hidden);
 				}
 				for (let i = 0; i < bot.categories.length; i++) {
 					const cmdsInCat = cmds.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
 					helpEmbed.addField(bot.categories[i], Array.from(cmdsInCat).join(", "));
 				}
+				helpEmbed.setTitle("All the commands for this bot")
+					.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\``)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter(`There are ${cmds.size} commands in total.`);
 			} else {
 				const commandFlags = command.flags.map(f => `\`--${f.name.toLowerCase()}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`),
 					commandPerms = command.perms,
@@ -360,13 +360,9 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			try {
 				const res = delete require.cache[require.resolve(`../${args[0]}`)];
-				if (res) {
-					message.channel.send(`The file ${args[0]} was reloaded and its require.cache has been cleared.`);
-				} else {
-					message.channel.send("Failed to reload that file.");
-				}
+				message.channel.send(res ? "The file's require() cache has been cleared." : "Failed to reload that file.");
 			} catch(err) {
-				message.channel.send(`Couldn't reload file: \`${err}\``);
+				message.channel.send(`A problem has occurred while reloading the file: \`${err}\``);
 			}
 		}
 	},
@@ -399,7 +395,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "stats",
-				description: "Get detailed stats for the Kendra bot",
+				description: "Get detailed stats for this bot",
 				aliases: ["botstats"],
 				allowDMs: true,
 				args: [
@@ -454,7 +450,7 @@ module.exports = [
 				
 				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL)
 					.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
-					.setDescription("Here's some detailed stats about the Kendra bot! *To see stats about the bot host, use `k,stats processor`*")
+					.setDescription(`Here's some detailed stats about this bot! *To see stats about the bot host, use \`${bot.prefix}stats processor\`*`)
 					.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
 					.addField("Last Restart", getDuration(bot.readyTimestamp), true)
 					.addField("Servers", `Total: ${serverCount.toLocaleString()}` + "\n" +
@@ -470,7 +466,7 @@ module.exports = [
 					.addField("Messages Seen", `Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, Date.now() - bot.readyTimestamp)})` + "\n" +
 					`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, stats.duration)})`
 					, true)
-					.addField("Phone Calls Made", `Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, Date.now() - bot.readyTimestamp)})` + "\n" +
+					.addField("Phone Connections", `Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, Date.now() - bot.readyTimestamp)})` + "\n" +
 					`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, stats.duration)})`
 					, true)
 					.addField("Commands", `Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, Date.now() - bot.readyTimestamp)})` + "\n" +
@@ -627,7 +623,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "usage",
-				description: "Find out which commands on Kendra are used most often",
+				description: "Find out which commands from the bot are used most often",
 				aliases: ["popular", "mostused"],
 				allowDMs: true,
 				args: [

@@ -32,10 +32,10 @@ module.exports = async bot => {
 			newBotGame = `with you in ${bot.cache.guildCount} servers`;
 			switch (bot.cache.status.pos) {
 				case 0:
-					newBotGame = `with ${bot.cache.userCount} users`;
+					newBotGame = `with ${parseLargeNumber(bot.cache.userCount, parserOptions)} users`;
 					break;
 				case 1:
-					newBotGame = `with ${bot.cache.channelCount} channels`;
+					newBotGame = `with ${parseLargeNumber(bot.cache.channelCount, parserOptions)} channels`;
 					break;
 				case 2:
 					newBotGame = `${parseLargeNumber(bot.cache.cumulativeStats.commandTotal, parserOptions)} run commands`;

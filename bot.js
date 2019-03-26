@@ -160,7 +160,7 @@ class KendraBot extends Client {
 		cachedStats.commandUsage = [];
 	}
 	
-	async setCumulativeStats(data) {
+	setCumulativeStats(data) {
 		const storedStats = data || require("./modules/stats.json");
 		this.cache.cumulativeStats = {
 			duration: storedStats.duration,

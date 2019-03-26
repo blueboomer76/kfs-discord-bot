@@ -650,7 +650,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const newChannelName = args[0].toLowerCase();
-			if (/^[0-9a-z-_]+$/.test(newChannelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
+			if (/[^0-9a-z-_]/.test(newChannelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
 				
 			message.channel.setName(newChannelName)
 				.then(() => message.channel.send(`✅ This channel's name has been set to **${newChannelName}**.`))

@@ -439,8 +439,8 @@ module.exports = [
 				guildMembers = message.guild.large ? fetchMembers(message) : message.guild.members,
 				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id));
 
-			if (roleMembers.length == 0) return {cmdWarn: `There are no members in the role **${role.name}**.`};
-			if (roleMembers.length > 250) return {cmdWarn: `There are more than 250 members in the role **${role.name}**.`};
+			if (roleMembers.size == 0) return {cmdWarn: `There are no members in the role **${role.name}**.`};
+			if (roleMembers.size > 250) return {cmdWarn: `There are more than 250 members in the role **${role.name}**.`};
 					
 			paginator.paginate(message, {title: `List of members in role - ${role.name}`}, [roleMembers.map(m => m.user.tag)], {
 				embedColor: role.color,
@@ -512,9 +512,9 @@ module.exports = [
 					true)
 				.addField(`Roles [${guild.roles.size} total]`, `\`${bot.prefix}rolelist\` to see all roles`, true)
 				.addField(`Channels [${guild.channels.size} total]`,
-					`${message.guild.channels.filter(chnl => chnl.type == "text").size} Text\n` +
-					`${message.guild.channels.filter(chnl => chnl.type == "voice").size} Voice\n` +
-					`${message.guild.channels.filter(chnl => chnl.type == "category").size} Categories`,
+					`${guild.channels.filter(chnl => chnl.type == "text").size} Text\n` +
+					`${guild.channels.filter(chnl => chnl.type == "voice").size} Voice\n` +
+					`${guild.channels.filter(chnl => chnl.type == "category").size} Categories`,
 					true)
 			);
 		}

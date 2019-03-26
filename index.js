@@ -1,22 +1,20 @@
 const KendraBot = require("./bot.js"),
-	{token} = require("./config.json");
+	{token} = require("./config.json"),
+	fs = require("fs");
 
 if (parseFloat(process.versions.node) < 8) {
 	throw new Error("Incompatible Node version (Node version 8 or higher needed)");
 }
 
 // Check for modules/stats.json
-
-try {
-	require("./modules/stats.json");
-} catch(err) {
-	require("fs").writeFile("modules/stats.json", JSON.stringify({
+if (!fs.existsSync("modules/stats.json")) {
+	fs.writeFileSync("modules/stats.json", JSON.stringify({
 		duration: 0,
 		messageTotal: 0,
 		commandTotal: 0,
 		callTotal: 0,
 		commandDistrib: []
-	}), err => {if (err) throw err;});
+	}, null, 4));
 }
 
 const bot = new KendraBot({
