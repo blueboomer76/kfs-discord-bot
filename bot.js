@@ -170,8 +170,8 @@ class KFSDiscordBot extends Client {
 		cachedStats.commandUsages = [];
 		cachedStats.lastCheck = Date.now();
 	}
-
-	async setCumulativeStats(data) {
+	
+	setCumulativeStats(data) {
 		const storedStats = data || require("./modules/stats.json");
 		this.cache.cumulativeStats = {
 			duration: storedStats.duration,
