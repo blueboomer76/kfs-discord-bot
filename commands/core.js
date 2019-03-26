@@ -361,13 +361,9 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			try {
 				const res = delete require.cache[require.resolve(`../${args[0]}`)];
-				if (res) {
-					message.channel.send(`The file ${args[0]} was reloaded and its require.cache has been cleared.`);
-				} else {
-					message.channel.send("Failed to reload that file.");
-				}
+				message.channel.send(res ? "The file's require() cache has been cleared." : "Failed to reload that file.");
 			} catch (err) {
-				message.channel.send(`Couldn't reload file: \`${err}\``);
+				message.channel.send(`A problem has occurred while reloading the file: \`${err}\``);
 			}
 		}
 	},
@@ -400,7 +396,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "stats",
-				description: "Get detailed stats for the bot",
+				description: "Get detailed stats for this bot",
 				aliases: ["botstats"],
 				allowDMs: true,
 				args: [
