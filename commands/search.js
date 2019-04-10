@@ -345,7 +345,7 @@ module.exports = [
 						errorMsg: "Please provide \"random\", a number greater than 0, or supply no arguments.",
 						optional: true,
 						type: "function",
-						testFunction: obj => {return obj.toLowerCase() == "random" || parseInt(obj) >= 1}
+						testFunction: obj => obj.toLowerCase() == "random" || parseInt(obj) >= 1
 					}
 				],
 				perms: {
@@ -355,47 +355,54 @@ module.exports = [
 				},
 				usage: "xkcd [<number> | random]"
 			});
+			this.lastChecked = 0;
+			this.currComicNum = 0;
 		}
 		
 		async run(bot, message, args, flags) {
-			if (args[0]) args[0] = args[0].toLowerCase();
-			request.get("https://xkcd.com/info.0.json", (err, res) => {
-				const requestRes = bot.checkRemoteRequest("XKCD", err, res);
-				if (requestRes != true) return message.channel.send(requestRes);
-				
-				const currComic = JSON.parse(res.body);
-				if (args[0] == "random" || parseInt(args[0]) > 0) {
-					let comicNum;
-					if (args[0] == "random") {
-						comicNum = Math.ceil(Math.random() * currComic.num);
-					} else {
-						const chosenComicNum = parseInt(args[0]);
-						if (chosenComicNum > currComic.num) return message.channel.send("Invalid comic number provided.");
-						comicNum = chosenComicNum;
-					}
-					request.get(`https://xkcd.com/${comicNum}/info.0.json`, (err2, res2) => {
-						if (err2 || !res2 || res2.statusCode >= 400) {
-							this.postComic(message, currComic, "Current ", true);
-							return;
-						}
-						const chosenComic = JSON.parse(res2.body);
-						this.postComic(message, chosenComic, args[0] == "random" ? "Random " : "");
-					});
-				} else {
-					this.postComic(message, currComic, "Current ");
+			let comicToPost;
+			if (Date.now() > this.lastChecked + 1000*86400) {
+				try {
+					const latestComic = await this.getComic();
+					this.currComicNum = latestComic.num;
+					if (!args[0]) comicToPost = latestComic;
+				} catch (err) {
+					return {cmdWarn: err};
 				}
-			});
+			}
+
+			try {
+				if (args[0] && args[0].toLowerCase() == "random") {
+					const comicNum = Math.ceil(Math.random() * this.currComicNum);
+					await this.postComic(message, `https://xkcd.com/${comicNum}/info.0.json`, {titlePrefix: "Random "});
+				} else if (parseInt(args[0]) > 0) {
+					if (args[0] > this.currComicNum) return {cmdWarn: "Invalid comic number provided."};
+					await this.postComic(message, `https://xkcd.com/${args[0]}/info.0.json`);
+				} else {
+					await this.postComic(message, null, {comic: comicToPost, titlePrefix: "Current "});
+				}
+			} catch (err) {
+				return {cmdWarn: bot.checkRemoteRequest("XKCD", err.err, err.res)};
+			}
 		}
 		
-		postComic(message, comic, titlePrefix, isFallback) {
-			const xkcdEmbed = new RichEmbed()
-				.setTitle(`${titlePrefix}XKCD Comic - ${comic.title} (#${comic.num})`)
+		getComic(url) {
+			return new Promise((resolve, reject) => {
+				request.get(url || "https://xkcd.com/info.0.json", (err, res) => {
+					if (err || !res || res.statusCode >= 400) reject({err: err, res: res});
+					resolve(JSON.parse(res.body));
+				});
+			});
+		}
+
+		async postComic(message, url, options = {}) {
+			const comic = options.comic || await this.getComic(url);
+			message.channel.send(new RichEmbed()
+				.setTitle(`${options.titlePrefix || ""}XKCD Comic - ${comic.title} (#${comic.num})`)
 				.setDescription(comic.alt)
 				.setColor(Math.floor(Math.random() * 16777216))
-				.setImage(comic.img);
-			
-			if (isFallback) xkcdEmbed.description = `*Failed to fetch from XKCD, defaulting to the current one.*\n\n${comic.alt}`;
-			message.channel.send(xkcdEmbed);
+				.setImage(comic.img)
+			);
 		}
 	}
 ];

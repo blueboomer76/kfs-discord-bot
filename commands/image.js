@@ -125,7 +125,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
+			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "antimeme", false);
 				if (fetchRes) return {cmdWarn: fetchRes};
 			}
@@ -245,7 +245,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
+			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "me_irl", false);
 				if (fetchRes) return {cmdWarn: fetchRes};
 			}
@@ -272,7 +272,7 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
+			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "memes", false);
 				if (fetchRes) return {cmdWarn: fetchRes};
 			}
