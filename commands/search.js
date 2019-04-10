@@ -126,7 +126,7 @@ module.exports = [
 				json: true
 			}, (err, res) => {
 				if (err) return message.channel.send(`Could not request to Reddit: ${err.message} (${err.code})`);
-				if (res.statusCode == 403) return message.channel.send(`⚠ Unfortunately, that subreddit is inaccessible because it is ${res.body.reason}.`);
+				if (res.statusCode == 403) return message.channel.send("⚠ Unfortunately, that subreddit is inaccessible.");
 				if (res.statusCode >= 400) return message.channel.send(`⚠ An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode})`);
 				
 				let results = res.body.data.children;
@@ -346,7 +346,7 @@ module.exports = [
 						errorMsg: "Please provide \"random\", a number greater than 0, or supply no arguments.",
 						optional: true,
 						type: "function",
-						testFunction: obj => {return obj == "random" || obj > 0}
+						testFunction: obj => obj == "random" || obj > 0
 					}
 				],
 				perms: {
@@ -356,38 +356,54 @@ module.exports = [
 				},
 				usage: "xkcd [<number> | random]"
 			});
+			this.lastChecked = 0;
+			this.currComicNum = 0;
 		}
 		
 		async run(bot, message, args, flags) {
-			request.get("https://xkcd.com/info.0.json", (err, res) => {
-				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "XKCD", err, res);
-				
-				const currComic = JSON.parse(res.body);
-				if (args[0] == "random" || args[0] > 0) {
-					const comicNum = args[0] == "random" ? Math.floor(Math.random() * currComic.num) : parseInt(args[0]);
-					request.get(`https://xkcd.com/${comicNum}/info.0.json`, (err2, res2) => {
-						if (err2 || res2.statusCode >= 400) {
-							this.postComic(message, currComic, "Current ", res2.statusCode);
-							return;
-						}
-						const chosenComic = JSON.parse(res2.body);
-						this.postComic(message, chosenComic, args[0] == "random" ? "Random " : "");
-					});
-				} else {
-					this.postComic(message, currComic, "Current ");
+			let comicToPost;
+			if (Date.now() > this.lastChecked + 1000*86400) {
+				try {
+					const latestComic = await this.getComic();
+					this.currComicNum = latestComic.num;
+					if (!args[0]) comicToPost = latestComic;
+				} catch(err) {
+					return {cmdWarn: err};
 				}
-			});
+			}
+
+			try {
+				if (args[0] == "random") {
+					const comicNum = Math.floor(Math.random() * this.currComicNum);
+					await this.postComic(message, `https://xkcd.com/${comicNum}/info.0.json`, {titlePrefix: "Random "});
+				} else if (args[0] > 0) {
+					if (args[0] > this.currComicNum) return {cmdWarn: "Invalid comic number provided."};
+					await this.postComic(message, `https://xkcd.com/${args[0]}/info.0.json`);
+				} else {
+					await this.postComic(message, null, {comic: comicToPost, titlePrefix: "Current "});
+				}
+			} catch(err) {
+				bot.handleRemoteSiteError(message, "XKCD", err.err, err.res);
+			}
 		}
 		
-		postComic(message, comic, titlePrefix, fallbackCode) {
-			const xkcdEmbed = new RichEmbed()
-				.setTitle(`${titlePrefix}XKCD Comic - ${comic.title} (#${comic.num})`)
+		getComic(url) {
+			return new Promise((resolve, reject) => {
+				request.get(url || "https://xkcd.com/info.0.json", (err, res) => {
+					if (err || res.statusCode >= 400) reject({err: err, res: res});
+					resolve(JSON.parse(res.body));
+				});
+			});
+		}
+
+		async postComic(message, url, options = {}) {
+			const comic = options.comic || await this.getComic(url);
+			message.channel.send(new RichEmbed()
+				.setTitle(`${options.titlePrefix || ""}XKCD Comic - ${comic.title} (#${comic.num})`)
 				.setColor(Math.floor(Math.random() * 16777216))
-				.setDescription(comic.alt)
-				.setImage(comic.img);
-			
-			if (fallbackCode) xkcdEmbed.description = `*Failed to fetch from XKCD, showing the current one instead. (status code ${fallbackCode})*\n\n${comic.alt}`;
-			message.channel.send(xkcdEmbed);
+				.setDescription(options.fallbackCode ? `*Failed to fetch from XKCD, showing the current one instead. (status code ${options.fallbackCode})*\n\n${comic.alt}` : comic.alt)
+				.setImage(comic.img)
+			);		
 		}
 	}
 ];

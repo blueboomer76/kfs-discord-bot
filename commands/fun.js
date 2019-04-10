@@ -66,7 +66,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
+			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				try {
 					this.cachedPosts = await this.getAntiJokes();
 				} catch(err) {
@@ -262,7 +262,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
+			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				try {
 					this.cachedPosts = await this.getJokes();
 				} catch(err) {
@@ -365,7 +365,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			if (new Date() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
+			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				try {
 					this.cachedPosts = await this.getPuns();
 				} catch(err) {
