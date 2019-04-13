@@ -193,6 +193,59 @@ module.exports = [
 			imageManager.getCanvasImage(img, imgResolvable, args[0] && args[0].isEmoji);
 		}
 	},
+	class DeepFryCommand extends Command {
+		constructor() {
+			super({
+				name: "deepfry",
+				description: "Deep fries an image",
+				aliases: ["fry"],
+				args: [
+					{
+						optional: true,
+						type: "image"
+					},
+				],
+				cooldown: {
+					name: "image-editing",
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "deepfry [image URL/mention/emoji]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			
+			Jimp.read(imgResolvable)
+				.then(img => {
+					img.scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, i) => {
+						img.bitmap.data[i] = img.bitmap.data[i] < 144 ? 0 : 255;
+						img.bitmap.data[i+1] = img.bitmap.data[i+1] < 144 ? 0 : 255;
+						img.bitmap.data[i+2] = img.bitmap.data[i+2] < 144 ? 0 : 255;
+					});
+					img.quality(1)
+						.getBufferAsync(Jimp.MIME_JPEG)
+						.then(imgToSend => {
+							message.channel.send({
+								files: [{attachment: imgToSend, name: "deepfry.jpg"}]
+							});
+						})
+						.catch(() => {
+							message.channel.send("Failed to generate the image.");
+						});
+				})
+				.catch(() => {
+					message.channel.send("⚠ Failed to get image for that URL.");
+				});
+		}
+	},
 	class FlipCommand extends Command {
 		constructor() {
 			super({
@@ -498,6 +551,39 @@ module.exports = [
 			
 			const pixelsFlag = flags.find(f => f.name == "pixels");
 			imageManager.applyJimpFilterAndPost(message, imgResolvable, "pixelate", {pixels: pixelsFlag ? pixelsFlag.args[0] : null});
+		}
+	},
+	class RandomCropCommand extends Command {
+		constructor() {
+			super({
+				name: "randomcrop",
+				description: "Crops an image randomly",
+				aliases: ["randcrop"],
+				args: [
+					{
+						optional: true,
+						type: "image"
+					},
+				],
+				cooldown: {
+					name: "image-editing",
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "randomcrop [image URL/mention/emoji]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
+			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			
+			imageManager.applyJimpFilterAndPost(message, imgResolvable, "randomcrop");
 		}
 	},
 	class RotateCommand extends Command {

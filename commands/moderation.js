@@ -657,6 +657,44 @@ module.exports = [
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
+	class RenameRoleCommand extends Command {
+		constructor() {
+			super({
+				name: "renamerole",
+				description: "Renames a role",
+				aliases: ["rnr", "rolename", "setrolename"],
+				args: [
+					{
+						allowQuotes: true,
+						infiniteArgs: true,
+						type: "role"
+					},
+					{
+						type: "string"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_ROLES"],
+					user: ["MANAGE_ROLES"],
+					level: 0
+				},
+				usage: "renamerole <role> <new role name>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const role = args[0], newRoleName = args[1];
+			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot rename the role **${role.name}** because its position is at or higher than mine.`};
+				
+			role.edit({name: newRoleName})
+				.then(() => message.channel.send(`✅ The role's name has been set to **${newRoleName}**.`))
+				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
+		}
+	},
 	class ResetNicknameCommand extends Command {
 		constructor() {
 			super({
@@ -726,6 +764,50 @@ module.exports = [
 			
 			member.setNickname(newNick)
 				.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been set to **${newNick}.**`))
+				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
+		}
+	},
+	class SetRoleColorCommand extends Command {
+		constructor() {
+			super({
+				name: "setrolecolor",
+				description: "Sets a new color for a role",
+				aliases: ["src", "rolecolor"],
+				args: [
+					{
+						allowQuotes: true,
+						infiniteArgs: true,
+						type: "role"
+					},
+					{
+						errorMsg: "You need to provide either a hex or decimal color.",
+						type: "function",
+						testFunction: obj => {
+							return /^#?[0-9A-Fa-f]{6}$/.test(obj) || /decimal:\d{1,8}/.test(obj);
+						}
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_ROLES"],
+					user: ["MANAGE_ROLES"],
+					level: 0
+				},
+				usage: "setrolecolor <role> <hex color | decimal:0-16777215>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const role = args[0],
+				isDecimal = args[1].startsWith("decimal:"), 
+				newRoleColor = isDecimal ? parseInt(args[1].slice(8)) : args[1].replace("#", "");
+			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot change the color of the role **${role.name}** because its position is at or higher than mine.`};
+			
+			role.edit({color: newRoleColor})
+				.then(() => message.channel.send(`✅ The color of role **${role.name}** has been set to **${isDecimal ? newRoleColor : "#" + newRoleColor}**.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
