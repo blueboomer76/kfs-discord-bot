@@ -164,6 +164,35 @@ module.exports = [
 			});
 		}
 	},
+	class BoneHurtingJuiceCommand extends Command {
+		constructor() {
+			super({
+				name: "bonehurtingjuice",
+				description: "Memes redone to be positive and almost wholesome",
+				aliases: ["bhj"],
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				}
+			});
+			this.cachedSfwPosts = [];
+			this.cachedNsfwPosts = [];
+			this.lastChecked = 0;
+		}
+		
+		async run(bot, message, args, flags) {
+			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
+				const fetchRes = await setCommandPosts(this, "bonehurtingjuice", true);
+				if (fetchRes) return {cmdWarn: fetchRes};
+			}
+			sendRedditEmbed(this, message, true);
+		}
+	},
 	class CatCommand extends Command {
 		constructor() {
 			super({
