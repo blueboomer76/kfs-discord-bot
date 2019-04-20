@@ -68,7 +68,6 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const channel = args[0] || message.channel,
 				createdDate = new Date(channel.createdTimestamp),
-				channelPosition = channel.type == "category" ? channel.position : channel.calculatedPosition,
 				channelEmbed = new RichEmbed()
 					.setTitle(`Channel Info - ${channel.name}`)
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -78,8 +77,35 @@ module.exports = [
 					.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
 					.addField("Accessible to everyone", channel.permissionsFor(message.guild.id).has("READ_MESSAGES") ? "Yes" : "No", true);
 			
-			const posInfo = channel.type == "voice" ? "voice" : "text and category";
-			channelEmbed.addField(`Relative position to ${posInfo} channels`, channelPosition + 1, true);
+			const uncategorized = message.guild.channels.filter(c => c.type != "category" && !c.parent);
+			let channels, pos = 0;
+			if (uncategorized.has(channel.id)) {
+				channels = uncategorized.array().sort((a,b) => a.position - b.position);
+			} else {
+				const categoryId = channel.type == "category" ? channel.id : channel.parent.id,
+					catChannels = message.guild.channels.filter(c => c.type == "category").array().sort((a,b) => a.position - b.position);
+				pos += uncategorized.size;
+
+				let chnlParent;
+				for (const cat of catChannels) {
+					chnlParent = cat;
+					pos++;
+					if (chnlParent.id == categoryId) break;
+					pos += cat.children.size;
+				}
+				channels = chnlParent.children.array().sort((a,b) => a.position - b.position);
+			}
+			if (channel.type != "category") {
+				const textChannels = channels.filter(c => c.type == "text"),
+					voiceChannels = channels.filter(c => c.type == "voice");
+				if (channel.type == "text") {
+					pos += textChannels.findIndex(c => c.id == channel.id);
+				} else {
+					pos += textChannels.size + voiceChannels.findIndex(c => c.id == channel.id);
+				}
+				pos++;
+			}
+			channelEmbed.addField("Position", pos + " / " + message.guild.channels.size, true);
 			
 			if (channel.type == "text") {
 				channelEmbed.addField("NSFW", channel.nsfw ? "Yes" : "No", true)

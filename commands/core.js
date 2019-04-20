@@ -63,7 +63,7 @@ module.exports = [
 				flags: [
 					{
 						name: "dm",
-						desc: "Sends the help message to DMs instead"
+						desc: "Sends the help message as a Direct Message instead"
 					},
 				],
 				perms: {
@@ -71,7 +71,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "help [command]"
+				usage: "help [command] [--dm]"
 			});
 		}
 		
@@ -82,14 +82,19 @@ module.exports = [
 				if (!bot.ownerIds.includes(message.author.id) && !bot.adminIds.includes(message.author.id)) {
 					cmds = cmds.filter(cmd => !cmd.disabled && !cmd.hidden);
 				}
-				for (let i = 0; i < bot.categories.length; i++) {
-					const cmdsInCat = cmds.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
-					helpEmbed.addField(bot.categories[i], Array.from(cmdsInCat).join(", "));
+				
+				const cmdsByCat = {};
+				for (const category of bot.categories) cmdsByCat[category] = [];
+				for (const cmd of Array.from(cmds.values())) {
+					cmdsByCat[cmd.category].push({n: cmd.name, c: cmd.category});
+				}
+				for (const cmdSet in cmdsByCat) {
+					helpEmbed.addField(cmdsByCat[cmdSet][0].c, cmdsByCat[cmdSet].map(cmd => cmd.n).join(", "));
 				}
 				helpEmbed.setTitle("All the commands for this bot")
 					.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\``)
 					.setColor(Math.floor(Math.random() * 16777216))
-					.setFooter(`There are ${cmds.size} commands in total.`);
+					.setFooter(`There are ${cmds.size} commands available.`);
 			} else {
 				const commandFlags = command.flags.map(f => `\`--${f.name.toLowerCase()}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`),
 					commandPerms = command.perms,

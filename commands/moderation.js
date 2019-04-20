@@ -6,7 +6,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "addrole",
-				description: "Adds a role to a user. It will be logged if a modlog channel was set",
+				description: "Adds a role to a user",
 				aliases: ["ar", "giverole", "setrole"],
 				args: [
 					{
@@ -52,11 +52,11 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
-			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot add the role **${role.name}** to **${member.user.tag}** because its position is at or higher than mine.`};
-			if (member.roles.has(role.id)) return {cmdWarn: `That member already has the role **${role.name}**.`};
+			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot add the role **${role.name}** to user **${member.user.tag}** because its position is at or higher than mine.`};
+			if (member.roles.has(role.id)) return {cmdWarn: `User **${member.user.tag}** already has the role **${role.name}**.`};
 				
 			member.addRole(role)
-				.then(() => message.channel.send(`✅ Role **${role.name}** has been added to **${member.user.tag}**.`))
+				.then(() => message.channel.send(`✅ Role **${role.name}** has been added to user **${member.user.tag}**.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -64,7 +64,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "ban",
-				description: "Bans a user. It will be logged if a modlog channel was set",
+				description: "Bans a user from this server. You can specify a reason for the audit log entry",
 				args: [
 					{
 						infiniteArgs: true,
@@ -112,10 +112,10 @@ module.exports = [
 			const member = args[0],
 				daysFlag = flags.find(f => f.name == "days"),
 				reasonFlag = flags.find(f => f.name == "reason");
-			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot ban the member **${member.user.tag}** because their highest role is at or higher than mine.`};
+			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot ban the user **${member.user.tag}** because their highest role is at or higher than mine.`};
 			
 			if (!flags.some(f => f.name == "yes")) {
-				const promptRes = await promptor.prompt(message, `You are about to ban the user **${member.user.tag}** from this guild.`);
+				const promptRes = await promptor.prompt(message, `You are about to ban the user **${member.user.tag}** from this server.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
 			
@@ -123,7 +123,7 @@ module.exports = [
 				days: daysFlag ? daysFlag.args[0] : 0,
 				reason: reasonFlag ? reasonFlag.args[0] : null
 			})
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was banned from the guild.`))
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was banned from this server.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -156,7 +156,7 @@ module.exports = [
 			if (channelNameRegex.test(channelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
 				
 			message.guild.createChannel(channelName)
-				.then(channel => message.channel.send(`✅ The channel **${channel.name}** has been created.`))
+				.then(() => message.channel.send(`✅ The channel **${channelName}** has been created.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -164,7 +164,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "createrole",
-				description: "Creates a guild role. It will be logged if a modlog channel was set",
+				description: "Creates a server role",
 				aliases: ["crrole"],
 				args: [
 					{
@@ -282,7 +282,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "hackban",
-				description: "Bans a user even if that user is not in this server. It will be logged if a modlog channel was set",
+				description: "Bans a user even if that user is not in this server. You can specify a reason for the audit log entry",
 				args: [
 					{
 						errorMsg: "Please provide a valid user ID.",
@@ -335,15 +335,15 @@ module.exports = [
 				days: daysFlag ? daysFlag.args[0] : 0,
 				reason: reasonFlag ? reasonFlag.args[0] : null
 			})
-				.then(() => message.channel.send(`✅ The user with ID **${userId}** was banned from the guild.`))
-				.catch(() => message.channel.send("Could not ban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."));
+				.then(() => message.channel.send(`✅ The user with ID **${userId}** was hackbanned from this server.`))
+				.catch(() => message.channel.send("Could not hackban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."));
 		}
 	},
 	class KickCommand extends Command {
 		constructor() {
 			super({
 				name: "kick",
-				description: "Kicks a member. It will be logged if a modlog channel was set",
+				description: "Kicks a user from this server. You can specify a reason for the audit log entry",
 				args: [
 					{
 						infiniteArgs: true,
@@ -362,6 +362,10 @@ module.exports = [
 							num: 1,
 							type: "string"
 						}
+					},
+					{
+						name: "yes",
+						desc: "Skips the confirmation dialog"
 					}
 				],
 				perms: {
@@ -375,13 +379,15 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0], reasonFlag = flags.find(f => f.name == "reason");
-			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot kick the member **${member.user.tag}** because their highest role is at or higher than mine.`};
+			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot kick the user **${member.user.tag}** because their highest role is at or higher than mine.`};
 			
-			const promptRes = await promptor.prompt(message, `You are about to kick the user **${args[0].user.tag}** from this guild.`);
-			if (promptRes) return {cmdWarn: promptRes};
+			if (!flags.some(f => f.name == "yes")) {
+				const promptRes = await promptor.prompt(message, `You are about to kick the user **${args[0].user.tag}** from this server.`);
+				if (promptRes) return {cmdWarn: promptRes};
+			}
 			
 			member.kick(reasonFlag ? reasonFlag.args[0] : null)
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was kicked from the guild.`))
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was kicked from this server.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -411,7 +417,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0];
-			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot mute the member **${member.user.tag}** because their highest role is at or higher than mine.`};
+			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot mute the user **${member.user.tag}** because their highest role is at or higher than mine.`};
 			if (!message.channel.permissionsFor(member).has("SEND_MESSAGES")) return {cmdWarn: `**${member.user.tag}** is already muted or cannot send messages in this channel.`};
 			message.channel.overwritePermissions(member, {
 				SEND_MESSAGES: false
@@ -588,7 +594,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "removerole",
-				description: "Removes a role a user has. It will be logged if a modlog channel was set",
+				description: "Removes a role a user has",
 				aliases: ["rr", "takerole"],
 				args: [
 					{
@@ -616,11 +622,11 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
-			if (!member.roles.has(role.id)) return {cmdWarn: `**${member.user.tag}** does not have a role named **${role.name}**.`};
-			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot remove the role **${role.name}** from **${member.user.tag}** because its position is at or higher than mine.`};
+			if (!member.roles.has(role.id)) return {cmdWarn: `User **${member.user.tag}** does not have a role named **${role.name}**.`};
+			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot remove the role **${role.name}** from user **${member.user.tag}** because its position is at or higher than mine.`};
 				
 			member.removeRole(role)
-				.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from **${member.user.tag}**.`))
+				.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from user **${member.user.tag}**.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -699,7 +705,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "resetnickname",
-				description: "Remove a member's nickname. It will be logged if a modlog channel was set",
+				description: "Remove a member's nickname",
 				aliases: ["removenick", "removenickname", "resetnick"],
 				args: [
 					{
@@ -722,7 +728,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0];
-			if (member.nickname == null) return {cmdWarn: `**${member.user.tag}** does not have a nickname in this guild.`};
+			if (member.nickname == null) return {cmdWarn: `User **${member.user.tag}** does not have a nickname in this server.`};
 				
 			member.setNickname("")
 				.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been reset.`))
@@ -733,7 +739,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "setnickname",
-				description: "Changes a member's nickname. It will be logged if a modlog channel was set",
+				description: "Changes a member's nickname",
 				aliases: ["changenick", "setnick"],
 				args: [
 					{
@@ -763,7 +769,7 @@ module.exports = [
 			const member = args[0], newNick = args[1];
 			
 			member.setNickname(newNick)
-				.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been set to **${newNick}.**`))
+				.then(() => message.channel.send(`✅ Nickname of user **${member.user.tag}** has been set to **${newNick}.**`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -780,7 +786,7 @@ module.exports = [
 						type: "role"
 					},
 					{
-						errorMsg: "You need to provide either a hex or decimal color.",
+						errorMsg: "You need to provide either a hex or decimal color (by placing `decimal:` in front of the number).",
 						type: "function",
 						testFunction: obj => {
 							return /^#?[0-9A-Fa-f]{6}$/.test(obj) || /decimal:\d{1,8}/.test(obj);
@@ -823,7 +829,7 @@ module.exports = [
 						type: "member"
 					},
 					{
-						missingArgMsg: "You need to provide a number of days to delete messages. Use `ban` without the `days` option instead if you do not want to delete any messages, or `kick` to simply remove the member.",
+						missingArgMsg: "You need to provide a number of days to delete messages. Use `ban` without the `days` option instead if you do not want to delete any messages, or `kick` to simply remove the user.",
 						type: "number",
 						min: 1,
 						max: 14
@@ -858,10 +864,10 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0], reasonFlag = flags.find(f => f.name == "reason");
-			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot softban the member **${member.user.tag}** because their highest role is at or higher than mine.`};
+			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot softban the user **${member.user.tag}** because their highest role is at or higher than mine.`};
 			
 			if (!flags.some(f => f.name == "yes")) {
-				const promptRes = await promptor.prompt(message, `You are about to softban the user **${member.user.tag}** in this guild.`);
+				const promptRes = await promptor.prompt(message, `You are about to softban the user **${member.user.tag}** in this server.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
 			
@@ -872,16 +878,16 @@ module.exports = [
 				.then(() => {
 					message.guild.unban(member.user.id)
 						.then(() => message.channel.send(`✅ The user **${member.user.tag}** was softbanned.`))
-						.catch(() => message.channel.send("An error has occurred while trying to unban the member."));
+						.catch(() => message.channel.send("An error has occurred while trying to unban the user while softbanning."));
 				})
-				.catch(err => message.channel.send("An error has occurred while trying to ban the member: ```" + err + "```"));
+				.catch(err => message.channel.send("An error has occurred while trying to ban the user while softbanning: ```" + err + "```"));
 		}
 	},
 	class UnbanCommand extends Command {
 		constructor() {
 			super({
 				name: "unban",
-				description: "Unbans a user. It will be logged if a modlog channel was set",
+				description: "Unbans a user. You can specify a reason for the audit log entry",
 				args: [
 					{
 						errorMsg: "Please provide a valid user ID.",
@@ -920,7 +926,7 @@ module.exports = [
 				reasonFlag = flags.find(f => f.name == "reason");
 				
 			message.guild.unban(userId, reasonFlag ? reasonFlag.args[0] : null)
-				.then(() => message.channel.send(`✅ The user with ID **${userId}** was unbanned from the guild.`))
+				.then(() => message.channel.send(`✅ User with ID **${userId}** was unbanned from this server.`))
 				.catch(() => message.channel.send("Could not unban the user with that ID. Make sure to check for typos in the ID and that the user is in the ban list."));
 		}
 	},
@@ -950,12 +956,12 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0];
-			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot unmute the member **${member.user.tag}** because their highest role is at or higher than mine.`};
+			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot unmute the user **${member.user.tag}** because their highest role is at or higher than mine.`};
 			if (message.channel.permissionsFor(member).has("SEND_MESSAGES")) return {cmdWarn: `**${member.user.tag}** is not muted or is able to send messages in this channel.`};
 			message.channel.overwritePermissions(member, {
 				SEND_MESSAGES: true
 			})
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was unmuted in this channel.`))
+				.then(() => message.channel.send(`✅ User **${member.user.tag}** was unmuted in this channel.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	}

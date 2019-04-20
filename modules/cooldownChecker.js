@@ -16,7 +16,7 @@ function getIdByType(message, type) {
 	} else if (type == "channel") {
 		return message.channel.id;
 	} else if (type == "guild") {
-		if (message.guild) {return message.guild.id} else {return message.author.id}
+		return (message.guild && message.guild.id) || message.author.id;
 	} else {
 		throw new Error("Cooldown type must either be user, channel, or guild.");
 	}
@@ -24,11 +24,7 @@ function getIdByType(message, type) {
 
 function findCooldown(bot, id, name, findIndex) {
 	const filter = cd => cd.id == id && cd.name == name;
-	if (findIndex) {
-		return bot.cache.recentCommands.findIndex(filter);
-	} else {
-		return bot.cache.recentCommands.find(filter);
-	}
+	return findIndex ? bot.cache.recentCommands.findIndex(filter) : bot.cache.recentCommands.find(filter);
 }
 
 /*
@@ -66,14 +62,10 @@ module.exports = {
 			if (!checkedCd.notified) {
 				checkedCd.notified = true;
 				let toSend = `⛔ **Cooldown:**\n*${cdMessages[Math.floor(Math.random() * cdMessages.length)]}*` + "\n";
-
-				if (command.cooldown.name) {
-					toSend += `${capitalize(command.cooldown.name, true)} commands`;
-				} else {
-					toSend += "This command";
-				}
+				toSend += command.cooldown.name ? `${capitalize(command.cooldown.name, true)} commands are` : "This command is";
+				
 				const cdTime = ((checkedCd.resets - Date.now()) / 1000).toFixed(1);
-				toSend += ` is on cooldown for **${cdTime > 0 ? cdTime : 0.1} more seconds**`;
+				toSend += ` on cooldown for **${cdTime > 0 ? cdTime : 0.1} more seconds**`;
 				if (cdType == "channel") {
 					toSend += " in this channel";
 				} else if (cdType == "guild") {

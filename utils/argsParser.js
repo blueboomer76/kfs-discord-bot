@@ -152,7 +152,7 @@ module.exports = {
 	},
 	parseFlags: async (bot, message, args, commandFlags) => {
 		// 1. Get flags
-		const flags = [], flagIndexes = [], flagBases = args.filter(a => /^(-[A-Za-z]|(-{2}|—)[a-z]{2})/.test(a));
+		const flags = [], flagIndexes = [], flagBases = args.filter(a => /^(-[a-z](?![a-z])|(-{2}|—)[a-z]{2})/i.test(a));
 			
 		for (let i = 0; i < flagBases.length; i++) {
 			flagIndexes.push(args.indexOf(flagBases[i]));
