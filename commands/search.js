@@ -94,7 +94,7 @@ module.exports = [
 				if (foundRedirSub) return bot.commands.get(foundRedirSub.goTo).run(bot, message);
 				subreddit = args[0].replace(/^\/?[Rr]\//, "");
 				if (subreddit.length < 3) return {cmdWarn: "Subreddit names should have at least 3 characters."};
-				if (!(/^[0-9A-Za-z_]+$/).test(subreddit)) return {cmdWarn: "Subreddit names should be alphanumeric with underscores only."};
+				if (!(/^[0-9A-Za-z_]+$/).test(subreddit)) return {cmdWarn: "Subreddit names should contain alphanumeric characters and underscores only (no spaces)."};
 			} else {
 				subreddit = "all";
 			}

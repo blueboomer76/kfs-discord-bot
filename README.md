@@ -1,11 +1,14 @@
 # Kendra Discord Bot
 <div style="text-align: center;">
-<img src="https://discordbots.org/api/widget/429807759144386572.svg">
+<a href="https://discordbots.org/bots/429807759144386572"><img src="https://discordbots.org/api/widget/429807759144386572.svg"></a>
 
-<img src="https://botsfordiscord.com/api/bot/429807759144386572/widget">
+<a href="https://botsfordiscord.com/bots/429807759144386572/"><img src="https://botsfordiscord.com/api/bot/429807759144386572/widget"></a>
+
+<a href="https://bots.ondiscord.xyz/bots/429807759144386572"><img src="https://bots.ondiscord.xyz/bots/429807759144386572/embed"></a>
 </div>
 
-[<img src="https://discordapp.com/api/guilds/308063187696091140/widget.png">](https://discord.gg/yB8TvWU) [<img src="https://david-dm.org/blueboomer76/KendraBot.svg">](https://david-dm.org/blueboomer76/KendraBot)
+[![Server Widget](https://discordapp.com/api/guilds/308063187696091140/widget.png)](https://discord.gg/yB8TvWU)
+[![David DM Status](https://david-dm.org/blueboomer76/KendraBot.svg)](https://david-dm.org/blueboomer76/KendraBot)
 
 A multipurpose Discord bot for fun, utility, and more, coded in discord.js.
 

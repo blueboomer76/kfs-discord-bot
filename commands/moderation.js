@@ -83,7 +83,7 @@ module.exports = [
 							num: 1,
 							type: "number",
 							min: 0,
-							max: 14
+							max: 7
 						}
 					},
 					{
@@ -104,7 +104,7 @@ module.exports = [
 					user: ["BAN_MEMBERS"],
 					level: 0
 				},
-				usage: "ban <user> [--days <1-14>] [--reason <reason>] [--yes]"
+				usage: "ban <user> [--days <1-7>] [--reason <reason>] [--yes]"
 			});
 		}
 		
@@ -123,7 +123,7 @@ module.exports = [
 				days: daysFlag ? daysFlag.args[0] : 0,
 				reason: reasonFlag ? reasonFlag.args[0] : null
 			})
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was banned from this server.`))
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been banned from this server.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -287,10 +287,7 @@ module.exports = [
 					{
 						errorMsg: "Please provide a valid user ID.",
 						type: "function",
-						testFunction: obj => {
-							const objInt = parseInt(obj);
-							return !isNaN(obj) && objInt.length >= 17 && objInt.length < 19;
-						}
+						testFunction: obj => !isNaN(obj) && obj.length >= 17 && obj.length < 19
 					}
 				],
 				cooldown: {
@@ -305,7 +302,7 @@ module.exports = [
 							num: 1,
 							type: "number",
 							min: 0,
-							max: 14
+							max: 7
 						}
 					},
 					{
@@ -322,20 +319,20 @@ module.exports = [
 					user: ["BAN_MEMBERS"],
 					level: 0
 				},
-				usage: "hackban <user id> [--days <1-14>] [--reason <reason>]"
+				usage: "hackban <user id> [--days <1-7>] [--reason <reason>]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			const userId = parseInt(args[0]),
+			const userId = args[0],
 				daysFlag = flags.find(f => f.name == "days"),
 				reasonFlag = flags.find(f => f.name == "reason");
-				
+			
 			message.guild.ban(userId, {
 				days: daysFlag ? daysFlag.args[0] : 0,
 				reason: reasonFlag ? reasonFlag.args[0] : null
 			})
-				.then(() => message.channel.send(`✅ The user with ID **${userId}** was hackbanned from this server.`))
+				.then(() => message.channel.send(`✅ The user with ID **${userId}** has been hackbanned from this server.`))
 				.catch(() => message.channel.send("Could not hackban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."));
 		}
 	},
@@ -387,7 +384,7 @@ module.exports = [
 			}
 			
 			member.kick(reasonFlag ? reasonFlag.args[0] : null)
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was kicked from this server.`))
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been kicked from this server.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -422,7 +419,7 @@ module.exports = [
 			message.channel.overwritePermissions(member, {
 				SEND_MESSAGES: false
 			})
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was muted in this channel.`))
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been muted in this channel.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -832,7 +829,7 @@ module.exports = [
 						missingArgMsg: "You need to provide a number of days to delete messages. Use `ban` without the `days` option instead if you do not want to delete any messages, or `kick` to simply remove the user.",
 						type: "number",
 						min: 1,
-						max: 14
+						max: 7
 					}
 				],
 				cooldown: {
@@ -858,7 +855,7 @@ module.exports = [
 					user: ["BAN_MEMBERS"],
 					level: 0
 				},
-				usage: "softban <user> <days: 1-14> [--reason <reason>] [--yes]"
+				usage: "softban <user> <days: 1-7> [--reason <reason>] [--yes]"
 			});
 		}
 		
@@ -877,7 +874,7 @@ module.exports = [
 			})
 				.then(() => {
 					message.guild.unban(member.user.id)
-						.then(() => message.channel.send(`✅ The user **${member.user.tag}** was softbanned.`))
+						.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been softbanned.`))
 						.catch(() => message.channel.send("An error has occurred while trying to unban the user while softbanning."));
 				})
 				.catch(err => message.channel.send("An error has occurred while trying to ban the user while softbanning: ```" + err + "```"));
@@ -892,10 +889,7 @@ module.exports = [
 					{
 						errorMsg: "Please provide a valid user ID.",
 						type: "function",
-						testFunction: obj => {
-							const objInt = parseInt(obj);
-							return !isNaN(obj) && objInt.length >= 17 && objInt.length < 19;
-						}
+						testFunction: obj => !isNaN(obj) && obj.length >= 17 && obj.length < 19
 					}
 				],
 				cooldown: {
@@ -922,11 +916,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const userId = parseInt(args[0]),
-				reasonFlag = flags.find(f => f.name == "reason");
+			const userId = args[0], reasonFlag = flags.find(f => f.name == "reason");
 				
 			message.guild.unban(userId, reasonFlag ? reasonFlag.args[0] : null)
-				.then(() => message.channel.send(`✅ User with ID **${userId}** was unbanned from this server.`))
+				.then(() => message.channel.send(`✅ User with ID **${userId}** has been unbanned from this server.`))
 				.catch(() => message.channel.send("Could not unban the user with that ID. Make sure to check for typos in the ID and that the user is in the ban list."));
 		}
 	},
@@ -961,7 +954,7 @@ module.exports = [
 			message.channel.overwritePermissions(member, {
 				SEND_MESSAGES: true
 			})
-				.then(() => message.channel.send(`✅ User **${member.user.tag}** was unmuted in this channel.`))
+				.then(() => message.channel.send(`✅ User **${member.user.tag}** has been unmuted in this channel.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	}

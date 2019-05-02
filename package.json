@@ -1,6 +1,6 @@
 {
   "name": "kendrabot",
-  "version": "1.4.11",
+  "version": "1.4.16",
   "description": "Multipurpose bot for utility, fun, and more",
   "main": "index.js",
   "dependencies": {
