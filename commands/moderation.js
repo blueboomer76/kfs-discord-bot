@@ -36,7 +36,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
-			if (member.roles.has(role.id)) return {cmdWarn: `That user already has the role **${role.name}**.`};
+			if (member.roles.has(role.id)) return {cmdWarn: `User **${member.user.tag}** already has the role **${role.name}**.`};
 			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
 				return {cmdWarn: `Role **${role.name}** cannot be added to **${member.user.tag}** since its position is at or higher than yours (overrides with server owner)`};
 			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
@@ -116,7 +116,7 @@ module.exports = [
 				days: daysFlag ? daysFlag.args : 0,
 				reason: reasonFlag ? reasonFlag.args : null
 			})
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was banned from the server.`))
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been banned from this server.`))
 				.catch(err => message.channel.send("An error has occurred while trying to ban the user: `" + err + "`"));
 		}
 	},
@@ -350,7 +350,7 @@ module.exports = [
 				days: daysFlag ? daysFlag.args : 0,
 				reason: reasonFlag ? reasonFlag.args : null
 			})
-				.then(() => message.channel.send(`✅ The user with ID **${userID}** was hackbanned from the server.`))
+				.then(() => message.channel.send(`✅ The user with ID **${userID}** has been hackbanned from this server.`))
 				.catch(() => message.channel.send("Could not hackban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."));
 		}
 	},
@@ -376,6 +376,10 @@ module.exports = [
 						arg: {
 							type: "string"
 						}
+					},
+					{
+						name: "yes",
+						desc: "Skips the confirmation dialog"
 					}
 				],
 				perms: {
@@ -383,7 +387,7 @@ module.exports = [
 					user: ["KICK_MEMBERS"],
 					level: 0
 				},
-				usage: "kick <user> [--reason <reason>]"
+				usage: "kick <user> [--reason <reason>] [--yes]"
 			});
 		}
 		
@@ -396,12 +400,14 @@ module.exports = [
 			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
 				return {cmdWarn: `I cannot kick the user **${member.user.tag}** since their highest role is at or higher than mine.`};
 			}
-
-			const promptRes = await promptor.prompt(message, `You are about to kick the user **${member.user.tag}** from this server.`);
-			if (promptRes) return {cmdWarn: promptRes};
+			
+			if (!flags.some(f => f.name == "yes")) {
+				const promptRes = await promptor.prompt(message, `You are about to kick the user **${member.user.tag}** from this server.`);
+				if (promptRes) return {cmdWarn: promptRes};
+			}
 
 			member.kick(reasonFlag ? reasonFlag.args : null)
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was kicked from the server.`))
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been kicked from this server.`))
 				.catch(err => message.channel.send("An error has occurred while trying to kick the user: `" + err + "`"));
 		}
 	},
@@ -445,7 +451,7 @@ module.exports = [
 			message.channel.overwritePermissions(member, {
 				SEND_MESSAGES: false
 			})
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was muted in this channel.`))
+				.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been muted in this channel.`))
 				.catch(err => message.channel.send("An error has occurred while trying to mute the user: `" + err + "`"));
 		}
 	},
@@ -645,7 +651,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
-			if (!member.roles.has(role.id)) return {cmdWarn: `**${member.user.tag}** does not have a role named **${role.name}**.`};
+			if (!member.roles.has(role.id)) return {cmdWarn: `User **${member.user.tag}** does not have a role named **${role.name}**.`};
 			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
 				return {cmdWarn: `Role **${role.name}** cannot be removed from **${member.user.tag}** since its position is at or higher than yours (overrides with server owner)`};
 			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
@@ -655,7 +661,7 @@ module.exports = [
 			}
 	
 			member.removeRole(role)
-				.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from the user **${member.user.tag}**.`))
+				.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from user **${member.user.tag}**.`))
 				.catch(err => message.channel.send("An error has occurred while trying to remove the role: `" + err + "`"));
 		}
 	},
@@ -763,7 +769,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const member = args[0];
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
-			if (!member.nickname) return {cmdWarn: `**${member.user.tag}** does not have a nickname in this server.`};
+			if (!member.nickname) return {cmdWarn: `User **${member.user.tag}** does not have a nickname in this server.`};
 			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
 				return {cmdWarn: `Nickname of **${member.user.tag}** cannot be reset since their highest role is at or higher than yours (overrides with server owner)`};
 			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
@@ -815,7 +821,7 @@ module.exports = [
 			}
 
 			member.setNickname(newNick)
-				.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been set to **${newNick}**.`))
+				.then(() => message.channel.send(`✅ Nickname of user **${member.user.tag}** has been set to **${newNick}.**`))
 				.catch(err => message.channel.send("An error has occurred while trying to set the nickname: `" + err + "`"));
 		}
 	},
@@ -832,7 +838,7 @@ module.exports = [
 						type: "role"
 					},
 					{
-						errorMsg: "You need to provide either a hex or decimal color.",
+						errorMsg: "You need to provide either a hex or decimal color (by placing `decimal:` in front of the number).",
 						type: "function",
 						testFunction: obj => {
 							return /^#?[0-9A-Fa-f]{6}$/.test(obj) || /decimal:\d{1,8}/.test(obj);
@@ -931,10 +937,10 @@ module.exports = [
 			})
 				.then(() => {
 					message.guild.unban(member.user.id)
-						.then(() => message.channel.send(`✅ The user **${member.user.tag}** was softbanned.`))
-						.catch(() => message.channel.send("An error has occurred while trying to unban the user."));
+						.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been softbanned.`))
+						.catch(() => message.channel.send("An error has occurred while trying to unban the user while softbanning."));
 				})
-				.catch(err => message.channel.send("An error has occurred while trying to softban the user: `" + err + "`"));
+				.catch(err => message.channel.send("An error has occurred while trying to ban the user while softbanning: " + err + ""));
 		}
 	},
 	class UnbanCommand extends Command {
@@ -977,7 +983,7 @@ module.exports = [
 			if (userID == message.author.id || userID == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
 
 			message.guild.unban(userID, reasonFlag ? reasonFlag.args : null)
-				.then(() => message.channel.send(`✅ The user with ID **${userID}** was unbanned from the server.`))
+				.then(() => message.channel.send(`✅ User with ID **${userID}** has been unbanned from this server.`))
 				.catch(() => message.channel.send("Could not unban the user with that ID. Make sure to check for typos in the ID and that the user is in the ban list."));
 		}
 	},
@@ -1021,7 +1027,7 @@ module.exports = [
 			message.channel.overwritePermissions(member, {
 				SEND_MESSAGES: null
 			})
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** was unmuted in this channel.`))
+				.then(() => message.channel.send(`✅ User **${member.user.tag}** has been unmuted in this channel.`))
 				.catch(err => message.channel.send("An error has occurred while trying to unmute the user: `" + err + "`"));
 		}
 	}

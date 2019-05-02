@@ -62,7 +62,7 @@ module.exports = [
 				flags: [
 					{
 						name: "dm",
-						desc: "Sends the help message to DMs instead"
+						desc: "Sends the help message as a Direct Message instead"
 					},
 				],
 				perms: {
@@ -79,15 +79,20 @@ module.exports = [
 			if (!command) {
 				helpEmbed.setTitle("All bot commands")
 					.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\``)
-					.setColor(Math.floor(Math.random() * 16777216))
-					.setFooter(`There are ${bot.commands.size} commands in total.`);
+					.setColor(Math.floor(Math.random() * 16777216));
 				let cmds = bot.commands;
 				if (!bot.ownerIDs.includes(message.author.id) && !bot.adminIDs.includes(message.author.id)) {
 					cmds = cmds.filter(cmd => !cmd.disabled && !cmd.hidden);
 				}
-				for (let i = 0; i < bot.categories.length; i++) {
-					const cmdsInCat = cmds.filter(cmd => cmd.category == bot.categories[i]).map(cmd => cmd.name);
-					helpEmbed.addField(bot.categories[i], cmdsInCat.join(", "));
+				helpEmbed.setFooter(`There are ${cmds.size} commands available.`);
+				
+				const cmdsByCat = {};
+				for (const category of bot.categories) cmdsByCat[category] = [];
+				for (const cmd of Array.from(cmds.values())) {
+					cmdsByCat[cmd.category].push({n: cmd.name, c: cmd.category});
+				}
+				for (const cmdSet in cmdsByCat) {
+					helpEmbed.addField(cmdsByCat[cmdSet][0].c, cmdsByCat[cmdSet].map(cmd => cmd.n).join(", "));
 				}
 			} else {
 				const commandFlags = command.flags.map(f => `\`--${f.name.toLowerCase()}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`),

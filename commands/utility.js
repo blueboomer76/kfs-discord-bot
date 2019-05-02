@@ -77,10 +77,36 @@ module.exports = [
 					.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
 					.addField("Accessible to everyone", channel.permissionsFor(message.guild.roles.find(r => r.calculatedPosition == 0)).has("VIEW_CHANNEL") ? "Yes" : "No", true);
 			
-			const channelPositions = message.guild.channels.filter(c => c.type == channel.type).map(c => c.calculatedPosition);
-			channelPositions.sort((a, b) => a - b);
-			channelEmbed.addField("Position to same type channels", channelPositions.indexOf(channel.calculatedPosition) + 1);
+			const uncategorized = message.guild.channels.filter(c => c.type != "category" && !c.parent);
+			let channels, pos = 0;
+			if (uncategorized.has(channel.id)) {
+				channels = uncategorized.array().sort((a, b) => a.calculatedPosition - b.calculatedPosition);
+			} else {
+				const categoryID = channel.type == "category" ? channel.id : channel.parent.id,
+					catChannels = message.guild.channels.filter(c => c.type == "category").array().sort((a, b) => a.calculatedPosition - b.calculatedPosition);
+				pos += uncategorized.size;
 
+				let chnlParent;
+				for (const cat of catChannels) {
+					chnlParent = cat;
+					pos++;
+					if (chnlParent.id == categoryID) break;
+					pos += cat.children.size;
+				}
+				channels = chnlParent.children.array().sort((a, b) => a.calculatedPosition - b.calculatedPosition);
+			}
+			if (channel.type != "category") {
+				const textChannels = channels.filter(c => c.type == "text"),
+					voiceChannels = channels.filter(c => c.type == "voice");
+				if (channel.type == "text") {
+					pos += textChannels.findIndex(c => c.id == channel.id);
+				} else {
+					pos += textChannels.length + voiceChannels.findIndex(c => c.id == channel.id);
+				}
+				pos++;
+			}
+			channelEmbed.addField("Position", pos + " / " + message.guild.channels.size, true);
+			
 			if (channel.type == "text") {
 				channelEmbed.addField("NSFW", channel.nsfw ? "Yes" : "No", true)
 					.addField("Topic", channel.topic || "No topic set");
