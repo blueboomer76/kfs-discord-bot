@@ -44,6 +44,29 @@ function capitalize(str, capAll) {
 
 module.exports = {
 	capitalize: capitalize,
+	getBotStats: (bot, stats) => {
+		let commandCurrentTotal = bot.cache.stats.commandCurrentTotal;
+		for (const usageCacheEntry of bot.cache.stats.commandUsages) {
+			commandCurrentTotal += usageCacheEntry.uses;
+		}
+		return {
+			servers: bot.guilds.size,
+			largeServers: bot.guilds.filter(g => g.large).size,
+			users: bot.users.size,
+			onlineUsers: bot.users.filter(u => u.presence.status != "offline").size,
+			channels: {
+				text: bot.channels.filter(ch => ch.type == "text").size,
+				voice: bot.channels.filter(ch => ch.type == "voice").size,
+				categories: bot.channels.filter(ch => ch.type == "category").size
+			},
+			sessionCommands: bot.cache.stats.commandSessionTotal + commandCurrentTotal,
+			totalCommands: stats.commandTotal + commandCurrentTotal,
+			sessionCalls: bot.cache.stats.callSessionTotal + bot.cache.stats.callCurrentTotal,
+			totalCalls: stats.callTotal + bot.cache.stats.callCurrentTotal,
+			sessionMessages: bot.cache.stats.messageSessionTotal + bot.cache.stats.messageCurrentTotal,
+			totalMessages: stats.messageTotal + bot.cache.stats.messageCurrentTotal
+		};
+	},
 	getDuration: (time1, time2, simple) => {
 		if (!time1) throw new Error("Time 1 is required");
 		if (isNaN(time1)) throw new TypeError("Time 1 is not a valid timestamp");

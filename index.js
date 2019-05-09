@@ -1,6 +1,7 @@
 const {DiscordAPIError} = require("discord.js"),
 	KFSDiscordBot = require("./bot.js"),
-	{token} = require("./config.json");
+	{token} = require("./config.json"),
+	fs = require("fs");
 
 if (parseFloat(process.versions.node) < 8) {
 	throw new Error("Incompatible Node version (Node version 8 or higher needed)");
@@ -30,7 +31,7 @@ try {
 	};
 }
 
-require("fs").writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {
+fs.writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {
 	if (err) throw err;
 	bot.setCumulativeStats();
 });
@@ -44,6 +45,7 @@ const bot = new KFSDiscordBot({
 });
 
 bot.loadCommands();
+if (fs.existsSync("./commands/advanced")) bot.loadCommands("./commands/advanced/");
 bot.loadEvents();
 
 process.on("uncaughtException", err => {
