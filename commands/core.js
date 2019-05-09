@@ -1,8 +1,9 @@
 const {RichEmbed, version} = require("discord.js"),
 	Command = require("../structures/command.js"),
-	{capitalize, getDuration, parsePerm} = require("../modules/functions.js"),
+	{capitalize, getBotStats, getDuration, parsePerm} = require("../modules/functions.js"),
 	paginator = require("../utils/paginator.js"),
 	packageInfo = require("../package.json"),
+	fs = require("fs"),
 	os = require("os");
 
 module.exports = [
@@ -196,8 +197,10 @@ module.exports = [
 			
 			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."};
 			try {
-				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
-				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
+				const commandFile = category.toLowerCase().replace(/ /g, "-") + ".js",
+					foundCmdFile = fs.existsSync("commands/advanced/" + commandFile) ? "./advanced/" + commandFile : "./" + commandFile;
+				delete require.cache[require.resolve(foundCmdFile)];
+				const commandClasses = require(foundCmdFile),
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[2] ? args[2].toLowerCase() : commandName));
 				if (!CommandClass) return {cmdWarn: "Command not found. If the command class name does not start with the command name, provide a third argument for the full class name before \"Command\", replacing all numbers in the command with the word."};
 				const newCommand = new CommandClass();
@@ -315,8 +318,10 @@ module.exports = [
 				commandName = command.name,
 				category = command.category;
 			try {
-				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
-				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
+				const commandFile = category.toLowerCase().replace(/ /g, "-") + ".js",
+					foundCmdFile = fs.existsSync("commands/advanced/" + commandFile) ? "./advanced/" + commandFile : "./" + commandFile;
+				delete require.cache[require.resolve(foundCmdFile)];
+				const commandClasses = require(foundCmdFile),
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[1] ? args[1].toLowerCase() : commandName));
 				if (!CommandClass) return {cmdWarn: "Command not found. If the command class name does not start with the command name, provide a second argument for the full class name before \"Command\", replacing all numbers in the command with the word."};
 				const newCommand = new CommandClass();
@@ -434,59 +439,44 @@ module.exports = [
 				statsEmbed.setAuthor("Bot Stats - Processor", bot.user.avatarURL);
 				this.getProcessorStats(message, statsEmbed);
 			} else {
-				const storedStats = require("../modules/stats.json"),
+				const storedStats = require("../modules/stats.json");
+				const beginEval = new Date(),
+					botStats = getBotStats(bot, storedStats),
+					endEval = new Date(),
 					processUptime = process.uptime() * 1000,
-					duration = storedStats.duration + (Date.now() - bot.cache.stats.lastCheck);
-				const beginEval = new Date();
-				const serverCount = bot.guilds.size,
-					bigServerCount = bot.guilds.filter(g => g.large).size,
-					userCount = bot.users.size,
-					onlineUserCount = bot.users.filter(u => u.presence.status != "offline").size,
-					textChannelCount = bot.channels.filter(chnl => chnl.type == "text").size,
-					voiceChannelCount = bot.channels.filter(chnl => chnl.type == "voice").size,
-					categoryCount = bot.channels.filter(chnl => chnl.type == "category").size;
-				let commandCurrentTotal = bot.cache.stats.commandCurrentTotal;
-				for (const usageCacheEntry of bot.cache.stats.commandUsages) {
-					commandCurrentTotal += usageCacheEntry.uses;
-				}
-				const sessionCommands = bot.cache.stats.commandSessionTotal + commandCurrentTotal,
-					totalCommands = storedStats.commandTotal + commandCurrentTotal,
-					sessionCalls = bot.cache.stats.callSessionTotal + bot.cache.stats.callCurrentTotal,
-					totalCalls = storedStats.callTotal + bot.cache.stats.callCurrentTotal,
-					sessionMessages = bot.cache.stats.messageSessionTotal + bot.cache.stats.messageCurrentTotal,
-					totalMessages = storedStats.messageTotal + bot.cache.stats.messageCurrentTotal;
-				
-				const endEval = new Date();
+					duration = storedStats.duration + (Date.now() - bot.cache.stats.lastCheck),
+					serverCount = botStats.servers,
+					userCount = botStats.users;
 				
 				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL)
 					.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
 					.setDescription(`Here's some detailed stats about this bot! *To see stats about the bot host, use \`${bot.prefix}stats processor\`*`)
 					.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
 					.addField("Last Ready", getDuration(bot.readyTimestamp), true)
-					.addField("Servers", 
+					.addField("Servers",
 						`Total: ${serverCount.toLocaleString()}` + "\n" +
-						`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
+						`Large: ${botStats.largeServers.toLocaleString()} (${(botStats.largeServers * 100 / serverCount).toFixed(1)}%)`
 						, true)
 					.addField("Users",
 						`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
-						`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(1)}%)`
+						`Online: ${botStats.onlineUsers.toLocaleString()} (${(botStats.onlineUsers / userCount * 100).toFixed(1)}%)`
 						, true)
 					.addField("Channels",
-						`Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
-						`Voice: ${voiceChannelCount.toLocaleString()} (${(voiceChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
-						`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
+						`Text: ${botStats.channels.text.toLocaleString()} (${(botStats.channels.text / serverCount).toFixed(2)}/server)` + "\n" +
+						`Voice: ${botStats.channels.voice.toLocaleString()} (${(botStats.channels.voice / serverCount).toFixed(2)}/server)` + "\n" +
+						`Categories: ${botStats.channels.categories.toLocaleString()} (${(botStats.channels.categories / serverCount).toFixed(2)}/server)`
 						, true)
 					.addField("Commands",
-						`Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, processUptime)})` + "\n" +
-						`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, duration)})`
+						`Session: ${botStats.sessionCommands.toLocaleString()} (${this.setRate(botStats.sessionCommands, processUptime)})` + "\n" +
+						`Total: ${botStats.totalCommands.toLocaleString()} (${this.setRate(botStats.totalCommands, duration)})`
 						, true)
 					.addField("Phone Connections",
-						`Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, processUptime)})` + "\n" +
-						`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, duration)})`
+						`Session: ${botStats.sessionCalls.toLocaleString()} (${this.setRate(botStats.sessionCalls, processUptime)})` + "\n" +
+						`Total: ${botStats.totalCalls.toLocaleString()} (${this.setRate(botStats.totalCalls, duration)})`
 						, true)
 					.addField("Messages Seen",
-						`Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, processUptime)})` + "\n" +
-						`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, duration)})`
+						`Session: ${botStats.sessionMessages.toLocaleString()} (${this.setRate(botStats.sessionMessages, processUptime)})` + "\n" +
+						`Total: ${botStats.totalMessages.toLocaleString()} (${this.setRate(botStats.totalMessages, duration)})`
 						, true);
 				message.channel.send(statsEmbed);
 			}
@@ -634,7 +624,10 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const command = args[0], commandName = command.name;
 			if (command.category == "Core" || commandName == "eval") return {cmdErr: "That command is not unloadable."};
-			delete require.cache[require.resolve(`./${command.category.toLowerCase().replace(/ /g, "-")}.js`)];
+
+			const commandFile = command.category.toLowerCase().replace(/ /g, "-") + ".js",
+				foundCmdFile = fs.existsSync("commands/advanced/" + commandFile) ? "./advanced/" + commandFile : "./" + commandFile;
+			delete require.cache[require.resolve(foundCmdFile)];
 			bot.commands.delete(commandName);
 			if (command.aliases.length > 0) {
 				const toRemoveAliases = bot.aliases.filter(alias => alias == command.name);

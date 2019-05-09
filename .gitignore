@@ -14,9 +14,10 @@ start-bot.bat
 # Stats JSON file
 stats.json
 
-# Test directory and command
+# Test and advanced commands directory
 test/
 test.js
+commands/advanced/
 
 # Visual Studio Code
 .vscode/
