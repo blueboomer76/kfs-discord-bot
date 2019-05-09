@@ -1,6 +1,6 @@
 const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
-	{capitalize, getDuration, parsePerm} = require("../modules/functions.js"),
+	{capitalize, getBotStats, getDuration, parsePerm} = require("../modules/functions.js"),
 	stats = require("../modules/stats.json"),
 	paginator = require("../utils/paginator.js"),
 	packageInfo = require("../package.json"),
@@ -434,24 +434,10 @@ module.exports = [
 				this.getProcessorStats(message, statsEmbed);
 			} else {
 				const beginEval = new Date(),
-					serverCount = bot.guilds.size,
-					bigServerCount = bot.guilds.filter(g => g.large).size,
-					userCount = bot.users.size,
-					onlineUserCount = bot.users.filter(u => u.presence.status != "offline").size,
-					textChannelCount = bot.channels.filter(chnl => chnl.type == "text").size,
-					voiceChannelCount = bot.channels.filter(chnl => chnl.type == "voice").size,
-					categoryCount = bot.channels.filter(chnl => chnl.type == "category").size,
-					sessionMessages = bot.cache.stats.messageCurrentTotal + bot.cache.stats.messageSessionTotal,
-					totalMessages = stats.messageTotal + bot.cache.stats.messageCurrentTotal,
-					sessionCalls = bot.cache.stats.callCurrentTotal + bot.cache.stats.callSessionTotal,
-					totalCalls = stats.callTotal + bot.cache.stats.callCurrentTotal;
-				let commandCurrentTotal = bot.cache.stats.commandCurrentTotal;
-				for (const usageCacheEntry of bot.cache.stats.commandUsage) {
-					commandCurrentTotal += usageCacheEntry.uses;
-				}
-				const sessionCommands = commandCurrentTotal + bot.cache.stats.commandSessionTotal,
-					totalCommands = stats.commandTotal + commandCurrentTotal,
-					endEval = new Date();
+					botStats = getBotStats(),
+					endEval = new Date(),
+					serverCount = botStats.servers,
+					userCount = botStats.users;
 				
 				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL)
 					.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
@@ -459,23 +445,23 @@ module.exports = [
 					.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
 					.addField("Last Restart", getDuration(bot.readyTimestamp), true)
 					.addField("Servers", `Total: ${serverCount.toLocaleString()}` + "\n" +
-					`Large: ${bigServerCount.toLocaleString()} (${(bigServerCount * 100 / serverCount).toFixed(1)}%)`
+					`Large: ${botStats.largeServers.toLocaleString()} (${(botStats.largeServers * 100 / serverCount).toFixed(1)}%)`
 					, true)
 					.addField("Users", `Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
-					`Online: ${onlineUserCount.toLocaleString()} (${(onlineUserCount / userCount * 100).toFixed(1)}%)`
+					`Online: ${botStats.onlineUsers.toLocaleString()} (${(botStats.onlineUsers / userCount * 100).toFixed(1)}%)`
 					, true)
-					.addField("Channels", `Text: ${textChannelCount.toLocaleString()} (${(textChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
-					`Voice: ${voiceChannelCount.toLocaleString()} (${(voiceChannelCount / serverCount).toFixed(2)}/server)` + "\n" +
-					`Categories: ${categoryCount.toLocaleString()} (${(categoryCount / serverCount).toFixed(2)}/server)`
+					.addField("Channels", `Text: ${botStats.channels.text.toLocaleString()} (${(botStats.channels.text / serverCount).toFixed(2)}/server)` + "\n" +
+					`Voice: ${botStats.channels.voice.toLocaleString()} (${(botStats.channels.voice / serverCount).toFixed(2)}/server)` + "\n" +
+					`Categories: ${botStats.channels.categories.toLocaleString()} (${(botStats.channels.categories / serverCount).toFixed(2)}/server)`
 					, true)
-					.addField("Messages Seen", `Session: ${sessionMessages.toLocaleString()} (${this.setRate(sessionMessages, Date.now() - bot.readyTimestamp)})` + "\n" +
-					`Total: ${totalMessages.toLocaleString()} (${this.setRate(totalMessages, stats.duration)})`
+					.addField("Messages Seen", `Session: ${botStats.sessionMessages.toLocaleString()} (${this.setRate(botStats.sessionMessages, Date.now() - bot.readyTimestamp)})` + "\n" +
+					`Total: ${botStats.totalMessages.toLocaleString()} (${this.setRate(botStats.totalMessages, stats.duration)})`
 					, true)
-					.addField("Phone Connections", `Session: ${sessionCalls.toLocaleString()} (${this.setRate(sessionCalls, Date.now() - bot.readyTimestamp)})` + "\n" +
-					`Total: ${totalCalls.toLocaleString()} (${this.setRate(totalCalls, stats.duration)})`
+					.addField("Phone Connections", `Session: ${botStats.sessionCalls.toLocaleString()} (${this.setRate(botStats.sessionCalls, Date.now() - bot.readyTimestamp)})` + "\n" +
+					`Total: ${botStats.totalCalls.toLocaleString()} (${this.setRate(botStats.totalCalls, stats.duration)})`
 					, true)
-					.addField("Commands", `Session: ${sessionCommands.toLocaleString()} (${this.setRate(sessionCommands, Date.now() - bot.readyTimestamp)})` + "\n" +
-					`Total: ${totalCommands.toLocaleString()} (${this.setRate(totalCommands, stats.duration)})`
+					.addField("Commands", `Session: ${botStats.sessionCommands.toLocaleString()} (${this.setRate(botStats.sessionCommands, Date.now() - bot.readyTimestamp)})` + "\n" +
+					`Total: ${botStats.totalCommands.toLocaleString()} (${this.setRate(botStats.totalCommands, stats.duration)})`
 					, true);
 				message.channel.send(statsEmbed);
 			}

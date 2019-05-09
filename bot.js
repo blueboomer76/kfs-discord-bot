@@ -78,24 +78,23 @@ class KendraBot extends Client {
 		}
 	}
 	
-	loadCommands() {
-		fs.readdir("./commands/", (err, files) => {
+	loadCommands(altdir) {
+		const dir = altdir || "./commands/";
+		fs.readdir(dir, (err, files) => {
 			if (err) throw err;
-			const cmdFiles = files.filter(f => f.split(".").pop() == "js").map(f => f.split(".").shift());
-			if (cmdFiles.length != 0) {
-				for (let category of cmdFiles) {
+			const categories = files.filter(f => f.split(".").pop() == "js").map(f => f.split(".").shift());
+			if (categories.length != 0) {
+				for (let category of categories) {
 					category = capitalize(category.replace(/-/g, " "));
 					this.categories.push(category);
-					const commandClasses = require(`./commands/${category.toLowerCase().replace(/ /g, "-")}`);
+					const commandClasses = require(`${dir}${category.toLowerCase().replace(/ /g, "-")}`);
 					if (commandClasses.length > 0) {
 						for (const CommandClass of commandClasses) {
 							const command = new CommandClass();
 							command.category = category;
 							this.commands.set(command.name, command);
 							if (command.aliases.length > 0) {
-								for (const alias of command.aliases) { 
-									this.aliases.set(alias, command.name);
-								}
+								for (const alias of command.aliases) this.aliases.set(alias, command.name);
 							}
 						}
 						console.log(`${commandClasses.length} commands have been loaded in the category ${category}.`);
@@ -104,8 +103,10 @@ class KendraBot extends Client {
 					}
 				}
 			} else {
-				throw new Error("No command files or commands found");
+				const err = "No command files or commands found in the directory: " + dir;
+				if (altdir) {console.log(err)} else {throw new Error(err)}
 			}
+			this.categories.sort();
 		});
 	}
 	

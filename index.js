@@ -26,6 +26,7 @@ const bot = new KendraBot({
 });
 
 bot.loadCommands();
+if (fs.existsSync("./commands/advanced")) bot.loadCommands("./commands/advanced/");
 bot.loadEvents();
 
 process.on("uncaughtException", err => {
