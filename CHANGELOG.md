@@ -2,6 +2,11 @@
 
 # 1.X (current)
 
+## 1.4.17
+
+- Renamed and changed moderation command descriptions and operations
+- Added a new check for `commands/advanced` for advanced-level commands
+
 ## 1.4.11
 
 - Added a way to store cumulative bot stats to its cache

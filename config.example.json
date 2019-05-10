@@ -9,10 +9,12 @@
 	"ownerIDs": [
 		"<array of owner IDs>"
 	],
-	"adminIDs": [],
-	"botModIDs": [],
-	"moderatorIDs": [],
-	"supportIDs": [],
+	"adminIDs": ["<array of admin IDs>"],
+	"botModIDs": ["<array of bot moderator IDs>"],
+	"moderatorIDs": ["array of moderator IDs>"],
+	"supportIDs": ["<array of support IDs>"],
+	"rssFeedChannel": "[RSS feed channel ID]",
+	"memeFeedChannel": "[meme feed channel ID]",
 	"customCooldownMessages": [
 		"You're calling me fast enough that I'm getting dizzy!",
 		"You have to wait before using the command again...",
@@ -23,6 +25,10 @@
 	"customStatusMessages": [
 		"enjoying with you",
 		"of great service.",
+		"with impulse",
+		"with spectrums",
 		"with variety"
-	]
+	],
+	"rssFeedWebsites": ["[array of RSS feed websites]"],
+	"trackOwnerCommands": true
 }
