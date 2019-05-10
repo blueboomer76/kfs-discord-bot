@@ -8,7 +8,7 @@
 </div>
 
 [![Server Widget](https://discordapp.com/api/guilds/308063187696091140/widget.png)](https://discord.gg/yB8TvWU)
-[![David DM Status](https://david-dm.org/blueboomer76/KendraBot.svg)](https://david-dm.org/blueboomer76/KendraBot)
+[![David DM Status](https://david-dm.org/blueboomer76/kendra-discord-bot.svg)](https://david-dm.org/blueboomer76/kendra-discord-bot)
 
 A multipurpose Discord bot for fun, utility, and more, coded in discord.js.
 

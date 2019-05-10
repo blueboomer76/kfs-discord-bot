@@ -2,6 +2,11 @@
 
 # 1.X (current)
 
+## 1.4.17
+- Renamed and changed moderation command descriptions and operations
+- Added a new check for `commands/advanced` for advanced-level commands
+- Bumped versions in `package.json` to latest versions
+
 ## 1.4.11
 - Added a way to store cumulative bot stats to its cache
 - Edited the bot method for writing bot stats
@@ -44,7 +49,7 @@
 
 ## 1.3.24
 - Added consistency for command error displaying
-- Changed the stats posting link from bots.discord.pw to botsondiscord.xyz
+- Changed the stats posting link from bots.discord.pw to bots.ondiscord.xyz
 
 ## 1.3.17
 - Changed dependency for headless scraper from `nightmare` to `puppeteer`
@@ -90,9 +95,8 @@
 
 ## 1.2.8
 - Added Search category
-- Added reddit command
+- Added more music commands, along with reddit command
 - Changed superagent dependency to request
-- Add more music commands
 
 ## 1.2.0
 - Added music commands (in beta)
@@ -119,7 +123,7 @@ Initial 1.X version
 
 ## 0.4.0
 - Added member finder
-- Moved events to own folder
+- Moved events to its own folder
 - Simplified `index.js` code
 - Improved the alias system
 

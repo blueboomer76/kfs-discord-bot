@@ -12,10 +12,19 @@
 		"<owner id>",
 		"<another owner id>"
 	],
-	"adminIds": [],
-	"botModIds": [],
-	"moderatorIds": [],
-	"supportIds": [],
+	"adminIds": ["<list of admin ids>"],
+	"botModIds": ["<list of bot moderator ids>"],
+	"moderatorIds": ["<list of moderator ids>"],
+	"supportIds": ["<list of support ids>"],
+	"ownerServer": {
+		"activity": "<main server channel id>",
+		"changelog": "<main server channel id>",
+		"id": "<main server id>",
+		"memeFeed": "<main server channel id>",
+		"modlog": "<main server channel id>",
+		"rssFeed": "<main server channel id>",
+		"welcome": "<main server channel id>"
+	},
 	"customCooldownMessages": [
 		"You're calling me fast enough that I'm getting dizzy!",
 		"Watch out, seems like we might get a speeding ticket at this rate!",
@@ -25,9 +34,16 @@
 		"Hang in there before using this command again..."
 	],
 	"customStatusMessages": [
-		"with over 45 commands",
 		"enjoying with you",
-		"with cuteness."
+		"of great service.",
+		"with cuteness.",
+		"with impulse",
+		"with over 90 commands",
+		"with rainbows",
+		"with spectrums",
+		"with variety"
 	],
+	"rssFeedWebsites": ["<list of rss feed websites>"],
+	"isBeta": false,
 	"trackOwnerCommands": true
 }
