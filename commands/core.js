@@ -434,7 +434,7 @@ module.exports = [
 				this.getProcessorStats(message, statsEmbed);
 			} else {
 				const beginEval = new Date(),
-					botStats = getBotStats(),
+					botStats = getBotStats(bot, stats),
 					endEval = new Date(),
 					serverCount = botStats.servers,
 					userCount = botStats.users;

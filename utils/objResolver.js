@@ -65,7 +65,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			if (testFunction(obj)) {return obj} else {return null}
 		case "image":
 			if (memberRegex.test(obj)) {
-				const guildMembers = message.guild.large ? fetchMembers(message) : message.guild.members,
+				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 					member = guildMembers.get(obj.match(/\d+/)[0]);
 				if (member) {
 					return member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`;
@@ -110,7 +110,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			if (member) {
 				return member ? [member] : null;
 			} else {
-				const guildMembers = message.guild.large ? fetchMembers(message) : message.guild.members,
+				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 					comparedObj = obj.toLowerCase();
 				list = guildMembers.filter(mem => {
 					return mem.user.tag.toLowerCase().includes(comparedObj) ||

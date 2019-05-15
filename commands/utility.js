@@ -361,7 +361,7 @@ module.exports = [
 			const role = args[0],
 				rolePos = role.calculatedPosition,
 				guildRoles = message.guild.roles,
-				guildMembers = message.guild.large ? fetchMembers(message) : message.guild.members,
+				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id)),
 				nearbyRoles = [];
 			
@@ -462,7 +462,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const role = args[0],
-				guildMembers = message.guild.large ? fetchMembers(message) : message.guild.members,
+				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id));
 
 			if (roleMembers.size == 0) return {cmdWarn: `There are no members in the role **${role.name}**.`};
@@ -499,7 +499,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const guild = message.guild,
-				guildMembers = message.guild.large ? fetchMembers(message) : message.guild.members,
+				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 				botCount = guildMembers.filter(mem => mem.user.bot).size,
 				createdDate = new Date(guild.createdTimestamp);
 			let guildVerif;
@@ -577,7 +577,7 @@ module.exports = [
 			userRoles.splice(userRoles.findIndex(role => role.id == message.guild.id), 1);
 			userRoles = userRoles.map(role => role.name);
 			
-			const guildMembers = message.guild.large ? fetchMembers(message) : message.guild.members,
+			const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 				guildMemArray = guildMembers.array();
 			guildMemArray.sort((a,b) => a.joinedTimestamp - b.joinedTimestamp);
 			
