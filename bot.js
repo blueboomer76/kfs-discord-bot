@@ -183,9 +183,9 @@ class KFSDiscordBot extends Client {
 	}
 
 	checkRemoteRequest(site, err, res) {
-		if (err) return `Could not request to ${site}: ${err.message}`;
+		if (err) return `Could not request to ${site}: ${err.message} (${err.code})`;
 		if (!res) return `No response was received from ${site}.`;
-		if (res.statusCode >= 400) return `The request to ${site} failed with status code ${res.statusCode} (${res.statusMessage})`;
+		if (res.statusCode >= 400) return `An error has been returned from ${site}: ${res.statusCode} (${res.statusMessage}). Try again later.`;
 		return true;
 	}
 
