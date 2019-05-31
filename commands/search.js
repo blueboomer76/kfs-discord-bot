@@ -88,7 +88,7 @@ module.exports = [
 			if (args[0]) {
 				const foundRedirSub = redirSubreddits.find(e => e.name == args[0].toLowerCase());
 				if (foundRedirSub) return bot.commands.get(foundRedirSub.goTo).run(bot, message);
-				subreddit = args[0].replace(/^\/?[Rr]\//, "");
+				subreddit = args[0].replace(/^\/?[Rr]\//, "").replace(/ /g, "_");
 				if (subreddit.length < 3 || subreddit.length > 21) return {cmdWarn: "Subreddit names should have in between 3 and 21 characters."};
 				if (!(/^[0-9A-Za-z_]+$/).test(subreddit)) return {cmdWarn: "Subreddit names should contain alphanumeric characters and underscores only (no spaces)."};
 			} else {

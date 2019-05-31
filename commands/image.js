@@ -25,9 +25,9 @@ function getPosts(subreddit, checkNsfw) {
 			qs: {raw_json: 1},
 			json: true
 		}, (err, res) => {
-			if (err) return reject(`Could not request to Reddit: ${err.message}`);
+			if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
 			if (!res) return reject("No response was received from Reddit.");
-			if (res.statusCode >= 400) return reject(`The request to Reddit failed with status code ${res.statusCode} (${res.statusMessage})`);
+			if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 			const results = res.body.data.children.filter(r => !r.data.stickied);
 		
 			if (checkNsfw) {
