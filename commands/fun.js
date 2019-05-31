@@ -93,7 +93,7 @@ module.exports = [
 					json: true
 				}, (err, res) => {
 					if (err) reject(`Could not request to Reddit: ${err.message} (${err.code})`);
-					if (res.statusCode >= 400) reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode})`);
+					if (res.statusCode >= 400) reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 					
 					this.lastChecked = Date.now();
 					const results = res.body.data.children
@@ -325,7 +325,7 @@ module.exports = [
 					json: true
 				}, (err, res) => {
 					if (err) reject(`Could not request to Reddit: ${err.message} (${err.code})`);
-					if (res.statusCode >= 400) reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode})`);
+					if (res.statusCode >= 400) reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 					
 					this.lastChecked = Date.now();
 					const results = res.body.data.children
@@ -393,7 +393,7 @@ module.exports = [
 					json: true
 				}, (err, res) => {
 					if (err) reject(`Could not request to Reddit: ${err.message} (${err.code})`);
-					if (res.statusCode >= 400) reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode})`);
+					if (res.statusCode >= 400) reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 					
 					this.lastChecked = Date.now();
 					const results = res.body.data.children

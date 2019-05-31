@@ -300,7 +300,7 @@ module.exports = [
 					json: true
 				}, (err, res) => {
 					if (err) reject(`Could not request to Open Trivia Database: ${err.message} (${err.code})`);
-					if (res.statusCode >= 400) reject(`An error has been returned from Open Trivia Database: ${res.statusMessage} (${res.statusCode})`);
+					if (res.statusCode >= 400) reject(`An error has been returned from Open Trivia Database: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 					
 					const results = res.body.results.map(r => {
 						return {

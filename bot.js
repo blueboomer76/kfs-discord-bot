@@ -172,7 +172,8 @@ class KendraBot extends Client {
 	}
 
 	handleRemoteSiteError(message, site, err, res) {
-		message.channel.send(err ? `⚠ Could not request to ${site}: ${err.message} (${err.code})` : `⚠ An error has been returned from ${site}: ${res.statusMessage} (${res.statusCode})`);
+		const errBase = err ? `Could not request to ${site}: ${err.message} (${err.code})` : `An error has been returned from ${site}: ${res.statusMessage} (${res.statusCode})`;
+		message.channel.send("⚠ " + errBase + " Try again later.");
 	}
 
 	// Optional functions
