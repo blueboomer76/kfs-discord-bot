@@ -283,15 +283,14 @@ class KFSDiscordBot extends Client {
 		const phoneCache = this.cache.phone;
 		if (this.checkDeletedPhoneChannels()) return;
 		
-		let affected = 0,
-			toSend = message.cleanContent.replace(/https?:\/\/\S+\.\S+/gi, "")
-				.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
+		const affected = message.channel.id == phoneCache.channels[0].id ? 1 : 0;
+		let toSend = message.cleanContent.replace(/https?:\/\/\S+\.\S+/gi, "")
+			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
+		if (toSend.length > 1500) toSend = `${toSend.slice(0, 1500)}...`;
 		
 		phoneCache.lastMsgTime = Date.now();
 		phoneCache.msgCount++;
 		setTimeout(() => {phoneCache.msgCount--}, 5000);
-		if (message.channel.id == phoneCache.channels[0].id) affected = 1;
-		if (toSend.length > 1500) toSend = `${toSend.slice(0, 1500)}...`;
 
 		phoneCache.channels[affected].send(`📞 ${toSend}`);
 		if (phoneCache.msgCount >= 4) {

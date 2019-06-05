@@ -92,7 +92,7 @@ module.exports = [
 				numAnswers = questionData.otherAnswers.length + 1,
 				tempAnswers = questionData.otherAnswers,
 				answers = [];
-			let answerLetter = null;
+			let answerLetter;
 
 			tempAnswers.push(questionData.answer);
 
