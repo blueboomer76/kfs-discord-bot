@@ -192,9 +192,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const iters = args[0] || 1;
 			if (iters == 1) {
-				let res;
-				if (Math.random() < 0.5) {res = "Heads"} else {res = "Tails"}
-				message.channel.send("I flipped a coin and got " + res);
+				message.channel.send("I flipped a coin and got " + (Math.random() < 0.5 ? "Heads" : "Tails"));
 			} else {
 				const res = [];
 				let heads = 0;
