@@ -176,10 +176,11 @@ module.exports = {
 			flagShortNames = commandFlags.map(f => f.name.charAt(0)),
 			flagLongNames = commandFlags.map(f => f.name.toLowerCase());
 		for (let i = 0; i < flags.length; i++) {
-			if (flags[i].method == "short") {
-				flags[i].name = flagLongNames[flagShortNames.indexOf(flags[i].name)].toLowerCase();
+			const shortIndex = flagShortNames.indexOf(flags[i].name);
+			if (shortIndex != -1 && flags[i].method == "short") {
+				flags[i].name = flagLongNames[shortIndex].toLowerCase();
 			}
-			if (!flagLongNames.includes(flags[i].name)) {
+			if (shortIndex == -1 || !flagLongNames.includes(flags[i].name)) {
 				if (parsedFlags.length == 0) {
 					if (i < flags.length - 1) {
 						newArgs = args.slice(0, flagIndexes[i+1]);

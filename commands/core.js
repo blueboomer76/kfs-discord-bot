@@ -4,6 +4,7 @@ const {RichEmbed} = require("discord.js"),
 	stats = require("../modules/stats.json"),
 	paginator = require("../utils/paginator.js"),
 	packageInfo = require("../package.json"),
+	fs = require("fs"),
 	os = require("os");
 
 module.exports = [
@@ -197,8 +198,10 @@ module.exports = [
 			
 			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."};
 			try {
-				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
-				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
+				const commandFile = category.toLowerCase().replace(/ /g, "-") + ".js",
+					foundCmdFile = fs.existsSync("commands/advanced/" + commandFile) ? "./advanced/" + commandFile : "./" + commandFile;
+				delete require.cache[require.resolve(foundCmdFile)];
+				const commandClasses = require(foundCmdFile),
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[2] || args[1]));
 				if (!CommandClass) return {cmdWarn: "Please provide a second argument for the full class name before \"Command\", replacing all numbers in the command with the word."};
 				const newCommand = new CommandClass();
@@ -314,8 +317,10 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const command = args[0], commandName = command.name, category = command.category;
 			try {
-				delete require.cache[require.resolve(`./${category.toLowerCase().replace(/ /g, "-")}.js`)];
-				const commandClasses = require(`./${category.toLowerCase().replace(/ /g, "-")}.js`),
+				const commandFile = category.toLowerCase().replace(/ /g, "-") + ".js",
+					foundCmdFile = fs.existsSync("commands/advanced/" + commandFile) ? "./advanced/" + commandFile : "./" + commandFile;
+				delete require.cache[require.resolve(foundCmdFile)];
+				const commandClasses = require(foundCmdFile),
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[1] || args[0].name));
 				if (!CommandClass) return {cmdWarn: "Please provide a second argument for the full class name before \"Command\", replacing all numbers in the command with the word."};
 				const newCommand = new CommandClass();
@@ -601,7 +606,6 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const command = args[0];
 			if (command.category == "Core" || command.name == "eval") return {cmdErr: "That command is not unloadable."};
-			delete require.cache[require.resolve(`./${command.category.toLowerCase().replace(/ /g, "-")}.js`)];
 			bot.commands.delete(command.name);
 			if (command.aliases.length > 0) {
 				const toRemoveAliases = bot.aliases.filter(alias => alias == command.name);
