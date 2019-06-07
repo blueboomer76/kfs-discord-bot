@@ -116,37 +116,16 @@ module.exports = async (bot, message) => {
 					});
 				}
 				
+				/*
+				The below condition can be replaced with this when bot owners are to be ignored.
+				if ((!runRes || !runRes.noLog) && runCommand.name != "help" && runCommand.name != "phone" && !bot.ownerIds.includes(message.author.id)) {
+				*/
+
 				if (!runRes || !runRes.noLog) {
-					const commandUsage = bot.cache.stats.commandUsage.find(u => u.command == runCommand.name);
-					if (commandUsage) {
-						commandUsage.uses++;
-					} else {
-						bot.cache.stats.commandUsage.push({
-							command: runCommand.name,
-							uses: 1
-						});
-					}
+					bot.cache.stats.commandUsage[runCommand.name] = (bot.cache.stats.commandUsage[runCommand.name] || 0) + 1;
 				} else {
 					bot.cache.stats.commandCurrentTotal++;
 				}
-				
-				/*
-				This is the code if owners are to be ignored.
-				
-				if ((!runRes || !runRes.noLog) && runCommand.name != "help" && runCommand.name != "phone" && !bot.ownerIds.includes(message.author.id)) {
-					const commandUsage = bot.cache.stats.commandUsage.find(u => u.command == runCommand.name);
-					if (commandUsage) {
-						commandUsage.uses++;
-					} else {
-						bot.cache.stats.commandUsage.push({
-							command: runCommand.name,
-							uses: 1
-						})
-					}
-				} else {
-					bot.cache.stats.commandCurrentTotal++;
-				};
-				*/
 			})
 			.catch(err => {
 				let errMsg = "⚠ **Something went wrong with this command**" + "```javascript" + "\n" + err.stack + "```";

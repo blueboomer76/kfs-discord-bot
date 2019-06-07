@@ -59,7 +59,7 @@ class KendraBot extends Client {
 			channelCount: 0,
 			phone: {channels: [], msgCount: 0, lastMsgTime: 0, timeout: null},
 			recentCommands: [],
-			cumulativeStats: undefined,
+			cumulativeStats: require("./modules/stats.json"),
 			stats: {
 				lastCheck: Date.now(),
 				messageCurrentTotal: 0,
@@ -68,11 +68,10 @@ class KendraBot extends Client {
 				callSessionTotal: 0,
 				commandCurrentTotal: 0,
 				commandSessionTotal: 0,
-				commandUsage: []
+				commandUsage: {}
 			},
 			status: {randomIters: 0, pos: 0}
 		};
-		this.setCumulativeStats();
 		if (config.ideaWebhook) {
 			this.ideaWebhook = new WebhookClient(config.ideaWebhook.id, config.ideaWebhook.token);
 		}
@@ -127,29 +126,36 @@ class KendraBot extends Client {
 		});
 	}
 	
-	async logStats() {
-		const storedStats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8")),
-			cachedStats = this.cache.stats;
-		storedStats.duration = storedStats.duration + (Date.now() - cachedStats.lastCheck);
-		storedStats.messageTotal += cachedStats.messageCurrentTotal;
+	logStats(sync = false) {
+		const cachedStats = this.cache.stats,
+			cumulativeStats = this.cache.cumulativeStats;
+		cumulativeStats.duration += Date.now() - cachedStats.lastCheck;
+		cumulativeStats.messageTotal += cachedStats.messageCurrentTotal;
+		cumulativeStats.callTotal += cachedStats.callCurrentTotal;
 
-		const distrib = storedStats.commandDistrib,
-			usageCache = cachedStats.commandUsage;
-		let commandCurrentTotal = cachedStats.commandCurrentTotal;
-		for (const entry of usageCache) {
-			const cmdIndex = distrib.findIndex(u => u.command == entry.command);
-			if (cmdIndex != -1) {
-				distrib[cmdIndex].uses += entry.uses;
-			} else {
-				distrib.push({command: entry.command, uses: entry.uses});
-			}
-			commandCurrentTotal += entry.uses;
+		const usageCache = cachedStats.commandUsage;
+		let distrib = cumulativeStats.commandDistrib,
+			commandCurrentTotal = cachedStats.commandCurrentTotal;
+		for (const cmdName in usageCache) {
+			distrib[cmdName] = (distrib[cmdName] || 0) + usageCache[cmdName];
+			commandCurrentTotal += usageCache[cmdName];
 		}
-		storedStats.callTotal += cachedStats.callCurrentTotal;
-		storedStats.commandTotal += commandCurrentTotal;
-		distrib.sort((a,b) => b.uses - a.uses);
-		fs.writeFileSync("modules/stats.json", JSON.stringify(storedStats, null, 4));
-		this.setCumulativeStats(storedStats);
+		cumulativeStats.commandTotal += commandCurrentTotal;
+		
+		if (Date.now() > cumulativeStats.lastSorted + 1000*86400*7) {
+			cumulativeStats.lastSorted = Date.now();
+			const tempNames = Object.keys(distrib),
+				tempUses = Object.values(distrib),
+				tempArray = [];
+			for (let i = 0; i < tempNames.length; i++) {
+				tempArray.push({name: tempNames[i], uses: tempUses[i]});
+			}
+			tempArray.sort((a, b) => a.uses - b.uses);
+			distrib = {};
+			for (let i = 0; i < tempArray.length; i++) {
+				distrib[tempArray[i].name] = tempArray[i].uses;
+			}
+		}
 
 		cachedStats.messageSessionTotal += cachedStats.messageCurrentTotal;
 		cachedStats.messageCurrentTotal = 0;
@@ -158,19 +164,20 @@ class KendraBot extends Client {
 		cachedStats.commandSessionTotal += commandCurrentTotal;
 		cachedStats.commandCurrentTotal = 0;
 		cachedStats.lastCheck = Date.now();
-		cachedStats.commandUsage = [];
+		cachedStats.commandUsage = {};
+
+		if (sync) {
+			fs.writeFileSync("modules/stats.json", JSON.stringify(cumulativeStats, null, 4));
+		} else {
+			return new Promise((resolve, reject) => {
+				fs.writeFile("modules/stats.json", JSON.stringify(cumulativeStats, null, 4), err => {
+					if (err) reject(err);
+					resolve();
+				});
+			});
+		}
 	}
 	
-	setCumulativeStats(data) {
-		const storedStats = data || require("./modules/stats.json");
-		this.cache.cumulativeStats = {
-			duration: storedStats.duration,
-			messageTotal: storedStats.messageTotal,
-			commandTotal: storedStats.commandTotal,
-			callTotal: storedStats.callTotal
-		};
-	}
-
 	handleRemoteSiteError(message, site, err, res) {
 		const errBase = err ? `Could not request to ${site}: ${err.message} (${err.code})` : `An error has been returned from ${site}: ${res.statusMessage} (${res.statusCode})`;
 		message.channel.send("⚠ " + errBase + " Try again later.");

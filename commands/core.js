@@ -1,7 +1,6 @@
 const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	{capitalize, getBotStats, getDuration, parsePerm} = require("../modules/functions.js"),
-	stats = require("../modules/stats.json"),
 	paginator = require("../utils/paginator.js"),
 	packageInfo = require("../package.json"),
 	fs = require("fs"),
@@ -397,7 +396,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			await message.channel.send("Logging stats and shutting down the bot...");
-			await bot.logStats();
+			await bot.logStats(true);
 			process.exit(1);
 		}
 	},
@@ -439,7 +438,7 @@ module.exports = [
 				this.getProcessorStats(message, statsEmbed);
 			} else {
 				const beginEval = new Date(),
-					botStats = getBotStats(bot, stats),
+					botStats = getBotStats(bot),
 					endEval = new Date(),
 					serverCount = botStats.servers,
 					userCount = botStats.users;
@@ -460,13 +459,13 @@ module.exports = [
 					`Categories: ${botStats.channels.categories.toLocaleString()} (${(botStats.channels.categories / serverCount).toFixed(2)}/server)`
 					, true)
 					.addField("Messages Seen", `Session: ${botStats.sessionMessages.toLocaleString()} (${this.setRate(botStats.sessionMessages, Date.now() - bot.readyTimestamp)})` + "\n" +
-					`Total: ${botStats.totalMessages.toLocaleString()} (${this.setRate(botStats.totalMessages, stats.duration)})`
+					`Total: ${botStats.totalMessages.toLocaleString()} (${this.setRate(botStats.totalMessages, bot.cache.cumulativeStats.duration)})`
 					, true)
 					.addField("Phone Connections", `Session: ${botStats.sessionCalls.toLocaleString()} (${this.setRate(botStats.sessionCalls, Date.now() - bot.readyTimestamp)})` + "\n" +
-					`Total: ${botStats.totalCalls.toLocaleString()} (${this.setRate(botStats.totalCalls, stats.duration)})`
+					`Total: ${botStats.totalCalls.toLocaleString()} (${this.setRate(botStats.totalCalls, bot.cache.cumulativeStats.duration)})`
 					, true)
 					.addField("Commands", `Session: ${botStats.sessionCommands.toLocaleString()} (${this.setRate(botStats.sessionCommands, Date.now() - bot.readyTimestamp)})` + "\n" +
-					`Total: ${botStats.totalCommands.toLocaleString()} (${this.setRate(botStats.totalCommands, stats.duration)})`
+					`Total: ${botStats.totalCommands.toLocaleString()} (${this.setRate(botStats.totalCommands, bot.cache.cumulativeStats.duration)})`
 					, true);
 				message.channel.send(statsEmbed);
 			}
@@ -642,8 +641,16 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const commandUsage = require("../modules/stats.json").commandDistrib,
-				entries = [commandUsage.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
+			const distrib = bot.cache.cumulativeStats.commandDistrib,
+				cmdNames = Object.keys(distrib),
+				cmdUses = Object.values(distrib),
+				tempArray = [];
+			for (let i = 0; i < cmdNames.length; i++) {
+				tempArray.push({name: cmdNames[i], uses: cmdUses[i]});
+			}
+			tempArray.sort((a, b) => b.uses - a.uses);
+			const entries = [tempArray.map(cmd => `${cmd.name} - used ${cmd.uses} times`)];
+
 			paginator.paginate(message, {title: "Most Popular Bot Commands"}, entries, {
 				limit: 25,
 				noStop: true,

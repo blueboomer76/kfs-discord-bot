@@ -13,7 +13,8 @@ if (!fs.existsSync("modules/stats.json")) {
 		messageTotal: 0,
 		commandTotal: 0,
 		callTotal: 0,
-		commandDistrib: []
+		lastSorted: 0,
+		commandDistrib: {}
 	}, null, 4));
 }
 
@@ -47,7 +48,7 @@ process.on("unhandledRejection", reason => {
 // Emitted by Ctrl+C in the command line
 process.on("SIGINT", async () => {
 	console.log("Logging stats and exiting process due to a SIGINT received");
-	await bot.logStats();
+	await bot.logStats(true);
 	process.exit(1);
 });
 

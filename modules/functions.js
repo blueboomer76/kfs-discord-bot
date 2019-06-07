@@ -44,10 +44,12 @@ const capitalize = (str, capAll) => {
 
 module.exports = {
 	capitalize: capitalize,
-	getBotStats: (bot, stats) => {
-		let commandCurrentTotal = bot.cache.stats.commandCurrentTotal;
-		for (const usageCacheEntry of bot.cache.stats.commandUsage) {
-			commandCurrentTotal += usageCacheEntry.uses;
+	getBotStats: bot => {
+		const stats = bot.cache.stats,
+			cumulativeStats = bot.cache.cumulativeStats;
+		let commandCurrentTotal = stats.commandCurrentTotal;
+		for (const cmdName in stats.commandUsage) {
+			commandCurrentTotal += stats.commandUsage[cmdName];
 		}
 		return {
 			servers: bot.guilds.size,
@@ -59,12 +61,12 @@ module.exports = {
 				voice: bot.channels.filter(ch => ch.type == "voice").size,
 				categories: bot.channels.filter(ch => ch.type == "category").size
 			},
-			sessionMessages: bot.cache.stats.messageCurrentTotal + bot.cache.stats.messageSessionTotal,
-			totalMessages: stats.messageTotal + bot.cache.stats.messageCurrentTotal,
-			sessionCalls: bot.cache.stats.callCurrentTotal + bot.cache.stats.callSessionTotal,
-			totalCalls: stats.callTotal + bot.cache.stats.callCurrentTotal,
-			sessionCommands: commandCurrentTotal + bot.cache.stats.commandSessionTotal,
-			totalCommands: stats.commandTotal + commandCurrentTotal
+			sessionMessages: stats.messageCurrentTotal + stats.messageSessionTotal,
+			totalMessages: cumulativeStats.messageTotal + stats.messageCurrentTotal,
+			sessionCalls: stats.callCurrentTotal + stats.callSessionTotal,
+			totalCalls: cumulativeStats.callTotal + stats.callCurrentTotal,
+			sessionCommands: commandCurrentTotal + stats.commandSessionTotal,
+			totalCommands: cumulativeStats.commandTotal + commandCurrentTotal
 		};
 	},
 	getDuration: (time1, time2, simple) => {
