@@ -118,35 +118,14 @@ module.exports = async (bot, message) => {
 				}
 				
 				/*
-					This is the code if owners and select commands are to be ignored.
-					
+					The below condition can be replaced with this when bot owners and select commands are to be ignored.
 					if ((!runRes || (!runRes.noLog && !runRes.cmdWarn && !runRes.cmdErr)) && runCommand.name != "help" && runCommand.name != "phone" && !bot.ownerIDs.includes(message.author.id)) {
-						const commandUsage = bot.cache.stats.commandUsages.find(u => u.command == runCommand.name);
-						if (commandUsage) {
-							commandUsage.uses++;
-						} else {
-							bot.cache.stats.commandUsages.push({
-								command: runCommand.name,
-								uses: 1
-							})
-						}
-					} else {
-						bot.cache.stats.commandCurrentTotal++;
-					}
 				*/
 				if (!runRes || (!runRes.noLog && !runRes.cmdWarn && !runRes.cmdErr)) {
-					const commandUsage = bot.cache.stats.commandUsages.find(u => u.command == runCommand.name);
-					if (commandUsage) {
-						commandUsage.uses++;
-					} else {
-						bot.cache.stats.commandUsages.push({
-							command: runCommand.name,
-							uses: 1
-						});
-					}
+					bot.cache.stats.commandUsages[runCommand.name] = (bot.cache.stats.commandUsages[runCommand.name] || 0) + 1;
 				} else {
 					bot.cache.stats.commandCurrentTotal++;
-				}			
+				}
 			})
 			.catch(err => {
 				let e = err instanceof Error && err.stack ? err.stack : err;

@@ -22,12 +22,15 @@ try {
 	if (isNaN(parseInt(storedStats.commandTotal))) storedStats.commandTotal = 0;
 	if (isNaN(parseInt(storedStats.callTotal))) storedStats.callTotal = 0;
 	if (isNaN(parseInt(storedStats.messageTotal))) storedStats.messageTotal = 0;
+	if (isNaN(parseInt(storedStats.lastSorted))) storedStats.lastSorted = 0;
 	try {
-		storedStats.commandUsages = storedStats.commandUsages.filter(entry => {
-			return !isNaN(parseInt(entry.uses));
-		});
+		for (const cmdName in storedStats.commandUsages) {
+			if (isNaN(parseInt(storedStats.commandUsages[cmdName]))) {
+				delete storedStats.commandUsages[cmdName];
+			}
+		}
 	} catch (err2) {
-		storedStats.commandUsages = [];
+		storedStats.commandUsages = {};
 	}
 } catch (err) {
 	storedStats = {
@@ -35,13 +38,14 @@ try {
 		commandTotal: 0,
 		callTotal: 0,
 		messageTotal: 0,
-		commandUsages: []
+		lastSorted: 0,
+		commandUsages: {}
 	};
 }
 
 fs.writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {
 	if (err) throw err;
-	bot.setCumulativeStats();
+	bot.cache.cumulativeStats = require("./modules/stats.json");
 });
 
 bot.loadCommands();
@@ -66,7 +70,7 @@ process.on("unhandledRejection", reason => {
 // Emitted by Ctrl+C in the command line
 process.on("SIGINT", async () => {
 	console.log("Logging stats and exiting process due to a SIGINT received");
-	await bot.logStats();
+	await bot.logStats(true);
 	process.exit(1);
 });
 
