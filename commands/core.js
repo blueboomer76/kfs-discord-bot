@@ -398,7 +398,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			await message.channel.send("Logging stats and shutting down the bot...");
-			await bot.logStats();
+			await bot.logStats(true);
 			process.exit(0);
 		}
 	},
@@ -439,12 +439,11 @@ module.exports = [
 				statsEmbed.setAuthor("Bot Stats - Processor", bot.user.avatarURL);
 				this.getProcessorStats(message, statsEmbed);
 			} else {
-				const storedStats = require("../modules/stats.json");
 				const beginEval = new Date(),
-					botStats = getBotStats(bot, storedStats),
+					botStats = getBotStats(bot),
 					endEval = new Date(),
 					processUptime = process.uptime() * 1000,
-					duration = storedStats.duration + (Date.now() - bot.cache.stats.lastCheck),
+					duration = bot.cache.cumulativeStats.duration + (Date.now() - bot.cache.stats.lastCheck),
 					serverCount = botStats.servers,
 					userCount = botStats.users;
 				
@@ -662,7 +661,15 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const storedUsages = require("../modules/stats.json").commandUsages,
-				entries = [storedUsages.map(cmd => `${cmd.command} - used ${cmd.uses} times`)];
+				cmdNames = Object.keys(storedUsages),
+				cmdUses = Object.values(storedUsages),
+				tempArray = [];
+			for (let i = 0; i < cmdNames.length; i++) {
+				tempArray.push({name: cmdNames[i], uses: cmdUses[i]});
+			}
+			tempArray.sort((a, b) => b.uses - a.uses);
+			const entries = [tempArray.map(cmd => `${cmd.name} - used ${cmd.uses} times`)];
+
 			paginator.paginate(message, {title: "Most Popular Bot Commands"}, entries, {
 				limit: 25,
 				noStop: true,

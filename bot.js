@@ -64,7 +64,9 @@ class KFSDiscordBot extends Client {
 				duration: 0,
 				commandTotal: 0,
 				callTotal: 0,
-				messageTotal: 0
+				messageTotal: 0,
+				lastSorted: 0,
+				commandUsages: {}
 			},
 			stats: {
 				commandCurrentTotal: 0,
@@ -73,7 +75,7 @@ class KFSDiscordBot extends Client {
 				callSessionTotal: 0,
 				messageCurrentTotal: 0,
 				messageSessionTotal: 0,
-				commandUsages: [],
+				commandUsages: {},
 				lastCheck: Date.now()
 			},
 			status: {randomIters: 0, pos: 0}
@@ -133,34 +135,38 @@ class KFSDiscordBot extends Client {
 		});
 	}
 	
-	async logStats() {
-		delete require.cache[require.resolve("./modules/stats.json")];
+	logStats(writeSync = false) {
+		const cachedStats = this.cache.stats,
+			cumulativeStats = this.cache.cumulativeStats;
 
-		const storedStats = JSON.parse(fs.readFileSync("modules/stats.json", "utf8")),
-			cachedStats = this.cache.stats;
+		cumulativeStats.duration += Date.now() - cachedStats.lastCheck;
 
-		storedStats.duration += Date.now() - cachedStats.lastCheck;
-
-		const storedUsages = storedStats.commandUsages,
-			cachedUsages = cachedStats.commandUsages;
+		const cachedUsages = cachedStats.commandUsages,
+			storedUsages = cumulativeStats.commandUsages;
 		let commandCurrentTotal = cachedStats.commandCurrentTotal;
-		for (const entry of cachedUsages) {
-			const cmdIndex = storedUsages.findIndex(u => u.command == entry.command);
-			if (cmdIndex != -1) {
-				storedUsages[cmdIndex].uses += entry.uses;
-			} else {
-				storedUsages.push({command: entry.command, uses: entry.uses});
-			}
-			commandCurrentTotal += entry.uses;
+		for (const cmdName in cachedUsages) {
+			storedUsages[cmdName] = (storedUsages[cmdName] || 0) + cachedUsages[cmdName];
+			commandCurrentTotal += cachedUsages[cmdName];
 		}
-		storedStats.commandTotal += commandCurrentTotal;
-		storedStats.callTotal += cachedStats.callCurrentTotal;
-		storedStats.messageTotal += cachedStats.messageCurrentTotal;
+		cumulativeStats.commandTotal += commandCurrentTotal;
+		cumulativeStats.callTotal += cachedStats.callCurrentTotal;
+		cumulativeStats.messageTotal += cachedStats.messageCurrentTotal;
 
-		storedUsages.sort((a, b) => b.uses - a.uses);
-
-		fs.writeFileSync("modules/stats.json", JSON.stringify(storedStats, null, 4));
-		this.setCumulativeStats(storedStats);
+		if (Date.now() > cumulativeStats.lastSorted + 1000 * 86400 * 7) {
+			cumulativeStats.lastSorted = Date.now();
+			const tempNames = Object.keys(storedUsages),
+				tempUses = Object.values(storedUsages),
+				tempArray = [],
+				newUsages = {};
+			for (let i = 0; i < tempNames.length; i++) {
+				tempArray.push({name: tempNames[i], uses: tempUses[i]});
+			}
+			tempArray.sort((a, b) => b.uses - a.uses);
+			for (let i = 0; i < tempArray.length; i++) {
+				newUsages[tempArray[i].name] = tempArray[i].uses;
+			}
+			cumulativeStats.commandUsages = newUsages;
+		}
 
 		cachedStats.commandSessionTotal += commandCurrentTotal;
 		cachedStats.commandCurrentTotal = 0;
@@ -168,18 +174,19 @@ class KFSDiscordBot extends Client {
 		cachedStats.callCurrentTotal = 0;
 		cachedStats.messageSessionTotal += cachedStats.messageCurrentTotal;
 		cachedStats.messageCurrentTotal = 0;
-		cachedStats.commandUsages = [];
+		cachedStats.commandUsages = {};
 		cachedStats.lastCheck = Date.now();
-	}
-	
-	setCumulativeStats(data) {
-		const storedStats = data || require("./modules/stats.json");
-		this.cache.cumulativeStats = {
-			duration: storedStats.duration,
-			commandTotal: storedStats.commandTotal,
-			callTotal: storedStats.callTotal,
-			messageTotal: storedStats.messageTotal
-		};
+
+		if (writeSync) {
+			fs.writeFileSync("modules/stats.json", JSON.stringify(cumulativeStats, null, 4));
+		} else {
+			return new Promise((resolve, reject) => {
+				fs.writeFile("modules/stats.json", JSON.stringify(cumulativeStats, null, 4), err => {
+					if (err) reject(err);
+					resolve();
+				});
+			});
+		}
 	}
 
 	checkRemoteRequest(site, err, res) {
