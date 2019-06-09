@@ -224,6 +224,35 @@ module.exports = [
 			});
 		}
 	},
+	class DiscordIRLCommand extends Command {
+		constructor() {
+			super({
+				name: "discordirl",
+				description: "Memes about Discord",
+				aliases: ["discordmeme"],
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				}
+			});
+			this.cachedSfwPosts = [];
+			this.cachedNsfwPosts = [];
+			this.lastChecked = 0;
+		}
+		
+		async run(bot, message, args, flags) {
+			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
+				const fetchRes = await setCommandPosts(this, "discord_irl", true);
+				if (fetchRes) return {cmdWarn: fetchRes};
+			}
+			sendRedditEmbed(this, message, true);
+		}
+	},
 	class DogCommand extends Command {
 		constructor() {
 			super({

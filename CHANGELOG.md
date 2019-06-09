@@ -1,6 +1,16 @@
-*Note: Some changes have been compacted into some versions in this changelog. The full changelog is available on the Discord server.*
+**Note**: *Some changes, especially command additions in more recent versions, have been compacted into some versions in this changelog.*
+
+*The full changelog is available on the Discord support server.*
 
 # 1.X (current)
+
+## 1.5.0
+- Changed the storage method of command usage from array to object form
+- Added the command usage from `modules/stats.json` to the bot cache
+- Adapted more precise methods for measuring the execution time of functions
+- Edited associated depreciations with `discord.js` version 11.5
+- Added `mathjs` dependency
+- Simplified many expressions to use ternary operators or other efficient forms
 
 ## 1.4.17
 - Renamed and changed moderation command descriptions and operations
