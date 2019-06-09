@@ -236,12 +236,12 @@ module.exports = [
 				const requestRes = bot.checkRemoteRequest("the Urban Dictionary", err, res);
 				if (requestRes != true) return message.channel.send(requestRes);
 
-				const defs = res.body;
-				if (defs.list.length > 0) {
+				const defList = res.body.list;
+				if (defList.length > 0) {
 					const entries = [
-						defs.list.map(def => `Urban Dictionary - ${def.word}`),
-						defs.list.map(def => def.definition.length > 2000 ? `${def.definition.slice(0, 2000)}...` : def.definition),
-						defs.list.map(def => {
+						defList.map(def => `Urban Dictionary - ${def.word}`),
+						defList.map(def => def.definition.length > 2000 ? `${def.definition.slice(0, 2000)}...` : def.definition),
+						defList.map(def => {
 							return [
 								{
 									name: "Example",

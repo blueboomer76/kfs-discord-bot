@@ -68,7 +68,7 @@ module.exports = [
 				cowsayLines = toDisplayLines.concat(cowsayLines);
 			}
 			
-			message.channel.send(`\`\`\`${cowsayLines.join("\n")}\`\`\``);
+			message.channel.send("```" + cowsayLines.join("\n") + "```");
 		}
 	},
 	class EmojifyCommand extends Command {
@@ -156,17 +156,13 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
 			
-			const owoifySuffixes = ["owo", "OWO", "uwu", "UwU", "X3", ":3", "***notices bulge** OwO, what's this?*"];
-			let owoified = args[0].toLowerCase();
-
-			owoified = owoified
-				.replace(/[lr]+/g, "w")
-				.replace(/n/g, "ny")
-				.split(" ")
-				.map(word => {
-					return Math.random() < 0.25 ? `${word.charAt(0)}-${word}` : word;
-				})
-				.join(" ");
+			const owoifySuffixes = ["owo", "OWO", "uwu", "UwU", "X3", ":3", "***notices bulge** OwO, what's this?*"],
+				owoified = args[0].toLowerCase()
+					.replace(/[lr]+/g, "w")
+					.replace(/n/g, "ny")
+					.split(" ")
+					.map(word => Math.random() < 0.25 ? `${word.charAt(0)}-${word}` : word)
+					.join(" ");
 			message.channel.send(owoified + " " + owoifySuffixes[Math.floor(Math.random() * owoifySuffixes.length)]);
 		}
 	},
