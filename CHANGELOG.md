@@ -1,6 +1,16 @@
-*Note: Some changes have been compacted into some versions in this changelog. The full changelog is available on the Discord server.*
+**Note**: *Some changes, especially command additions in more recent versions, have been compacted into some versions in this changelog.*
+
+*The full changelog is available on the Discord support server.*
 
 # 1.X (current)
+
+## 1.5.0
+- Changed the storage method of command usage from array to object form
+- Added the command usage from `modules/stats.json` to the bot cache
+- Adapted more precise methods for measuring the execution time of functions
+- Bumped `discord.js` to 11.5.0 and edited associated depreciations
+- Added `mathjs` dependency
+- Simplified many expressions to use ternary operators or other efficient forms
 
 ## 1.4.17
 - Renamed and changed moderation command descriptions and operations
@@ -49,7 +59,7 @@
 
 ## 1.3.24
 - Added consistency for command error displaying
-- Changed the stats posting link from bots.discord.pw to bots.ondiscord.xyz
+- Changed the stats posting link for bots.discord.pw to bots.ondiscord.xyz
 
 ## 1.3.17
 - Changed dependency for headless scraper from `nightmare` to `puppeteer`
@@ -78,7 +88,7 @@
 - Added a new category Text Editing
 
 ## 1.2.29
-- Removed cheerio dependency for reddit and meme commands
+- Removed `cheerio` dependency for reddit and meme commands
 
 ## 1.2.26
 - Move commands into category files; `commands` now has no subfolders.
@@ -96,7 +106,7 @@
 ## 1.2.8
 - Added Search category
 - Added more music commands, along with reddit command
-- Changed superagent dependency to request
+- Changed `superagent` dependency to `request`
 
 ## 1.2.0
 - Added music commands (in beta)

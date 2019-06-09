@@ -1,6 +1,28 @@
 const Command = require("../structures/command.js");
 
 module.exports = [
+	class ClapifyCommand extends Command {
+		constructor() {
+			super({
+				name: "clapify",
+				description: "Clapify 👏 text 👏 for 👏 you",
+				aliases: ["clap"],
+				args: [
+					{
+						infiniteArgs: true,
+						type: "string"
+					}
+				],
+				usage: "clapify <text>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const clapified = args[0].replace(/ /g, " 👏 ");
+			if (clapified.length >= 2000) return {cmdWarn: "Your input text to clapify is too long!", cooldown: null, noLog: true};
+			message.channel.send(clapified);
+		}
+	},
 	class CowsayCommand extends Command {
 		constructor() {
 			super({
@@ -181,11 +203,11 @@ module.exports = [
 			
 			const weebifySuffixes = ["owo", "OWO", "uwu", "UwU", "X3", ":3", "***notices bulge** OwO, what's this?*"],
 				weebified = args[0].toLowerCase()
-				.replace(/[lr]+/g, "w")
-				.replace(/n/g, "ny")
-				.split(" ")
+					.replace(/[lr]+/g, "w")
+					.replace(/n/g, "ny")
+					.split(" ")
 					.map(word => Math.random() < 0.25 ? `${word.charAt(0)}-${word}` : word)
-				.join(" ");
+					.join(" ");
 			message.channel.send(weebified + " " + weebifySuffixes[Math.floor(Math.random() * weebifySuffixes.length)]);
 		}
 	}

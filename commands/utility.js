@@ -4,6 +4,7 @@ const {RichEmbed} = require("discord.js"),
 	fetchMembers = require("../modules/memberFetcher.js"),
 	paginator = require("../utils/paginator.js"),
 	convert = require("color-convert"),
+	math = require("mathjs"),
 	util = require("util");
 
 module.exports = [
@@ -75,7 +76,7 @@ module.exports = [
 					.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
 					.addField("Type", capitalize(channel.type), true)
 					.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
-					.addField("Accessible to everyone", channel.permissionsFor(message.guild.id).has("READ_MESSAGES") ? "Yes" : "No", true);
+					.addField("Accessible to everyone", channel.permissionsFor(message.guild.id).has("VIEW_CHANNEL") ? "Yes" : "No", true);
 			
 			const uncategorized = message.guild.channels.filter(c => c.type != "category" && !c.parent);
 			let channels, pos = 0;
@@ -343,6 +344,31 @@ module.exports = [
 				}
 				message.channel.send(evalEmbed);
 			}
+		}
+	},
+	class MathCommand extends Command {
+		constructor() {
+			super({
+				name: "math",
+				description: "Calculate a math expression",
+				aliases: ["calc", "calculate"],
+				args: [
+					{
+						type: "string"
+					}
+				],
+				usage: "math <expression>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			let result;
+			try {
+				result = math.evaluate(args[0]);
+			} catch(err) {
+				return {cmdWarn: "Failed to evaluate expression: " + err.message};
+			}
+			message.channel.send(result);
 		}
 	},
 	class RoleInfoCommand extends Command {

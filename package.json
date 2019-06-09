@@ -1,17 +1,18 @@
 {
-  "name": "kendrabot",
-  "version": "1.4.17",
-  "description": "Multipurpose bot for utility, fun, and more",
+  "name": "kendra-discord-bot",
+  "version": "1.5.0",
+  "description": "A multipurpose Discord bot for fun, moderation, utility, and more, written in discord.js",
   "main": "index.js",
   "dependencies": {
     "canvas": "^2.5.0",
     "cheerio": "^1.0.0-rc.3",
     "color-convert": "^2.0.0",
-    "discord.js": "^11.4.2",
+    "discord.js": "^11.5.0",
     "ffmpeg-binaries": "^4.0.0",
     "gifencoder": "^2.0.1",
     "googleapis": "^39.2.0",
     "jimp": "^0.6.4",
+    "mathjs": "^6.0.0",
     "moment": "^2.23.0",
     "node-opus": "^0.3.1",
     "puppeteer": "^1.11.0",
@@ -32,14 +33,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/blueboomer76/kendraBot.git"
+    "url": "git+https://github.com/blueboomer76/kendra-discord-bot.git"
   },
   "author": "blueboomer76",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/blueboomer76/kendraBot/issues"
+    "url": "https://github.com/blueboomer76/kendra-discord-bot/issues"
   },
-  "homepage": "https://github.com/blueboomer76/kendraBot#readme",
+  "homepage": "https://github.com/blueboomer76/kendra-discord-bot#readme",
   "engines": {
     "node": ">=8"
   }

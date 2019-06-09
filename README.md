@@ -10,10 +10,10 @@
 [![Server Widget](https://discordapp.com/api/guilds/308063187696091140/widget.png)](https://discord.gg/yB8TvWU)
 [![David DM Status](https://david-dm.org/blueboomer76/kendra-discord-bot.svg)](https://david-dm.org/blueboomer76/kendra-discord-bot)
 
-A multipurpose Discord bot for fun, utility, and more, coded in discord.js.
+A multipurpose Discord bot for fun, moderation, utility, and more, written in discord.js.
 
 ## Description
-Kendra is an **actively developed bot** that not only has fun, moderation, utility commands, but a phone command for calling other servers, and combines features from popular bots. New commands are added to Kendra often.
+Kendra is an actively developed Discord bot that not only has fun, moderation, and utility commands, but also has a phone command to connect servers together, and combines features from other popular bots.
 
 ## How to install
 *Note: You need to have Node.js 8 or newer installed before you can start the bot, and it is recommended to have a 64-bit operating system when running it*
