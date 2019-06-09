@@ -1,10 +1,10 @@
 # KFS Discord Bot
 
-A multipurpose Discord bot for fun, utility, and more, written in discord.js.
+A multipurpose Discord bot for fun, moderation, utility, and more, written in discord.js.
 
 ## Description
 
-This is an **actively developed bot** that not only has fun, moderation, utility commands, but also a phone command for calling other servers, and combines features from popular bots.
+This is an actively developed Discord bot that not only has fun, moderation, and utility commands, but also has a phone command to connect servers together, and combines features from other popular bots.
 
 ## How to Install
 

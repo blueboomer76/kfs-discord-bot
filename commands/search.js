@@ -8,6 +8,7 @@ const redirSubreddits = [
 	{name: "antijokes", goTo: "antijoke"},
 	{name: "antimeme", goTo: "antimeme"},
 	{name: "bonehurtingjuice", goTo: "bonehurtingjuice"},
+	{name: "discord_irl", goTo: "discordirl"},
 	{name: "jokes", goTo: "joke"},
 	{name: "me_irl", goTo: "meirl"},
 	{name: "memes", goTo: "meme"},

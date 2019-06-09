@@ -1,6 +1,31 @@
 const Command = require("../structures/command.js");
 
 module.exports = [
+	class ClapifyCommand extends Command {
+		constructor() {
+			super({
+				name: "clapify",
+				description: "Clapify 👏 text 👏 for 👏 you",
+				aliases: ["clap"],
+				args: [
+					{
+						infiniteArgs: true,
+						type: "string"
+					}
+				],
+				usage: "clapify <text>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			let toClapify = args[0].split(" ");
+			if (toClapify.length == 1) toClapify = args[0].split("");
+
+			const clapified = toClapify.join(" 👏 ");
+			if (clapified.length >= 2000) return {cmdWarn: "Your input text to clapify is too long!"};
+			message.channel.send(clapified);
+		}
+	},
 	class CowsayCommand extends Command {
 		constructor() {
 			super({

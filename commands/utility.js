@@ -4,6 +4,7 @@ const {RichEmbed} = require("discord.js"),
 	{fetchMembers} = require("../modules/memberFetcher.js"),
 	paginator = require("../utils/paginator.js"),
 	convert = require("color-convert"),
+	math = require("mathjs"),
 	util = require("util");
 
 module.exports = [
@@ -358,6 +359,32 @@ module.exports = [
 				}
 				message.channel.send(evalEmbed);
 			}
+		}
+	},
+	class MathCommand extends Command {
+		constructor() {
+			super({
+				name: "math",
+				description: "Calculate a math expression",
+				aliases: ["calc", "calculate"],
+				args: [
+					{
+						infiniteArgs: true,
+						type: "string"
+					}
+				],
+				usage: "math <expression>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			let result;
+			try {
+				result = math.evaluate(args[0]);
+			} catch (err) {
+				return {cmdWarn: "Failed to evaluate expression: " + err.message};
+			}
+			message.channel.send(result);
 		}
 	},
 	class RoleInfoCommand extends Command {
