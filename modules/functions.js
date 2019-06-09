@@ -118,11 +118,7 @@ module.exports = {
 			baseStr1 = `${Math.round((timeDif - 5256000) / 31536000)} years`;
 		}
 		
-		if (simple) {
-			return `${baseStr1} ${suffix}`;
-		} else {
-			return `${baseStr1} ${baseStr2} ${suffix}`;
-		}
+		return simple ? `${baseStr1} ${suffix}` : `${baseStr1} ${baseStr2} ${suffix}`;
 	},
 	parseLargeNumber: (num, options = {}) => {
 		/*

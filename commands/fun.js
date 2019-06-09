@@ -192,9 +192,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const iters = args[0] || 1;
 			if (iters == 1) {
-				let res;
-				if (Math.random() < 0.5) {res = "Heads"} else {res = "Tails"}
-				message.channel.send("I flipped a coin and got " + res);
+				message.channel.send("I flipped a coin and got " + (Math.random() < 0.5 ? "Heads" : "Tails"));
 			} else {
 				const res = [];
 				let heads = 0;
@@ -282,14 +280,12 @@ module.exports = [
 				
 				postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0];
 
-				const toDisplayDesc = `**[${postData.title}](https://redd.it/${postData.id})**` + "\n" +
-					postData.desc + "\n" +
-					`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
-
+				const title = `**[${postData.title}](https://redd.it/${postData.id})**` + "\n",
+					toDisplayDesc = postData.desc,
+					meta = "\n" + `- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
+				
 				if (embedDesc.length == 0 && postData.desc.length >= 1600) {
-					embedDesc += `**[${postData.title}](https://redd.it/${postData.id})**` + "\n" +
-						postData.desc + "..." + "\n" +
-						`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
+					embedDesc += title + toDisplayDesc + "..." + meta;
 					break;
 				} else if (embedDesc.length + toDisplayDesc.length > 2000) {
 					if (toDisplayDesc.length / (1600 - embedDesc.length) > 2) {
@@ -300,13 +296,11 @@ module.exports = [
 							break;
 						}
 					} else {
-						embedDesc += `**[${postData.title}](https://redd.it/${postData.id})**` + "\n" +
-							postData.desc.slice(0, 1600 - embedDesc.length) + "..." + "\n" +
-							`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
+						embedDesc += title + toDisplayDesc.slice(0, 1600 - embedDesc.length) + "..." + meta;
 						break;
 					}
 				} else {
-					embedDesc += toDisplayDesc;
+					embedDesc += title + toDisplayDesc + meta;
 				}
 			}
 			

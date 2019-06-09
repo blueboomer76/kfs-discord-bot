@@ -172,36 +172,36 @@ module.exports = [
 				args: [
 					{
 						type: "oneof",
-						allowedValues: ["rock", "paper", "scissors"]
+						allowedValues: ["r", "rock", "p", "paper", "s", "scissors"]
 					}
 				],
-				usage: "rps <rock | paper | scissors>"
+				usage: "rps <r | rock | p | paper | s | scissors>"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
 			const choices = ["rock", "paper", "scissors"],
-				userChoice = args[0],
+				userChoice = args[0].length == 1 ? choices.find(c => c.startsWith(args[0])) : args[0],
 				botChoice = choices[Math.floor(Math.random() * 3)];
-			let msgSuffix;
-			
+			let rpsResult;
+
 			if (userChoice == botChoice) {
-				msgSuffix = "The game is a tie";
+				rpsResult = "The game is a tie";
 			} else {
 				let win = false;
-				if (userChoice == "rock" && botChoice == "scissors") win = !win;
-				if (userChoice == "paper" && botChoice == "rock") win = !win;
-				if (userChoice == "scissors" && botChoice == "paper") win = !win;
-				if (win) {msgSuffix = "You win"} else {msgSuffix = "The bot wins"}
+				if (userChoice == "rock" && botChoice == "scissors") win = true;
+				if (userChoice == "paper" && botChoice == "rock") win = true;
+				if (userChoice == "scissors" && botChoice == "paper") win = true;
+				rpsResult = win ? "You win" : "The bot wins";
 			}
-			message.channel.send(`You chose ${userChoice} and I choose ${botChoice}. ${msgSuffix}!`);
+			message.channel.send(`You chose ${userChoice} and I choose ${botChoice}. ${rpsResult}!`);
 		}
 	},
 	class SlotsCommand extends Command {
 		constructor() {
 			super({
 				name: "slots",
-				description: "Play slots and try to get lucky!",
+				description: "Roll the reels and try to match the symbols!",
 				aliases: ["slot"]
 			});
 		}
@@ -217,12 +217,11 @@ module.exports = [
 			if (chosen[3] == chosen[4] || chosen[3] == chosen[5] || chosen[4] == chosen[5]) {
 				result = "matched 2 symbols!";
 				if (chosen[3] == chosen[4] && chosen[3] == chosen[5] && chosen[4] == chosen[5]) {
-					result = "matched 3 symbols!";
+					result = chosen[3] == ":seven:" ? "got three 7's! Lucky!" : "matched 3 symbols!";
 				}
-				
 			}
 			
-			message.channel.send("**🎰 | Kendra Slots**\n" + 
+			message.channel.send("**🎰 | Slot Game**\n" + 
 			"------------------\n" +
 			`${chosen[0]} : ${chosen[1]} : ${chosen[2]}\n\n` +
 			`${chosen[3]} : ${chosen[4]} : ${chosen[5]} **<<<**\n\n` +
@@ -258,7 +257,7 @@ module.exports = [
 				tempAnswers = tQuestion.otherAnswers,
 				answers = [],
 				numAnswers = tQuestion.otherAnswers.length + 1;
-			let answerLetter = null;
+			let answerLetter;
 			
 			tempAnswers.push(tQuestion.answer);
 			

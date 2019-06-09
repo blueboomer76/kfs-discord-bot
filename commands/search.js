@@ -238,12 +238,12 @@ module.exports = [
 				json: true
 			}, (err, res) => {
 				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "the Urban Dictionary", err, res);
-				const defs = res.body;
-				if (defs.list.length > 0) {
+				const defList = res.body.list;
+				if (defList.length > 0) {
 					const entries = [
-						defs.list.map(def => `Urban Dictionary - ${def.word}`),
-						defs.list.map(def => def.definition.length < 2000 ? def.definition : `${def.definition.slice(0,2000)}...`),
-						defs.list.map(def => {
+						defList.map(def => `Urban Dictionary - ${def.word}`),
+						defList.map(def => def.definition.length < 2000 ? def.definition : `${def.definition.slice(0,2000)}...`),
+						defList.map(def => {
 							return [
 								{
 									name: "Example",

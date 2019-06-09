@@ -300,12 +300,25 @@ module.exports = [
 			const consoleFlag = flags.some(f => f.name == "console");
 			let rawRes, beginEval, endEval;
 			try {
-				beginEval = Date.now();
+				beginEval = process.hrtime();
 				rawRes = eval(args[0]);
 			} catch (err) {
-				rawRes = consoleFlag ? err.stack : err.stack.split("    ", 3).join("    ") + "    ...";
+				if (err && err.stack) {
+					rawRes = consoleFlag || !err.stack.split ? err.stack : err.stack.split("    ", 3).join("    ") + "    ...";
+				} else {
+					rawRes = err;
+				}
 			} finally {
-				endEval = Date.now();
+				endEval = process.hrtime();
+			}
+			const ns = (endEval[0] - beginEval[0]) * 1e+9 + (endEval[1] - beginEval[1]);
+			let evalTime;
+			if (ns < 100000) {
+				evalTime = (ns / 1000).toPrecision(3) + "μs";
+			} else if (ns < 1e+9) {
+				evalTime = (ns / 1000000).toPrecision(3) + "ms";
+			} else {
+				evalTime = Math.round(ns / 1000000) + "ms";
 			}
 
 			const res = typeof rawRes == "function" ? rawRes.toString() : rawRes;
@@ -319,7 +332,7 @@ module.exports = [
 						.setTitle("discord.js Evaluator")
 						.setColor(Math.floor(Math.random() * 16777216))
 						.setTimestamp(message.createdAt)
-						.setFooter(`Execution took: ${endEval - beginEval}ms`)
+						.setFooter("Execution took: " + evalTime)
 						.addField("Your code", "```javascript" + "\n" + toEval + "```");
 				if (resToSend != undefined && resToSend != null && resToSend.toString().length > 1000) {
 					console.log(res);

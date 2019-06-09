@@ -440,11 +440,13 @@ module.exports = [
 				const beginEval = new Date(),
 					botStats = getBotStats(bot),
 					endEval = new Date(),
+					dif = endEval - beginEval,
+					evalTime = dif < 1000 ? dif + "ms" : ((endEval - beginEval) / 1000).toFixed(2) + "s",
 					serverCount = botStats.servers,
 					userCount = botStats.users;
 				
 				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL)
-					.setFooter(`⏰ Took: ${((endEval - beginEval) / 1000).toFixed(2)}s | Stats as of`)
+					.setFooter(`⏰ Took: ${evalTime} | Stats as of`)
 					.setDescription(`Here's some detailed stats about this bot! *To see stats about the bot host, use \`${bot.prefix}stats processor\`*`)
 					.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
 					.addField("Last Restart", getDuration(bot.readyTimestamp), true)

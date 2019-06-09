@@ -28,9 +28,9 @@ module.exports = [
 			];
 			
 			if (args[0].length <= 50) {
-				cowsayLines.unshift(` ${("_").repeat(args[0].length + 2)}`,
+				cowsayLines.unshift(` ${"_".repeat(args[0].length + 2)}`,
 					`< ${args[0]} >`,
-					` ${("-").repeat(args[0].length + 2)}`
+					` ${"-".repeat(args[0].length + 2)}`
 				);
 			} else {
 				const lines = [], words = args[0].split(" ");
@@ -58,17 +58,17 @@ module.exports = [
 				}
 								
 				const toDisplayLines = [];
-				toDisplayLines.push(` ${("_").repeat(52)}`, `/ ${lines[0]} \\`);
+				toDisplayLines.push(` ${"_".repeat(52)}`, `/ ${lines[0]} \\`);
 				if (lines.length > 2) {
 					for (let i = 1; i < lines.length - 1; i++) {
 						toDisplayLines.push(`| ${lines[i]} |`);
 					}
 				}
-				toDisplayLines.push(`\\ ${lines[lines.length - 1]} /`, ` ${("-").repeat(52)}`);
+				toDisplayLines.push(`\\ ${lines[lines.length - 1]} /`, ` ${"-".repeat(52)}`);
 				cowsayLines = toDisplayLines.concat(cowsayLines);
 			}
 			
-			message.channel.send(`\`\`\`${cowsayLines.join("\n")}\`\`\``);
+			message.channel.send("```" + cowsayLines.join("\n") + "```");
 		}
 	},
 	class EmojifyCommand extends Command {
@@ -179,16 +179,12 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters.", cooldown: null, noLog: true};
 			
-			const weebifySuffixes = ["owo", "OWO", "uwu", "UwU", "X3", ":3", "***notices bulge** OwO, what's this?*"];
-			let weebified = args[0].toLowerCase();
-
-			weebified = weebified
+			const weebifySuffixes = ["owo", "OWO", "uwu", "UwU", "X3", ":3", "***notices bulge** OwO, what's this?*"],
+				weebified = args[0].toLowerCase()
 				.replace(/[lr]+/g, "w")
 				.replace(/n/g, "ny")
 				.split(" ")
-				.map(word => {
-					return Math.random() < 0.25 ? `${word.charAt(0)}-${word}` : word;
-				})
+					.map(word => Math.random() < 0.25 ? `${word.charAt(0)}-${word}` : word)
 				.join(" ");
 			message.channel.send(weebified + " " + weebifySuffixes[Math.floor(Math.random() * weebifySuffixes.length)]);
 		}
