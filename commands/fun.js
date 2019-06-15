@@ -96,7 +96,7 @@ module.exports = [
 					
 					this.lastChecked = Date.now();
 					const results = res.body.data.children
-						.filter(r => !r.data.stickied)
+						.filter(r => !r.data.stickied && r.data.score > 0)
 						.map(r => {
 							const rCrossposts = r.data.crosspost_parent_list;
 							let rDesc;
@@ -418,7 +418,7 @@ module.exports = [
 					
 					this.lastChecked = Date.now();
 					const results = res.body.data.children
-						.filter(r => !r.data.stickied)
+						.filter(r => !r.data.stickied && r.data.score > 0)
 						.map(r => {
 							let punText = null;
 							if (r.data.selftext != "") {
@@ -522,8 +522,27 @@ module.exports = [
 						type: "string"
 					}
 				],
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				},
 				usage: "rate <someone or something>"
 			});
+			this.rateStates = [
+				{min: 10, msg: "PERFECT! ❣"},
+				{min: 9.8, msg: "Almost Perfect! ☺"},
+				{min: 9, msg: "Awesome! 😄"},
+				{min: 8, msg: "Great 😉"},
+				{min: 7, msg: "Pretty Good 😌"},
+				{min: 6.9, msg: "😏"},
+				{min: 6, msg: "Above Average 🙂"},
+				{min: 5, msg: "About Average 😶"},
+				{min: 4, msg: "Below Average 😕"},
+				{min: 3, msg: "Poor 😦"},
+				{min: 2, msg: "Bad 😥"},
+				{min: 1, msg: "Awful 😰"}
+			];
 		}
 		
 		async run(bot, message, args, flags) {
@@ -541,20 +560,42 @@ module.exports = [
 				hash |= 0; // Convert to 32-bit integer
 			}
 
-			let rand = (Math.abs(hash % 90 / 10) + 1).toFixed(1), toSend;
+			let rating = (Math.abs(hash % 90 / 10) + 1).toFixed(1), toSend;
 			if (toRate.toLowerCase() == bot.user.username.toLowerCase() || toRate == bot.user.tag) {
 				return message.channel.send("I would rate myself a 10/10, of course.");
 			} else if (toRate == message.author.tag || toRate.toLowerCase() == "me") {
-				rand = (Math.abs(hash % 50 / 10) + 5).toFixed(1);
+				rating = (Math.abs(hash % 50 / 10) + 5).toFixed(1);
 				toSend = "I would rate you: ";
 			} else {
 				let toRateRaw = toRate;
 				if (toRateRaw.length > 1500) toRateRaw = toRateRaw.slice(0, 1500) + "...";
 				toSend = `I would rate \`${toRateRaw}\`: `;
 			}
-			rand = parseFloat(rand);
-			message.channel.send(toSend + "\n" + "`" + "█".repeat(Math.floor(rand + 0.5)) + " ‍‍".repeat(10 - Math.floor(rand + 0.5)) + "` " +
-			`**${rand}**/10 `);
+			rating = parseFloat(rating);
+
+			const rand = Math.floor(Math.random() * 255);
+			let r = 0, g = 0, b = 0;
+			switch (Math.floor(Math.random() * 3)) {
+				case 0:
+					r = 255;
+					if (Math.random() < 0.5) {g = rand} else {b = rand}
+					break;
+				case 1:
+					g = 255;
+					if (Math.random() < 0.5) {b = rand} else {r = rand}
+					break;
+				case 2:
+					b = 255;
+					if (Math.random() < 0.5) {r = rand} else {g = rand}
+			}
+
+			const rMultiplier = (rating - 1) / 9;
+			message.channel.send(new RichEmbed()
+				.setDescription(toSend + "\n" +
+					"`" + "█".repeat(Math.round(rating)) + " ‍‍".repeat(10 - Math.round(rating)) + "` " + `**${rating}**/10` + "\n" +
+					this.rateStates[this.rateStates.findIndex(state => state.min <= rating)].msg)
+				.setColor(Math.floor(r * rMultiplier) * 65536 + Math.floor(g * rMultiplier) * 256 + Math.floor(b * rMultiplier))
+			);
 		}
 	},
 	class SayCommand extends Command {
@@ -621,13 +662,18 @@ module.exports = [
 				usage: "ship <user 1> [user 2]"
 			});
 			this.shipStates = [
-				{max: 10, msg: "PERFECT!"},
-				{max: 9.5, msg: "Almost Perfect!"},
-				{max: 8, msg: "Great!"},
-				{max: 6, msg: "Good!"},
-				{max: 4, msg: "About Average"},
-				{max: 2, msg: "Below Average"},
-				{max: 0, msg: "Not a Match!"},
+				{min: 10, msg: "PERFECT MATCH! ❣"},
+				{min: 9.8, msg: "Almost Perfect Match! 💞"},
+				{min: 9, msg: "Awesome! 💟"},
+				{min: 8, msg: "Great 💖"},
+				{min: 7, msg: "Pretty Good 💗"},
+				{min: 6.9, msg: "😏"},
+				{min: 6, msg: "Above Average 💜"},
+				{min: 5, msg: "About Average ❤"},
+				{min: 4, msg: "Below Average 💙"},
+				{min: 3, msg: "Poor 💚"},
+				{min: 2, msg: "Bad 🖤"},
+				{min: 1, msg: "Not a match! 💔"}
 			];
 		}
 		
@@ -658,15 +704,14 @@ module.exports = [
 				hash |= 0; // Convert to 32-bit integer
 			}
 			for (let i = 0; i < toShip2.length; i++) {
-				hash = hash * 31 + toShip1.charCodeAt(i);
+				hash = hash * 31 + toShip2.charCodeAt(i);
 				hash |= 0; // Convert to 32-bit integer
 			}
 
 			const shipRating = parseFloat((Math.abs(hash % 90) / 10 + 1).toFixed(1));
 			let shipDescription = `**Ship Name**: ${shipName}` + "\n" +
-				"**Ship Rating**:" + "\n\n" +
-				"`" + "█".repeat(Math.floor(shipRating + 0.5)) + " ‍‍".repeat(10 - Math.floor(shipRating + 0.5)) + "` " +
-				`**${shipRating}**/10 | ` + this.shipStates[this.shipStates.findIndex(state => state.max <= shipRating)].msg;
+				"**Ship Rating**: `" + "█".repeat(Math.round(shipRating)) + " ‍‍".repeat(10 - Math.round(shipRating)) + "` " + `**${shipRating}**/10` + "\n" +
+				this.shipStates[this.shipStates.findIndex(state => state.min <= shipRating)].msg;
 			if (toShip1 == toShip2) shipDescription += "\n\n" + "*Forever alone!*";
 			message.channel.send(new RichEmbed()
 				.setTitle(`${toShip1} 💗 ${toShip2}`)
