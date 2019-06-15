@@ -376,12 +376,12 @@ module.exports = [
 			try {
 				if (args[0] && args[0].toLowerCase() == "random") {
 					const comicNum = Math.floor(Math.random() * this.currComicNum);
-					await this.postComic(message, `https://xkcd.com/${comicNum}/info.0.json`, {titlePrefix: "Random "});
+					this.postComic(message, `https://xkcd.com/${comicNum}/info.0.json`, {titlePrefix: "Random "});
 				} else if (parseInt(args[0]) > 0) {
 					if (args[0] > this.currComicNum) return {cmdWarn: "Invalid comic number provided."};
-					await this.postComic(message, `https://xkcd.com/${args[0]}/info.0.json`);
+					this.postComic(message, `https://xkcd.com/${args[0]}/info.0.json`);
 				} else {
-					await this.postComic(message, null, {comic: comicToPost, titlePrefix: "Current "});
+					this.postComic(message, null, {comic: comicToPost, titlePrefix: "Current "});
 				}
 			} catch(err) {
 				return {cmdWarn: bot.checkRemoteRequest("XKCD", err.err, err.res)};

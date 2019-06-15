@@ -2,10 +2,10 @@ const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	request = require("request");
 
-async function setCommandPosts(command, subreddit, checkNsfw) {
+async function setCommandPosts(command, subreddit, checkNsfw, filterScores) {
 	let fetchRes;
 	command.lastChecked = Date.now();
-	await getPosts(subreddit, checkNsfw)
+	await getPosts(subreddit, checkNsfw, filterScores)
 		.then(posts => {
 			if (checkNsfw) {
 				command.lastChecked = Date.now();
@@ -19,7 +19,7 @@ async function setCommandPosts(command, subreddit, checkNsfw) {
 	return fetchRes;
 }
 
-function getPosts(subreddit, checkNsfw) {
+function getPosts(subreddit, checkNsfw, filterScores) {
 	return new Promise((resolve, reject) => {
 		request.get({
 			url: `https://reddit.com/r/${subreddit}/hot.json`,
@@ -29,7 +29,9 @@ function getPosts(subreddit, checkNsfw) {
 			if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
 			if (!res) return reject("No response was received from Reddit.");
 			if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
-			const results = res.body.data.children.filter(r => !r.data.stickied);
+			
+			let results = res.body.data.children.filter(r => !r.data.stickied);
+			if (filterScores) results = results.filter(r => r.data.score > 0);
 		
 			if (checkNsfw) {
 				const sfwResults = [], nsfwResults = [];
@@ -127,7 +129,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "antimeme", false);
+				const fetchRes = await setCommandPosts(this, "antimeme", false, true);
 				if (fetchRes) return {cmdWarn: fetchRes};
 			}
 			sendRedditEmbed(this, message, false);
@@ -187,7 +189,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "bonehurtingjuice", true);
+				const fetchRes = await setCommandPosts(this, "bonehurtingjuice", true, false);
 				if (fetchRes) return {cmdWarn: fetchRes};
 			}
 			sendRedditEmbed(this, message, true);
@@ -247,7 +249,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "discord_irl", true);
+				const fetchRes = await setCommandPosts(this, "discord_irl", true, true);
 				if (fetchRes) return {cmdWarn: fetchRes};
 			}
 			sendRedditEmbed(this, message, true);
@@ -306,7 +308,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "me_irl", false);
+				const fetchRes = await setCommandPosts(this, "me_irl", false, false);
 				if (fetchRes) return {cmdWarn: fetchRes};
 			}
 			sendRedditEmbed(this, message, false);
@@ -333,7 +335,7 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "memes", false);
+				const fetchRes = await setCommandPosts(this, "memes", false, false);
 				if (fetchRes) return {cmdWarn: fetchRes};
 			}
 			sendRedditEmbed(this, message, false);
