@@ -377,12 +377,12 @@ module.exports = [
 			try {
 				if (args[0] == "random") {
 					const comicNum = Math.floor(Math.random() * this.currComicNum);
-					await this.postComic(message, `https://xkcd.com/${comicNum}/info.0.json`, {titlePrefix: "Random "});
+					this.postComic(message, `https://xkcd.com/${comicNum}/info.0.json`, {titlePrefix: "Random "});
 				} else if (args[0] > 0) {
 					if (args[0] > this.currComicNum) return {cmdWarn: "Invalid comic number provided."};
-					await this.postComic(message, `https://xkcd.com/${args[0]}/info.0.json`);
+					this.postComic(message, `https://xkcd.com/${args[0]}/info.0.json`);
 				} else {
-					await this.postComic(message, null, {comic: comicToPost, titlePrefix: "Current "});
+					this.postComic(message, null, {comic: comicToPost, titlePrefix: "Current "});
 				}
 			} catch(err) {
 				bot.handleRemoteSiteError(message, "XKCD", err.err, err.res);
@@ -403,7 +403,7 @@ module.exports = [
 			message.channel.send(new RichEmbed()
 				.setTitle(`${options.titlePrefix || ""}XKCD Comic - ${comic.title} (#${comic.num})`)
 				.setColor(Math.floor(Math.random() * 16777216))
-				.setDescription(options.fallbackCode ? `*Failed to fetch from XKCD, showing the current one instead. (status code ${options.fallbackCode})*\n\n${comic.alt}` : comic.alt)
+				.setDescription(comic.alt)
 				.setImage(comic.img)
 			);		
 		}
