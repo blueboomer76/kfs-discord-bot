@@ -80,6 +80,7 @@ class KFSDiscordBot extends Client {
 			},
 			status: {randomIters: 0, pos: 0}
 		};
+		this.connectionRetries = 0;
 		if (config.ideaWebhookID && config.ideaWebhookToken) {
 			this.ideaWebhook = new WebhookClient(config.ideaWebhookID, config.ideaWebhookToken);
 		}
@@ -112,7 +113,7 @@ class KFSDiscordBot extends Client {
 				}
 			} else {
 				const err = "No command files or commands found in the directory: " + dir;
-				if (altdir) {console.log(err)} else {throw new Error(err)}
+				if (altdir) {console.error(err)} else {throw new Error(err)}
 			}
 			this.categories.sort();
 		});
@@ -208,7 +209,7 @@ class KFSDiscordBot extends Client {
 		}, (err, res) => {
 			const requestRes = this.checkRemoteRequest("discordbots.org", err, res);
 			if (requestRes != true) {
-				console.log(`[Stats Posting] ${requestRes}`);
+				console.error(`[Stats Posting] ${requestRes}`);
 			} else {
 				console.log("[Stats Posting] Stats successfully posted to discordbots.org");
 			}
@@ -226,7 +227,7 @@ class KFSDiscordBot extends Client {
 		}, (err, res) => {
 			const requestRes = this.checkRemoteRequest("bots.ondiscord.xyz", err, res);
 			if (requestRes != true) {
-				console.log(`[Stats Posting] ${requestRes}`);
+				console.error(`[Stats Posting] ${requestRes}`);
 			} else {
 				console.log("[Stats Posting] Stats successfully posted to bots.ondiscord.xyz");
 			}
@@ -245,7 +246,7 @@ class KFSDiscordBot extends Client {
 		}, (err, res) => {
 			const requestRes = this.checkRemoteRequest("botsfordiscord.com", err, res);
 			if (requestRes != true) {
-				console.log(`[Stats Posting] ${requestRes}`);
+				console.error(`[Stats Posting] ${requestRes}`);
 			} else {
 				console.log("[Stats Posting] Stats successfully posted to botsfordiscord.com");
 			}

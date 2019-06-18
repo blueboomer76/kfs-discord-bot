@@ -22,6 +22,8 @@ module.exports = async bot => {
 	bot.cache.guildCount = bot.guilds.size;
 	bot.cache.userCount = bot.users.size;
 	bot.cache.channelCount = bot.channels.size;
+	bot.connectionRetries = 0;
+
 	if (!initialized) {
 		initialized = true;
 		bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
