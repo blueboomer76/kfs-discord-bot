@@ -109,7 +109,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 				if (Math.ceil(entries[0].length / options.limit) > 5) emojiList.push("🔢");
 				for (let i = 0; i < emojiList.length; i++) {
 					setTimeout(() => {
-						newMessage.react(emojiList[i]).catch(err => {console.log(err)});
+						newMessage.react(emojiList[i]).catch(err => console.error(err));
 					}, i * 1000);
 				}
 				

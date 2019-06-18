@@ -21,6 +21,7 @@ module.exports = async bot => {
 	bot.cache.userCount = bot.users.size;
 	bot.cache.channelCount = bot.channels.size;
 	bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
+	bot.connectionRetries = 0;
 
 	setInterval(() => {
 		let newBotGame;
