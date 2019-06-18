@@ -52,4 +52,8 @@ process.on("SIGINT", async () => {
 	process.exit(1);
 });
 
-bot.login(token);
+bot.login(token)
+	.catch(err => {
+		console.error("Bot failed to login:");
+		console.error(err);
+	});

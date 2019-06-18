@@ -15,6 +15,7 @@ const parserOptions = {
 
 module.exports = async bot => {
 	console.log(`[${new Date().toJSON()}] Bot has entered ready state.`);
+	bot.connectionRetries = 0;
 	
 	bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
 	bot.user.setActivity(`${bot.prefix}help | with you in ${bot.guilds.size} servers`);

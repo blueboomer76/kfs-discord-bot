@@ -9,7 +9,10 @@ module.exports = {
 		if (userInput && userInput.isEmoji) {
 			await svg2png(userInput.content, {width: 512, height: 512})
 				.then(pngBuffer => resolvedContent = Buffer.from(pngBuffer))
-				.catch(err => console.log(err));
+				.catch(err => {
+					console.error("SVG to PNG conversion failed:");
+					console.error(err);
+				});
 		} else if (!userInput) {
 			await message.channel.fetchMessages({limit: 25})
 				.then(msgs => {
@@ -27,7 +30,7 @@ module.exports = {
 						}
 					}
 				})
-				.catch(err => console.log("Failed to fetch messages while resolving an image URL:", err));
+				.catch(err => console.error("Failed to fetch messages while resolving an image URL: " + err));
 		} else {
 			resolvedContent = userInput;
 		}
@@ -37,15 +40,16 @@ module.exports = {
 		if (isEmoji) {
 			img.src = imgResolvable;
 		} else {
-			img.onerror = () => {
-				console.log("Failed to load the image.");
+			img.onerror = err => {
+				console.error("Failed to load a canvas image: ");
+				console.error(err);
 			};
 			request.get({
 				url: imgResolvable,
 				encoding: null
 			}, (err, res) => {
 				if (err || res.statusCode >= 400) {
-					console.log("Failed to get URL while trying to assign the source to the canvas image.");
+					console.log("Failed to get source data for a canvas image.");
 				} else {
 					img.src = res.body;
 				}

@@ -549,7 +549,7 @@ module.exports = [
 					})
 					.catch(err => fetchErr = err);
 				if (fetchErr) {
-					console.log(fetchErr);
+					console.error(fetchErr);
 					return {cmdWarn: "Failed to fetch messages"};
 				}
 			} else if (deleteLarge) {

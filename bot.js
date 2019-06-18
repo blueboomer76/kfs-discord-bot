@@ -72,6 +72,7 @@ class KendraBot extends Client {
 			},
 			status: {randomIters: 0, pos: 0}
 		};
+		this.connectionRetries = 0;
 		if (config.ideaWebhook) {
 			this.ideaWebhook = new WebhookClient(config.ideaWebhook.id, config.ideaWebhook.token);
 		}
@@ -103,7 +104,7 @@ class KendraBot extends Client {
 				}
 			} else {
 				const err = "No command files or commands found in the directory: " + dir;
-				if (altdir) {console.log(err)} else {throw new Error(err)}
+				if (altdir) {console.error(err)} else {throw new Error(err)}
 			}
 			this.categories.sort();
 		});
@@ -194,11 +195,11 @@ class KendraBot extends Client {
 			json: true
 		}, (err, res) => {
 			if (err) {
-				console.log(`Failed to post to bots.ondiscord.xyz:\n${err}`);
+				console.error(`Failed to post to bots.ondiscord.xyz:\n${err}`);
 			} else if (res.statusCode >= 400) {
-				console.log(`An unexpected status code ${res.statusCode} was returned from bots.ondiscord.xyz`);
+				console.error(`An unexpected status code ${res.statusCode} was returned from bots.ondiscord.xyz`);
 			} else {
-				console.log("Stats successfully posted to bots.ondiscord.xyz");
+				console.error("Stats successfully posted to bots.ondiscord.xyz");
 			}
 		});
 	}
@@ -214,11 +215,11 @@ class KendraBot extends Client {
 			json: true
 		}, (err, res) => {
 			if (err) {
-				console.log(`Failed to post to botsfordiscord.com:\n${err}`);
+				console.error(`Failed to post to botsfordiscord.com:\n${err}`);
 			} else if (res.statusCode >= 400) {
-				console.log(`An unexpected status code ${res.statusCode} was returned from botsfordiscord.com`);
+				console.error(`An unexpected status code ${res.statusCode} was returned from botsfordiscord.com`);
 			} else {
-				console.log("Stats successfully posted to botsfordiscord.com");
+				console.error("Stats successfully posted to botsfordiscord.com");
 			}
 		});
 	}
@@ -233,11 +234,11 @@ class KendraBot extends Client {
 			json: true
 		}, (err, res) => {
 			if (err) {
-				console.log(`Failed to post to discordbots.org:\n${err}`);
+				console.error(`Failed to post to discordbots.org:\n${err}`);
 			} else if (res.statusCode >= 400) {
-				console.log(`An unexpected status code ${res.statusCode} was returned from discordbots.org`);
+				console.error(`An unexpected status code ${res.statusCode} was returned from discordbots.org`);
 			} else {
-				console.log("Stats successfully posted to discordbots.org");
+				console.error("Stats successfully posted to discordbots.org");
 			}
 		});
 	}
@@ -247,7 +248,7 @@ class KendraBot extends Client {
 			url: "https://reddit.com/r/memes/hot.json",
 			json: true
 		}, (err, res) => {
-			if (err) {console.log(err); return}
+			if (err) return console.error(err);
 			const entry = res.body.data.children.filter(r => !r.data.stickied)[0];
 			this.channels.get(config.ownerServer.memeFeed).send(new RichEmbed()
 				.setTitle(entry.data.title)
