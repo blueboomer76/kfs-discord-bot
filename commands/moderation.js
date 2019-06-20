@@ -952,7 +952,7 @@ module.exports = [
 			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot unmute the user **${member.user.tag}** because their highest role is at or higher than mine.`};
 			if (message.channel.permissionsFor(member).has("SEND_MESSAGES")) return {cmdWarn: `**${member.user.tag}** is not muted or is able to send messages in this channel.`};
 			message.channel.overwritePermissions(member, {
-				SEND_MESSAGES: true
+				SEND_MESSAGES: null
 			})
 				.then(() => message.channel.send(`✅ User **${member.user.tag}** has been unmuted in this channel.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));

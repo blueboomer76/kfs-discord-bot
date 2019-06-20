@@ -134,9 +134,9 @@ class KendraBot extends Client {
 		cumulativeStats.messageTotal += cachedStats.messageCurrentTotal;
 		cumulativeStats.callTotal += cachedStats.callCurrentTotal;
 
-		const usageCache = cachedStats.commandUsage;
-		let distrib = cumulativeStats.commandDistrib,
-			commandCurrentTotal = cachedStats.commandCurrentTotal;
+		const usageCache = cachedStats.commandUsage,
+			distrib = cumulativeStats.commandDistrib;
+		let commandCurrentTotal = cachedStats.commandCurrentTotal;
 		for (const cmdName in usageCache) {
 			distrib[cmdName] = (distrib[cmdName] || 0) + usageCache[cmdName];
 			commandCurrentTotal += usageCache[cmdName];
@@ -147,15 +147,16 @@ class KendraBot extends Client {
 			cumulativeStats.lastSorted = Date.now();
 			const tempNames = Object.keys(distrib),
 				tempUses = Object.values(distrib),
-				tempArray = [];
+				tempArray = [],
+				newDistrib = {};
 			for (let i = 0; i < tempNames.length; i++) {
 				tempArray.push({name: tempNames[i], uses: tempUses[i]});
 			}
-			tempArray.sort((a, b) => a.uses - b.uses);
-			distrib = {};
+			tempArray.sort((a, b) => b.uses - a.uses);
 			for (let i = 0; i < tempArray.length; i++) {
-				distrib[tempArray[i].name] = tempArray[i].uses;
+				newDistrib[tempArray[i].name] = tempArray[i].uses;
 			}
+			cumulativeStats.commandDistrib = newDistrib;
 		}
 
 		cachedStats.messageSessionTotal += cachedStats.messageCurrentTotal;

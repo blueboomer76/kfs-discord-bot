@@ -214,7 +214,7 @@ module.exports = [
 					`**HSV**: hsv(${hsvValues[0]}, ${hsvValues[1]}%, ${hsvValues[2]}%)` + "\n" +
 					`**XYZ**: XYZ(${xyzValues.join(", ")})`)
 					.setColor(decimalValue)
-					.addField("Related colors", `**Greyscale**: rgb(${(greyscaleValue + ",").repeat(2) + greyscaleValue})` + "\n" +
+					.addField("Related colors", `**Greyscale**: rgb(${(greyscaleValue + ", ").repeat(2) + greyscaleValue})` + "\n" +
 					`**Inverted**: rgb(${rgbValues.map(v => 255 - v).join(", ")})`)
 				);
 			} else {
