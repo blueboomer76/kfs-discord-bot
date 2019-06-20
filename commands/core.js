@@ -396,8 +396,7 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			await message.channel.send("Logging stats and shutting down the bot...");
-			await bot.logStats(true);
-			process.exit(1);
+			process.exit();
 		}
 	},
 	class StatsCommand extends Command {

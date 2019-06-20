@@ -32,7 +32,7 @@ bot.loadEvents();
 
 process.on("uncaughtException", err => {
 	console.error(`[${new Date().toJSON()}] Exception:` + "\n" + err.stack);
-	if (!bot.user) process.exit(2);
+	if (!bot.user) process.exit(1);
 });
 
 process.on("unhandledRejection", reason => {
@@ -46,10 +46,11 @@ process.on("unhandledRejection", reason => {
 });
 
 // Emitted by Ctrl+C in the command line
-process.on("SIGINT", async () => {
-	console.log("Logging stats and exiting process due to a SIGINT received");
-	await bot.logStats(true);
-	process.exit(1);
+process.on("SIGINT", () => process.exit());
+
+process.on("exit", () => {
+	console.log("Process exiting, bot stats will be logged and bot instance will be destroyed.");
+	bot.logStats(true);
 });
 
 bot.login(token)

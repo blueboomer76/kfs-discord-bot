@@ -5,57 +5,56 @@ const {applyJimpFilter} = require("../modules/filters.js"),
 
 module.exports = {
 	getImageResolvable: async (message, userInput) => {
-		let resolvedContent = null;
+		const result = {data: null, error: null};
 		if (userInput && userInput.isEmoji) {
 			await svg2png(userInput.content, {width: 512, height: 512})
-				.then(pngBuffer => resolvedContent = Buffer.from(pngBuffer))
-				.catch(err => {
-					console.error("SVG to PNG conversion failed:");
-					console.error(err);
-				});
+				.then(pngBuffer => result.data = Buffer.from(pngBuffer))
+				.catch(err => result.error = "SVG to PNG conversion failed: " + err);
 		} else if (!userInput) {
 			await message.channel.fetchMessages({limit: 25})
 				.then(msgs => {
 					msgs = msgs.array();
 					for (const msg of msgs) {
-						if (msg.embeds[0] && msg.embeds[0].type == "image") {
-							resolvedContent = msg.embeds[0].url;
-							break;
-						} else if (msg.embeds[0] && msg.embeds[0].image) {
-							resolvedContent = msg.embeds[0].image.url;
-							break;
-						} else if (msg.attachments.size != 0) {
-							resolvedContent = msg.attachments.last().url;
+						if (msg.embeds[0]) {
+							if (msg.embeds[0].type == "image") {
+								result.data = msg.embeds[0].url;
+								break;
+							} else if (msg.embeds[0].image) {
+								result.data = msg.embeds[0].image.url;
+								break;
+							}
+						} else if (msg.attachments.size > 0) {
+							result.data = msg.attachments.last().url;
 							break;
 						}
 					}
+					if (!result.data) result.error = "No mention or emoji found, or image attachment found in recent messages";
 				})
-				.catch(err => console.error("Failed to fetch messages while resolving an image URL: " + err));
+				.catch(err => result.error = "Failed to fetch messages while finding images: " + err);
 		} else {
-			resolvedContent = userInput;
+			result.data = userInput;
 		}
-		return resolvedContent;
+		return result;
 	},
-	getCanvasImage: (img, imgResolvable, isEmoji) => {
+	getCanvasImage: (canvasImg, imgResolvable, isEmoji, callback) => new Promise((resolve, reject) => {
 		if (isEmoji) {
-			img.src = imgResolvable;
+			canvasImg.src = imgResolvable;
+			callback();
 		} else {
-			img.onerror = err => {
-				console.error("Failed to load a canvas image: ");
-				console.error(err);
-			};
+			canvasImg.onload = callback;
+			canvasImg.onerror = () => reject("Failed to load image onto canvas.");
 			request.get({
 				url: imgResolvable,
 				encoding: null
 			}, (err, res) => {
 				if (err || res.statusCode >= 400) {
-					console.log("Failed to get source data for a canvas image.");
+					reject("Failed to get source data for the image.");
 				} else {
-					img.src = res.body;
+					canvasImg.src = res.body;
 				}
 			});
 		}
-	},
+	}),
 	applyJimpFilterAndPost: (msg, imgResolvable, filter, options = {}) => {
 		Jimp.read(imgResolvable)
 			.then(img => {
@@ -67,11 +66,11 @@ module.exports = {
 						});
 					})
 					.catch(() => {
-						msg.channel.send("Failed to generate the image.");
+						msg.channel.send("⚠ Failed to generate the image.");
 					});
 			})
 			.catch(() => {
-				msg.channel.send("⚠ Failed to get image for that URL.");
+				msg.channel.send("⚠ Failed to read image contents.");
 			});	
 	},
 	postJimpImage: (msg, img, fileName) => {
@@ -85,7 +84,7 @@ module.exports = {
 				});
 			})
 			.catch(() => {
-				msg.channel.send("Failed to generate the image.");
+				msg.channel.send("⚠ Failed to generate the image.");
 			});
 	}
 };
