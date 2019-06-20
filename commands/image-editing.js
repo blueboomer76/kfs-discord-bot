@@ -43,11 +43,11 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			const levelFlag = flags.find(f => f.name == "level");
-			imageManager.applyJimpFilterAndPost(message, imgResolvable, "blur", {blur: levelFlag ? levelFlag.args : null});
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "blur", {blur: levelFlag ? levelFlag.args : null});
 		}
 	},
 	class CreateMemeCommand extends Command {
@@ -88,8 +88,8 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {			
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			const pipeRegex = / ?\| /,
 				disableCapsFlag = flags.some(f => f.name == "disable-caps");
@@ -122,7 +122,7 @@ module.exports = [
 
 			const img = new Canvas.Image();
 
-			img.onload = () => {
+			imageManager.getCanvasImage(img, fetchedImg.data, args[0] && args[0].isEmoji, () => {
 				if (img.width < 100 || img.height < 100) return message.channel.send("You need to use an image 100 x 100 or larger.");
 				if (img.width * img.height > 8388608) return message.channel.send("The image is too large.");
 
@@ -146,9 +146,8 @@ module.exports = [
 						name: "meme.png"
 					}]
 				});
-			};
-
-			imageManager.getCanvasImage(img, imgResolvable, args[0] && args[0].isEmoji);
+			})
+				.catch(err => message.channel.send("⚠ " + err));
 		}
 
 		drawText(canvas, ctx, text, isTop) {
@@ -221,10 +220,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 			
-			Jimp.read(imgResolvable)
+			Jimp.read(fetchedImg.data)
 				.then(img => {
 					img.scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, i) => {
 						img.bitmap.data[i] = img.bitmap.data[i] < 144 ? 0 : 255;
@@ -273,10 +272,10 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
-			imageManager.applyJimpFilterAndPost(message, imgResolvable, "flip");
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "flip");
 		}
 	},
 	class FlopCommand extends Command {
@@ -305,10 +304,10 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
-			imageManager.applyJimpFilterAndPost(message, imgResolvable, "flop");
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "flop");
 		}
 	},
 	class GrayscaleCommand extends Command {
@@ -338,10 +337,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
-			imageManager.applyJimpFilterAndPost(message, imgResolvable, "grayscale");
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "grayscale");
 		}
 	},
 	class InvertCommand extends Command {
@@ -370,10 +369,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
-			imageManager.applyJimpFilterAndPost(message, imgResolvable, "invert");
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "invert");
 		}
 	},
 	class MirrorCommand extends Command {
@@ -409,11 +408,11 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			const type = args[1];
-			Jimp.read(imgResolvable)
+			Jimp.read(fetchedImg.data)
 				.then(img => {
 					const imgClone1 = img.clone(),
 						imgClone2 = img.clone(),
@@ -495,10 +494,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 			
-			Jimp.read(imgResolvable)
+			Jimp.read(fetchedImg.data)
 				.then(img => {
 					img.quality(1)
 						.getBufferAsync(Jimp.MIME_JPEG)
@@ -553,11 +552,11 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			const pixelsFlag = flags.find(f => f.name == "pixels");
-			imageManager.applyJimpFilterAndPost(message, imgResolvable, "pixelate", {pixels: pixelsFlag ? pixelsFlag.args : null});
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "pixelate", {pixels: pixelsFlag ? pixelsFlag.args : null});
 		}
 	},
 	class RandomCropCommand extends Command {
@@ -587,10 +586,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 			
-			imageManager.applyJimpFilterAndPost(message, imgResolvable, "randomcrop");
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "randomcrop");
 		}
 	},
 	class RotateCommand extends Command {
@@ -630,11 +629,11 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			const degreesFlag = flags.find(f => f.name == "degrees");
-			imageManager.applyJimpFilterAndPost(message, imgResolvable, "rotate", {rotation: degreesFlag ? degreesFlag.args : null});
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "rotate", {rotation: degreesFlag ? degreesFlag.args : null});
 		}
 	},
 	class SepiaCommand extends Command {
@@ -663,10 +662,10 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
-			imageManager.applyJimpFilterAndPost(message, imgResolvable, "sepia");
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "sepia");
 		}
 	},
 	class SpinCommand extends Command {
@@ -707,13 +706,13 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const imgResolvable = await imageManager.getImageResolvable(message, args[0]);
-			if (!imgResolvable) return {cmdWarn: "No mention or emoji found, or image attachment found in recent messages"};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			const speedFlag = flags.find(f => f.name == "speed"),
 				img = new Canvas.Image();
 			
-			img.onload = () => {
+			imageManager.getCanvasImage(img, fetchedImg.data, args[0] && args[0].isEmoji, () => {
 				let canvasDim = img.width < img.height ? img.width : img.height,
 					imgScale = 1,
 					imgX = 0,
@@ -762,8 +761,8 @@ module.exports = [
 						name: "spin.gif"
 					}]
 				});
-			};
-			imageManager.getCanvasImage(img, imgResolvable, args[0] && args[0].isEmoji);
+			})
+				.catch(err => message.channel.send("⚠ " + err));
 		}
 	}
 ];
