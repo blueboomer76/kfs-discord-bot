@@ -545,8 +545,8 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const guild = message.guild,
-				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members;
-			
+				guildMembers = guild.large ? await fetchMembers(message) : guild.members;
+
 			const createdDate = new Date(guild.createdTimestamp);
 			let guildVerif;
 			switch (guild.verificationLevel) {
@@ -565,10 +565,13 @@ module.exports = [
 				case 4:
 					guildVerif = "Very High (verified phone)";
 			}
+			const botCount = guildMembers.filter(mem => mem.user.bot).size;
+
+			const statuses = {online: 0, idle: 0, dnd: 0, offline: guild.memberCount - guild.presences.size},
+				channels = {text: 0, voice: 0, category: 0};
+			for (const presence of guild.presences.array()) statuses[presence.status]++;
+			for (const channel of guild.channels.array()) channels[channel.type]++;
 			
-			const onlineCount = guild.presences.filter(p => p.status != "offline").size,
-				botCount = guildMembers.filter(mem => mem.user.bot).size;
-	
 			message.channel.send(new RichEmbed()
 				.setTitle(`Server Info - ${guild.name}`)
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -582,15 +585,13 @@ module.exports = [
 				.addField("Explicit Filter", guild.explicitContentFilter == 0 ? "None" : (guild.explicitContentFilter == 1 ? "Low" : "High"), true)
 				.addField("2-Factor Auth Required", guild.mfaLevel == 0 ? "No" : "Yes", true)
 				.addField(`Members [${guild.memberCount} total]`,
-					`${onlineCount} Online (${(onlineCount / guild.memberCount * 100).toFixed(1)}%)\n` +
+					`${statuses.online} Online (${(statuses.online / guild.memberCount * 100).toFixed(1)}%), ` +
+					`${statuses.idle} Idle, ${statuses.dnd} DND, ${statuses.offline} Offline` + "\n" +
 					`${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,
 					true)
 				.addField(`Roles [${guild.roles.size - 1} total]`, "Use `rolelist` to see all roles", true)
 				.addField(`Channels [${guild.channels.size} total]`,
-					`${guild.channels.filter(chnl => chnl.type == "text").size} Text\n` +
-					`${guild.channels.filter(chnl => chnl.type == "voice").size} Voice\n` +
-					`${guild.channels.filter(chnl => chnl.type == "category").size} Categories`,
-					true)
+					`${channels.text} Text` + "\n" + `${channels.voice} Voice` + "\n" + `${channels.category} Categories`, true)
 			);
 		}
 	},

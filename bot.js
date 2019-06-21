@@ -262,13 +262,13 @@ class KFSDiscordBot extends Client {
 			if (requestRes != true) {
 				console.error(`Failed to obtain a meme from Reddit: ${requestRes}`);
 			} else {
-				const entry = res.body.data.children.filter(r => !r.data.stickied)[0];
+				const meme = res.body.data.children.filter(r => !r.data.stickied)[0].data;
 				this.channels.get(config.memeFeedChannel).send(new RichEmbed()
-					.setTitle(entry.data.title)
-					.setURL(`https://reddit.com${entry.data.permalink}`)
+					.setTitle(meme.title)
+					.setURL(`https://reddit.com${meme.permalink}`)
 					.setColor(Math.floor(Math.random() * 16777216))
-					.setFooter(`👍 ${entry.data.score} | 💬 ${entry.data.num_comments} | By: ${entry.data.author}`)
-					.setImage(entry.data.url)
+					.setFooter(`👍 ${meme.score} | 💬 ${meme.num_comments} | By: ${meme.author}`)
+					.setImage(meme.url)
 				);
 			}
 		});
