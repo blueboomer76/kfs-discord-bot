@@ -1,6 +1,6 @@
 {
   "name": "kendra-discord-bot",
-  "version": "1.5.0",
+  "version": "1.5.4",
   "description": "A multipurpose Discord bot for fun, moderation, utility, and more, written in discord.js",
   "main": "index.js",
   "dependencies": {

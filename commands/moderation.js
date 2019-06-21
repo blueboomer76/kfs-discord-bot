@@ -1,5 +1,27 @@
-const Command = require("../structures/command.js"),
-	promptor = require("../modules/codePromptor.js");
+const {Permissions} = require("discord.js"),
+	Command = require("../structures/command.js"),
+	promptor = require("../modules/codePromptor.js"),
+	{fetchMembers} = require("../modules/memberFetcher.js");
+
+function compareRolePositions(message, target, role, options) {
+	let err = "";
+	if (options.type == "role") {
+		const tempErr = `I cannot ${options.action} the role **${target.name}** since its position is at or higher than `;
+		if (target.comparePositionTo(message.guild.me.highestRole) >= 0) {
+			err = tempErr + "my highest role.";
+		} else if (message.guild.owner.id != message.author.id && target.comparePositionTo(message.member.highestRole) >= 0) {
+			err = tempErr + "your highest role.";
+		}
+	} else {
+		const tempErr = `I cannot ${options.action} the user **${target.user.tag}** since the user's highest role is at or higher than `;
+		if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
+			err = tempErr + "mine.";
+		} else if (message.guild.owner.id != message.author.id && role.comparePositionTo(message.member.highestRole) >= 0) {
+			err = tempErr + "yours.";
+		}
+	}
+	return err.length > 0 ? err : true;
+}
 
 module.exports = [
 	class AddRoleCommand extends Command {
@@ -52,7 +74,8 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
-			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot add the role **${role.name}** to user **${member.user.tag}** because its position is at or higher than mine.`};
+			const compareTest = compareRolePositions(message, member, role, {action: `add the role **${role.name}** to`, type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 			if (member.roles.has(role.id)) return {cmdWarn: `User **${member.user.tag}** already has the role **${role.name}**.`};
 				
 			member.addRole(role)
@@ -112,7 +135,8 @@ module.exports = [
 			const member = args[0],
 				daysFlag = flags.find(f => f.name == "days"),
 				reasonFlag = flags.find(f => f.name == "reason");
-			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot ban the user **${member.user.tag}** because their highest role is at or higher than mine.`};
+			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "ban", type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 			
 			if (!flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to ban the user **${member.user.tag}** from this server.`);
@@ -123,7 +147,7 @@ module.exports = [
 				days: daysFlag ? daysFlag.args[0] : 0,
 				reason: reasonFlag ? reasonFlag.args[0] : null
 			})
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been banned from this server.`))
+				.then(() => message.channel.send(`✅ User **${member.user.tag}** has been banned from this server.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -267,7 +291,8 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const role = args[0];
-			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot delete the role **${role.name}** because its position is at or higher than mine.`};
+			const compareTest = compareRolePositions(message, role, null, {action: "delete", type: "role"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 			if (role.members.size > 10 && role.members.size > message.guild.memberCount / 10 && !flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to delete the role **${role.name}** (ID ${role.name}), which more than 10% of the members in this server have.`);
 				if (promptRes) return {cmdWarn: promptRes};
@@ -327,12 +352,25 @@ module.exports = [
 			const userId = args[0],
 				daysFlag = flags.find(f => f.name == "days"),
 				reasonFlag = flags.find(f => f.name == "reason");
+
+			let guildMembers;
+			if (message.guild.large) {
+				guildMembers = await fetchMembers(message);
+				if (!guildMembers) return {cmdWarn: "Unable to perform a hackban. Maybe try again?"};
+			} else {
+				guildMembers = message.guild.members;
+			}
+			const memberWithId = guildMembers.get(userId);
+			if (memberWithId) {
+				const compareTest = compareRolePositions(message, memberWithId, memberWithId.highestRole, {action: "hackban", type: "user"});
+				if (compareTest != true) return {cmdWarn: compareTest};
+			}
 			
 			message.guild.ban(userId, {
 				days: daysFlag ? daysFlag.args[0] : 0,
 				reason: reasonFlag ? reasonFlag.args[0] : null
 			})
-				.then(() => message.channel.send(`✅ The user with ID **${userId}** has been hackbanned from this server.`))
+				.then(() => message.channel.send(`✅ User with ID **${userId}** has been hackbanned from this server.`))
 				.catch(() => message.channel.send("Could not hackban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."));
 		}
 	},
@@ -376,7 +414,8 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0], reasonFlag = flags.find(f => f.name == "reason");
-			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot kick the user **${member.user.tag}** because their highest role is at or higher than mine.`};
+			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "kick", type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 			
 			if (!flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to kick the user **${args[0].user.tag}** from this server.`);
@@ -384,7 +423,7 @@ module.exports = [
 			}
 			
 			member.kick(reasonFlag ? reasonFlag.args[0] : null)
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been kicked from this server.`))
+				.then(() => message.channel.send(`✅ User **${member.user.tag}** has been kicked from this server.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -414,12 +453,23 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0];
-			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot mute the user **${member.user.tag}** because their highest role is at or higher than mine.`};
-			if (!message.channel.permissionsFor(member).has("SEND_MESSAGES")) return {cmdWarn: `**${member.user.tag}** is already muted or cannot send messages in this channel.`};
+			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "mute", type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
+
+			const mcOverwrites = message.channel.permissionOverwrites.get(member.user.id);
+			if (mcOverwrites && new Permissions(mcOverwrites.deny).has("SEND_MESSAGES")) {
+				return {cmdWarn: `**${member.user.tag}** is already muted in this channel.`};
+			}
 			message.channel.overwritePermissions(member, {
 				SEND_MESSAGES: false
 			})
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been muted in this channel.`))
+				.then(channel => {
+					let toSend = `✅ User **${member.user.tag}** has been muted in this channel.`;
+					if (!channel.permissionsFor(member).has("VIEW_CHANNEL")) {
+						toSend += "\n" + "*This user is also unable to view this channel.*";
+					}
+					message.channel.send(toSend);
+				})
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
@@ -619,8 +669,9 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
+			const compareTest = compareRolePositions(message, member, role, {action: `remove the role **${role.name}** from`, type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 			if (!member.roles.has(role.id)) return {cmdWarn: `User **${member.user.tag}** does not have a role named **${role.name}**.`};
-			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot remove the role **${role.name}** from user **${member.user.tag}** because its position is at or higher than mine.`};
 				
 			member.removeRole(role)
 				.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from user **${member.user.tag}**.`))
@@ -691,7 +742,8 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const role = args[0], newRoleName = args[1];
-			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot rename the role **${role.name}** because its position is at or higher than mine.`};
+			const compareTest = compareRolePositions(message, role, null, {action: "rename", type: "role"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 				
 			role.edit({name: newRoleName})
 				.then(() => message.channel.send(`✅ The role's name has been set to **${newRoleName}**.`))
@@ -807,7 +859,8 @@ module.exports = [
 			const role = args[0],
 				isDecimal = args[1].startsWith("decimal:"), 
 				newRoleColor = isDecimal ? parseInt(args[1].slice(8)) : args[1].replace("#", "");
-			if (role.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot change the color of the role **${role.name}** because its position is at or higher than mine.`};
+			const compareTest = compareRolePositions(message, role, null, {action: "change the color of", type: "role"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 			
 			role.edit({color: newRoleColor})
 				.then(() => message.channel.send(`✅ The color of role **${role.name}** has been set to **${isDecimal ? newRoleColor : "#" + newRoleColor}**.`))
@@ -861,8 +914,9 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0], reasonFlag = flags.find(f => f.name == "reason");
-			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdErr: `I cannot softban the user **${member.user.tag}** because their highest role is at or higher than mine.`};
-			
+			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "softban", type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
+
 			if (!flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to softban the user **${member.user.tag}** in this server.`);
 				if (promptRes) return {cmdWarn: promptRes};
@@ -874,7 +928,7 @@ module.exports = [
 			})
 				.then(() => {
 					message.guild.unban(member.user.id)
-						.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been softbanned.`))
+						.then(() => message.channel.send(`✅ User **${member.user.tag}** has been softbanned.`))
 						.catch(() => message.channel.send("An error has occurred while trying to unban the user while softbanning."));
 				})
 				.catch(err => message.channel.send("An error has occurred while trying to ban the user while softbanning: ```" + err + "```"));
@@ -949,12 +1003,23 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const member = args[0];
-			if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) return {cmdWarn: `I cannot unmute the user **${member.user.tag}** because their highest role is at or higher than mine.`};
-			if (message.channel.permissionsFor(member).has("SEND_MESSAGES")) return {cmdWarn: `**${member.user.tag}** is not muted or is able to send messages in this channel.`};
+			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "unmute", type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
+
+			const mcOverwrites = message.channel.permissionOverwrites.get(member.user.id);
+			if (!mcOverwrites || !new Permissions(mcOverwrites.deny).has("SEND_MESSAGES")) {
+				return {cmdWarn: `**${member.user.tag}** is not muted in this channel.`};
+			}
 			message.channel.overwritePermissions(member, {
 				SEND_MESSAGES: null
 			})
-				.then(() => message.channel.send(`✅ User **${member.user.tag}** has been unmuted in this channel.`))
+				.then(channel => {
+					let toSend = `✅ User **${member.user.tag}** has been unmuted in this channel.`;
+					if (!channel.permissionsFor(member).has("VIEW_CHANNEL")) {
+						toSend += "\n" + "*This user is still unable to view this channel.*";
+					}
+					message.channel.send(toSend);
+				})
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	}

@@ -35,10 +35,9 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 					return chnl.name.toLowerCase().includes(obj.toLowerCase());
 				});
 			}
-			if (list.length > 0) {return list} else {return null}
+			return list.length > 0 ? list : null;
 		case "command":
-			const command = bot.commands.get(obj) || bot.commands.get(bot.aliases.get(obj));
-			if (command) {return command} else {return null}
+			return bot.commands.get(obj) || bot.commands.get(bot.aliases.get(obj)) || null;
 		case "duration":
 			// Coming soon
 			break;
@@ -59,10 +58,10 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				});
 			}
 				
-			if (list.length > 0) {return list} else {return null}
+			return list.length > 0 ? list : null;
 		case "function":
 			const testFunction = params.testFunction;
-			if (testFunction(obj)) {return obj} else {return null}
+			return testFunction(obj) ? obj : null;
 		case "image":
 			if (memberRegex.test(obj)) {
 				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
@@ -89,14 +88,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			if (twemojiResults.length == 0) return null;
 			const twemojiCode = twemoji.convert.toCodePoint(twemojiResults[0]),
 				file = `node_modules/twemoji/2/svg/${twemojiCode}.svg`;
-			if (fs.existsSync(file)) {
-				return {
-					isEmoji: true,
-					content: fs.readFileSync(file)
-				};
-			} else {
-				return null;
-			}
+			return fs.existsSync(file) ? {isEmoji: true, content: fs.readFileSync(file)} : null;
 		case "member":
 			const memberMatch = obj.match(memberRegex);
 			let member;
@@ -118,11 +110,11 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 						mem.displayName.toLowerCase().includes(comparedObj);
 				}).array();
 			}
-			if (list.length > 0) {return list} else {return null}
+			return list.length > 0 ? list : null;
 		case "number":
-			if (!isNaN(obj) && obj >= params.min && obj <= params.max) {return parseInt(obj)} else {return null}
+			return !isNaN(obj) && obj >= params.min && obj <= params.max ? parseInt(obj) : null;
 		case "oneof":
-			if (params.list.includes(obj)) {return obj} else {return null}
+			return params.list.includes(obj) ? obj : null;
 		case "regex":
 			// Coming soon
 			break;
@@ -142,7 +134,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 					return role.name.toLowerCase().includes(obj.toLowerCase());
 				});
 			}
-			if (list.length > 0) {return list} else {return null}
+			return list.length > 0 ? list : null;
 		case "string":
 			return obj.toString();
 		default:
