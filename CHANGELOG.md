@@ -4,6 +4,13 @@
 
 # 1.X (current)
 
+## 1.5.4
+
+- Improved the handling of role permissions of most moderation commands
+- Edited methods for getting the amount of each type of channel and presence in a server
+- Changed the behavior and logged messages when the bot fails to reconnect
+- Changed `console.log` and `process.exit` expressions to more relevant ones with the appropriate values
+
 ## 1.5.0
 
 - Changed the storage method of command usage from array to object form

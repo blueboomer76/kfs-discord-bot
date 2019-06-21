@@ -29,19 +29,16 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			let channel;
 			if (channelMatch) {
 				channel = guildChannels.get(channelMatch[0].match(/\d+/)[0]);
-				if (channel) {return [channel]} else {return null}
+				return channel ? [channel] : null;
 			} else {
 				channel = guildChannels.get(obj);
 				if (channel) return [channel];
 			}
 
-			list = guildChannels.array().filter(chnl => {
-				return chnl.name.toLowerCase().includes(lowerObj);
-			});
-			if (list.length > 0) {return list} else {return null}
+			list = guildChannels.array().filter(chnl => chnl.name.toLowerCase().includes(lowerObj));
+			return list.length > 0 ? list : null;
 		case "command":
-			const command = bot.commands.get(lowerObj) || bot.commands.get(bot.aliases.get(lowerObj));
-			if (command) {return command} else {return null}
+			return bot.commands.get(lowerObj) || bot.commands.get(bot.aliases.get(lowerObj)) || null;
 		case "emoji":
 			const guildEmojis = message.guild.emojis,
 				emojiMatch = obj.match(emojiRegex);
@@ -57,10 +54,10 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			list = guildEmojis.array().filter(emoji => {
 				return emoji.name.toLowerCase().includes(lowerObj);
 			});
-			if (list.length > 0) {return list} else {return null}
+			return list.length > 0 ? list : null;
 		case "function":
 			const testFunction = params.testFunction;
-			if (testFunction(obj)) {return obj} else {return null}
+			return testFunction(obj) ? obj : null;
 		case "image":
 			if (memberRegex.test(obj)) {
 				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
@@ -88,17 +85,11 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			const twemojiCode = twemoji.convert.toCodePoint(twemojiResults[0]);
 			let file = `node_modules/twemoji/2/svg/${twemojiCode}.svg`;
 			if (fs.existsSync(file)) {
-				return {
-					isEmoji: true,
-					content: fs.readFileSync(file)
-				};
+				return {isEmoji: true, content: fs.readFileSync(file)};
 			} else {
 				file = `node_modules/twemoji/2/svg/${twemojiCode.split("-", 1)}.svg`;
 				if (fs.existsSync(file)) {
-					return {
-						isEmoji: true,
-						content: fs.readFileSync(file)
-					};
+					return {isEmoji: true, content: fs.readFileSync(file)};
 				} else {
 					return null;
 				}
@@ -121,12 +112,12 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				mem.user.username.toLowerCase().includes(lowerObj) ||
 				mem.displayName.toLowerCase().includes(lowerObj);
 			}).array();
-			if (list.length > 0) {return list} else {return null}
+			return list.length > 0 ? list : null;
 		case "number":
 			const num = Math.floor(obj);
-			if (!isNaN(num) && num >= params.min && num <= params.max) {return num} else {return null}
+			return !isNaN(num) && num >= params.min && num <= params.max ? num : null;
 		case "oneof":
-			if (params.list.includes(lowerObj)) {return lowerObj} else {return null}
+			return params.list.includes(lowerObj) ? lowerObj : null;
 		case "role":
 			const guildRoles = message.guild.roles.clone();
 			guildRoles.delete(guildRoles.find(role => role.calculatedPosition == 0).id);
@@ -135,16 +126,14 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			let role;
 			if (roleMatch) {
 				role = guildRoles.get(roleMatch[0].match(/\d+/)[0]);
-				if (role) {return [role]} else {return null}
+				return role ? [role] : null;
 			} else {
 				role = guildRoles.get(obj);
 				if (role) return [role];
 			}
 
-			list = guildRoles.array().filter(role => {
-				return role.name.toLowerCase().includes(lowerObj);
-			});
-			if (list.length > 0) {return list} else {return null}
+			list = guildRoles.array().filter(role => role.name.toLowerCase().includes(lowerObj));
+			return list.length > 0 ? list : null;
 		case "string":
 			return obj.toString();
 		default:

@@ -2,6 +2,26 @@ const {Permissions} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	promptor = require("../modules/codePromptor.js");
 
+function compareRolePositions(message, target, role, options) {
+	let err = "";
+	if (options.type == "role") {
+		const tempErr = `I cannot ${options.action} the role **${target.name}** since its position is at or higher than `;
+		if (message.guild.owner.id != message.author.id && target.comparePositionTo(message.member.highestRole) >= 0) {
+			err = tempErr + "your highest role. This can be overridden with server owner.";
+		} else if (!options.ignoreBot && target.comparePositionTo(message.guild.me.highestRole) >= 0) {
+			err = tempErr + "my highest role.";
+		}
+	} else {
+		const tempErr = `I cannot ${options.action} the user **${target.user.tag}** since the user's highest role is at or higher than `;
+		if (message.guild.owner.id != message.author.id && role.comparePositionTo(message.member.highestRole) >= 0) {
+			err = tempErr + "yours. This can be overridden with server owner.";
+		} else if (!options.ignoreBot && role.comparePositionTo(message.guild.me.highestRole) >= 0) {
+			err = tempErr + "mine.";
+		}
+	}
+	return err.length > 0 ? err : true;
+}
+
 module.exports = [
 	class AddRoleCommand extends Command {
 		constructor() {
@@ -37,13 +57,9 @@ module.exports = [
 			const member = args[0], role = args[1];
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
 			if (member.roles.has(role.id)) return {cmdWarn: `User **${member.user.tag}** already has the role **${role.name}**.`};
-			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
-				return {cmdWarn: `Role **${role.name}** cannot be added to **${member.user.tag}** since its position is at or higher than yours (overrides with server owner)`};
-			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return {cmdWarn: `I cannot add the role **${role.name}** to **${member.user.tag}** since its position is at or higher than mine.`};
-			} else if (role.managed) {
-				return {cmdWarn: `Role **${role.name}** cannot be added to **${member.user.tag}** since it is managed or integrated.`};
-			}
+			if (role.managed) return {cmdWarn: `Role **${role.name}** cannot be added to **${member.user.tag}** since it is managed or integrated.`};
+			const compareTest = compareRolePositions(message, member, role, {action: `add the role **${role.name}** to`, type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 	
 			member.addRole(role)
 				.then(() => message.channel.send(`✅ Role **${role.name}** has been added to the user **${member.user.tag}**.`))
@@ -101,11 +117,8 @@ module.exports = [
 				daysFlag = flags.find(f => f.name == "days"),
 				reasonFlag = flags.find(f => f.name == "reason");
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
-			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-				return {cmdWarn: `User **${member.user.tag}** cannot be banned since their highest role is at or higher than yours (overrides with server owner)`};
-			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return {cmdWarn: `I cannot ban the user **${member.user.tag}** since their highest role is at or higher than mine.`};
-			}
+			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "ban", type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 
 			if (!flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to ban the user **${member.user.tag}** from this server.`);
@@ -116,7 +129,7 @@ module.exports = [
 				days: daysFlag ? daysFlag.args : 0,
 				reason: reasonFlag ? reasonFlag.args : null
 			})
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been banned from this server.`))
+				.then(() => message.channel.send(`✅ User **${member.user.tag}** has been banned from this server.`))
 				.catch(err => message.channel.send("An error has occurred while trying to ban the user: `" + err + "`"));
 		}
 	},
@@ -259,14 +272,9 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			const role = args[0];
-			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
-				return {cmdWarn: `Role **${role.name}** cannot be deleted since its position is at or higher than yours (overrides with server owner)`};
-			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return {cmdWarn: `I cannot delete the role **${role.name}** since its position is at or higher than mine.`};
-			} else if (role.managed) {
-				return {cmdWarn: `Role **${role.name}** cannot be deleted since it is managed or integrated.`};
-			}
-
+			if (role.managed) return {cmdWarn: `Role **${role.name}** cannot be deleted since it is managed or integrated.`};
+			const compareTest = compareRolePositions(message, role, null, {action: "delete", type: "role"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 			if (role.members.size > 10 && role.members.size > message.guild.memberCount / 10 && !flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to delete the role **${role.name}** (ID ${role.id}), which more than 10% of the members in this server have.`);
 				if (promptRes) return {cmdWarn: promptRes};
@@ -325,30 +333,27 @@ module.exports = [
 				daysFlag = flags.find(f => f.name == "days"),
 				reasonFlag = flags.find(f => f.name == "reason");
 			if (userID == message.author.id || userID == message.guild.owner.id || userID == bot.user.id) return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
-			let guildMembers, cmdErr;
+			let guildMembers, cmdErr = false;
 			if (!message.guild.large) {
 				guildMembers = message.guild.members;
 			} else {
 				await message.guild.fetchMembers()
 					.then(g => guildMembers = g.members)
-					.catch(err => cmdErr = `Failed to fetch members: ${err}`);
+					.catch(() => cmdErr = true);
 			}
-			if (cmdErr) return {cmdWarn: cmdErr};
+			if (cmdErr) return {cmdWarn: "Unable to perform a hackban. Maybe try again?"};
 
 			const memberWithID = guildMembers.get(userID);
 			if (memberWithID) {
-				if (message.author.id != message.guild.owner.id && memberWithID.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-					return {cmdWarn: `User **${memberWithID.user.tag}** cannot be hackbanned since their highest role is at or higher than yours (overrides with server owner)`};
-				} else if (memberWithID.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
-					return {cmdWarn: `I cannot hackban the user **${memberWithID.user.tag}** since their highest role is at or higher than mine.`};
-				}
+				const compareTest = compareRolePositions(message, memberWithID, memberWithID.highestRole, {action: "hackban", type: "user"});
+				if (compareTest != true) return {cmdWarn: compareTest};
 			}
 
 			message.guild.ban(userID, {
 				days: daysFlag ? daysFlag.args : 0,
 				reason: reasonFlag ? reasonFlag.args : null
 			})
-				.then(() => message.channel.send(`✅ The user with ID **${userID}** has been hackbanned from this server.`))
+				.then(() => message.channel.send(`✅ User with ID **${userID}** has been hackbanned from this server.`))
 				.catch(() => message.channel.send("Could not hackban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."));
 		}
 	},
@@ -393,11 +398,8 @@ module.exports = [
 			const member = args[0],
 				reasonFlag = flags.find(f => f.name == "reason");
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
-			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-				return {cmdWarn: `User **${member.user.tag}** cannot be kicked since their highest role is at or higher than yours (overrides with server owner)`};
-			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return {cmdWarn: `I cannot kick the user **${member.user.tag}** since their highest role is at or higher than mine.`};
-			}
+			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "kick", type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 			
 			if (!flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to kick the user **${member.user.tag}** from this server.`);
@@ -405,7 +407,7 @@ module.exports = [
 			}
 
 			member.kick(reasonFlag ? reasonFlag.args : null)
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been kicked from this server.`))
+				.then(() => message.channel.send(`✅ User **${member.user.tag}** has been kicked from this server.`))
 				.catch(err => message.channel.send("An error has occurred while trying to kick the user: `" + err + "`"));
 		}
 	},
@@ -436,9 +438,8 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const member = args[0];
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
-			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-				return {cmdWarn: `User **${member.user.tag}** cannot be muted since their highest role is at or higher than yours (overrides with server owner)`};
-			}
+			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "mute", type: "user", ignoreBot: true});
+			if (compareTest != true) return {cmdWarn: compareTest};
 			
 			const mcOverwrites = message.channel.permissionOverwrites.get(member.user.id);
 			if (mcOverwrites && new Permissions(mcOverwrites.deny).has("SEND_MESSAGES")) {
@@ -447,7 +448,13 @@ module.exports = [
 			message.channel.overwritePermissions(member, {
 				SEND_MESSAGES: false
 			})
-				.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been muted in this channel.`))
+				.then(channel => {
+					let toSend = `✅ User **${member.user.tag}** has been muted in this channel.`;
+					if (!channel.permissionsFor(member).has("VIEW_CHANNEL")) {
+						toSend += "\n" + "*This user is also unable to view this channel.*";
+					}
+					message.channel.send(toSend);
+				})
 				.catch(err => message.channel.send("An error has occurred while trying to mute the user: `" + err + "`"));
 		}
 	},
@@ -648,14 +655,10 @@ module.exports = [
 			const member = args[0], role = args[1];
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
 			if (!member.roles.has(role.id)) return {cmdWarn: `User **${member.user.tag}** does not have a role named **${role.name}**.`};
-			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
-				return {cmdWarn: `Role **${role.name}** cannot be removed from **${member.user.tag}** since its position is at or higher than yours (overrides with server owner)`};
-			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return {cmdWarn: `I cannot remove the role **${role.name}** from **${member.user.tag}** since its position is at or higher than mine.`};
-			} else if (role.managed) {
-				return {cmdWarn: `Role **${role.name}** cannot be removed from **${member.user.tag}** since it is managed or integrated.`};
-			}
-	
+			if (role.managed) return {cmdWarn: `Role **${role.name}** cannot be removed from **${member.user.tag}** since it is managed or integrated.`};
+			const compareTest = compareRolePositions(message, member, role, {action: `remove the role **${role.name}** from`, type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
+
 			member.removeRole(role)
 				.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from user **${member.user.tag}**.`))
 				.catch(err => message.channel.send("An error has occurred while trying to remove the role: `" + err + "`"));
@@ -724,11 +727,8 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			const role = args[0], newRoleName = args[1];
-			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
-				return {cmdWarn: `Role **${role.name}** cannot be renamed since its position is at or higher than yours (overrides with server owner)`};
-			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return {cmdWarn: `I cannot rename the role **${role.name}** since its position is at or higher than mine.`};
-			}
+			const compareTest = compareRolePositions(message, role, null, {action: "rename", type: "role"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 
 			role.setName(newRoleName)
 				.then(() => message.channel.send(`✅ The role's name has been set to **${newRoleName}**.`))
@@ -764,11 +764,8 @@ module.exports = [
 			const member = args[0];
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 			if (!member.nickname) return {cmdWarn: `User **${member.user.tag}** does not have a nickname in this server.`};
-			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-				return {cmdWarn: `Nickname of **${member.user.tag}** cannot be reset since their highest role is at or higher than yours (overrides with server owner)`};
-			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return {cmdWarn: `I cannot reset the nickname of **${member.user.tag}** since their highest role is at or higher than mine.`};
-			}
+			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "reset the nickname of", type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 
 			member.setNickname("")
 				.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been reset.`))
@@ -808,11 +805,8 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const member = args[0], newNick = args[1];
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
-			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-				return {cmdWarn: `Nickname of **${member.user.tag}** cannot be set since their highest role is at or higher than yours (overrides with server owner)`};
-			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return {cmdWarn: `I cannot set the nickname of **${member.user.tag}** since their highest role is at or higher than mine.`};
-			}
+			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "set the nickname of", type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 
 			member.setNickname(newNick)
 				.then(() => message.channel.send(`✅ Nickname of user **${member.user.tag}** has been set to **${newNick}.**`))
@@ -856,11 +850,8 @@ module.exports = [
 			const role = args[0],
 				isDecimal = args[1].startsWith("decimal:"), 
 				newRoleColor = isDecimal ? parseInt(args[1].slice(8)) : args[1].replace("#", "");
-			if (message.author.id != message.guild.owner.id && role.comparePositionTo(message.member.highestRole) >= 0) {
-				return {cmdWarn: `The color of role **${role.name}** cannot be changed since its position is at or higher than yours (overrides with server owner)`};
-			} else if (role.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return {cmdWarn: `I cannot change the color of the role **${role.name}** since its position is at or higher than mine.`};
-			}
+			const compareTest = compareRolePositions(message, role, null, {action: "change the color of", type: "role"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 			
 			role.setColor(newRoleColor)
 				.then(() => message.channel.send(`✅ The color of role **${role.name}** has been set to **${isDecimal ? newRoleColor : "#" + newRoleColor}**.`))
@@ -914,11 +905,8 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const member = args[0], reasonFlag = flags.find(f => f.name == "reason");
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
-			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-				return {cmdWarn: `User **${member.user.tag}** cannot be softbanned since their highest role is at or higher than yours (overrides with server owner)`};
-			} else if (member.highestRole.comparePositionTo(message.guild.me.highestRole) >= 0) {
-				return {cmdWarn: `I cannot softban the user **${member.user.tag}** since their highest role is at or higher than mine.`};
-			}
+			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "softban", type: "user"});
+			if (compareTest != true) return {cmdWarn: compareTest};
 			
 			if (!flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to softban the user **${member.user.tag}** in this server.`);
@@ -931,7 +919,7 @@ module.exports = [
 			})
 				.then(() => {
 					message.guild.unban(member.user.id)
-						.then(() => message.channel.send(`✅ The user **${member.user.tag}** has been softbanned.`))
+						.then(() => message.channel.send(`✅ User **${member.user.tag}** has been softbanned.`))
 						.catch(() => message.channel.send("An error has occurred while trying to unban the user while softbanning."));
 				})
 				.catch(err => message.channel.send("An error has occurred while trying to ban the user while softbanning: " + err + ""));
@@ -1008,9 +996,8 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const member = args[0];
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
-			if (message.author.id != message.guild.owner.id && member.highestRole.comparePositionTo(message.member.highestRole) >= 0) {
-				return {cmdWarn: `User **${member.user.tag}** cannot be unmuted since their highest role is at or higher than yours (overrides with server owner)`};
-			}
+			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "unmute", type: "user", ignoreBot: true});
+			if (compareTest != true) return {cmdWarn: compareTest};
 			
 			const mcOverwrites = message.channel.permissionOverwrites.get(member.user.id);
 			if (!mcOverwrites || !new Permissions(mcOverwrites.deny).has("SEND_MESSAGES")) {
@@ -1019,7 +1006,13 @@ module.exports = [
 			message.channel.overwritePermissions(member, {
 				SEND_MESSAGES: null
 			})
-				.then(() => message.channel.send(`✅ User **${member.user.tag}** has been unmuted in this channel.`))
+				.then(channel => {
+					let toSend = `✅ User **${member.user.tag}** has been unmuted in this channel.`;
+					if (!channel.permissionsFor(member).has("VIEW_CHANNEL")) {
+						toSend += "\n" + "*This user is still unable to view this channel.*";
+					}
+					message.channel.send(toSend);
+				})
 				.catch(err => message.channel.send("An error has occurred while trying to unmute the user: `" + err + "`"));
 		}
 	}
