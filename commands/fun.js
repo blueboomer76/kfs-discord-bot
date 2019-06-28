@@ -390,15 +390,11 @@ module.exports = [
 
 			if (postData.desc) punEmbed.setDescription(postData.desc);
 			if (postData.imageURL) {
-				if (/^https?:\/\/(imgur\.com|v\.redd\.it)/.test(postData.imageURL) || /\.gifv$/.test(postData.imageURL)) {
-					message.channel.send(`${postData.imageURL} (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author})`);
-					return;
+				if (postData.imageURL.startsWith("https://external-") || /\.(gif|jpe?g|png)$/.test(postData.imageURL)) {
+					punEmbed.setImage(postData.imageURL);
 				} else {
-					if (/^https:\/\/external-/.test(postData.imageURL) || /\.(gif|jpe?g|png)$/.test(postData.imageURL)) {
-						punEmbed.setImage(postData.imageURL);
-					} else {
-						punEmbed.setDescription(postData.imageURL);
-					}
+					message.channel.send(`${postData.imageURL} (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author} | ID: ${postData.url.match(/comments\/[0-9a-z]+(?=\/)/)[0].slice(9)})`);
+					return;
 				}
 			}
 
