@@ -37,7 +37,7 @@ function getPosts(subreddit, checkNsfw, filterScores) {
 				const sfwResults = [], nsfwResults = [];
 				
 				for (const result of results) {
-					const postObj = {
+					const postData = {
 						title: result.data.title,
 						url: result.data.permalink,
 						score: result.data.score,
@@ -45,11 +45,7 @@ function getPosts(subreddit, checkNsfw, filterScores) {
 						author: result.data.author,
 						imageURL: /v\.redd\.it/.test(result.data.url) && result.data.preview ? result.data.preview.images[0].source.url : result.data.url
 					};
-					if (result.data.over_18) {
-						nsfwResults.push(postObj);
-					} else {
-						sfwResults.push(postObj);
-					}
+					if (result.data.over_18) {nsfwResults.push(postData)} else {sfwResults.push(postData)}
 				}
 				
 				resolve({sfw: sfwResults, nsfw: nsfwResults});

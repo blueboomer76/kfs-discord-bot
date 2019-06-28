@@ -67,26 +67,17 @@ module.exports = {
 							files: [{attachment: imgToSend, name: filter + ".png"}]
 						});
 					})
-					.catch(() => {
-						msg.channel.send("⚠ Failed to generate the image.");
-					});
+					.catch(() => msg.channel.send("⚠ Failed to generate the image."));
 			})
-			.catch(() => {
-				msg.channel.send("⚠ Failed to read image contents.");
-			});	
+			.catch(() => msg.channel.send("⚠ Failed to read image contents."));	
 	},
 	postJimpImage: (msg, img, fileName) => {
 		img.getBufferAsync(Jimp.MIME_PNG)
 			.then(imgToSend => {
 				msg.channel.send({
-					files: [{
-						attachment: imgToSend,
-						name: fileName
-					}]
+					files: [{attachment: imgToSend, name: fileName}]
 				});
 			})
-			.catch(() => {
-				msg.channel.send("⚠ Failed to generate the image.");
-			});
+			.catch(() => msg.channel.send("⚠ Failed to generate the image."));
 	}
 };

@@ -99,7 +99,7 @@ module.exports = [
 						.filter(r => !r.data.stickied && r.data.score > 0)
 						.map(r => {
 							const rCrossposts = r.data.crosspost_parent_list,
-								rDesc = r.data.selftext || (rCrossposts ? (rCrossposts[0].selftext || "") : "");
+								rDesc = r.data.selftext || ((rCrossposts && rCrossposts[0].selftext) || "");
 							return {
 								title: r.data.title,
 								desc: rDesc.length > 2000 ? `${rDesc.slice(0, 2000)}...` : rDesc,
@@ -459,11 +459,11 @@ module.exports = [
 				message.channel.fetchMessage(args[1])
 					.then(msg => {
 						const quoteEmbed = new RichEmbed()
-							.setDescription(msg.content)
+							.setDescription(msg.content || ((msg.embeds[0] && msg.embeds[0].description) || ""))
 							.setAuthor(msg.author.tag, msg.author.avatarURL || `https://cdn.discordapp.com/embed/avatars/${msg.author.discriminator % 5}.png`)
 							.setFooter("Sent")
 							.setTimestamp(msg.createdAt)
-							.addField("Jump to message", `[Click or tap here](https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${msg.id})`);
+							.addField("Jump to message", `[Click or tap here](${msg.url})`);
 						if (msg.member) quoteEmbed.setColor(msg.member.displayColor);
 						message.channel.send(quoteEmbed);
 					})

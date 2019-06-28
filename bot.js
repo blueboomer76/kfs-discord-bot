@@ -20,7 +20,7 @@ class KFSDiscordBot extends Client {
 		this.permLevels = [
 			{
 				name: "User",
-				validate: () => {return true}
+				validate: () => true
 			},
 			{
 				name: "Server Owner",
