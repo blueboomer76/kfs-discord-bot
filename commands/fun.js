@@ -100,7 +100,7 @@ module.exports = [
 						.filter(r => !r.data.stickied && r.data.score > 0)
 						.map(r => {
 							const rCrossposts = r.data.crosspost_parent_list,
-								rDesc = r.data.selftext || (rCrossposts ? (rCrossposts[0].selftext || "") : "");
+								rDesc = r.data.selftext || ((rCrossposts && rCrossposts[0].selftext) || "");
 							return {
 								title: r.data.title,
 								desc: rDesc.length > 2000 ? `${rDesc.slice(0,2000)}...` : rDesc,
@@ -420,7 +420,7 @@ module.exports = [
 							{
 								errorMsg: "Please provide a valid message ID.",
 								type: "function",
-								testFunction: obj => {return obj.length >= 17 && obj.length < 19 && !isNaN(obj)}
+								testFunction: obj => obj.length >= 17 && obj.length < 19 && !isNaN(obj)
 							}
 						]
 					},
@@ -449,10 +449,10 @@ module.exports = [
 					.then(msg => {
 						const quoteEmbed = new RichEmbed()
 							.setAuthor(msg.author.tag, msg.author.avatarURL || `https://cdn.discordapp.com/embed/avatars/${msg.author.discriminator % 5}.png`)
-							.setDescription(msg.content)
+							.setDescription(msg.content || ((msg.embeds[0] && msg.embeds[0].description) || ""))
 							.setFooter("Sent")
 							.setTimestamp(msg.createdAt)
-							.addField("Jump to message", `[Click or tap here](https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${msg.id})`);
+							.addField("Jump to message", `[Click or tap here](${msg.url})`);
 						if (msg.member) quoteEmbed.setColor(msg.member.displayColor);
 						message.channel.send(quoteEmbed);
 					})
@@ -518,7 +518,7 @@ module.exports = [
 			}
 			
 			let rating = (Math.abs(hash % 90 / 10) + 1).toFixed(1), toSend;
-			if (toRate.toLowerCase() == "kendra" || toRate == bot.user.tag) {
+			if (toRate.toLowerCase() == bot.user.username.toLowerCase() || toRate == bot.user.tag) {
 				return message.channel.send("I would rate myself a 10/10, of course.");
 			} else if (toRate == message.member.user.tag || toRate == "me") {
 				rating = (Math.abs(hash % 50 / 10) + 5).toFixed(1);

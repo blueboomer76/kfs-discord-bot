@@ -14,6 +14,7 @@ const parserOptions = {
 };
 
 module.exports = async bot => {
+	console.log("=".repeat(30) + " READY " + "=".repeat(30));
 	console.log(`[${new Date().toJSON()}] Bot has entered ready state.`);
 	bot.connectionRetries = 0;
 	

@@ -105,7 +105,7 @@ module.exports = async (bot, message) => {
 						message.channel.send(`⚠ ${errTitle}${runRes.cmdWarn}`);
 					} else if (runRes.cmdErr) {
 						const errTitle = runRes.errTitle ? `**${runRes.errTitle}**\n` : "";
-						message.channel.send(`‼ ${errTitle}${runRes.cmdErr}`);
+						message.channel.send(`❗ ${errTitle}${runRes.cmdErr}`);
 					}
 				}
 				
