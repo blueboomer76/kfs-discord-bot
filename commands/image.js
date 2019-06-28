@@ -88,22 +88,15 @@ function sendRedditEmbed(command, message, checkNsfw) {
 	postData = postData[0];
 
 	const embedTitle = postData.title, imageURL = postData.imageURL;
-	if (/^https?:\/\/(imgur\.com|v\.redd\.it)/.test(imageURL) || /\.gifv$/.test(imageURL)) {
-		message.channel.send(`${imageURL} (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author})`);
-	} else {
-		const redditEmbed = new RichEmbed()
+	if (imageURL.startsWith("https://external-") || /\.(gif|jpe?g|png)$/.test(imageURL)) {
+		message.channel.send(new RichEmbed()
 			.setTitle(embedTitle.length > 250 ? embedTitle.slice(0, 250) + "..." : embedTitle)
 			.setURL("https://reddit.com" + postData.url)
 			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`);
-
-		if (/^https:\/\/external-/.test(imageURL) || /\.(gif|jpe?g|png)$/.test(imageURL)) {
-			redditEmbed.setImage(imageURL);
-		} else {
-			redditEmbed.setDescription(imageURL);
-		}
-
-		message.channel.send(redditEmbed);
+			.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
+			.setImage(imageURL));
+	} else {
+		message.channel.send(`${imageURL} (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author} | ID: ${postData.url.match(/comments\/[0-9a-z]+(?=\/)/)[0].slice(9)})`);
 	}
 }
 
