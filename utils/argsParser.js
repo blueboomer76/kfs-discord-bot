@@ -163,7 +163,7 @@ module.exports = {
 
 		for (let i = 0; i < flagBases.length; i++) {
 			flagIndexes.push(args.indexOf(flagBases[i]));
-			const flagObj = {
+			const flagData = {
 				method: /^-{2}|—/.test(flagBases[i]) ? "long" : "short",
 				name: flagBases[i].slice(flagBases[i].startsWith("--") ? 2 : 1),
 				args: []
@@ -172,9 +172,9 @@ module.exports = {
 				flags[i-1].args = args.slice(flagIndexes[i-1] + 1, flagIndexes[i]);
 			}
 			if (i == flagBases.length - 1 && flagIndexes[i] < args.length - 1) {
-				flagObj.args = args.slice(flagIndexes[i] + 1);
+				flagData.args = args.slice(flagIndexes[i] + 1);
 			}
-			flags.push(flagObj);
+			flags.push(flagData);
 		}
 		let newArgs = args.slice(0, flagIndexes[0]);
 

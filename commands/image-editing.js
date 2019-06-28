@@ -234,16 +234,12 @@ module.exports = [
 						.getBufferAsync(Jimp.MIME_JPEG)
 						.then(imgToSend => {
 							message.channel.send({
-								files: [{attachment: imgToSend, name: "deepfry.jpg"}]
+								files: [{attachment: imgToSend, name: "deepfry.png"}]
 							});
 						})
-						.catch(() => {
-							message.channel.send("Failed to generate the image.");
-						});
+						.catch(() => message.channel.send("⚠ Failed to generate the image."));
 				})
-				.catch(() => {
-					message.channel.send("⚠ Failed to get image for that URL.");
-				});
+				.catch(() => message.channel.send("⚠ Failed to read image contents."));
 		}
 	},
 	class FlipCommand extends Command {
@@ -463,7 +459,7 @@ module.exports = [
 					}
 				})
 				.catch(() => {
-					message.channel.send("⚠ Failed to get image for that URL.");
+					message.channel.send("⚠ Failed to read image contents.");
 				});
 		}
 	},
@@ -506,13 +502,9 @@ module.exports = [
 								files: [{attachment: imgToSend, name: "needsmorejpeg.jpg"}]
 							});
 						})
-						.catch(() => {
-							message.channel.send("Failed to generate the image.");
-						});
+						.catch(() => message.channel.send("⚠ Failed to generate the image."));
 				})
-				.catch(() => {
-					message.channel.send("⚠ Failed to get image for that URL.");
-				});
+				.catch(() => message.channel.send("⚠ Failed to read image contents."));
 		}
 	},
 	class PixelateCommand extends Command {

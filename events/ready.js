@@ -16,6 +16,7 @@ const parserOptions = {
 let initialized = false;
 
 module.exports = async bot => {
+	console.log("=".repeat(30) + " READY " + "=".repeat(30));
 	console.log(`[${new Date().toJSON()}] Bot has entered ready state.`);
 	bot.user.setActivity(`${bot.prefix}help | with you in ${bot.guilds.size} servers`);
 
