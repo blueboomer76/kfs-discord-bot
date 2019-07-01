@@ -216,7 +216,6 @@ module.exports = [
 						name: "page",
 						desc: "The page to go to",
 						arg: {
-							num: 1,
 							type: "number",
 							min: 1,
 							max: 10

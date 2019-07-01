@@ -523,6 +523,7 @@ module.exports = [
 				flags: [
 					{
 						name: "pixels",
+						desc: "The width of each enlarged pixel",
 						type: "number",
 						min: 1
 					}
@@ -715,8 +716,7 @@ module.exports = [
 					imgY = -Math.floor((imgHeight - canvasDim) / 2);
 				}
 
-				const canvas = Canvas.createCanvas(canvasDim, canvasDim),
-					ctx = canvas.getContext("2d"),
+				const ctx = Canvas.createCanvas(canvasDim, canvasDim).getContext("2d"),
 					encoder = new gifencoder(canvasDim, canvasDim),
 					stream = encoder.createReadStream();
 				
@@ -812,8 +812,7 @@ module.exports = [
 				const triggerHeight = imgHeight > 350 ? 150 : (imgHeight > 250 ? (imgHeight - 250) * 0.5 + 100 : 100),
 					canvasWidth = Math.floor(imgWidth),
 					canvasHeight = Math.floor((imgHeight < 800 ? imgHeight : 800) + triggerHeight),
-					canvas = Canvas.createCanvas(canvasWidth, canvasHeight),
-					ctx = canvas.getContext("2d"),
+					ctx = Canvas.createCanvas(canvasWidth, canvasHeight).getContext("2d"),
 					encoder = new gifencoder(canvasWidth, canvasHeight),
 					stream = encoder.createReadStream();
 				

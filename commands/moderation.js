@@ -50,7 +50,6 @@ module.exports = [
 						name: "role",
 						desc: "Role to give",
 						arg: {
-							num: 1,
 							type: "role"
 						}
 					},
@@ -58,7 +57,6 @@ module.exports = [
 						name: "user",
 						desc: "User to give the role to",
 						arg: {
-							num: 1,
 							type: "member"
 						}
 					}
@@ -103,7 +101,6 @@ module.exports = [
 						name: "days",
 						desc: "Number of days to delete messages",
 						arg: {
-							num: 1,
 							type: "number",
 							min: 0,
 							max: 7
@@ -113,7 +110,6 @@ module.exports = [
 						name: "reason",
 						desc: "Reason to put in the audit log",
 						arg: {
-							num: 1,
 							type: "string"
 						}
 					},
@@ -324,7 +320,6 @@ module.exports = [
 						name: "days",
 						desc: "Number of days to delete messages",
 						arg: {
-							num: 1,
 							type: "number",
 							min: 0,
 							max: 7
@@ -334,7 +329,6 @@ module.exports = [
 						name: "reason",
 						desc: "Reason to put in the audit log",
 						arg: {
-							num: 1,
 							type: "string"
 						}
 					}
@@ -394,7 +388,6 @@ module.exports = [
 						name: "reason",
 						desc: "Reason to put in the audit log",
 						arg: {
-							num: 1,
 							type: "string"
 						}
 					},
@@ -505,7 +498,6 @@ module.exports = [
 						name: "text",
 						desc: "Filter messages containing text",
 						arg: {
-							num: 1,
 							type: "string"
 						}
 					},
@@ -513,7 +505,6 @@ module.exports = [
 						name: "user",
 						desc: "Filter messages from a user",
 						arg: {
-							num: 1,
 							type: "member"
 						}
 					}
@@ -630,7 +621,7 @@ module.exports = [
 						}
 						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!` + "\n\n" + "__**Breakdown**__:" + "\n" + breakdown)
 							.then(m => {
-								m.delete(deleteAfter < 10000 ? deleteAfter : 10000).catch(() => {});
+									m.delete(deleteAfter < 10000 ? deleteAfter : 10000).catch(() => {});
 							});
 					})
 					.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -894,7 +885,6 @@ module.exports = [
 						name: "reason",
 						desc: "Reason to put in the audit log",
 						arg: {
-							num: 1,
 							type: "string"
 						}
 					},
@@ -955,7 +945,6 @@ module.exports = [
 						name: "reason",
 						desc: "Reason to put in the audit log",
 						arg: {
-							num: 1,
 							type: "string"
 						}
 					}

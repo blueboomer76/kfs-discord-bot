@@ -1,7 +1,7 @@
 const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	{capitalize, getDuration} = require("../modules/functions.js"),
-	fetchMembers = require("../modules/memberFetcher.js"),
+	{fetchMembers} = require("../modules/memberFetcher.js"),
 	paginator = require("../utils/paginator.js"),
 	convert = require("color-convert"),
 	math = require("mathjs"),

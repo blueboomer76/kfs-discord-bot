@@ -1,6 +1,6 @@
 const fs = require("fs"),
 	twemoji = require("twemoji"),
-	fetchMembers = require("../modules/memberFetcher.js");
+	{fetchMembers} = require("../modules/memberFetcher.js");
 
 const emojiRegex = /<a?:.{2,}:\d+>/,
 	memberRegex = /<@!?\d+>/;

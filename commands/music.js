@@ -54,8 +54,8 @@ module.exports = [
 				description: "Play music",
 				args: [
 					{
+						infiniteArgs: true,
 						missingArgMsg: "Please provide the music that you want to play.",
-						num: Infinity,
 						type: "string"
 					}
 				],
@@ -64,7 +64,6 @@ module.exports = [
 						name: "seek",
 						desc: "The time to seek to in the music",
 						arg: {
-							num: 1,
 							type: "number",
 							min: 0
 						}

@@ -1,3 +1,4 @@
 module.exports = async bot => {
-	console.log(`[${new Date().toJSON()}] WebSocket is attempting to reconnect.`);
+	if (bot.connectionRetries > 0) return;
+	console.log(`[${new Date().toJSON()}] WebSocket is attempting to reconnect...`);
 };
