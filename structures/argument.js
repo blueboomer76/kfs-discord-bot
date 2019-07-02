@@ -1,5 +1,11 @@
 class Argument {
 	constructor(props) {
+		if (!props.type) throw new Error("Argument type not given");
+		if (props.testFunction) {
+			if (!props.errorMsg) throw new Error("Missing required error message for missing argument with a test function");
+			this.testFunction = props.testFunction;
+		}
+
 		this.allowQuotes = props.allowQuotes || false;
 		this.errorMsg = props.errorMsg || null;
 		this.infiniteArgs = props.infiniteArgs || false;
@@ -13,12 +19,7 @@ class Argument {
 		if (props.allowedValues) this.allowedValues = props.allowedValues;
 		if (props.min) this.min = props.min;
 		if (props.max) this.max = props.max;
-		if (props.testFunction) {
-			this.testFunction = props.testFunction;
-			if (!props.errorMsg) throw new Error("Missing required message for missing arg message with a test function");
-		}
-			
-		if (!props.type) throw new Error("Argument type not given");
+		if (props.allowRaw) this.allowRaw = props.allowRaw;
 	}
 }
 
