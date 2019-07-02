@@ -4,6 +4,11 @@
 
 # 1.X (current)
 
+## 1.5.7
+- Added a new argument property "allowRaw" to allow some unresolved objects to be handled in commands
+- Allowed the argument parser to be able to parse non-strings seperately
+- Made the paginator use the RichEmbed class from `discord.js`
+
 ## 1.5.4
 - Improved the handling of role permissions of most moderation commands
 - Edited methods for getting the amount of each type of channel and presence in a server

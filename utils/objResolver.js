@@ -90,17 +90,17 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				file = `node_modules/twemoji/2/svg/${twemojiCode}.svg`;
 			return fs.existsSync(file) ? {isEmoji: true, content: fs.readFileSync(file)} : null;
 		case "member":
-			const memberMatch = obj.match(memberRegex);
+			const memberMatch = obj.match(memberRegex), allowRaw = params.allowRaw;
 			let member;
 
 			if (memberMatch) {
 				member = message.guild.large ? await getMember(memberMatch[0].match(/\d+/)[0]) : message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
-				return member ? [member] : null;
+				return member ? [member] : (allowRaw ? obj : null);
 			}
 			member = message.guild.members.get(obj);
 
 			if (member) {
-				return member ? [member] : null;
+				return member ? [member] : (allowRaw ? obj : null);
 			} else {
 				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 					comparedObj = obj.toLowerCase();
@@ -110,7 +110,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 						mem.displayName.toLowerCase().includes(comparedObj);
 				}).array();
 			}
-			return list.length > 0 ? list : null;
+			return list.length > 0 ? list : (allowRaw ? obj : null);
 		case "number":
 			return !isNaN(obj) && obj >= params.min && obj <= params.max ? parseInt(obj) : null;
 		case "oneof":
