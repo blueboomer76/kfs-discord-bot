@@ -599,13 +599,14 @@ module.exports = [
 		constructor() {
 			super({
 				name: "userinfo",
-				description: "Get info about a user",
+				description: "Get info about a user. You can also provide any user ID to get info even if outside this server",
 				aliases: ["member", "memberinfo", "user"],
 				args: [
 					{
 						infiniteArgs: true,
 						optional: true,
-						type: "member"
+						type: "member",
+						allowRaw: true
 					}
 				],
 				cooldown: {
@@ -622,12 +623,33 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const member = args[0] || message.member;
+			const userEmbed = new RichEmbed();
+			let user, member;
+			if (typeof args[0] == "string") {
+				let cmdErr = true;
+				if (/^\d{17,19}$/.test(args[0])) {
+					await bot.fetchUser(args[0])
+						.then(fetchedUser => {user = fetchedUser; cmdErr = false})
+						.catch(() => {});
+				}
+				if (cmdErr) return {cmdWarn: "No users found matching `" + args[0].slice(0, 1500) + "`"};
+			} else {
+				member = args[0] || message.member;
+				user = member.user;
+			}
 
-			const createdDate = new Date(member.user.createdTimestamp),
-				joinedDate = new Date(member.joinedTimestamp);
+			const createdDate = new Date(user.createdTimestamp);
+			userEmbed.setTitle(`User Info - ${user.tag}`)
+				.setFooter(`ID: ${user.id}`)
+				.setThumbnail(user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`)
+				.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`);
 
-			const rawPresence = member.presence;
+			if (member) {
+				const joinedDate = new Date(member.joinedTimestamp);
+				userEmbed.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`);
+			}
+
+			const rawPresence = (member && member.presence) || user.presence;
 			let presence;
 			if (rawPresence.status == "online") {
 				presence = "Online";
@@ -639,38 +661,34 @@ module.exports = [
 				presence = "Offline";
 			}
 			if (rawPresence.game) presence += ` (playing ${rawPresence.game.name})`;
+			userEmbed.addField("Status", presence, true);
 
-			const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
-				guildMemArray = guildMembers.array();
-			guildMemArray.sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
+			if (member) {
+				let memRoles = member.roles.array();
+				memRoles.splice(memRoles.findIndex(role => role.calculatedPosition == 0), 1);
+				memRoles = memRoles.map(role => role.name);
+				
+				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
+					guildMemArray = guildMembers.array();
+				guildMemArray.sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
+				
+				const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp), nearbyMems = [];
+				for (let i = joinPos - 2; i < joinPos + 3; i++) {
+					if (i < 0 || i >= message.guild.memberCount) continue;
+					nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
+				}
 
-			const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp),
-				nearbyMems = [];
-			for (let i = joinPos - 2; i < joinPos + 3; i++) {
-				if (i < 0 || i >= message.guild.memberCount) continue;
-				nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
+				userEmbed.addField("Bot user", user.bot ? "Yes" : "No", true)
+					.addField("Nickname", member.nickname || "None", true)
+					.addField("Member #", joinPos + 1, true)
+					.addField("Join order", nearbyMems.join(" > "))
+					.addField(`Roles - ${memRoles.length}`, memRoles.length == 0 ? "None" : memRoles.join(", "));
+
+				if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
+					userEmbed.setColor(member.displayColor);
+				}
 			}
 
-			let memRoles = member.roles.array();
-			memRoles.splice(memRoles.findIndex(role => role.calculatedPosition == 0), 1);
-			memRoles = memRoles.map(role => role.name);
-			
-			const userEmbed = new RichEmbed()
-				.setTitle(`User Info - ${member.user.tag}`)
-				.setFooter(`ID: ${member.id}`)
-				.setThumbnail(member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`)
-				.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
-				.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`)
-				.addField("Status", presence, true)
-				.addField("Bot user", member.user.bot ? "Yes" : "No", true)
-				.addField("Nickname", member.nickname || "None", true)
-				.addField("Member #", joinPos + 1, true)
-				.addField("Join order", nearbyMems.join(" > "))
-				.addField(`Roles - ${memRoles.length}`, memRoles.length == 0 ? "None" : memRoles.join(", "));
-	
-			if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
-				userEmbed.setColor(member.displayColor);
-			}
 			message.channel.send(userEmbed);
 		}
 	}

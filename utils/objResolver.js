@@ -95,12 +95,12 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				}
 			}
 		case "member":
-			const memberMatch = obj.match(memberRegex);
+			const memberMatch = obj.match(memberRegex), allowRaw = params.allowRaw;
 			let member;
 
 			if (memberMatch) {
 				member = message.guild.large ? await getMember(message, memberMatch[0].match(/\d+/)[0]) : message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
-				return member ? [member] : null;
+				return member ? [member] : (allowRaw ? obj : null);
 			} else if (/^\d{17,19}$/.test(obj)) {
 				member = message.guild.large ? await getMember(message, obj.match(/\d+/)[0]) : message.guild.members.get(obj.match(/\d+/)[0]);
 				if (member) return [member];
@@ -112,7 +112,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				mem.user.username.toLowerCase().includes(lowerObj) ||
 				mem.displayName.toLowerCase().includes(lowerObj);
 			}).array();
-			return list.length > 0 ? list : null;
+			return list.length > 0 ? list : (allowRaw ? obj : null);
 		case "number":
 			const num = Math.floor(obj);
 			return !isNaN(num) && num >= params.min && num <= params.max ? num : null;
