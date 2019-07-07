@@ -22,7 +22,7 @@ module.exports.applyJimpFilter = (img, filter, options) => {
 		case "pixelate":
 			img.pixelate(options.pixels || getPixelFactor(img));
 			break;
-		case "randomcrop":
+		case "randomcrop": {
 			const baseX1 = Math.random() * 0.25,
 				baseY1 = Math.random() * 0.25,
 				baseX2 = 1 - Math.random() * 0.25,
@@ -37,6 +37,7 @@ module.exports.applyJimpFilter = (img, filter, options) => {
 				Math.floor((baseY2 - baseY1) * img.bitmap.height)
 			);
 			break;
+		}
 		case "rotate":
 			img.rotate(360 - (options.rotation || 90));
 			break;

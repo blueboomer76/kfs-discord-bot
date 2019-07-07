@@ -26,14 +26,9 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 	let list;
 	switch (type) {
 		case "boolean":
-			if (["yes", "y", "true", "enable"].includes(lowerObj)) {
-				return true;
-			} else if (["no", "n", "false", "disable"].includes(lowerObj)) {
-				return false;
-			} else {
-				return null;
-			}
-		case "channel":
+			if (["yes", "y", "true", "enable"].includes(lowerObj)) return true;
+			return ["no", "n", "false", "disable"].includes(lowerObj) ? false : null;
+		case "channel": {
 			const guildChannels = message.guild.channels,
 				channelMatch = obj.match(/^<#\d{17,19}>$/);
 			let channel;
@@ -47,7 +42,8 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 
 			list = guildChannels.array().filter(chnl => chnl.name.toLowerCase().includes(lowerObj));
 			return list.length > 0 ? list : null;
-		case "color":
+		}
+		case "color": {
 			const objWithNoSpaces = lowerObj.replace(/[ %]/g, "").toLowerCase();
 			let i, colorMatch;
 			for (i = 0; i < colorRegexes.length; i++) {
@@ -57,34 +53,41 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			switch (i) {
 				case 0: // #rrggbb or rrggbb | e.g. #112233 or 112233
 					return parseInt(colorMatch.replace("#", ""), 16);
-				case 1: // rgb(r,g,b) | e.g. rgb(1,2,3)
+				case 1: { // rgb(r,g,b) | e.g. rgb(1,2,3)
 					const rgbValues = colorMatch.slice(4, colorMatch.length - 1).split(",");
 					return rgbValues.some(value => value > 255) ? null : parseInt(rgbValues[0]) * 65536 + parseInt(rgbValues[1]) * 256 + parseInt(rgbValues[2]);
-				case 2: // hsl(h,s,l) | e.g. hsl(1,2,3)
+				}
+				case 2: { // hsl(h,s,l) | e.g. hsl(1,2,3)
 					const hslValues = colorMatch.slice(4, colorMatch.length - 1).split(",");
 					if (hslValues[0] >= 360 || hslValues[1] > 100 || hslValues[2] > 100) return null;
 					const hslRgbValues = convert.hsl.rgb(hslValues);
 					return hslRgbValues[0] * 65536 + hslRgbValues[1] * 256 + hslRgbValues[2];
-				case 3: // cmyk(c,m,y,k) | e.g. cmyk(1,2,3,4)
+				}
+				case 3: { // cmyk(c,m,y,k) | e.g. cmyk(1,2,3,4)
 					const cmykValues = colorMatch.slice(5, colorMatch.length - 1).split(",");
 					if (cmykValues.some(value => value > 100)) return null;
 					const cmykRgbValues = convert.cmyk.rgb(cmykValues);
 					return cmykRgbValues[0] * 65536 + cmykRgbValues[1] * 256 + cmykRgbValues[2];
-				case 4: // decimal:number | e.g. decimal:1234
+				}
+				case 4: { // decimal:number | e.g. decimal:1234
 					const decimalValue = parseInt(colorMatch.slice(8));
 					return decimalValue < 16777216 ? decimalValue : null;
-				case 5: // r,g,b | e.g. 1,2,3
-					const rgbValues2 = colorMatch.split(",");
-					return rgbValues2.some(value => value > 255) ? null : parseInt(rgbValues2[0]) * 65536 + parseInt(rgbValues2[1]) * 256 + parseInt(rgbValues2[2]);
-				case 6: // CSS color name | e.g. blue
+				}
+				case 5: { // r,g,b | e.g. 1,2,3
+					const rgbValues = colorMatch.split(",");
+					return rgbValues.some(value => value > 255) ? null : parseInt(rgbValues[0]) * 65536 + parseInt(rgbValues[1]) * 256 + parseInt(rgbValues[2]);
+				}
+				case 6: { // CSS color name | e.g. blue
 					const nameRgbValues = convert.keyword.rgb(colorMatch);
 					return nameRgbValues ? nameRgbValues[0] * 65536 + nameRgbValues[1] * 256 + nameRgbValues[2] : null;
+				}
 				default:
 					return null;
 			}
+		}
 		case "command":
 			return bot.commands.get(lowerObj) || bot.commands.get(bot.aliases.get(lowerObj)) || null;
-		case "emoji":
+		case "emoji": {
 			const guildEmojis = message.guild.emojis,
 				emojiMatch = obj.match(emojiRegex);
 			let emoji;
@@ -100,10 +103,12 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				return emoji.name.toLowerCase().includes(lowerObj);
 			});
 			return list.length > 0 ? list : null;
-		case "function":
+		}
+		case "function": {
 			const testFunction = params.testFunction;
 			return testFunction(obj) ? obj : null;
-		case "image":
+		}
+		case "image": {
 			if (memberRegex.test(obj)) {
 				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 					member = guildMembers.get(obj.match(/\d+/)[0]);
@@ -114,18 +119,15 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				}
 			}
 			if (/^https?:\/\/.+\.(gif|jpe?g|png)$/i.test(obj)) return obj;
-			const emojiMatch2 = obj.match(emojiRegex);
-			if (emojiMatch2) {
-				const emojiID = emojiMatch2[0].match(/\d+/)[0],
-					emojiExtension = /^<a:/.test(emojiMatch2[0]) ? "gif" : "png";
+			const emojiMatch = obj.match(emojiRegex);
+			if (emojiMatch) {
+				const emojiID = emojiMatch[0].match(/\d+/)[0],
+					emojiExtension = /^<a:/.test(emojiMatch[0]) ? "gif" : "png";
 				return `https://cdn.discordapp.com/emojis/${emojiID}.${emojiExtension}`;
 			}
 
 			const twemojiResults = [];
-			twemoji.replace(obj, match => {
-				twemojiResults.push(match);
-				return match;
-			});
+			twemoji.replace(obj, match => {twemojiResults.push(match); return match});
 			if (twemojiResults.length == 0) return null;
 			const twemojiCode = twemoji.convert.toCodePoint(twemojiResults[0]);
 			let file = `node_modules/twemoji/2/svg/${twemojiCode}.svg`;
@@ -139,7 +141,8 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 					return null;
 				}
 			}
-		case "member":
+		}
+		case "member": {
 			const memberMatch = obj.match(memberRegex), allowRaw = params.allowRaw;
 			let member;
 
@@ -158,12 +161,14 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				mem.displayName.toLowerCase().includes(lowerObj);
 			}).array();
 			return list.length > 0 ? list : (allowRaw ? obj : null);
-		case "number":
+		}
+		case "number": {
 			const num = Math.floor(obj);
 			return !isNaN(num) && num >= params.min && num <= params.max ? num : null;
+		}
 		case "oneof":
 			return params.list.includes(lowerObj) ? lowerObj : null;
-		case "role":
+		case "role": {
 			const guildRoles = message.guild.roles.clone();
 			guildRoles.delete(guildRoles.find(role => role.calculatedPosition == 0).id);
 
@@ -179,6 +184,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 
 			list = guildRoles.array().filter(role => role.name.toLowerCase().includes(lowerObj));
 			return list.length > 0 ? list : null;
+		}
 		case "string":
 			return obj.toString();
 		default:
