@@ -50,12 +50,6 @@ module.exports = [
 				name: "help",
 				description: "Get help for a command, or see all commands available.",
 				allowDMs: true,
-				args: [
-					{
-						optional: true,
-						type: "command"
-					}
-				],
 				cooldown: {
 					time: 8000,
 					type: "user"
@@ -71,59 +65,99 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "help [command] [--dm]"
+				subcommands: [
+					{
+						name: "arguments"
+					},
+					{
+						name: "fallback",
+						args: [
+							{
+								optional: true,
+								type: "command"
+							}
+						]
+					}
+				],
+				usage: "help [command] [--dm] OR help arguments"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			const command = args[0], helpEmbed = new RichEmbed();
-			if (!command) {
-				helpEmbed.setTitle("All bot commands")
-					.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\``)
-					.setColor(Math.floor(Math.random() * 16777216));
-				let cmds = bot.commands;
-				if (!bot.ownerIDs.includes(message.author.id) && !bot.adminIDs.includes(message.author.id)) {
-					cmds = cmds.filter(cmd => !cmd.disabled && !cmd.hidden);
-				}
-				helpEmbed.setFooter(`There are ${cmds.size} commands available.`);
-				
-				const cmdsByCat = {};
-				for (const category of bot.categories) cmdsByCat[category] = [];
-				for (const cmd of Array.from(cmds.values())) {
-					cmdsByCat[cmd.category].push({n: cmd.name, c: cmd.category});
-				}
-				for (const cmdSet in cmdsByCat) {
-					helpEmbed.addField(cmdsByCat[cmdSet][0].c, cmdsByCat[cmdSet].map(cmd => cmd.n).join(", "));
-				}
+			const helpEmbed = new RichEmbed().setColor(Math.floor(Math.random() * 16777216));
+			if (args[0] == "arguments") {
+				message.channel.send(helpEmbed.setTitle("Argument Info")
+					.setDescription("Here's some argument info for commands:")
+					.addField("Argument Legend", "In command usage strings:" + "\n" + 
+					"- Required argument (`<` and `>`) - needs to be provided for a command to work" + "\n" + 
+					"- Optional argument (`[` and `]`) - not needed for a command to work" + "\n" + 
+					"- Infinite arguments (`...`) - more than one argument can be provided" + "\n" + 
+					"- Key (`key:`) - represents the expected argument type" + "\n" + 
+					"*Arguments may be nested together in certain commands.*")
+					.addField("Channels, Roles, and Users", "All of these can accept mentions, IDs or names." + "\n" +
+					"*User arguments also accept nicknames.*")
+					.addField("Images", "Images must be one of these forms:" + "\n" +
+					"- Link to an image ending in .gif, .jpg, .jpeg, or .png" + "\n" +
+					"- A user mention" + "\n" +
+					"- An emoji (e.g. ⬆)" + "\n" +
+					"*The bot will search through the last 25 messages for images if no arguments are given.*")
+					.addField("Colors", "Colors must be in one of these forms:" + "\n" +
+					"- Decimal (`decimal:number`), e.g. `decimal:1234567` [Range: `decimal:0`-`decimal:16777215`]" + "\n" +
+					"- Hexadecimal (`#rrggbb` or `rrggbb`), e.g. `#112233` or `112233` [Range: `#000000`-`#ffffff`]" + "\n" +
+					"- `rgb(r,g,b)`, e.g. `rgb(123,145,255)` [Range: `rgb(0,0,0)`-`rgb(255,255,255)`]" + "\n" +
+					"- CSS color name, e.g. `blue`" + "\n" +
+					"- `r,g,b`, e.g. `123,145,255` [Range: `0,0,0`-`255,255,255`]" + "\n" +
+					"- `hsl(h,s,l)`, e.g. `hsl(123,45,67)` or `hsl(123,45%,67%)` [Range: `hsl(0,0,0)`-`hsl(359,100,100)`]")
+				);
 			} else {
-				const commandFlags = command.flags.map(f => `\`--${f.name.toLowerCase()}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`),
-					commandPerms = command.perms,
-					permReq = {
-						bot: commandPerms.bot.length > 0 ? commandPerms.bot.map(p => parsePerm(p)).join(", ") : "None",
-						user: commandPerms.user.length > 0 ? commandPerms.user.map(p => parsePerm(p)).join(", ") : "None",
-						role: commandPerms.role ? `\nRequires having a role named ${commandPerms.role}.` : "",
-						level: commandPerms.level > 0 ? `\nRequires being ${bot.permLevels[commandPerms.level].name}.` : ""
-					};
+				const command = args[0];
+				if (!command) {
+					helpEmbed.setTitle("All bot commands")
+						.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\`` + "\n" +
+						"To see argument help, use `" + bot.prefix + "help arguments`");
+					let cmds = bot.commands;
+					if (!bot.ownerIDs.includes(message.author.id) && !bot.adminIDs.includes(message.author.id)) {
+						cmds = cmds.filter(cmd => !cmd.disabled && !cmd.hidden);
+					}
+					helpEmbed.setFooter(`There are ${cmds.size} commands available.`);
+					
+					const cmdsByCat = {};
+					for (const category of bot.categories) cmdsByCat[category] = [];
+					for (const cmd of Array.from(cmds.values())) {
+						cmdsByCat[cmd.category].push({n: cmd.name, c: cmd.category});
+					}
+					for (const cmdSet in cmdsByCat) {
+						helpEmbed.addField(cmdsByCat[cmdSet][0].c, cmdsByCat[cmdSet].map(cmd => cmd.n).join(", "));
+					}
+				} else {
+					const commandFlags = command.flags.map(f => `\`--${f.name.toLowerCase()}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`),
+						commandPerms = command.perms,
+						permReq = {
+							bot: commandPerms.bot.length > 0 ? commandPerms.bot.map(p => parsePerm(p)).join(", ") : "None",
+							user: commandPerms.user.length > 0 ? commandPerms.user.map(p => parsePerm(p)).join(", ") : "None",
+							role: commandPerms.role ? `\nRequires having a role named ${commandPerms.role}.` : "",
+							level: commandPerms.level > 0 ? `\nRequires being ${bot.permLevels[commandPerms.level].name}.` : ""
+						};
 
-				helpEmbed.setTitle(`Help - ${command.name}`)
-					.setColor(Math.floor(Math.random() * 16777216))
-					.setFooter(`Category: ${command.category} | Don't include the usage symbols when running the command.`)
-					.addField("Description", command.description);
-				if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "));
-				if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"));
-				helpEmbed.addField("Usage", "`" + bot.prefix + command.usage + "`");
-				if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.map(e => "`" + e + "`").join("\n"));
-				if (command.allowDMs) helpEmbed.addField("Allows DMs", "Yes");
-				if (commandPerms.bot.length > 0 || commandPerms.user.length > 0 || commandPerms.role || commandPerms.level > 0) {
-					helpEmbed.addField("Permissions", `Bot - ${permReq.bot}` + "\n" + `User - ${permReq.user}${permReq.role}${permReq.level}`);
+					helpEmbed.setTitle(`Help - ${command.name}`)
+						.setFooter(`Category: ${command.category} | Don't include the usage symbols when running the command.`)
+						.addField("Description", command.description);
+					if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "));
+					if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"));
+					helpEmbed.addField("Usage", "`" + bot.prefix + command.usage + "`");
+					if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.map(e => "`" + e + "`").join("\n"));
+					if (command.allowDMs) helpEmbed.addField("Allows DMs", "Yes");
+					if (commandPerms.bot.length > 0 || commandPerms.user.length > 0 || commandPerms.role || commandPerms.level > 0) {
+						helpEmbed.addField("Permissions", `Bot - ${permReq.bot}` + "\n" + `User - ${permReq.user}${permReq.role}${permReq.level}`);
+					}
+					helpEmbed.addField("Cooldown", command.cooldown.time != 0 ? `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}` : "None");
 				}
-				helpEmbed.addField("Cooldown", command.cooldown.time != 0 ? `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}` : "None");
-			}
-			if (flags.some(f => f.name == "dm")) {
-				message.member.send(helpEmbed)
-					.catch(() => message.channel.send("Failed to send a help message as a DM. Check your settings and try again."));
-			} else {
-				message.channel.send(helpEmbed);
+				if (flags.some(f => f.name == "dm")) {
+					message.member.send(helpEmbed)
+						.catch(() => message.channel.send("Failed to send a help message as a DM. Check your settings and try again."));
+				} else {
+					message.channel.send(helpEmbed);
+				}
 			}
 		}
 	},
