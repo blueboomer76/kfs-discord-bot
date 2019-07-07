@@ -487,20 +487,11 @@ module.exports = [
 			const createdDate = new Date(guild.createdTimestamp);
 			let guildVerif;
 			switch (guild.verificationLevel) {
-				case 0:
-					guildVerif = "None";
-					break;
-				case 1:
-					guildVerif = "Low (verified email)";
-					break;
-				case 2:
-					guildVerif = "Medium (registered for 5 mins)";
-					break;
-				case 3:
-					guildVerif = "High (member for 10 mins)";
-					break;
-				case 4:
-					guildVerif = "Very High (verified phone)";
+				case 0: guildVerif = "None"; break;
+				case 1: guildVerif = "Low (verified email)"; break;
+				case 2: guildVerif = "Medium (registered for 5 mins)"; break;
+				case 3: guildVerif = "High (member for 10 mins)"; break;
+				case 4: guildVerif = "Very High (verified phone)";
 			}
 			const botCount = guildMembers.filter(mem => mem.user.bot).size;
 

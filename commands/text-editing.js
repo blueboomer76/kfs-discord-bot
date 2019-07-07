@@ -121,41 +121,18 @@ module.exports = [
 					emojified += `:regional_indicator_${c}: `;
 				} else {
 					switch (c) {
-						case " ":
-							emojified += "   ";
-							break;
-						case "0":
-							emojified += ":zero: ";
-							break;
-						case "1":
-							emojified += ":one: ";
-							break;
-						case "2":
-							emojified += ":two: ";
-							break;
-						case "3":
-							emojified += ":three: ";
-							break;
-						case "4":
-							emojified += ":four: ";
-							break;
-						case "5":
-							emojified += ":five: ";
-							break;
-						case "6":
-							emojified += ":six: ";
-							break;
-						case "7":
-							emojified += ":seven: ";
-							break;
-						case "8":
-							emojified += ":eight: ";
-							break;
-						case "9":
-							emojified += ":nine: ";
-							break;
-						default:
-							emojified += `${c} `;
+						case " ": emojified += "   "; break;
+						case "0": emojified += ":zero: "; break;
+						case "1": emojified += ":one: "; break;
+						case "2": emojified += ":two: "; break;
+						case "3": emojified += ":three: "; break;
+						case "4": emojified += ":four: "; break;
+						case "5": emojified += ":five: "; break;
+						case "6": emojified += ":six: "; break;
+						case "7": emojified += ":seven: "; break;
+						case "8": emojified += ":eight: "; break;
+						case "9": emojified += ":nine: "; break;
+						default: emojified += `${c} `;
 					}
 				}
 			}
