@@ -80,10 +80,10 @@ async function checkArgs(bot, message, args, cmdArg) {
 
 module.exports = {
 	parseArgs: async (bot, message, args, command) => {
-		let commandArgs = command.args;
-		if (commandArgs.length == 0) return args;
-
 		const subcommands = command.subcommands;
+		let commandArgs = command.args;
+		if (commandArgs.length == 0 && subcommands.length == 0) return args;
+		
 		let subcmd;
 		if (subcommands.length > 0) {
 			const foundScmd = subcommands.find(scmd => scmd.name == args[0]);

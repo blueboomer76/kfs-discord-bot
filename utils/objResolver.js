@@ -1,8 +1,18 @@
 const fs = require("fs"),
+	convert = require("color-convert"),
 	twemoji = require("twemoji"),
 	{fetchMembers} = require("../modules/memberFetcher.js");
 
-const emojiRegex = /<a?:.{2,}:\d+>/,
+const colorRegexes = [
+		/decimal:\d{1,8}/,
+		/#?[0-9a-f]{6}/,
+		/rgb\((\d{1,3},){2}\d{1,3}\)/,
+		/^[a-z]+/,
+		/(\d{1,3},){2}\d{1,3}/,
+		/hsl\((\d{1,3},){2}\d{1,3}\)/,
+		/c(my|ym)k\((\d{1,3},){2}\d{1,3}\)/
+	],
+	emojiRegex = /<a?:.{2,}:\d+>/,
 	memberRegex = /<@!?\d+>/;
 
 async function getMember(message, id) {
@@ -36,6 +46,36 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				});
 			}
 			return list.length > 0 ? list : null;
+		case "color":
+			const objWithNoSpaces = obj.replace(/[ %]/g, "").toLowerCase();
+			let i, colorMatch;
+			for (i = 0; i < colorRegexes.length; i++) {
+				const matched = objWithNoSpaces.match(colorRegexes[i]);
+				if (matched) {colorMatch = matched[0]; break}
+			}
+			switch (i) {
+				case 0: // decimal:number | e.g. decimal:1234
+					const decimalValue = parseInt(colorMatch.slice(8));
+					return decimalValue < 16777216 ? decimalValue : null;
+				case 1: // #rrggbb or rrggbb | e.g. #112233 or 112233
+					return parseInt(colorMatch.replace("#", ""), 16);
+				case 2: // rgb(r,g,b) | e.g. rgb(1,2,3)
+					const rgbValues = colorMatch.slice(4, colorMatch.length - 1).split(",");
+					return rgbValues.some(value => value > 255) ? null : parseInt(rgbValues[0]) * 65536 + parseInt(rgbValues[1]) * 256 + parseInt(rgbValues[2]);
+				case 3: // CSS color name | e.g. blue
+					const nameRgbValues = convert.keyword.rgb(colorMatch);
+					return nameRgbValues ? nameRgbValues[0] * 65536 + nameRgbValues[1] * 256 + nameRgbValues[2] : null;
+				case 4: // r,g,b | e.g. 1,2,3
+					const rgbValues2 = colorMatch.split(",");
+					return rgbValues2.some(value => value > 255) ? null: parseInt(rgbValues2[0]) * 65536 + parseInt(rgbValues2[1]) * 256 + parseInt(rgbValues2[2]);
+				case 5: // hsl(h,s,l) | e.g. hsl(1,2,3)
+					const hslValues = colorMatch.slice(4, colorMatch.length - 1).split(",");
+					if (hslValues[1] > 100 || hslValues[2] > 100) return null;
+					const hslRgbValues = convert.hsl.rgb(hslValues);
+					return hslRgbValues[0] * 65536 + hslRgbValues[1] * 256 + hslRgbValues[2];
+				default:
+					return null;
+			}
 		case "command":
 			return bot.commands.get(obj) || bot.commands.get(bot.aliases.get(obj)) || null;
 		case "duration":

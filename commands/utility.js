@@ -129,7 +129,7 @@ module.exports = [
 				aliases: ["colour"],
 				args: [
 					{
-						type: "string"
+						type: "color"
 					}
 				],
 				perms: {
@@ -139,87 +139,33 @@ module.exports = [
 				},
 				usage: "color <hex color | rgb(0-255,0-255,0-255) | color name | 0-255,0-255,0-255 | decimal:0-16777215 | hsl(0-359,0-100,0-100)>"
 			});
-			this.colorRegexes = [
-				/decimal:\d{1,8}/,
-				/#?[0-9a-f]{6}/i,
-				/rgb\((\d{1,3},){2}\d{1,3}\)/,
-				/^[a-z]+/i,
-				/(\d{1,3},){2}\d{1,3}/,
-				/hsl\((\d{1,3},){2}\d{1,3}\)/,
-				/c(my|ym)k\((\d{1,3},){2}\d{1,3}\)/,
-			];
 		}
 		
 		async run(bot, message, args, flags) {
-			const argWithNoSpaces = args[0].replace(/[ %]/g, "");
-			let i, colorRegexMatch;
-			for (i = 0; i < this.colorRegexes.length; i++) {
-				const matched = argWithNoSpaces.match(this.colorRegexes[i]);
-				if (matched) {colorRegexMatch = matched[0]; break}
-			}
-			if (colorRegexMatch) {
-				let colorName, cmykValues, decimalValue, hexValue, hslValues, rgbValues;
-
-				switch (i) {
-					case 0: // decimal:number | e.g. decimal:1234
-						decimalValue = parseInt(colorRegexMatch.slice(8));
-						if (decimalValue > 16777215) return {cmdWarn: "Decimal value must be between 0 and 16777215."};
-						rgbValues = [Math.floor(decimalValue / 65536), Math.floor(decimalValue / 256) % 256, decimalValue % 256];
-						break;
-					case 1: // #rrggbb or rrggbb | e.g. #112233 or 112233
-						hexValue = colorRegexMatch.replace("#", "");
-						rgbValues = [
-							parseInt(hexValue.slice(0,2), 16),
-							parseInt(hexValue.slice(2,4), 16),
-							parseInt(hexValue.slice(4,6), 16)
-						];
-						break;
-					case 2: // rgb(r,g,b) | e.g. rgb(1,2,3)
-						rgbValues = colorRegexMatch.slice(4, colorRegexMatch.length - 1).split(",");
-						break;
-					case 3: // CSS color name | e.g. blue
-						colorName = colorRegexMatch;
-						rgbValues = convert.keyword.rgb(colorName);
-						if (!rgbValues) return {cmdWarn: "Invalid color name"};
-						break;
-					case 4: // r,g,b | e.g. 1,2,3
-						rgbValues = colorRegexMatch.split(/, ?/);
-						break;
-					case 5: // hsl(h,s,l) | e.g. hsl(1,2,3)
-						hslValues = colorRegexMatch.slice(4, colorRegexMatch.length - 1).split(",");
-						rgbValues = convert.hsl.rgb(hslValues);
-						break;
-					case 6: // cmyk(c,m,y,k) | e.g. cmyk(1,2,3,4)
-						cmykValues = colorRegexMatch.slice(4, colorRegexMatch.length - 1).split(",");
-						rgbValues = convert.cmyk.rgb(cmykValues);
-				}
-
-				if (i != 3) colorName = convert.rgb.keyword(rgbValues);
-				if (i != 6) cmykValues = convert.rgb.cmyk(rgbValues);
-				if (i != 0) decimalValue = 65536 * rgbValues[0] + 256 * rgbValues[1] + 1 * rgbValues[2];
-				if (i != 1) hexValue = convert.rgb.hex(rgbValues);
-				if (i != 5) hslValues = convert.rgb.hsl(rgbValues);
-				const hsvValues = convert.rgb.hsv(rgbValues);
-				const xyzValues = convert.rgb.xyz(rgbValues);
-				const greyscaleValue = convert.rgb.gray(rgbValues);
+			const decimalValue = parseInt(args[0]),
+				rgbValues = [Math.floor(decimalValue / 65536), Math.floor(decimalValue / 256) % 256, decimalValue % 256],
+				colorName = convert.rgb.keyword(rgbValues),
+				cmykValues = convert.rgb.cmyk(rgbValues),
+				hexValue = convert.rgb.hex(rgbValues),
+				hslValues = convert.rgb.hsl(rgbValues),
+				hsvValues = convert.rgb.hsv(rgbValues),
+				xyzValues = convert.rgb.xyz(rgbValues),
+				greyscaleValue = convert.rgb.gray(rgbValues);
 				
-				message.channel.send(new RichEmbed()
-					.setTitle("Color - " + argWithNoSpaces)
-					.setDescription(`**Nearest CSS Color Name**: ${colorName}` + "\n" +
-					`**Hexadecimal (Hex)**: #${hexValue}` + "\n" +
-					`**RGB**: rgb(${rgbValues.join(", ")})` + "\n" + 
-					`**Decimal (Integer)**: ${decimalValue}` + "\n" +
-					`**HSL**: hsl(${hslValues[0]}, ${hslValues[1]}%, ${hslValues[2]}%)` + "\n" +
-					`**CMYK**: cmyk(${cmykValues[0]}%, ${cmykValues[1]}%, ${cmykValues[2]}%, ${cmykValues[3]}%)` + "\n" +
-					`**HSV**: hsv(${hsvValues[0]}, ${hsvValues[1]}%, ${hsvValues[2]}%)` + "\n" +
-					`**XYZ**: XYZ(${xyzValues.join(", ")})`)
-					.setColor(decimalValue)
-					.addField("Related colors", `**Greyscale**: rgb(${(greyscaleValue + ", ").repeat(2) + greyscaleValue})` + "\n" +
-					`**Inverted**: rgb(${rgbValues.map(v => 255 - v).join(", ")})`)
-				);
-			} else {
-				return {cmdWarn: "Invalid color."};
-			}
+			message.channel.send(new RichEmbed()
+				.setTitle("Color - #" + hexValue)
+				.setDescription(`**Nearest CSS Color Name**: ${colorName}` + "\n" +
+				`**Hexadecimal (Hex)**: #${hexValue}` + "\n" +
+				`**RGB**: rgb(${rgbValues.join(", ")})` + "\n" + 
+				`**Decimal (Integer)**: ${decimalValue}` + "\n" +
+				`**HSL**: hsl(${hslValues[0]}, ${hslValues[1]}%, ${hslValues[2]}%)` + "\n" +
+				`**CMYK**: cmyk(${cmykValues[0]}%, ${cmykValues[1]}%, ${cmykValues[2]}%, ${cmykValues[3]}%)` + "\n" +
+				`**HSV**: hsv(${hsvValues[0]}, ${hsvValues[1]}%, ${hsvValues[2]}%)` + "\n" +
+				`**XYZ**: XYZ(${xyzValues.join(", ")})`)
+				.setColor(decimalValue)
+				.addField("Related colors", `**Greyscale**: rgb(${(greyscaleValue + ", ").repeat(2) + greyscaleValue})` + "\n" +
+				`**Inverted**: rgb(${rgbValues.map(v => 255 - v).join(", ")})`)
+			);
 		}
 	},
 	class EmojiCommand extends Command {

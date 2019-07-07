@@ -826,11 +826,7 @@ module.exports = [
 						type: "role"
 					},
 					{
-						errorMsg: "You need to provide either a hex or decimal color (by placing `decimal:` in front of the number).",
-						type: "function",
-						testFunction: obj => {
-							return /^#?[0-9A-Fa-f]{6}$/.test(obj) || /decimal:\d{1,8}/.test(obj);
-						}
+						type: "color"
 					}
 				],
 				cooldown: {
@@ -842,19 +838,17 @@ module.exports = [
 					user: ["MANAGE_ROLES"],
 					level: 0
 				},
-				usage: "setrolecolor <role> <hex color | decimal:0-16777215>"
+				usage: "setrolecolor <role> <color: hex color | decimal:0-16777215 | ...>"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
-			const role = args[0],
-				isDecimal = args[1].startsWith("decimal:"), 
-				newRoleColor = isDecimal ? parseInt(args[1].slice(8)) : args[1].replace("#", "");
+			const role = args[0], newRoleColor = args[1];
 			const compareTest = compareRolePositions(message, role, null, {action: "change the color of", type: "role"});
 			if (compareTest != true) return {cmdWarn: compareTest};
 			
 			role.edit({color: newRoleColor})
-				.then(() => message.channel.send(`✅ The color of role **${role.name}** has been set to **${isDecimal ? newRoleColor : "#" + newRoleColor}**.`))
+				.then(() => message.channel.send(`✅ The color of role **${role.name}** has been set to **#${newRoleColor.toString(16)}**.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
 		}
 	},
