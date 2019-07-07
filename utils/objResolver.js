@@ -25,12 +25,9 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 	let list;
 	switch (type) {
 		case "boolean":
-			if (["yes", "y", "true", "enable"].includes(obj)) {
-				return true;
-			} else if (["no", "n", "false", "disable"].includes(obj)) {
-				return false;
-			} else {return null}
-		case "channel":
+			if (["yes", "y", "true", "enable"].includes(obj)) return true;
+			return ["no", "n", "false", "disable"].includes(obj) ? false : null;
+		case "channel": {
 			const guildChannels = message.guild.channels, channelMatch = obj.match(/<#\d+>/);
 			let channel;
 			if (channelMatch) {
@@ -46,7 +43,8 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				});
 			}
 			return list.length > 0 ? list : null;
-		case "color":
+		}
+		case "color": {
 			const objWithNoSpaces = obj.replace(/[ %]/g, "").toLowerCase();
 			let i, colorMatch;
 			for (i = 0; i < colorRegexes.length; i++) {
@@ -54,35 +52,41 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				if (matched) {colorMatch = matched[0]; break}
 			}
 			switch (i) {
-				case 0: // decimal:number | e.g. decimal:1234
+				case 0: { // decimal:number | e.g. decimal:1234
 					const decimalValue = parseInt(colorMatch.slice(8));
 					return decimalValue < 16777216 ? decimalValue : null;
+				}
 				case 1: // #rrggbb or rrggbb | e.g. #112233 or 112233
 					return parseInt(colorMatch.replace("#", ""), 16);
-				case 2: // rgb(r,g,b) | e.g. rgb(1,2,3)
+				case 2: { // rgb(r,g,b) | e.g. rgb(1,2,3)
 					const rgbValues = colorMatch.slice(4, colorMatch.length - 1).split(",");
 					return rgbValues.some(value => value > 255) ? null : parseInt(rgbValues[0]) * 65536 + parseInt(rgbValues[1]) * 256 + parseInt(rgbValues[2]);
-				case 3: // CSS color name | e.g. blue
+				}
+				case 3: { // CSS color name | e.g. blue
 					const nameRgbValues = convert.keyword.rgb(colorMatch);
 					return nameRgbValues ? nameRgbValues[0] * 65536 + nameRgbValues[1] * 256 + nameRgbValues[2] : null;
-				case 4: // r,g,b | e.g. 1,2,3
-					const rgbValues2 = colorMatch.split(",");
-					return rgbValues2.some(value => value > 255) ? null: parseInt(rgbValues2[0]) * 65536 + parseInt(rgbValues2[1]) * 256 + parseInt(rgbValues2[2]);
-				case 5: // hsl(h,s,l) | e.g. hsl(1,2,3)
+				}
+				case 4: { // r,g,b | e.g. 1,2,3
+					const rgbValues = colorMatch.split(",");
+					return rgbValues.some(value => value > 255) ? null: parseInt(rgbValues[0]) * 65536 + parseInt(rgbValues[1]) * 256 + parseInt(rgbValues[2]);
+				}
+				case 5: { // hsl(h,s,l) | e.g. hsl(1,2,3)
 					const hslValues = colorMatch.slice(4, colorMatch.length - 1).split(",");
 					if (hslValues[1] > 100 || hslValues[2] > 100) return null;
 					const hslRgbValues = convert.hsl.rgb(hslValues);
 					return hslRgbValues[0] * 65536 + hslRgbValues[1] * 256 + hslRgbValues[2];
+				}
 				default:
 					return null;
 			}
+		}
 		case "command":
 			return bot.commands.get(obj) || bot.commands.get(bot.aliases.get(obj)) || null;
 		case "duration":
 			// Coming soon
 			break;
-		case "emoji":
-			const guildEmojis = message.guild.emojis, emojiMatch = emojiRegex.match(obj);
+		case "emoji": {
+			const guildEmojis = message.guild.emojis, emojiMatch = obj.match(emojiRegex);
 			let emoji;
 			if (emojiMatch) {
 				return [guildEmojis.get(emojiMatch[0].match(/\d+/)[0])];
@@ -99,10 +103,12 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			}
 				
 			return list.length > 0 ? list : null;
-		case "function":
+		}
+		case "function": {
 			const testFunction = params.testFunction;
 			return testFunction(obj) ? obj : null;
-		case "image":
+		}
+		case "image": {
 			if (memberRegex.test(obj)) {
 				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 					member = guildMembers.get(obj.match(/\d+/)[0]);
@@ -113,23 +119,21 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				}
 			}
 			if (/^https?:\/\/.+\.(gif|jpe?g|png)$/i.test(obj)) return obj;
-			const emojiMatch2 = obj.match(emojiRegex);
-			if (emojiMatch2) {
-				const emojiId = emojiMatch2[0].match(/\d+/)[0],
-					emojiExtension = /^<a:/.test(emojiMatch2[0]) ? "gif" : "png";
+			const emojiMatch = obj.match(emojiRegex);
+			if (emojiMatch) {
+				const emojiId = emojiMatch[0].match(/\d+/)[0],
+					emojiExtension = /^<a:/.test(emojiMatch[0]) ? "gif" : "png";
 				return `https://cdn.discordapp.com/emojis/${emojiId}.${emojiExtension}`;
 			}
 
 			const twemojiResults = [];
-			twemoji.replace(obj, match => {
-				twemojiResults.push(match);
-				return match;
-			});
+			twemoji.replace(obj, match => {twemojiResults.push(match); return match});
 			if (twemojiResults.length == 0) return null;
 			const twemojiCode = twemoji.convert.toCodePoint(twemojiResults[0]),
 				file = `node_modules/twemoji/2/svg/${twemojiCode}.svg`;
 			return fs.existsSync(file) ? {isEmoji: true, content: fs.readFileSync(file)} : null;
-		case "member":
+		}
+		case "member": {
 			const memberMatch = obj.match(memberRegex), allowRaw = params.allowRaw;
 			let member;
 
@@ -151,6 +155,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				}).array();
 			}
 			return list.length > 0 ? list : (allowRaw ? obj : null);
+		}
 		case "number":
 			return !isNaN(obj) && obj >= params.min && obj <= params.max ? parseInt(obj) : null;
 		case "oneof":
@@ -158,7 +163,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 		case "regex":
 			// Coming soon
 			break;
-		case "role":
+		case "role": {
 			if (obj == "everyone" || obj == message.guild.id) return null;
 			const guildRoles = message.guild.roles, roleMatch = obj.match(/<@&\d+>/);
 			let role;
@@ -175,6 +180,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				});
 			}
 			return list.length > 0 ? list : null;
+		}
 		case "string":
 			return obj.toString();
 		default:

@@ -120,7 +120,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 						pgCollector.stop();
 						newMessage.delete();
 						break;
-					case "🔢":
+					case "🔢": {
 						const newMessage2 = await message.channel.send("What page do you want to go to?");
 						reaction.remove(message.author.id);
 						message.channel.awaitMessages(msg => msg.author.id == message.author.id && !isNaN(msg.content), {
@@ -139,6 +139,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 								if (toDelete.length > 0) message.channel.bulkDelete(toDelete);
 							})
 							.catch(() => {});
+					}
 				}
 			});
 			pgCollector.on("end", reactions => {

@@ -491,20 +491,11 @@ module.exports = [
 			let guildVerif;
 			
 			switch (guild.verificationLevel) {
-				case 0:
-					guildVerif = "None";
-					break;
-				case 1:
-					guildVerif = "Low (verified email)";
-					break;
-				case 2:
-					guildVerif = "Medium (registered for 5 mins)";
-					break;
-				case 3:
-					guildVerif = "High (member for 10 mins)";
-					break;
-				case 4:
-					guildVerif = "Very High (verified phone)";
+				case 0: guildVerif = "None"; break;
+				case 1: guildVerif = "Low (verified email)"; break;
+				case 2: guildVerif = "Medium (registered for 5 mins)"; break;
+				case 3: guildVerif = "High (member for 10 mins)"; break;
+				case 4: guildVerif = "Very High (verified phone)";
 			}
 
 			for (const channel of guild.channels.array()) channels[channel.type]++;
