@@ -4,9 +4,12 @@ const {parsePerm} = require("../modules/functions.js"),
 
 async function execCommand(runCommand, bot, message, args) {
 	if (runCommand.disabled) return {cmdErr: "This command is currently disabled.", noLog: true};
-	if (!message.guild && !runCommand.allowDMs) return {cmdErr: "This command cannot be used in Direct Messages.", noLog: true};
-	if (message.guild && runCommand.nsfw && !message.channel.nsfw) return {cmdErr: "Please go to a NSFW channel to use this command.", noLog: true};
-	if (message.guild && message.guild.large && !message.member) await message.guild.fetchMember(message.author);
+	if (message.guild) {
+		if (runCommand.nsfw && !message.channel.nsfw) return {cmdErr: "Please go to a NSFW channel to use this command.", noLog: true};
+		if (message.guild.large && !message.member) await message.guild.fetchMember(message.author);
+	} else if (!runCommand.allowDMs) {
+		return {cmdErr: "This command cannot be used in Direct Messages.", noLog: true};
+	}
 	
 	const requiredPerms = runCommand.perms;
 	let userPermsAllowed = null, roleAllowed = null, faultMsg = "";
@@ -14,7 +17,7 @@ async function execCommand(runCommand, bot, message, args) {
 		if (requiredPerms.bot.length > 0) {
 			for (const perm of requiredPerms.bot) {
 				if (!message.guild.me.hasPermission(perm)) {
-					faultMsg += `I need these permissions to run this command:\n${requiredPerms.bot.map(p => parsePerm(p)).join(", ")}`;
+					faultMsg += "I need these permissions to run this command:" + "\n" + requiredPerms.bot.map(p => parsePerm(p)).join(", ");
 					break;
 				}
 			}
@@ -30,11 +33,12 @@ async function execCommand(runCommand, bot, message, args) {
 		}
 		if (requiredPerms.role) roleAllowed = message.member.roles.some(role => role.name.toLowerCase() == requiredPerms.role.toLowerCase());
 		if (userPermsAllowed == false && roleAllowed == null) {
-			faultMsg += `\nYou need these permissions to run this command:\n${requiredPerms.user.map(p => parsePerm(p)).join(", ")}`;
+			faultMsg += "\n" + "You need these permissions to run this command:" + "\n" + requiredPerms.user.map(p => parsePerm(p)).join(", ");
 		} else if (userPermsAllowed == false && roleAllowed == false) {
-			faultMsg += `\nYou need these permissions or a role named **${requiredPerms.role}** to run this command:\n${requiredPerms.user.map(p => parsePerm(p)).join(", ")}`;
+			faultMsg += "\n" + `You need these permissions or a role named **${requiredPerms.role}** to run this command:` + "\n" +
+			requiredPerms.user.map(p => parsePerm(p)).join(", ");
 		} else if (userPermsAllowed == null && roleAllowed == false) {
-			faultMsg += `\nYou need a role named **${requiredPerms.role}** to run this command.`;
+			faultMsg += "\n" + `You need a role named **${requiredPerms.role}** to run this command.`;
 		}
 	}
 	if (requiredPerms.level > 0) {
@@ -45,7 +49,7 @@ async function execCommand(runCommand, bot, message, args) {
 		}
 		if (userLevel < requiredPerms.level) {
 			const faultDesc = permLevels[requiredPerms.level].desc ? ` (${permLevels[requiredPerms.level].desc})` : "";
-			faultMsg += `\nYou need to be a ${bot.permLevels[requiredPerms.level].name} to run this command${faultDesc}`;
+			faultMsg += "\n" + `You need to be a ${bot.permLevels[requiredPerms.level].name} to run this command` + faultDesc;
 		}
 	}
 	if (faultMsg.length > 0) return {errTitle: "Command permission error", cmdWarn: faultMsg, noLog: true};
@@ -54,7 +58,7 @@ async function execCommand(runCommand, bot, message, args) {
 	if (runCommand.flags.length > 0) {
 		const parsedFlags = await argParser.parseFlags(bot, message, args, runCommand.flags);
 		if (parsedFlags.error) {
-			if (parsedFlags.error.startsWith("Multiple")) return {cmdErr: `**${parsedFlags.error}**\n${parsedFlags.message}`, noLog: true};
+			if (parsedFlags.error.startsWith("Multiple")) return {cmdErr: `**${parsedFlags.error}**` + "\n" + parsedFlags.message, noLog: true};
 			return {cmdErr: `**${parsedFlags.error}**` + "\n" + parsedFlags.message + "\n" + `▫ | Correct usage: \`${runCommand.usage}\``, noLog: true};
 		}
 		flags = parsedFlags.flags;
@@ -62,8 +66,11 @@ async function execCommand(runCommand, bot, message, args) {
 	}
 	args = await argParser.parseArgs(bot, message, args, runCommand);
 	if (args.error) {
-		if (args.error.startsWith("Multiple")) return {cmdErr: `**${args.error}**\n${args.message}`, noLog: true};
-		return {cmdErr: `**${args.error}**` + "\n" + args.message + "\n" + `▫ | Correct usage: \`${runCommand.usage}\`` + "\n" + `▫ | Get more help by using \`${bot.prefix}help ${runCommand.name}\``, noLog: true};
+		if (args.error.startsWith("Multiple")) return {cmdErr: `**${args.error}**` + "\n" + args.message, noLog: true};
+		return {
+			cmdErr: `**${args.error}**` + "\n" + args.message + "\n" + `▫ | Correct usage: \`${runCommand.usage}\`` + "\n" + `▫ | Get more help by using \`${bot.prefix}help ${runCommand.name}\``,
+			noLog: true
+		};
 	}
 		
 	return runCommand.run(bot, message, args, flags);
@@ -78,8 +85,7 @@ module.exports = async (bot, message) => {
 		}
 	} else {
 		const mentionMatch = message.content.match(bot.mentionPrefix),
-			prefixSliceAmt = mentionMatch ? mentionMatch[0].length : bot.prefix.length,
-			args = message.content.slice(prefixSliceAmt).trim().split(/ +/g),
+			args = message.content.slice(mentionMatch ? mentionMatch[0].length : bot.prefix.length).trim().split(/ +/g),
 			command = args.shift().toLowerCase(),
 			runCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
 		
@@ -101,10 +107,10 @@ module.exports = async (bot, message) => {
 				
 				if (runRes) {
 					if (runRes.cmdWarn) {
-						const errTitle = runRes.errTitle ? `**${runRes.errTitle}**\n` : "";
+						const errTitle = runRes.errTitle ? `**${runRes.errTitle}**` + "\n" : "";
 						message.channel.send(`⚠ ${errTitle}${runRes.cmdWarn}`);
 					} else if (runRes.cmdErr) {
-						const errTitle = runRes.errTitle ? `**${runRes.errTitle}**\n` : "";
+						const errTitle = runRes.errTitle ? `**${runRes.errTitle}**` + "\n" : "";
 						message.channel.send(`❗ ${errTitle}${runRes.cmdErr}`);
 					}
 				}
@@ -128,8 +134,8 @@ module.exports = async (bot, message) => {
 				}
 			})
 			.catch(err => {
-				let errMsg = "⚠ **Something went wrong with this command**" + "```javascript" + "\n" + err.stack + "```";
-				if (!bot.ownerIds.includes(message.author.id)) errMsg += "If this keeps happening, come to the official server to discuss this bug.";
+				let errMsg = "⚠ **Internal Command Error**" + "```javascript" + "\n" + err.stack + "```";
+				if (!bot.ownerIds.includes(message.author.id)) errMsg += "If this keeps happening, come to the official server to discuss this bug and error stack.";
 				message.channel.send(errMsg);
 			});
 	}
