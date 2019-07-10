@@ -721,8 +721,7 @@ module.exports = [
 					imgY = -Math.floor((imgHeight - canvasDim) / 2);
 				}
 
-				const canvas = Canvas.createCanvas(canvasDim, canvasDim),
-					ctx = canvas.getContext("2d"),
+				const ctx = Canvas.createCanvas(canvasDim, canvasDim).getContext("2d"),
 					encoder = new gifencoder(canvasDim, canvasDim),
 					stream = encoder.createReadStream();
 				
