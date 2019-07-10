@@ -723,8 +723,7 @@ module.exports = [
 				}
 				const framesPerSecond = speedFlag ? (speedFlag.args + 1) * 5 : 20;
 
-				const canvas = Canvas.createCanvas(canvasDim, canvasDim),
-					ctx = canvas.getContext("2d"),
+				const ctx = Canvas.createCanvas(canvasDim, canvasDim).getContext("2d"),
 					encoder = new gifencoder(canvasDim, canvasDim),
 					stream = encoder.createReadStream();
 				

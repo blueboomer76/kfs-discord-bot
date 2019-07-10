@@ -273,7 +273,7 @@ module.exports = [
 					let phoneMsg0;
 					bot.cache.stats.callCurrentTotal++;
 					phoneCache.lastMsgTime = Date.now();
-					phoneCache.timeout = setTimeout(() => {bot.checkPhone()}, 1000*3600);
+					phoneCache.timeout = setTimeout(() => bot.checkPhone(), 1000*3600);
 					
 					message.channel.send("☎ A phone connection has started! Greet the other side!");
 					if (phoneCache.channels.length == 2) {

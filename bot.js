@@ -298,7 +298,7 @@ class KFSDiscordBot extends Client {
 		
 		phoneCache.lastMsgTime = Date.now();
 		phoneCache.msgCount++;
-		setTimeout(() => {phoneCache.msgCount--}, 5000);
+		setTimeout(() => phoneCache.msgCount--, 5000);
 
 		phoneCache.channels[affected].send(`📞 ${toSend}`);
 		if (phoneCache.msgCount >= 4) {
@@ -312,7 +312,7 @@ class KFSDiscordBot extends Client {
 
 		const dif = Date.now() - phoneCache.lastMsgTime;
 		if (dif < 1000*3595) {
-			phoneCache.timeout = setTimeout(() => {this.checkPhone()}, dif);
+			phoneCache.timeout = setTimeout(() => this.checkPhone(), dif);
 		} else {
 			this.resetPhone("⏰ The phone call has timed out due to inactivity.");
 		}

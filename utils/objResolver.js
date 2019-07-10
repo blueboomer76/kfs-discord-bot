@@ -16,8 +16,8 @@ const colorRegexes = [
 	memberRegex = /^<@!?\d{17,19}>$/;
 
 async function getMember(message, id) {
-	let member;
-	await message.guild.fetchMember(id).then(mem => member = mem).catch(() => member = null);
+	let member = null;
+	await message.guild.fetchMember(id).then(mem => member = mem).catch(() => {});
 	return member;
 }
 
