@@ -7,6 +7,14 @@ module.exports.applyJimpFilter = (img, filter, options) => {
 		case "blur":
 			img.blur(options.blur || getPixelFactor(img));
 			break;
+		case "colorify": 
+			img.scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, i) => {
+				const avg = (img.bitmap.data[i] + img.bitmap.data[i+1] + img.bitmap.data[i+2]) / 3;
+				img.bitmap.data[i] = (avg / 255) * (255 - options.colors[0]) + options.colors[0];
+				img.bitmap.data[i+1] = (avg / 255) * (255 - options.colors[1]) + options.colors[1];
+				img.bitmap.data[i+2] = (avg / 255) * (255 - options.colors[2]) + options.colors[2];
+			});
+			break;
 		case "flip":
 			img.flip(true, false);
 			break;

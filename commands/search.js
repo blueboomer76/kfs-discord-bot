@@ -213,6 +213,10 @@ module.exports = [
 				],
 				flags: [
 					{
+						name: "exact",
+						desc: "Only show definitions which match all terms"
+					},
+					{
 						name: "page",
 						desc: "The page to go to",
 						arg: {
@@ -227,7 +231,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "urban <term> [--page <number>]"
+				usage: "urban <term> [--exact] [--page <number>]"
 			});
 		}
 		
@@ -238,42 +242,53 @@ module.exports = [
 				json: true
 			}, (err, res) => {
 				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "the Urban Dictionary", err, res);
-				const defList = res.body.list;
-				if (defList.length > 0) {
-					const entries = [
-						defList.map(def => `Urban Dictionary - ${def.word}`),
-						defList.map(def => def.definition.length < 2000 ? def.definition : `${def.definition.slice(0,2000)}...`),
-						defList.map(def => {
-							return [
-								{
-									name: "Example",
-									value: def.example.length > 0 ? (def.example.length < 1000 ? def.example : `${def.example.slice(0,1000)}...`) : "No example given"
-								},
-								{
-									name: "By",
-									value: def.author,
-									inline: true
-								},
-								{
-									name: "Rating",
-									value: `👍 ${def.thumbs_up} / 👎 ${def.thumbs_down}`,
-									inline: true
-								}
-							];
-						})
-					];
-					const pageFlag = flags.find(f => f.name == "page");
-					paginator.paginate(message, {
-						thumbnail: {url: "https://i.imgur.com/Bg54V46.png"}
-					}, entries, {
-						limit: 1,
-						numbered: false,
-						page: pageFlag ? pageFlag.args[0] : 1,
-						params: ["title", "description", "fields"]
+				let defList = res.body.list;
+				if (flags.some(f => f.name == "exact")) {
+					const userWords = args[0].toLowerCase().split(" ");
+					defList = defList.filter(def => {
+						const words = def.word.toLowerCase().split(" ");
+						if (userWords.length != words.length) return false;
+						for (let i = 0; i < words.length; i++) {
+							const word = words[i],
+								wordBase = word.endsWith("s") ? word.slice(word.length - 1) : word;
+							if (!userWords[i].includes(wordBase)) return false;
+						}
+						return true;
 					});
-				} else {
-					message.channel.send("⚠ No definition found for that term.");
 				}
+				if (defList.length == 0) return message.channel.send("⚠ No definition found for that term.");
+
+				const entries = [
+					defList.map(def => `Urban Dictionary - ${def.word}`),
+					defList.map(def => def.definition.length < 2000 ? def.definition : `${def.definition.slice(0,2000)}...`),
+					defList.map(def => {
+						return [
+							{
+								name: "Example",
+								value: def.example.length > 0 ? (def.example.length < 1000 ? def.example : `${def.example.slice(0,1000)}...`) : "No example given"
+							},
+							{
+								name: "By",
+								value: def.author,
+								inline: true
+							},
+							{
+								name: "Rating",
+								value: `👍 ${def.thumbs_up} / 👎 ${def.thumbs_down}`,
+								inline: true
+							}
+						];
+					})
+				];
+				const pageFlag = flags.find(f => f.name == "page");
+				paginator.paginate(message, {
+					thumbnail: {url: "https://i.imgur.com/Bg54V46.png"}
+				}, entries, {
+					limit: 1,
+					numbered: false,
+					page: pageFlag ? pageFlag.args[0] : 1,
+					params: ["title", "description", "fields"]
+				});
 			});
 		}
 	},
