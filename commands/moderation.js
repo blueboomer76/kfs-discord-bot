@@ -487,6 +487,10 @@ module.exports = [
 						desc: "Inverts the messages selected"
 					},
 					{
+						name: "no-delete",
+						desc: "Prevents the deletion breakdown message from being automatically deleted"
+					},
+					{
 						name: "text",
 						desc: "Filter messages containing text",
 						arg: {
@@ -506,7 +510,7 @@ module.exports = [
 					user: ["MANAGE_MESSAGES"],
 					level: 0
 				},
-				usage: "purge <1-500> OR purge <1-100> [attachments] [bots] [embeds] [images] [invites] [left] [links] [mentions] [reactions] [--user <user>] [--text <text>] [--invert]"
+				usage: "purge <1-500> OR purge <1-100> [attachments] [bots] [embeds] [images] [invites] [left] [links] [mentions] [reactions] [--user <user>] [--text <text>] [--invert] [--no-delete]"
 			});
 			this.options = ["attachments", "bots", "embeds", "images", "invites", "left", "links", "mentions", "reactions"];
 		}
@@ -517,7 +521,7 @@ module.exports = [
 			const deleteLarge = args[0] > 100;
 			let toDelete = args[0];
 
-			if (args[1] || flags.length > 0) {
+			if (args[1] || flags.some(f => f.name != "no-delete")) {
 				if (deleteLarge) return {cmdWarn: "Options are not supported for deleting from more than 100 messages at a time."};
 				const extraArg = args.slice(1).find(arg => !this.options.includes(arg));
 				if (extraArg) {
@@ -599,7 +603,9 @@ module.exports = [
 						.catch(err => deleteErr = "Could not delete all messages: ```" + err + "```");
 					if (deleteErr) return {cmdWarn: deleteErr};
 				}
-				message.channel.send(`🗑 Deleted ${deleteCount} messages from this channel!`).then(m => m.delete(7500).catch(() => {}));
+				message.channel.send(`🗑 Deleted ${deleteCount} messages from this channel!`).then(m => {
+					if (!flags.some(f => f.name == "no-delete")) m.delete(7500).catch(() => {});
+				});
 			} else {
 				message.channel.bulkDelete(toDelete, true)
 					.then(messages => {
@@ -614,7 +620,9 @@ module.exports = [
 						}
 						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!` + "\n\n" + "__**Breakdown**__:" + "\n" + breakdown)
 							.then(m => {
-								m.delete(deleteAfter < 10000 ? deleteAfter : 10000).catch(() => {});
+								if (!flags.some(f => f.name == "no-delete")) {
+									m.delete(deleteAfter < 10000 ? deleteAfter : 10000).catch(() => {});
+								}
 							});
 					})
 					.catch(err => message.channel.send("An error has occurred while trying to purge the messages: `" + err + "`"));
@@ -851,6 +859,39 @@ module.exports = [
 			role.setColor(newRoleColor)
 				.then(() => message.channel.send(`✅ The color of role **${role.name}** has been set to **#${newRoleColor.toString(16)}**.`))
 				.catch(err => message.channel.send("An error has occurred while trying to set the color of the role: `" + err + "`"));
+		}
+	},
+	class SetTopicCommand extends Command {
+		constructor() {
+			super({
+				name: "settopic",
+				description: "Sets the topic for this channel",
+				args: [
+					{
+						infiniteArgs: true,
+						type: "string"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_CHANNELS"],
+					user: ["MANAGE_CHANNELS"],
+					level: 0
+				},
+				usage: "settopic <new topic>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const newChannelTopic = args[0];
+			if (newChannelTopic.length > 1024) return {cmdWarn: "The topic to set is too long."};
+				
+			message.channel.setTopic(newChannelTopic)
+				.then(() => message.channel.send("✅ This channel's topic has changed."))
+				.catch(err => message.channel.send("An error has occurred while trying to set the topic: `" + err + "`"));
 		}
 	},
 	class SoftbanCommand extends Command {
