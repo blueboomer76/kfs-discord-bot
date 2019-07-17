@@ -50,6 +50,115 @@ module.exports = [
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "blur", {blur: levelFlag ? levelFlag.args : null});
 		}
 	},
+	class ColorifyCommand extends Command {
+		constructor() {
+			super({
+				name: "colorify",
+				description: "Changes the colors of an image to a certain hue",
+				aliases: ["applycolor"],
+				args: [
+					{
+						optional: true,
+						shiftable: true,
+						type: "image"
+					},
+					{
+						infiniteArgs: true,
+						type: "color"
+					}
+				],
+				cooldown: {
+					name: "image-editing",
+					time: 15000,
+					type: "channel"
+				},
+				usage: "colorify [image URL/mention/emoji] <color: hex color | decimal:0-16777215 | ...>"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
+
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "colorify", {
+				colors: [Math.floor(args[1] / 65536), Math.floor((args[1] % 65536) / 256), args[1] % 256]
+			});
+		}
+	},
+	class CompositeCommand extends Command {
+		constructor() {
+			super({
+				name: "composite",
+				description: "Composites two or more images into one (max. 10 images/emojis)",
+				args: [
+					{
+						type: "image"
+					},
+					{
+						infiniteArgs: true,
+						optional: true,
+						parseSeperately: true,
+						type: "image"
+					}
+				],
+				cooldown: {
+					name: "image-editing",
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "composite <image 1> [images...]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			if (args.length > 10) return {cmdWarn: "Too many images or emojis provided."};
+
+			const errs = [], imgs = [];
+			for (let i = 0; i < args.length; i++) {
+				const arg = args[i],
+					fetchedImg = await imageManager.getImageResolvable(message, arg);
+				if (fetchedImg.error) {
+					errs.push("Image " + i + ": " + fetchedImg.error);
+				} else {
+					await Jimp.read(fetchedImg.data)
+						.then(img => imgs.push(img))
+						.catch(() => errs.push("Image " + i + ": Failed to read image contents."));
+				}
+
+				if (errs.length >= args.length - 1) {
+					return {cmdWarn: "Not enough images loaded successfully to produce a composite image." + "\n" + "```" + errs.join("\n") + "```"};
+				} else {
+					continue;
+				}
+			}
+
+			const compositeImg = args[1] ? imgs.shift() : imgs.pop(),
+				compositeWidth = compositeImg.bitmap.width,
+				compositeHeight = compositeImg.bitmap.height;
+			for (const img of imgs) {
+				const widthRatio = compositeWidth / img.bitmap.width, newHeight = img.bitmap.height * widthRatio;
+				if (newHeight > compositeHeight) {
+					img.scale(widthRatio);
+					const yOffset = Math.floor((newHeight - compositeHeight) / 2);
+					img.crop(0, yOffset, img.bitmap.width, newHeight - yOffset);
+				} else if (newHeight < compositeHeight) {
+					const heightRatio = compositeHeight / img.bitmap.height, newWidth = img.bitmap.width * heightRatio;
+					img.scale(heightRatio);
+					const xOffset = Math.floor((newWidth - compositeWidth) / 2);
+					img.crop(xOffset, 0, newWidth - xOffset, img.bitmap.height);
+				}
+
+				compositeImg.composite(img, 0, 0, {opacitySource: 0.5});
+			}
+
+			imageManager.postJimpImage(message, compositeImg, "composite.png");
+		}
+	},
 	class CreateMemeCommand extends Command {
 		constructor() {
 			super({
