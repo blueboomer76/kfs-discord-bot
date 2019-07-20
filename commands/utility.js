@@ -102,7 +102,7 @@ module.exports = [
 				if (channel.type == "text") {
 					pos += textChannels.findIndex(c => c.id == channel.id);
 				} else {
-					pos += textChannels.size + voiceChannels.findIndex(c => c.id == channel.id);
+					pos += textChannels.length + voiceChannels.findIndex(c => c.id == channel.id);
 				}
 				pos++;
 			}
@@ -129,6 +129,7 @@ module.exports = [
 				aliases: ["colour"],
 				args: [
 					{
+						infiniteArgs: true,
 						type: "color"
 					}
 				],

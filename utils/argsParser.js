@@ -34,7 +34,7 @@ async function checkArgs(bot, message, args, cmdArg) {
 	}
 	
 	const resolved = await resolver.resolve(bot, message, args, arg.type, params);
-	if (!resolved) {
+	if (resolved == null) {
 		if (cmdArg.shiftable) {
 			return {shift: true};
 		} else {

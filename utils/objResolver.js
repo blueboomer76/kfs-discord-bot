@@ -4,15 +4,15 @@ const fs = require("fs"),
 	{fetchMembers} = require("../modules/memberFetcher.js");
 
 const colorRegexes = [
-		/decimal:\d{1,8}/,
-		/#?[0-9a-f]{6}/,
-		/rgb\((\d{1,3},){2}\d{1,3}\)/,
+		/^decimal:\d{1,8}$/,
+		/^#?[0-9a-f]{6}$/,
+		/^rgb\((\d{1,3},){2}\d{1,3}\)/,
 		/^[a-z]+/,
-		/(\d{1,3},){2}\d{1,3}/,
-		/hsl\((\d{1,3},){2}\d{1,3}\)/,
-		/c(my|ym)k\((\d{1,3},){2}\d{1,3}\)/
+		/^(\d{1,3},){2}\d{1,3}$/,
+		/^hsl\((\d{1,3},){2}\d{1,3}\)/,
+		/^c(my|ym)k\((\d{1,3},){2}\d{1,3}\)/
 	],
-	emojiRegex = /<a?:.{2,}:\d+>/,
+	emojiRegex = /<a?:[0-9A-Za-z_]{2,}:\d+>/,
 	memberRegex = /<@!?\d+>/;
 
 async function getMember(message, id) {

@@ -30,14 +30,22 @@ module.exports.applyJimpFilter = (img, filter, options) => {
 		case "pixelate":
 			img.pixelate(options.pixels || getPixelFactor(img));
 			break;
-		case "randomcrop":
+		case "randomcrop": {
+			const baseX1 = Math.random() * 0.25,
+				baseY1 = Math.random() * 0.25,
+				baseX2 = 1 - Math.random() * 0.25,
+				offsetSum = baseX1 + baseY1 + (1 - baseX2),
+				newY2Offset = offsetSum < 0.1 ? 0.1 - offsetSum : 0,
+				baseY2 = (1 - newY2Offset) - Math.random() * (0.25 - newY2Offset);
+				
 			img.crop(
-				Math.floor(Math.random() * img.bitmap.width * 0.25),
-				Math.floor(Math.random() * img.bitmap.height * 0.25),
-				Math.floor(img.bitmap.width * (0.5 + Math.random() * 0.25)),
-				Math.floor(img.bitmap.height * (0.5 + Math.random() * 0.25))
+				Math.floor(baseX1 * img.bitmap.width),
+				Math.floor(baseY1 * img.bitmap.height),
+				Math.floor(baseX2 * img.bitmap.width),
+				Math.floor(baseY2 * img.bitmap.height)
 			);
 			break;
+		}
 		case "rotate":
 			img.rotate(options.rotation || 90);
 			break;

@@ -834,6 +834,7 @@ module.exports = [
 						type: "role"
 					},
 					{
+						infiniteArgs: true,
 						type: "color"
 					}
 				],

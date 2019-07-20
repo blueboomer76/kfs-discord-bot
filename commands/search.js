@@ -193,7 +193,8 @@ module.exports = [
 					noStop: viewAll,
 					numbered: true,
 					page: 1,
-					params: null
+					params: null,
+					reactTimeLimit: 60000
 				});
 			});
 		}
