@@ -4,6 +4,11 @@
 
 # 1.X (current)
 
+## 1.5.12
+
+- Added "color" argument type
+- Changed Reddit fetching methods to accept objects
+
 ## 1.5.7
 
 - Added a new argument property "allowRaw" to allow some unresolved objects to be handled in commands

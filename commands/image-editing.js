@@ -337,23 +337,7 @@ module.exports = [
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 			
-			Jimp.read(fetchedImg.data)
-				.then(img => {
-					img.scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, i) => {
-						img.bitmap.data[i] = img.bitmap.data[i] < 144 ? 0 : 255;
-						img.bitmap.data[i+1] = img.bitmap.data[i+1] < 144 ? 0 : 255;
-						img.bitmap.data[i+2] = img.bitmap.data[i+2] < 144 ? 0 : 255;
-					});
-					img.quality(1)
-						.getBufferAsync(Jimp.MIME_JPEG)
-						.then(imgToSend => {
-							message.channel.send({
-								files: [{attachment: imgToSend, name: "deepfry.png"}]
-							});
-						})
-						.catch(() => message.channel.send("⚠ Failed to generate the image."));
-				})
-				.catch(() => message.channel.send("⚠ Failed to read image contents."));
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "deepfry", {jpeg: true});
 		}
 	},
 	class FlipCommand extends Command {
@@ -527,50 +511,46 @@ module.exports = [
 					const imgClone1 = img.clone(),
 						imgClone2 = img.clone(),
 						imgWidth = img.bitmap.width,
-						imgHeight = img.bitmap.height;
+						imgHalfWidth = imgWidth / 2,
+						imgHeight = img.bitmap.height,
+						imgHalfHeight = imgHeight / 2,
+						imgToSend = new Jimp(imgWidth, imgHeight);
+					let fileName;
 
 					if (type == "haah" || type == "left-to-right") {
-						imgClone1.crop(imgWidth / 2, 0, imgWidth / 2, imgHeight);
-						imgClone2.crop(imgWidth / 2, 0, imgWidth / 2, imgHeight);
-						imgClone2.mirror(true, false);
+						imgClone1.crop(imgHalfWidth, 0, imgHalfWidth, imgHeight);
+						imgClone2.crop(imgHalfWidth, 0, imgHalfWidth, imgHeight)
+							.mirror(true, false);
 						
-						new Jimp(imgWidth, imgHeight, (err, img2) => {
-							img2.composite(imgClone1, imgWidth / 2, 0)
-								.composite(imgClone2, 0, 0);
-							imageManager.postJimpImage(message, img2, "mirror-haah.png");
-						});
-						return;
+						imgToSend.composite(imgClone1, imgWidth/2, 0)
+							.composite(imgClone2, 0, 0);
+						fileName = "mirror-haah.png";
 					} else if (type == "hooh" || type == "bottom-to-top") {
-						imgClone1.crop(0, imgHeight / 2, imgWidth, imgHeight / 2);
-						imgClone2.crop(0, imgHeight / 2, imgWidth, imgHeight / 2);
-						imgClone2.mirror(false, true);
+						imgClone1.crop(0, imgHalfHeight, imgWidth, imgHalfHeight);
+						imgClone2.crop(0, imgHalfHeight, imgWidth, imgHalfHeight)
+							.mirror(false, true);
 						
-						new Jimp(imgWidth, imgHeight, (err, img2) => {
-							img2.composite(imgClone1, 0, imgHeight / 2)
-								.composite(imgClone2, 0, 0);
-							imageManager.postJimpImage(message, img2, "mirror-hooh.png");
-						});
+						imgToSend.composite(imgClone1, 0, imgHalfHeight)
+							.composite(imgClone2, 0, 0);
+						fileName = "mirror-hooh.png";
 					} else if (type == "waaw" || type == "right-to-left") {
-						imgClone1.crop(0, 0, imgWidth / 2, imgHeight);
-						imgClone2.crop(0, 0, imgWidth / 2, imgHeight);
-						imgClone2.mirror(true, false);
+						imgClone1.crop(0, 0, imgHalfWidth, imgHeight);
+						imgClone2.crop(0, 0, imgHalfWidth, imgHeight)
+							.mirror(true, false);
 						
-						new Jimp(imgWidth, imgHeight, (err, img2) => {
-							img2.composite(imgClone1, 0, 0)
-								.composite(imgClone2, imgWidth / 2, 0);
-							imageManager.postJimpImage(message, img2, "mirror-waaw.png");
-						});
+						imgToSend.composite(imgClone1, 0, 0)
+							.composite(imgClone2, imgHalfWidth, 0);
+						fileName = "mirror-waaw.png";
 					} else {
-						imgClone1.crop(0, 0, imgWidth, imgHeight / 2);
-						imgClone2.crop(0, 0, imgWidth, imgHeight / 2);
-						imgClone2.mirror(false, true);
+						imgClone1.crop(0, 0, imgWidth, imgHalfHeight);
+						imgClone2.crop(0, 0, imgWidth, imgHalfHeight)
+							.mirror(false, true);
 						
-						new Jimp(imgWidth, imgHeight, (err, img2) => {
-							img2.composite(imgClone1, 0, 0)
-								.composite(imgClone2, 0, imgHeight / 2);
-							imageManager.postJimpImage(message, img2, "mirror-woow.png");
-						});
+						imgToSend.composite(imgClone1, 0, 0)
+							.composite(imgClone2, 0, imgHalfHeight);
+						fileName = "mirror-woow.png";
 					}
+					imageManager.postJimpImage(message, imgToSend, fileName);
 				})
 				.catch(() => {
 					message.channel.send("⚠ Failed to read image contents.");
@@ -607,18 +587,7 @@ module.exports = [
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 			
-			Jimp.read(fetchedImg.data)
-				.then(img => {
-					img.quality(1)
-						.getBufferAsync(Jimp.MIME_JPEG)
-						.then(imgToSend => {
-							message.channel.send({
-								files: [{attachment: imgToSend, name: "needsmorejpeg.jpg"}]
-							});
-						})
-						.catch(() => message.channel.send("⚠ Failed to generate the image."));
-				})
-				.catch(() => message.channel.send("⚠ Failed to read image contents."));
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "needsmorejpeg", {jpeg: true});
 		}
 	},
 	class PixelateCommand extends Command {
@@ -784,7 +753,7 @@ module.exports = [
 					{
 						optional: true,
 						type: "image"
-					},
+					}
 				],
 				cooldown: {
 					name: "image-editing",
