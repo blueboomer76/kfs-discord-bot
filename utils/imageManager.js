@@ -59,10 +59,10 @@ module.exports = {
 		Jimp.read(imgResolvable)
 			.then(img => {
 				applyJimpFilter(img, filter, options);
-				img.getBufferAsync(Jimp.MIME_PNG)
+				img.getBufferAsync(options.jpeg ? Jimp.MIME_JPEG : Jimp.MIME_PNG)
 					.then(imgToSend => {
 						msg.channel.send({
-							files: [{attachment: imgToSend, name: filter + ".png"}]
+							files: [{attachment: imgToSend, name: filter + (options.jpeg ? ".jpg" : ".png")}]
 						});
 					})
 					.catch(() => msg.channel.send("⚠ Failed to generate the image."));
