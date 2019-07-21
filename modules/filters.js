@@ -15,6 +15,14 @@ module.exports.applyJimpFilter = (img, filter, options) => {
 				img.bitmap.data[i+2] = (avg / 255) * (255 - options.colors[2]) + options.colors[2];
 			});
 			break;
+		case "deepfry":
+			img.scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, i) => {
+				img.bitmap.data[i] = img.bitmap.data[i] < 144 ? 0 : 255;
+				img.bitmap.data[i+1] = img.bitmap.data[i+1] < 144 ? 0 : 255;
+				img.bitmap.data[i+2] = img.bitmap.data[i+2] < 144 ? 0 : 255;
+			});
+			img.quality(1);
+			break;
 		case "flip":
 			img.flip(true, false);
 			break;
@@ -26,6 +34,9 @@ module.exports.applyJimpFilter = (img, filter, options) => {
 			break;
 		case "invert":
 			img.invert();
+			break;
+		case "needsmorejpeg":
+			img.quality(1);	
 			break;
 		case "pixelate":
 			img.pixelate(options.pixels || getPixelFactor(img));

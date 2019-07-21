@@ -134,7 +134,7 @@ module.exports = [
 					return r.data.display_name;
 				}).join(", "));
 
-				results = results.filter(r => !r.data.stickied);
+				results = results.filter(r => !r.data.stickied && !r.data.locked);
 				if (!message.channel.nsfw) results = results.filter(r => !r.data.over_18);
 				if (results.length == 0) return message.channel.send("⚠ No results found in the subreddit. *(You may try going to an NSFW channel to see all results)*");
 				
