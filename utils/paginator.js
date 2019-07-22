@@ -72,9 +72,7 @@ function checkReaction(collector, limit) {
 */
 
 module.exports.paginate = (message, genEmbed, entries, options) => {
-	if (options.numbered) {
-		entries[0] = entries[0].map((e, i) => `${i+1}. ${e}`);
-	}
+	if (options.numbered) entries[0] = entries[0].map((e, i) => `${i+1}. ${e}`);
 	const entryData = setEntries(entries, options.limit, options.page);
 	let paginatedEmbed = new RichEmbed(genEmbed)
 		.setColor(options.embedColor || options.embedColor == 0 ? options.embedColor : Math.floor(Math.random() * 16777216))

@@ -88,11 +88,11 @@ module.exports = [
 			if (args[0] == "arguments") {
 				message.channel.send(helpEmbed.setTitle("Argument Info")
 					.setDescription("Here's some argument info for commands:")
-					.addField("Argument Legend", "In command usage strings:" + "\n" + 
-					"- Required argument (`<` and `>`) - needs to be provided for a command to work" + "\n" + 
-					"- Optional argument (`[` and `]`) - not needed for a command to work" + "\n" + 
-					"- Infinite arguments (`...`) - more than one argument can be provided" + "\n" + 
-					"- Key (`key:`) - represents the expected argument type" + "\n" + 
+					.addField("Argument Legend", "In command usage strings:" + "\n" +
+					"- Required argument (`<` and `>`) - needs to be provided for a command to work" + "\n" +
+					"- Optional argument (`[` and `]`) - not needed for a command to work" + "\n" +
+					"- Infinite arguments (`...`) - more than one argument can be provided" + "\n" +
+					"- Key (`key:`) - represents the expected argument type" + "\n" +
 					"*Arguments may be nested together in certain commands.*")
 					.addField("Channels, Roles, and Users", "All of these can accept mentions, IDs or names." + "\n" +
 					"*User arguments also accept nicknames.*")
@@ -182,7 +182,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			message.channel.send(new RichEmbed()
 				.setTitle("Bot References")
-				.setDescription("Exciting! Now you have the chance to spread the love!")
+				.setDescription("Exciting! Use these links to spread the fun!")
 				.setColor(Math.floor(Math.random() * 16777216))
 				.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
 				.addField("Support Server", "[Go!](https://discord.gg/yB8TvWU)", true)
@@ -366,7 +366,7 @@ module.exports = [
 					for (const alias of toRemoveAliases.keys()) {
 						bot.aliases.delete(alias);
 					}
-					for (const alias of newCommand.aliases) { 
+					for (const alias of newCommand.aliases) {
 						bot.aliases.set(alias, newCommand.name);
 					}
 				}
@@ -548,7 +548,7 @@ module.exports = [
 			
 			processorEmbed.setDescription("Here's some detailed stats about the host that this bot is on!")
 				.addField("Total Resident Set (RSS)", `${(processMemoryUsage.rss / 1048576).toFixed(2)} MB`, true)
-				.addField("Heap Usage", `Total: ${(processMemoryUsage.heapTotal / 1048576).toFixed(2)} MB`+ "\n" + 
+				.addField("Heap Usage", `Total: ${(processMemoryUsage.heapTotal / 1048576).toFixed(2)} MB`+ "\n" +
 				`Used: ${(processMemoryUsage.heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
 				.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB` + "\n" +
 				`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)` + "\n" +

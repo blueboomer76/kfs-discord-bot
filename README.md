@@ -17,7 +17,7 @@ This is an actively developed Discord bot that not only has fun, moderation, and
 5. Run `npm install` to install the dependencies
 6. Run `node index.js`
 
-You can update the bot by running `git pull` to get the latest features.
+Update the bot by running `git pull` to get the latest features and bug fixes.
 
 ## Other Information
 
