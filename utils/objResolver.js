@@ -4,11 +4,12 @@ const {fetchMembers} = require("../modules/memberFetcher.js"),
 	twemoji = require("twemoji");
 
 const colorRegexes = [
-		/#?[0-9a-f]{6}/i,
-		/rgb\((\d{1,3},){2}\d{1,3}\)/i,
-		/hsl\((\d{1,3},){2}\d{1,3}\)/i,
-		/decimal:\d{1,8}/i,
-		/(\d{1,3},){2}\d{1,3}/,
+		/^#?[0-9a-f]{6}$/i,
+		/^rgb\((\d{1,3},){2}\d{1,3}\)/i,
+		/^hsl\((\d{1,3},){2}\d{1,3}\)/i,
+		/^c(my|ym)k\((\d{1,3},){2}\d{1,3}\)/i,
+		/^decimal:\d{1,8}$/i,
+		/^(\d{1,3},){2}\d{1,3}$/,
 		/^[a-z]+/i
 	],
 	emojiRegex = /<a?:[0-9A-Za-z_]{2,}:\d{17,19}>/,
@@ -62,15 +63,21 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 					const hslRgbValues = convert.hsl.rgb(hslValues);
 					return hslRgbValues[0] * 65536 + hslRgbValues[1] * 256 + hslRgbValues[2];
 				}
-				case 3: { // decimal:number | e.g. decimal:1234
+				case 3: {
+					const cmykValues = colorMatch.slice(5, colorMatch.length - 1).split(",");
+					if (cmykValues.some(value => value > 100)) return null;
+					const cmykRgbValues = convert.cmyk.rgb(cmykValues);
+					return cmykRgbValues[0] * 65536 + cmykRgbValues[1] * 256 + cmykRgbValues[2];
+				}
+				case 4: { // decimal:number | e.g. decimal:1234
 					const decimalValue = parseInt(colorMatch.slice(8));
 					return decimalValue < 16777216 ? decimalValue : null;
 				}
-				case 4: { // r,g,b | e.g. 1,2,3
+				case 5: { // r,g,b | e.g. 1,2,3
 					const rgbValues = colorMatch.split(",");
 					return rgbValues.some(value => value > 255) ? null : parseInt(rgbValues[0]) * 65536 + parseInt(rgbValues[1]) * 256 + parseInt(rgbValues[2]);
 				}
-				case 5: { // CSS color name | e.g. blue
+				case 6: { // CSS color name | e.g. blue
 					const nameRgbValues = convert.keyword.rgb(colorMatch);
 					return nameRgbValues ? nameRgbValues[0] * 65536 + nameRgbValues[1] * 256 + nameRgbValues[2] : null;
 				}
