@@ -42,7 +42,7 @@ module.exports = [
 			delete message.member.bjGame;
 		}
 		
-		drawFromDeck(deck) { 
+		drawFromDeck(deck) {
 			return deck.splice(Math.floor(Math.random() * deck.length), 1)[0];
 		}
 		
@@ -60,12 +60,12 @@ module.exports = [
 				if (playerValue == 21) {
 					game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\nBLACKJACK!`);
 				} else {		
-					return `${toDisplayDealer}\n${toDisplayPlayer}\n\n` + 
+					return `${toDisplayDealer}\n${toDisplayPlayer}\n\n` +
 					"Type `stand` to end your turn, or `hit` to draw another card.";
 				}
 			} else if (state == "drawing") {
 				if (!game.message.channel.messages.has(game.botMessage.id)) return;
-				game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\n` + 
+				game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\n` +
 				"Type `stand` to end your turn, or `hit` to draw another card.");
 			} else {
 				if (!game.message.channel.messages.has(game.botMessage.id)) return;
@@ -221,7 +221,7 @@ module.exports = [
 				}
 			}
 			
-			message.channel.send("**🎰 | Slot Game**\n" + 
+			message.channel.send("**🎰 | Slot Game**\n" +
 			"------------------\n" +
 			`${chosen[0]} : ${chosen[1]} : ${chosen[2]}\n\n` +
 			`${chosen[3]} : ${chosen[4]} : ${chosen[5]} **<<<**\n\n` +

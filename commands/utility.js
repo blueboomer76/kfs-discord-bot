@@ -157,7 +157,7 @@ module.exports = [
 				.setTitle("Color - #" + hexValue)
 				.setDescription(`**Nearest CSS Color Name**: ${colorName}` + "\n" +
 				`**Hexadecimal (Hex)**: #${hexValue}` + "\n" +
-				`**RGB**: rgb(${rgbValues.join(", ")})` + "\n" + 
+				`**RGB**: rgb(${rgbValues.join(", ")})` + "\n" +
 				`**Decimal (Integer)**: ${decimalValue}` + "\n" +
 				`**HSL**: hsl(${hslValues[0]}, ${hslValues[1]}%, ${hslValues[2]}%)` + "\n" +
 				`**CMYK**: cmyk(${cmykValues[0]}%, ${cmykValues[1]}%, ${cmykValues[2]}%, ${cmykValues[3]}%)` + "\n" +

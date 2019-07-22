@@ -8,6 +8,8 @@
 - Added a new argument property "allowRaw" to allow some unresolved objects to be handled in commands
 - Allowed the argument parser to be able to parse non-strings seperately
 - Made the paginator use the RichEmbed class from `discord.js`
+- Added a ready seperator in the command line to distinguish between bot sessions
+- Changed conditions for logging a reconnecting event
 
 ## 1.5.4
 - Improved the handling of role permissions of most moderation commands
@@ -37,15 +39,19 @@
 - Changed `Number(new Date())` to `Date.now()` in expressions requiring a numbered date
 - Reworded many of the event messages and added timestamps for better understanding
 - Changed system of handling remote HTTP request errors
+- Changed handling of Reddit-based commands when a non-regular image URL is embedded
 - Added many options to purge command
 
 ## 1.4.3
 - Added emoji support (both custom and default) for inputs to image commands
+- Added `svg2png` and `twemoji` dependencies
+- Moved some code into the image manager
 
 ## 1.4.0
 - Added more advanced image commands with customizeable text and GIFs
 - Added more commands in many categories
 - Changed the wording in some error messages
+- Moved some commands in Image category into a new category Image Editing
 
 ## 1.3.41
 - Fixed many bugs in the code in various parts
@@ -68,9 +74,11 @@
 
 ## 1.3.27
 - Added support for posting to botsfordiscord.com
+- Added time since bot creation to bot stats related commands
 
 ## 1.3.24
 - Added consistency for command error displaying
+- Added options for executing functions after a command has finished executing
 - Changed the stats posting link for bots.discord.pw to bots.ondiscord.xyz
 
 ## 1.3.17
@@ -94,7 +102,7 @@
 
 ## 1.3.4
 - Added more image commands
-- Fixed bugs in search and text editing commands
+- Fixed bugs in newly added commands, including in the Search and Text Editing categories
 
 ## 1.3.0
 - Added a new category Text Editing
@@ -129,10 +137,10 @@
 - Added a new category Games
 
 ## 1.1.0
-- Added a more advanced argument parser
+- Added a more advanced argument parser and paginator
 - Changed commands into class form
 - Added new commands, including say and quote
-- Added flag options to some commands 
+- Added flag options to some commands
 
 ## 1.0.0
 Initial 1.X version
