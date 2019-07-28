@@ -49,7 +49,7 @@ module.exports = [
 					user: ["MANAGE_ROLES"],
 					level: 0
 				},
-				usage: "addrole <user> <role>"
+				usage: "addrole <user | \"user\"> <role>"
 			});
 		}
 		
@@ -655,7 +655,7 @@ module.exports = [
 					user: ["MANAGE_ROLES"],
 					level: 0
 				},
-				usage: "removerole <user> <role>"
+				usage: "removerole <user | \"user\"> <role>"
 			});
 		}
 		
@@ -729,7 +729,7 @@ module.exports = [
 					user: ["MANAGE_ROLES"],
 					level: 0
 				},
-				usage: "renamerole <role> <new role name>"
+				usage: "renamerole <role | \"role\"> <new role name>"
 			});
 		}
 
@@ -806,7 +806,7 @@ module.exports = [
 					user: ["MANAGE_NICKNAMES"],
 					level: 0
 				},
-				usage: "setnickname <user> <new nick>"
+				usage: "setnickname <user | \"user\"> <new nick>"
 			});
 		}
 		
@@ -847,7 +847,7 @@ module.exports = [
 					user: ["MANAGE_ROLES"],
 					level: 0
 				},
-				usage: "setrolecolor <role> <color: hex color | decimal:0-16777215 | ...>"
+				usage: "setrolecolor <role | \"role\"> <color: hex color | decimal:0-16777215 | ...>"
 			});
 		}
 		
@@ -934,7 +934,7 @@ module.exports = [
 					user: ["BAN_MEMBERS"],
 					level: 0
 				},
-				usage: "softban <user> <days: 1-7> [--reason <reason>] [--yes]"
+				usage: "softban <user | \"user\"> <days: 1-7> [--reason <reason>] [--yes]"
 			});
 		}
 		
