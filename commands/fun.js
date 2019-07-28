@@ -153,7 +153,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "choose",
-				description: "Have the bot choose among a list of items",
+				description: "Have the bot choose among a list of items. Include quotes to group words of a choice together",
 				args: [
 					{
 						allowQuotes: true,
@@ -439,7 +439,7 @@ module.exports = [
 						],
 					}
 				],
-				usage: "quote <user> <quote> OR quote message <id>"
+				usage: "quote <user | \"user\"> <quote> OR quote message <id>"
 			});
 		}
 		
@@ -611,7 +611,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "ship <user 1> [user 2]"
+				usage: "ship <user 1 | \"user 1\"> [user 2]"
 			});
 			this.shipStates = [
 				{min: 10, msg: "PERFECT MATCH! ❣"},

@@ -91,6 +91,7 @@ module.exports = [
 					.addField("Argument Legend", "In command usage strings:" + "\n" +
 					"- Required argument (`<` and `>`) - needs to be provided for a command to work" + "\n" +
 					"- Optional argument (`[` and `]`) - not needed for a command to work" + "\n" +
+					"- Quotable argument (`arg | \"arg\"`) - can be quoted when more than one word is in an argument" + "\n" +
 					"- Infinite arguments (`...`) - more than one argument can be provided" + "\n" +
 					"- Key (`key:`) - represents the expected argument type" + "\n" +
 					"*Arguments may be nested together in certain commands.*")
@@ -221,7 +222,7 @@ module.exports = [
 					user: [],
 					level: 4
 				},
-				usage: "load <category> <command> [class name]"
+				usage: "load <category | \"category\"> <command> [class name]"
 			});
 		}
 		
