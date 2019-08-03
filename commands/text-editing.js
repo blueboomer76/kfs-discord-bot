@@ -131,7 +131,7 @@ module.exports = [
 						case "7": emojified += ":seven: "; break;
 						case "8": emojified += ":eight: "; break;
 						case "9": emojified += ":nine: "; break;
-						default: emojified += `${c} `;
+						default: emojified += c + " ";
 					}
 				}
 			}

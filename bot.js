@@ -90,13 +90,13 @@ class KFSDiscordBot extends Client {
 		const dir = altdir || "./commands/";
 		fs.readdir(dir, (err, files) => {
 			if (err) throw err;
-			const cmdFiles = files.filter(f => f.split(".").pop() == "js");
+			const cmdFiles = files.filter(f => f.endsWith(".js"));
 			if (cmdFiles.length > 0) {
 				for (const fileName of cmdFiles) {
 					const rawCategory = fileName.split(".").shift(),
 						category = capitalize(rawCategory.replace(/-/g, " "));
 					this.categories.push(category);
-					const commandClasses = require(`${dir}${fileName}`);
+					const commandClasses = require(dir + fileName);
 					if (commandClasses.length > 0) {
 						for (const CommandClass of commandClasses) {
 							const command = new CommandClass();
@@ -122,7 +122,7 @@ class KFSDiscordBot extends Client {
 	loadEvents() {
 		fs.readdir("./events/", (err, files) => {
 			if (err) throw err;
-			const evFiles = files.filter(f => f.split(".").pop() == "js");
+			const evFiles = files.filter(f => f.endsWith(".js"));
 			if (evFiles.length > 0) {
 				for (const eventFile of evFiles) {
 					const eventName = eventFile.split(".")[0], ev = require(`./events/${eventFile}`);
