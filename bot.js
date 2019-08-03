@@ -82,12 +82,12 @@ class KendraBot extends Client {
 		const dir = altdir || "./commands/";
 		fs.readdir(dir, (err, files) => {
 			if (err) throw err;
-			const categories = files.filter(f => f.split(".").pop() == "js").map(f => f.split(".").shift());
+			const categories = files.filter(f => f.endsWith(".js")).map(f => f.split(".").shift());
 			if (categories.length != 0) {
 				for (let category of categories) {
 					category = capitalize(category.replace(/-/g, " "));
 					this.categories.push(category);
-					const commandClasses = require(`${dir}${category.toLowerCase().replace(/ /g, "-")}`);
+					const commandClasses = require(dir + category.toLowerCase().replace(/ /g, "-"));
 					if (commandClasses.length > 0) {
 						for (const CommandClass of commandClasses) {
 							const command = new CommandClass();
@@ -113,7 +113,7 @@ class KendraBot extends Client {
 	loadEvents() {
 		fs.readdir("./events/", (err, files) => {
 			if (err) throw err;
-			const evFiles = files.filter(f => f.split(".").pop() == "js");
+			const evFiles = files.filter(f => f.endsWith(".js"));
 			if (evFiles.length > 0) {
 				for (const eventFile of evFiles) {
 					const eventName = eventFile.split(".")[0], ev = require(`./events/${eventFile}`);

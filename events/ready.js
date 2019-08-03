@@ -64,15 +64,15 @@ module.exports = async bot => {
 	
 	setInterval(() => {
 		bot.logStats();
-		if (new Date() % (1000*10800) < 1000*3600) {
+		if (Date.now() % (1000*10800) < 1000*3600) {
 			if (config.botsOnDiscordToken) bot.postBotsOnDiscordStats();
 			if (config.botsForDiscordToken) bot.postBotsForDiscordStats();
 			if (config.discordBotsOrgToken) bot.postDiscordBotsOrgStats();
 		}
-		if (config.ownerServer && config.ownerServer.rssFeed && (rssFeedPostInt == 3600 || new Date() % (1000 * rssFeedPostInt) < 1000*3600)) {
+		if (config.ownerServer && config.ownerServer.rssFeed && (rssFeedPostInt == 3600 || Date.now() % (1000 * rssFeedPostInt) < 1000*3600)) {
 			bot.postRssFeed(rssFeedPostAmt);
 		}
-		if (config.ownerServer && config.ownerServer.memeFeed && new Date() % (1000*21600) < 1000*3600) {
+		if (config.ownerServer && config.ownerServer.memeFeed && Date.now() % (1000*21600) < 1000*3600) {
 			bot.postMeme();
 		}
 	}, 1000*3600);

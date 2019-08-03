@@ -111,27 +111,30 @@ module.exports = {
 				if (arg.allowQuotes) {
 					const newArgs = parseArgQuotes(args.slice(i), arg.parseSeperately);
 					if (arg.parseSeperately) {
-						for (const sepArg of newArgs) {
-							const parsedSepArg = await checkArgs(bot, message, sepArg, arg);
+						for (let j = 0; j < newArgs.length; j++) {
+							const parsedSepArg = await checkArgs(bot, message, newArgs[j], arg);
 							if (parsedSepArg.error) {
-								if (parsedSepArg.error == true) parsedSepArg.error = `Argument ${i+1} error`;
+								if (parsedSepArg.error == true) parsedSepArg.error = `Argument ${i+j+1} error`;
 								return parsedSepArg;
 							}
 							parsedArgs.push(parsedSepArg);
 						}
+						return parsedArgs;
 					} else {
 						args = args.slice(0, i).concat(newArgs);
 					}
 				} else {
 					if (arg.parseSeperately) {
-						for (const sepArg of args.slice(i)) {
-							const parsedSepArg = await checkArgs(bot, message, sepArg, arg);
+						const newArgs = args.slice(i);
+						for (let j = 0; j < newArgs.length; j++) {
+							const parsedSepArg = await checkArgs(bot, message, newArgs[j], arg);
 							if (parsedSepArg.error) {
-								if (parsedSepArg.error == true) parsedSepArg.error = `Argument ${i+1} error`;
+								if (parsedSepArg.error == true) parsedSepArg.error = `Argument ${i+j+1} error`;
 								return parsedSepArg;
 							}
 							parsedArgs.push(parsedSepArg);
 						}
+						return parsedArgs;
 					} else {
 						args[i] = args.slice(i).join(" ");
 					}
@@ -197,7 +200,7 @@ module.exports = {
 			if (shortIndex != -1 && flags[i].method == "short") {
 				flags[i].name = flagLongNames[shortIndex].toLowerCase();
 			}
-			if (shortIndex == -1 || !flagLongNames.includes(flags[i].name)) {
+			if (shortIndex == -1 && !flagLongNames.includes(flags[i].name)) {
 				if (parsedFlags.length == 0) {
 					if (i < flags.length - 1) {
 						newArgs = args.slice(0, flagIndexes[i+1]);

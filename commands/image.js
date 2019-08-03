@@ -256,17 +256,16 @@ module.exports = [
 					level: 0
 				}
 			});
-			this.cachedSfwPosts = [];
-			this.cachedNsfwPosts = [];
+			this.cachedPosts = [];
 			this.lastChecked = 0;
 		}
 		
 		async run(bot, message, args, flags) {
-			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
+			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "bonehurtingjuice", false);
 				if (fetchRes) return {cmdWarn: fetchRes};
 			}
-			sendRedditEmbed(this, message, true);
+			sendRedditEmbed(this, message, false);
 		}
 	},
 	class CatCommand extends Command {
