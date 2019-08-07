@@ -470,14 +470,43 @@ module.exports = [
 				.setTimestamp(message.createdAt);
 			
 			if (args[0] == "processor") {
-				statsEmbed.setAuthor("Bot Stats - Processor", bot.user.avatarURL);
-				this.getProcessorStats(message, statsEmbed);
+				const totalMemory = os.totalmem(),
+					freeMemory = os.freemem(),
+					usedMemory = totalMemory - freeMemory,
+					processUsedMemory = process.memoryUsage(),
+					heapTotal = processUsedMemory.heapTotal,
+					heapUsed = processUsedMemory.heapUsed,
+					cpuUsage1 = this.getCpuUsage(os.cpus());
+				
+				statsEmbed.setAuthor("Bot Stats - Processor", bot.user.avatarURL)
+					.setDescription("Here's some detailed stats about the host that this bot is on!")
+					.addField("Process Started", getDuration(Date.now() - process.uptime() * 1000), true)
+					.addField("Total Resident Set (RSS)", `${(processUsedMemory.rss / 1048576).toFixed(2)} MB`, true)
+					.addField("Heap Usage", `Total: ${(heapTotal / 1048576).toFixed(2)} MB`+ "\n" +
+					`Used: ${(heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
+					.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB` + "\n" +
+					`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)` + "\n" +
+					`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true);
+				
+				setTimeout(() => {
+					const cpus = os.cpus(), cpuUsage2 = this.getCpuUsage(cpus);
+					let totalUsage = 0;
+					for (let i = 0; i < cpuUsage1.length; i++) {
+						const idleDif = cpuUsage2[i].idle - cpuUsage1[i].idle, nonidleDif = cpuUsage2[i].nonidle - cpuUsage1[i].nonidle;
+						totalUsage += nonidleDif / (idleDif + nonidleDif);
+					}
+					
+					statsEmbed.addField("CPU Usage", (totalUsage / cpuUsage1.length * 100).toFixed(1) + "%", true)
+						.addField("Processor", cpus[0].model)
+						.addField("Processors Utilized", cpuUsage1.length);
+					message.channel.send(statsEmbed);
+				}, 250);
 			} else {
-				const beginEval = new Date(),
+				const beginEval = Date.now(),
 					botStats = getBotStats(bot),
-					endEval = new Date(),
-					dif = endEval - beginEval,
-					evalTime = dif < 1000 ? dif + "ms" : ((endEval - beginEval) / 1000).toFixed(2) + "s",
+					endEval = Date.now(),
+					ms = endEval - beginEval,
+					evalTime = ms < 1000 ? ms + "ms" : (ms / 1000).toFixed(2) + "s",
 					processUptime = process.uptime() * 1000,
 					duration = bot.cache.cumulativeStats.duration + (Date.now() - bot.cache.stats.lastCheck),
 					serverCount = botStats.servers,
@@ -486,15 +515,15 @@ module.exports = [
 				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL)
 					.setFooter(`⏰ Took: ${evalTime} | Stats as of`)
 					.setDescription(`Here's some detailed stats about this bot! *To see stats about the bot host, use \`${bot.prefix}stats processor\`*`)
-					.addField("Bot created", getDuration(bot.user.createdTimestamp), true)
-					.addField("Last Ready", getDuration(bot.readyTimestamp), true)
+					.addField("Bot Created", getDuration(bot.user.createdTimestamp), true)
+					.addField("Bot Last Ready", getDuration(bot.readyTimestamp), true)
 					.addField("Servers",
 						`Total: ${serverCount.toLocaleString()}` + "\n" +
 						`Large: ${botStats.largeServers.toLocaleString()} (${(botStats.largeServers * 100 / serverCount).toFixed(1)}%)`
 						, true)
 					.addField("Users",
 						`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
-						`Online: ${botStats.onlineUsers.toLocaleString()} (${(botStats.onlineUsers / userCount * 100).toFixed(1)}%)`
+						`Online: ${botStats.presences.online.toLocaleString()} (${(botStats.presences.online / userCount * 100).toFixed(1)}%)`
 						, true)
 					.addField("Channels",
 						`Text: ${botStats.channels.text.toLocaleString()} (${(botStats.channels.text / serverCount).toFixed(2)}/server)` + "\n" +
@@ -520,63 +549,23 @@ module.exports = [
 		setRate(amount, duration) {
 			const amtPerDay = amount / duration * 8.64e+7;
 			if (amtPerDay > 43200) {
-				return `${(amtPerDay/86400).toFixed(2)}/sec`;
+				return (amtPerDay/86400).toFixed(2) + "/sec";
 			} else if (amtPerDay > 720) {
-				return `${(amtPerDay/1440).toFixed(2)}/min`;
+				return (amtPerDay/1440).toFixed(2) + "/min";
 			} else if (amtPerDay > 12) {
-				return `${(amtPerDay/24).toFixed(2)}/hr`;
+				return (amtPerDay/24).toFixed(2) + "/hr";
 			} else {
-				return `${amtPerDay.toFixed(2)}/day`;
-			}
+				return amtPerDay.toFixed(2) + "/day";
+			}		
 		}
-		
-		getProcessorStats(message, processorEmbed) {
-			const totalMemory = os.totalmem(),
-				freeMemory = os.freemem(),
-				usedMemory = totalMemory - freeMemory,
-				cpus = os.cpus(),
-				processMemoryUsage = process.memoryUsage(),
-				heapTotal = processMemoryUsage.heapTotal,
-				heapUsed = processMemoryUsage.heapUsed,
-				cpuUsage1 = [];
-			
-			for (const cpu of cpus) {
-				cpuUsage1.push({
+
+		getCpuUsage(cpus) {
+			return cpus.map(cpu => {
+				return {
 					idle: cpu.times.idle,
 					nonidle: Object.values(cpu.times).reduce((prev, val) => prev + val) - cpu.times.idle
-				});
-			}
-			
-			processorEmbed.setDescription("Here's some detailed stats about the host that this bot is on!")
-				.addField("Total Resident Set (RSS)", `${(processMemoryUsage.rss / 1048576).toFixed(2)} MB`, true)
-				.addField("Heap Usage", `Total: ${(processMemoryUsage.heapTotal / 1048576).toFixed(2)} MB`+ "\n" +
-				`Used: ${(processMemoryUsage.heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
-				.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB` + "\n" +
-				`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)` + "\n" +
-				`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true);
-			
-			setTimeout(this.postProcessorStats, 250, message, processorEmbed, cpuUsage1);
-		}
-		
-		postProcessorStats(message, processorEmbed, cpuUsage1) {
-			const cpuUsage2 = [], cpus = os.cpus();
-			for (const cpu of cpus) {
-				cpuUsage2.push({
-					idle: cpu.times.idle,
-					nonidle: Object.values(cpu.times).reduce((prev, val) => prev + val) - cpu.times.idle
-				});
-			}
-			
-			const usagePercentages = [];
-			for (let i = 0; i < cpus.length; i++) {
-				const idleDif = cpuUsage2[i].idle - cpuUsage1[i].idle, nonidleDif = cpuUsage2[i].nonidle - cpuUsage1[i].nonidle;
-				usagePercentages.push(nonidleDif / (idleDif + nonidleDif));
-			}
-			
-			processorEmbed.addField("CPU Usage", `${(usagePercentages.reduce((prev, val) => prev + val) / cpus.length * 100).toFixed(1)}%`, true)
-				.addField("Processor", cpus[0].model)
-				.addField("Number of Cores", cpus.length);
-			message.channel.send(processorEmbed);
+				};
+			});
 		}
 	},
 	class SuggestCommand extends Command {
@@ -675,23 +664,42 @@ module.exports = [
 				description: "Find out which commands from the bot are used most often",
 				aliases: ["popular", "mostused"],
 				allowDMs: true,
-				args: [
-					{
-						optional: true,
-						type: "number",
-						min: 1
-					}
-				],
 				cooldown: {
 					time: 30000,
 					type: "guild"
 				},
+				flags: [
+					{
+						name: "current",
+						desc: "Get most up to date usage for a command (only for 'command' subcommand)"
+					}
+				],
 				perms: {
 					bot: ["ADD_REACTIONS", "EMBED_LINKS", "MANAGE_MESSAGES"],
 					user: [],
 					level: 0
 				},
-				usage: "usage [page]"
+				subcommands: [
+					{
+						name: "command",
+						args: [
+							{
+								type: "command"
+							}
+						]
+					},
+					{
+						name: "fallback",
+						args: [
+							{
+								optional: true,
+								type: "number",
+								min: 1
+							}
+						]
+					}
+				],
+				usage: "usage [page] OR usage command <command> [--current]"
 			});
 		}
 		
@@ -703,16 +711,34 @@ module.exports = [
 			for (let i = 0; i < cmdNames.length; i++) {
 				tempArray.push({name: cmdNames[i], uses: cmdUses[i]});
 			}
-			tempArray.sort((a, b) => b.uses - a.uses);
-			const entries = [tempArray.map(cmd => `${cmd.name} - used ${cmd.uses} times`)];
 
-			paginator.paginate(message, {title: "Most Popular Bot Commands"}, entries, {
-				limit: 25,
-				noStop: true,
-				numbered: true,
-				page: args[0] || 1,
-				params: null
-			});
+			if (typeof args[0] == "number" || args[0] == null) {
+				tempArray.sort((a, b) => b.uses - a.uses);
+				const entries = [tempArray.map(cmd => `${cmd.name} - used ${cmd.uses} times`)];
+
+				paginator.paginate(message, {title: "Most Popular Bot Commands"}, entries, {
+					limit: 25,
+					noStop: true,
+					numbered: true,
+					page: args[0] || 1,
+					params: null
+				});
+			} else {
+				const command = args[1];
+				let usagesIndex = cmdNames.indexOf(command.name);
+				if (usagesIndex == -1) return {cmdWarn: "The command **" + command.name + "** has not been used yet."};
+
+				let cmdUsageEnd = "";
+				if (flags.some(f => f.name == "current")) {
+					tempArray.sort((a, b) => b.uses - a.uses);
+					usagesIndex = cmdNames.indexOf(command.name);
+				} else {
+					cmdUsageEnd = ", last updated " + getDuration(bot.cache.cumulativeStats.lastSorted);
+				}
+				
+				message.channel.send(`Command **${command.name}** has been used **${cmdUses[usagesIndex]}** times.` + "\n" +
+				`It is the #${usagesIndex + 1} most used command${cmdUsageEnd}.`);
+			}
 		}
 	}
 ];

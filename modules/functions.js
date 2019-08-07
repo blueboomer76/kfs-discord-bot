@@ -51,15 +51,20 @@ module.exports = {
 		for (const cmdName in cachedStats.commandUsages) {
 			commandCurrentTotal += cachedStats.commandUsages[cmdName];
 		}
+		const presences = {online: 0, idle: 0, dnd: 0, offline: 0},
+			channels = {text: 0, voice: 0, category: 0, dm: 0};
+		for (const user of bot.users.values()) presences[user.presence.status]++;
+		for (const channel of bot.channels.values()) channels[channel.type]++;		
+
 		return {
 			servers: bot.guilds.size,
 			largeServers: bot.guilds.filter(g => g.large).size,
 			users: bot.users.size,
-			onlineUsers: bot.users.filter(u => u.presence.status != "offline").size,
+			presences: presences,
 			channels: {
-				text: bot.channels.filter(ch => ch.type == "text").size,
-				voice: bot.channels.filter(ch => ch.type == "voice").size,
-				categories: bot.channels.filter(ch => ch.type == "category").size
+				text: channels.text,
+				voice: channels.voice,
+				categories: channels.category
 			},
 			sessionCommands: cachedStats.commandSessionTotal + commandCurrentTotal,
 			totalCommands: cumulativeStats.commandTotal + commandCurrentTotal,
