@@ -45,21 +45,24 @@ const capitalize = (str, capAll) => {
 module.exports = {
 	capitalize: capitalize,
 	getBotStats: bot => {
-		const stats = bot.cache.stats,
-			cumulativeStats = bot.cache.cumulativeStats;
+		const stats = bot.cache.stats, cumulativeStats = bot.cache.cumulativeStats;
 		let commandCurrentTotal = stats.commandCurrentTotal;
-		for (const cmdName in stats.commandUsage) {
-			commandCurrentTotal += stats.commandUsage[cmdName];
-		}
+		for (const cmdName in stats.commandUsage) commandCurrentTotal += stats.commandUsage[cmdName];
+		
+		const presences = {online: 0, idle: 0, dnd: 0, offline: 0},
+			channels = {text: 0, voice: 0, category: 0, dm: 0};
+		for (const user of bot.users.values()) presences[user.presence.status]++;
+		for (const channel of bot.channels.values()) channels[channel.type]++;
+
 		return {
 			servers: bot.guilds.size,
 			largeServers: bot.guilds.filter(g => g.large).size,
 			users: bot.users.size,
-			onlineUsers: bot.users.filter(u => u.presence.status != "offline").size,
+			presences: presences,
 			channels: {
-				text: bot.channels.filter(ch => ch.type == "text").size,
-				voice: bot.channels.filter(ch => ch.type == "voice").size,
-				categories: bot.channels.filter(ch => ch.type == "category").size
+				text: channels.text,
+				voice: channels.voice,
+				categories: channels.category
 			},
 			sessionMessages: stats.messageCurrentTotal + stats.messageSessionTotal,
 			totalMessages: cumulativeStats.messageTotal + stats.messageCurrentTotal,
