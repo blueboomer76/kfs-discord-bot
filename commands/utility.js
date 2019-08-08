@@ -84,7 +84,7 @@ module.exports = [
 				channels = uncategorized.array().sort((a,b) => a.position - b.position);
 			} else {
 				const categoryId = channel.type == "category" ? channel.id : channel.parent.id,
-					catChannels = message.guild.channels.filter(c => c.type == "category").array().sort((a,b) => a.position - b.position);
+					catChannels = message.guild.channels.array().filter(c => c.type == "category").sort((a,b) => a.position - b.position);
 				pos += uncategorized.size;
 
 				let chnlParent;
@@ -201,7 +201,7 @@ module.exports = [
 				.setFooter(`ID: ${emoji.id}`)
 				.setImage(emoji.url)
 				.addField("Emoji created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
-				.addField("Roles which can use this emoji", emoji.roles.size == 0 ? "All roles" : emoji.roles.array().map(role => role.name).join(", "))
+				.addField("Roles which can use this emoji", emoji.roles.size == 0 ? "All roles" : emoji.roles.map(role => role.name).join(", "))
 				.addField("Animated", emoji.animated ? "Yes" : "No", true)
 				.addField("Managed", emoji.managed ? "Yes" : "No", true)
 				.addField("Emoji URL", emoji.url)
@@ -499,8 +499,8 @@ module.exports = [
 				case 4: guildVerif = "Very High (verified phone)";
 			}
 
-			for (const channel of guild.channels.array()) channels[channel.type]++;
-			for (const presence of guild.presences.array()) statuses[presence.status]++;
+			for (const channel of guild.channels.values()) channels[channel.type]++;
+			for (const presence of guild.presences.values()) statuses[presence.status]++;
 			
 			const createdDate = new Date(guild.createdTimestamp);
 			message.channel.send(new RichEmbed()

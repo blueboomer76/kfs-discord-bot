@@ -1,15 +1,15 @@
 const {RichEmbed} = require("discord.js");
 
 function setEntries(entries, limit, page) {
-	const maxPage = Math.ceil(entries[0].length / limit), displayed = [];
+	const maxPage = Math.ceil(entries[0].length / limit);
+	let displayed;
 	if (page > maxPage) page = maxPage;
 	if (page < 1) page = 1;
 	
 	if (limit > 1) {
-		for (let i = 0; i < entries.length; i++) {
-			displayed.push(entries[i].slice((page - 1) * limit, page * limit));
-		}
+		displayed = entries[0].slice((page - 1) * limit, page * limit);
 	} else {
+		displayed = [];
 		for (let i = 0; i < entries.length; i++) {
 			displayed.push(entries[i][page-1]);
 		}
@@ -24,7 +24,7 @@ function setEmbed(paginatedEmbed, displayed, options) {
 			paginatedEmbed[options.params[i]] = displayed[i];
 		}
 	} else {
-		paginatedEmbed.description = displayed[0].join(options.newLineAfterEntry ? "\n\n" : "\n");
+		paginatedEmbed.description = displayed.join(options.newLineAfterEntry ? "\n\n" : "\n");
 	}
 	if (options.pinnedMsg) {
 		paginatedEmbed.description = options.pinnedMsg + "\n\n" + (paginatedEmbed.description || "");

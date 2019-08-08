@@ -13,8 +13,7 @@ module.exports = {
 		} else if (!userInput) {
 			await message.channel.fetchMessages({limit: 25})
 				.then(msgs => {
-					msgs = msgs.array();
-					for (const msg of msgs) {
+					for (const msg of msgs.values()) {
 						if (msg.embeds[0]) {
 							if (msg.embeds[0].type == "image") {
 								result.data = msg.embeds[0].url;
@@ -40,6 +39,7 @@ module.exports = {
 		if (isEmoji) {
 			canvasImg.src = imgResolvable;
 			callback();
+			resolve();
 		} else {
 			canvasImg.onload = callback;
 			canvasImg.onerror = () => reject("Failed to load image onto canvas.");

@@ -138,7 +138,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			let member;
 
 			if (memberMatch) {
-				member = message.guild.large ? await getMember(memberMatch[0].match(/\d+/)[0]) : message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
+				member = message.guild.large ? await getMember(message, memberMatch[0].match(/\d+/)[0]) : message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
 				return member ? [member] : (allowRaw ? obj : null);
 			}
 			member = message.guild.members.get(obj);
@@ -148,11 +148,11 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			} else {
 				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 					comparedObj = obj.toLowerCase();
-				list = guildMembers.filter(mem => {
+				list = guildMembers.array().filter(mem => {
 					return mem.user.tag.toLowerCase().includes(comparedObj) ||
 						mem.user.username.toLowerCase().includes(comparedObj) ||
 						mem.displayName.toLowerCase().includes(comparedObj);
-				}).array();
+				});
 			}
 			return list.length > 0 ? list : (allowRaw ? obj : null);
 		}
