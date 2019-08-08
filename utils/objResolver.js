@@ -155,11 +155,11 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			}
 
 			const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members;
-			list = guildMembers.filter(mem => {
+			list = guildMembers.array().filter(mem => {
 				return mem.user.tag.toLowerCase().includes(lowerObj) ||
 				mem.user.username.toLowerCase().includes(lowerObj) ||
 				mem.displayName.toLowerCase().includes(lowerObj);
-			}).array();
+			});
 			return list.length > 0 ? list : (allowRaw ? obj : null);
 		}
 		case "number": {

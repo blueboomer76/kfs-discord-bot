@@ -84,7 +84,7 @@ module.exports = [
 				channels = uncategorized.array().sort((a, b) => a.calculatedPosition - b.calculatedPosition);
 			} else {
 				const categoryID = channel.type == "category" ? channel.id : channel.parent.id,
-					catChannels = message.guild.channels.filter(c => c.type == "category").array().sort((a, b) => a.calculatedPosition - b.calculatedPosition);
+					catChannels = message.guild.channels.array().filter(c => c.type == "category").sort((a, b) => a.calculatedPosition - b.calculatedPosition);
 				pos += uncategorized.size;
 
 				let chnlParent;
@@ -508,8 +508,8 @@ module.exports = [
 
 			const statuses = {online: 0, idle: 0, dnd: 0, offline: guild.memberCount - guild.presences.size},
 				channels = {text: 0, voice: 0, category: 0};
-			for (const presence of guild.presences.array()) statuses[presence.status]++;
-			for (const channel of guild.channels.array()) channels[channel.type]++;
+			for (const presence of guild.presences.values()) statuses[presence.status]++;
+			for (const channel of guild.channels.values()) channels[channel.type]++;
 			
 			message.channel.send(new RichEmbed()
 				.setTitle(`Server Info - ${guild.name}`)

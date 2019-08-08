@@ -137,8 +137,6 @@ module.exports = [
 
 				if (errs.length >= args.length - 1) {
 					return {cmdWarn: "Not enough images loaded successfully to produce a composite image." + "\n" + "```" + errs.join("\n") + "```"};
-				} else {
-					continue;
 				}
 			}
 
