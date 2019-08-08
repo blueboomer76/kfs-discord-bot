@@ -13,8 +13,7 @@ module.exports = {
 		} else if (!userInput) {
 			await message.channel.fetchMessages({limit: 25})
 				.then(msgs => {
-					msgs = msgs.array();
-					for (const msg of msgs) {
+					for (const msg of msgs.values()) {
 						if (msg.attachments.size > 0) {
 							result.data = msg.attachments.last().url;
 							break;

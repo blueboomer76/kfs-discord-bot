@@ -124,7 +124,7 @@ module.exports = [
 					
 					const cmdsByCat = {};
 					for (const category of bot.categories) cmdsByCat[category] = [];
-					for (const cmd of Array.from(cmds.values())) {
+					for (const cmd of cmds.values()) {
 						cmdsByCat[cmd.category].push({n: cmd.name, c: cmd.category});
 					}
 					for (const cmdSet in cmdsByCat) {
