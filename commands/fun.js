@@ -353,6 +353,56 @@ module.exports = [
 			});
 		}
 	},
+	class NumberFactsCommand extends Command {
+		constructor() {
+			super({
+				name: "numberfacts",
+				description: "Get interesting facts about a number",
+				aliases: ["numfacts"],
+				args: [
+					{
+						type: "number",
+						min: 0,
+						max: 9e+20
+					}
+				],
+				flags: [
+					{
+						name: "previous",
+						desc: "If no facts are found, find the next interesting number above the provided number"
+					},
+					{
+						name: "next",
+						desc: "If no facts are found, find the next interesting number below the provided number"
+					}
+				],
+				usage: "numberfacts <number> [--(previous|next)]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			const num = args[0],
+				hasPreviousFlag = flags.some(f => f.name == "previous"),
+				hasNextFlag = flags.some(f => f.name == "next"),
+				reqQuery = {json: true};
+			if (hasPreviousFlag) {
+				reqQuery.notfound = "ceil";
+			} else if (hasNextFlag) {
+				reqQuery.notfound = "floor";
+			}
+
+			request.get({
+				url: "http://numbersapi.com/" + num,
+				qs: reqQuery,
+				json: true
+			}, (err, res) => {
+				const requestRes = bot.checkRemoteRequest("Number Facts API", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
+
+				message.channel.send(res.body.found || hasPreviousFlag || hasNextFlag ? "🔢 " + res.body.text : "No facts found! Try searching Wikipedia for **" + num + " (number)**");
+			});
+		}
+	},
 	class PunCommand extends Command {
 		constructor() {
 			super({
