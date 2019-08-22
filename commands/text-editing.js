@@ -1,5 +1,8 @@
 const Command = require("../structures/command.js");
 
+const grouperRegex = /<(a?:[0-9A-Za-z_]{2,}:|@!?|@&|#)\d+>|[\u0080-\uFFFF]{2}|./g,
+	wordGrouperRegex = /<(a?:[0-9A-Za-z_]{2,}:|@!?|@&|#)\d+>|([\u0080-\uFFFF]{2})+|\S+/g;
+
 module.exports = [
 	class ClapifyCommand extends Command {
 		constructor() {
@@ -179,16 +182,76 @@ module.exports = [
 						type: "string"
 					}
 				],
-				usage: "reverse <text>"
+				flags: [
+					{
+						name: "words",
+						desc: "Reverse text by words"
+					}
+				],
+				usage: "reverse <text> [--words]"
 			});
 		}
 		
 		async run(bot, message, args, flags) {
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
-			const chars = args[0].split("");
-			let reversed = "";
-			for (let i = chars.length - 1; i >= 0; i--) reversed += chars[i];
-			message.channel.send(reversed);
+
+			const wordsFlag = flags.some(f => f.name == "words");
+			message.channel.send(args[0].match(wordsFlag ? wordGrouperRegex : grouperRegex).reverse().join(wordsFlag ? " " : ""));
+		}
+	},
+	class ScrambleCommand extends Command {
+		constructor() {
+			super({
+				name: "scramble",
+				description: "Scrambles up the letters or words of your text",
+				aliases: ["jumble"],
+				args: [
+					{
+						infiniteArgs: true,
+						type: "string"
+					}
+				],
+				flags: [
+					{
+						name: "inner",
+						desc: "Scramble surrounding letters"
+					},
+					{
+						name: "words",
+						desc: "Scramble text using words"
+					}
+				],
+				usage: "scramble <text> [--(inner|words)]"
+			});
+		}
+		
+		async run(bot, message, args, flags) {
+			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
+			
+			const innerFlag = flags.some(f => f.name == "inner"),
+				wordsFlag = flags.some(f => f.name == "words"),
+				toScramble = args[0].match(wordsFlag ? wordGrouperRegex : grouperRegex);
+			let scrambled;
+			if (innerFlag) {
+				scrambled = toScramble;
+				const max1 = Math.floor(scrambled.length / 2) * 2, max2 = Math.floor((scrambled.length - 1) / 2) * 2 + 1;
+				for (let i = 0; i < 4; i++) {
+					const offset = i % 2, max = offset == 0 ? max1 : max2;
+					for (let j = 0; j < max; j += 2) {
+						if (Math.random() > 0.5) {
+							const temp = scrambled[offset+j];
+							scrambled[offset+j] = scrambled[offset+j+1];
+							scrambled[offset+j+1] = temp;
+						}
+					}
+				}
+			} else {
+				scrambled = [];
+				while (toScramble.length > 0) {
+					scrambled.push(toScramble.splice(Math.floor(Math.random() * toScramble.length), 1));
+				}
+			}
+			message.channel.send(scrambled.join(wordsFlag ? " " : ""));
 		}
 	}
 ];
