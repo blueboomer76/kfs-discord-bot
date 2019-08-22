@@ -12,10 +12,11 @@ module.exports = [
 		constructor() {
 			super({
 				name: "avatar",
-				description: "Get a user's avatar",
+				description: "Get a user's avatar. You can also provide any user ID even if outside this server",
 				aliases: ["profilepic", "pfp"],
 				args: [
 					{
+						allowRaw: true,
 						infiniteArgs: true,
 						optional: true,
 						type: "member"
@@ -30,12 +31,23 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const member = args[0] || message.member,
-				avatarURL = member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`;
+			let user;
+			if (typeof args[0] == "string") {
+				let cmdErr = true;
+				if (args[0].length >= 17 && args[0].length < 19 && !isNaN(args[0])) {
+					await bot.fetchUser(args[0])
+						.then(fetchedUser => {user = fetchedUser; cmdErr = false})
+						.catch(() => {});
+				}
+				if (cmdErr) return {cmdWarn: "No users found matching `" + args[0] + "`"};
+			} else {
+				user = (args[0] && args[0].user) || message.author;
+			}
+			const avatarURL = user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
 			message.channel.send(new RichEmbed()
-				.setTitle(`Avatar - ${member.user.tag}`)
+				.setTitle("Avatar - " + user.tag)
 				.setColor(Math.floor(Math.random() * 16777216))
-				.setDescription(`Avatar URL: ${avatarURL}`)
+				.setDescription("Avatar URL: " + avatarURL)
 				.setImage(avatarURL)
 			);
 		}
@@ -68,15 +80,20 @@ module.exports = [
 		
 		async run(bot, message, args, flags) {
 			const channel = args[0] || message.channel,
-				createdDate = new Date(channel.createdTimestamp),
-				channelEmbed = new RichEmbed()
-					.setTitle(`Channel Info - ${channel.name}`)
-					.setColor(Math.floor(Math.random() * 16777216))
-					.setFooter(`ID: ${channel.id}`)
-					.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
-					.addField("Type", capitalize(channel.type), true)
-					.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
-					.addField("Accessible to everyone", channel.permissionsFor(message.guild.id).has("VIEW_CHANNEL") ? "Yes" : "No", true);
+				createdDate = new Date(channel.createdTimestamp);
+			let accessible = "No";
+			if (channel.permissionsFor(message.guild.id).has("VIEW_CHANNEL")) {
+				accessible = channel.permissionsFor(message.guild.id).has("READ_MESSAGE_HISTORY") ? "Yes" : "Partial";
+			}
+			
+			const channelEmbed = new RichEmbed()
+				.setTitle(`Channel Info - ${channel.name}`)
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setFooter(`ID: ${channel.id}`)
+				.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.addField("Type", capitalize(channel.type), true)
+				.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
+				.addField("Accessible to everyone", accessible, true);
 			
 			const uncategorized = message.guild.channels.filter(c => c.type != "category" && !c.parent);
 			let channels, pos = 0;

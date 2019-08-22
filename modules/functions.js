@@ -33,7 +33,7 @@ const specialNumberKeys = [
 	{short: "n", long: "nonillion", value: 1e+30}
 ];
 
-const capitalize = (str, capAll) => {
+const capitalize = (str, capAll = false) => {
 	str = str.toString();
 	if (capAll) {
 		return str.split(/[ -]/).map(str2 => str2.charAt(0).toUpperCase() + str2.slice(1)).join(" ");
@@ -72,55 +72,56 @@ module.exports = {
 			totalCommands: cumulativeStats.commandTotal + commandCurrentTotal
 		};
 	},
-	getDuration: (time1, time2, simple) => {
-		if (!time1) throw new Error("Time 1 is required");
-		if (isNaN(time1)) throw new TypeError("Time 1 is not a valid timestamp");
-		if (time2 && isNaN(time2)) throw new TypeError("Time 2 is not a valid timestamp");
+	getDuration: (time1, time2, simple = false) => {
+		if (!time1 || isNaN(time1)) throw new TypeError("Time 1 requires a timestamp in milliseconds");
+		if (time2) {
+			if (isNaN(time2)) throw new TypeError("Time 2 requires a timestamp in milliseconds");
+		} else {
+			time2 = Date.now();
+		}
 		
-		time1 = new Date(time1);
-		time2 = time2 ? new Date(time2) : new Date();
-		
-		const timeDif = Math.abs((time2 - time1) / 1000),
-			suffix = time1 < time2 ? "ago" : "left";
+		const secDif = Math.abs(time2 - time1) / 1000;
 		let baseStr1 = "", baseStr2 = "";
-		
-		if (timeDif < 60) {
-			baseStr1 = `${timeDif.toFixed(simple ? 0 : 1)} seconds`;
-		} else if (timeDif < 3.1536e+9) {
-			if (timeDif < 3600) {
-				baseStr1 = `${Math.floor(timeDif / 60)} minute`;
-				baseStr2 = `${Math.round(timeDif % 60)} second`;
-			} else if (timeDif < 86400) {
-				baseStr1 = `${Math.floor(timeDif / 3600)} hour`;
-				baseStr2 = `${Math.floor((timeDif % 3600) / 60)} minute`;
-			} else if (timeDif < 2592000) {
-				baseStr1 = `${Math.floor(timeDif / 86400)} day`;
-				baseStr2 = `${Math.floor((timeDif % 86400) / 3600)} hour`;
+		if (secDif < 60) {
+			baseStr1 = secDif.toFixed(simple ? 0 : 1) + " seconds";
+		} else if (secDif < 3.1536e+9) {
+			if (secDif < 3600) {
+				baseStr1 = Math.floor(secDif / 60) + " minute";
+				baseStr2 = Math.round(secDif % 60) + " second";
+			} else if (secDif < 86400) {
+				baseStr1 = Math.floor(secDif / 3600) + " hour";
+				baseStr2 = Math.floor((secDif % 3600) / 60) + " minute";
+			} else if (secDif < 2592000) {
+				baseStr1 = Math.floor(secDif / 86400) + " day";
+				baseStr2 = Math.floor((secDif % 86400) / 3600) + " hour";
 			} else {
-				let yrDif = time2.getYear() - time1.getYear(),
-					moDif = time2.getMonth() - time1.getMonth(),
-					dayDif = time2.getDate() - time1.getDate();
+				const date1 = new Date(time1), date2 = new Date(time2);
+				let yrDif = date2.getFullYear() - date1.getFullYear(),
+					moDif = date2.getMonth() - date1.getMonth(),
+					dayDif = date2.getDate() - date1.getDate();
 				if ((moDif == 0 && dayDif < 0) || moDif < 0) {yrDif--; moDif += 12}
 				if (dayDif < 0) {moDif--; dayDif += 30}
-				if (timeDif < 31536000) {
-					baseStr1 = `${moDif} month`;
-					baseStr2 = `${dayDif} day`;
+	
+				if (secDif < 31536000) {
+					baseStr1 = moDif + " month";
+					baseStr2 = dayDif + " day";
 				} else {
 					if (dayDif >= 20) {
 						moDif++;
 						if (moDif > 11) {moDif = 0; yrDif++}
 					}
-					baseStr1 = `${yrDif} year`;
-					baseStr2 = `${moDif} month`;
+					baseStr1 = yrDif + " year";
+					baseStr2 = moDif + " month";
 				}
 			}
 			if (!baseStr1.startsWith("1 ")) baseStr1 += "s";
 			if (!baseStr2.startsWith("1 ")) baseStr2 += "s";
 			if (!simple) baseStr1 += ",";
 		} else {
-			baseStr1 = `${Math.round((timeDif - 5256000) / 31536000)} years`;
+			baseStr1 = Math.round((secDif - 5256000) / 31536000) + " years";
 		}
 		
+		const suffix = time1 < time2 ? "ago" : "left"; // Duration flows from time1 to time2
 		return simple ? `${baseStr1} ${suffix}` : `${baseStr1} ${baseStr2} ${suffix}`;
 	},
 	parseLargeNumber: (num, options = {}) => {
@@ -133,19 +134,37 @@ module.exports = {
 			- precision
 			- shortSuffix
 		*/
-		num = parseFloat(num);
+		const parsedNum = typeof num != "number" ? parseFloat(num) : num;
 		if (options.maxFullShow) {
-			if (options.maxFullShow < 1000) throw new RangeError("The max number to show in full must be at least 1000.");
+			if (options.maxFullShow < 1000 || options.maxFullShow >= 1e+15) {
+				throw new RangeError("The maximum number to show in full must be >= 1000 and < 1e+15.");
+			}
 		} else {
 			options.maxFullShow = 1e+9;
 		}
-		const numSign = num < 0 ? "-" : "";
-		let num2 = Math.abs(num) / 1000;
-		if (num2 < (options.maxFullShow / 1000)) return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-		if (num2 > 1e+300) return num;
 
-		const expon = Math.log10(num2), tens = Math.floor(expon / 30), ones = Math.floor(expon % 30 / 3);
-		num2 /= Math.pow(1e+30, tens) * Math.pow(1000, ones);
+		const numFactor = Math.abs(parsedNum) / 1000;
+		if (numFactor < (options.maxFullShow / 1000)) {
+			return parsedNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+		} else if (numFactor >= 1e+300) {
+			return parsedNum.toString();
+		}
+
+		// Build the string to be returned
+		const expon = Math.log10(numFactor),
+			tens = Math.floor(expon / 30),
+			ones = Math.floor(expon % 30 / 3),
+			dispNum = numFactor / (Math.pow(1e+30, tens) * Math.pow(1000, ones));
+
+		let numString;
+		if (options.precision) {
+			numString = dispNum.toPrecision(options.precision);
+		} else if (options.fixed) {
+			numString = dispNum.toFixed(options.fixed);
+		} else {
+			numString = dispNum.toPrecision(6);
+		}
+
 		let suffix = "";
 		if (options.shortSuffix) {
 			if (tens == 0) {
@@ -170,47 +189,41 @@ module.exports = {
 			}
 			if (options.capSuffix) suffix = capitalize(suffix);
 		}
-		let numString = num2;
-		if (options.precision) {
-			numString = numString.toPrecision(options.precision);
-		} else if (options.fixed) {
-			numString = numString.toFixed(options.fixed);
-		} else {
-			numString = numString.toPrecision(6);
-		}
-		return numSign + parseFloat(numString) + (options.noSpace ? "" : " ") + suffix;
+		return (parsedNum < 0 ? "-" : "") + parseFloat(numString).toString() + (options.noSpace ? "" : " ") + suffix;
 	},
 	parseLargeNumberInput: str => {
-		str = str.trim();
-		if (/^\d+(\.\d+)?$/.test(str)) return parseFloat(str);
+		const trimmed = str.trim();
+		if (/^\d+(\.\d+)?$/.test(trimmed)) return parseFloat(trimmed);
 
-		const baseMatch = str.match(/^\d+(\.\d+)?/);
-		let suffixMatch = str.match(/(?!^)[a-z]+/i);
+		const baseMatch = str.match(/^\d+(\.\d+)?/), suffixMatch = str.match(/(?!^)[a-z]+/i);
 		if (!baseMatch || !suffixMatch) return NaN;
-		suffixMatch = suffixMatch[0].toLowerCase();
-		if (suffixMatch.endsWith("illion")) suffixMatch = suffixMatch.slice(0, suffixMatch.length - 6);
 
+		const foundSuffix = suffixMatch[0].toLowerCase().replace(/illion$/, ""),
+			foundSpecialSuffix = specialNumberKeys.find(key => key.short == foundSuffix || key.long == foundSuffix);
 		let parsedNum = parseFloat(baseMatch[0]);
-		const foundSpecialSuffix = specialNumberKeys.find(key => key.short == suffixMatch || key.long == suffixMatch);
 		if (foundSpecialSuffix) return parsedNum * foundSpecialSuffix.value;
 
-		let suffix2 = suffixMatch, matchLength;
+		let matchLength = 0, long;
 		const foundTensSuffix = tensNumberKeys.find(key => {
-			if (suffixMatch.endsWith(key.short)) {matchLength = key.short.length; return true}
-			if (suffixMatch.endsWith(key.long)) {matchLength = key.long.length; return true}
+			if (foundSuffix.endsWith(key.long)) {matchLength = key.long.length; long = true; return true}
+			if (foundSuffix.endsWith(key.short)) {matchLength = key.short.length; long = false; return true}
 			return false;
 		});
 		
+		let foundSuffix2 = foundSuffix;
 		if (foundTensSuffix) {
 			parsedNum *= foundTensSuffix.value;
-			if (matchLength == suffixMatch.length) return parsedNum;
-			suffix2 = suffix2.slice(0, suffixMatch.length - matchLength);
-			if (suffixMatch.length > 5) {
-				if (suffix2 == "tres" && foundTensSuffix.long == "vigint") return parsedNum * 1e+72;
-				if (suffix2 == "septen" && foundTensSuffix.value <= 1e+93) return parsedNum * foundTensSuffix.value * 1e+21;
+			if (matchLength == foundSuffix.length) return parsedNum;
+			
+			foundSuffix2 = foundSuffix2.slice(0, foundSuffix.length - matchLength);
+			if (long) {
+				if (foundSuffix2 == "tres" && foundTensSuffix.long == "vigint") return parsedNum * 1e+9;
+				if (foundSuffix2 == "septen" && foundTensSuffix.value <= 1e+93) return parsedNum * 1e+21;
 			}
 		}
-		const foundOnesSuffix = onesNumberKeys.find(key => key.short == suffix2 || key.long == suffix2);
+		let filter;
+		if (long) {filter = key => key.long == foundSuffix2} else {filter = key => key.short == foundSuffix2}
+		const foundOnesSuffix = onesNumberKeys.find(filter);
 		return foundOnesSuffix ? parsedNum * foundOnesSuffix.value : NaN;
 	},
 	parsePerm: perm => {
