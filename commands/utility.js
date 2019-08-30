@@ -79,8 +79,7 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const channel = args[0] || message.channel,
-				createdDate = new Date(channel.createdTimestamp);
+			const channel = args[0] || message.channel;
 			let accessible = "No";
 			if (channel.permissionsFor(message.guild.id).has("VIEW_CHANNEL")) {
 				accessible = channel.permissionsFor(message.guild.id).has("READ_MESSAGE_HISTORY") ? "Yes" : "Partial";
@@ -90,7 +89,7 @@ module.exports = [
 				.setTitle(`Channel Info - ${channel.name}`)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`ID: ${channel.id}`)
-				.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.addField("Created at", `${new Date(channel.createdTimestamp).toUTCString()} (${getDuration(channel.createdTimestamp)})`)
 				.addField("Type", capitalize(channel.type), true)
 				.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
 				.addField("Accessible to everyone", accessible, true);
@@ -211,13 +210,13 @@ module.exports = [
 		}
 		
 		async run(bot, message, args, flags) {
-			const emoji = args[0], createdDate = new Date(emoji.createdTimestamp);
+			const emoji = args[0];
 			message.channel.send(new RichEmbed()
 				.setTitle(`Emoji - ${emoji.name}`)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`ID: ${emoji.id}`)
 				.setImage(emoji.url)
-				.addField("Emoji created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.addField("Emoji created at", `${new Date(emoji.createdTimestamp).toUTCString()} (${getDuration(emoji.createdTimestamp)})`)
 				.addField("Roles which can use this emoji", emoji.roles.size == 0 ? "All roles" : emoji.roles.map(role => role.name).join(", "))
 				.addField("Animated", emoji.animated ? "Yes" : "No", true)
 				.addField("Managed", emoji.managed ? "Yes" : "No", true)
@@ -374,13 +373,11 @@ module.exports = [
 				nearbyRoles.push(i == rolePos ? `**${roleName}**` : roleName);
 			}
 			
-			const createdDate = new Date(role.createdTimestamp);
-			
 			message.channel.send(new RichEmbed()
 				.setTitle(`Role Info - ${role.name}`)
 				.setColor(role.color)
 				.setFooter(`ID: ${role.id}`)
-				.addField("Role created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.addField("Role created at", `${new Date(role.createdTimestamp).toUTCString()} (${getDuration(role.createdTimestamp)})`)
 				.addField(`Members in Role [${roleMembers.size} total]`,
 					`${roleMembers.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
 					true)
@@ -519,14 +516,13 @@ module.exports = [
 			for (const channel of guild.channels.values()) channels[channel.type]++;
 			for (const presence of guild.presences.values()) statuses[presence.status]++;
 			
-			const createdDate = new Date(guild.createdTimestamp);
 			message.channel.send(new RichEmbed()
 				.setTitle(`Server Info - ${guild.name}`)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setThumbnail(guild.iconURL)
 				.setFooter(`ID: ${guild.id} | Server stats as of`)
 				.setTimestamp(message.createdAt)
-				.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.addField("Created at", `${new Date(guild.createdTimestamp).toUTCString()} (${getDuration(guild.createdTimestamp)})`)
 				.addField("Owner", `${guild.owner.user.tag} \`(ID ${guild.ownerID})\``)
 				.addField("Region", guild.region, true)
 				.addField("Verification", guildVerif, true)
@@ -596,12 +592,11 @@ module.exports = [
 				presence = "Offline";
 			}
 			if (rawPresence.game) presence += ` (playing ${rawPresence.game.name})`;
-				
-			const createdDate = new Date(user.createdTimestamp);
+
 			userEmbed.setTitle(`User Info - ${user.tag}`)
 				.setThumbnail(user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`)
 				.setFooter(`ID: ${user.id}`)
-				.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`);
+				.addField("Account created at", `${new Date(user.createdTimestamp).toUTCString()} (${getDuration(user.createdTimestamp)})`);
 
 			if (member) {
 				const joinedDate = new Date(member.joinedTimestamp);

@@ -707,6 +707,7 @@ module.exports = [
 						type: "role"
 					},
 					{
+						infiniteArgs: true,
 						type: "string"
 					}
 				],

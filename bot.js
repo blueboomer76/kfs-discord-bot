@@ -85,9 +85,9 @@ class KendraBot extends Client {
 			const categories = files.filter(f => f.endsWith(".js")).map(f => f.split(".").shift());
 			if (categories.length != 0) {
 				for (let category of categories) {
+					const commandClasses = require(dir + category + ".js");
 					category = capitalize(category.replace(/-/g, " "));
 					this.categories.push(category);
-					const commandClasses = require(dir + category.toLowerCase().replace(/ /g, "-"));
 					if (commandClasses.length > 0) {
 						for (const CommandClass of commandClasses) {
 							const command = new CommandClass();
@@ -200,7 +200,7 @@ class KendraBot extends Client {
 			} else if (res.statusCode >= 400) {
 				console.error(`An unexpected status code ${res.statusCode} was returned from bots.ondiscord.xyz`);
 			} else {
-				console.error("Stats successfully posted to bots.ondiscord.xyz");
+				console.log("Stats successfully posted to bots.ondiscord.xyz");
 			}
 		});
 	}
@@ -220,7 +220,7 @@ class KendraBot extends Client {
 			} else if (res.statusCode >= 400) {
 				console.error(`An unexpected status code ${res.statusCode} was returned from botsfordiscord.com`);
 			} else {
-				console.error("Stats successfully posted to botsfordiscord.com");
+				console.log("Stats successfully posted to botsfordiscord.com");
 			}
 		});
 	}
@@ -239,7 +239,7 @@ class KendraBot extends Client {
 			} else if (res.statusCode >= 400) {
 				console.error(`An unexpected status code ${res.statusCode} was returned from discordbots.org`);
 			} else {
-				console.error("Stats successfully posted to discordbots.org");
+				console.log("Stats successfully posted to discordbots.org");
 			}
 		});
 	}

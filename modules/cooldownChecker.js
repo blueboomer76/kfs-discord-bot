@@ -1,14 +1,5 @@
-const {capitalize} = require("../modules/functions.js");
-
-const cdMessages = [
-	"You're calling me fast enough that I'm getting dizzy!",
-	"Watch out, seems like we might get a speeding ticket at this rate!",
-	"You have to wait before using the command again...",
-	"You're calling me a bit too fast, I am getting dizzy!",
-	"I am busy, try again after a bit",
-	"Hang in there before using this command again...",
-	"Wait up, I am not done with my break"
-];
+const {customCooldownMessages} = require("../config.json"),
+	{capitalize} = require("../modules/functions.js");
 
 function getIdByType(message, type) {
 	if (type == "user") {
@@ -61,7 +52,7 @@ module.exports = {
 		if (checkedCd) {
 			if (!checkedCd.notified) {
 				checkedCd.notified = true;
-				let toSend = `⛔ **Cooldown:**\n*${cdMessages[Math.floor(Math.random() * cdMessages.length)]}*` + "\n";
+				let toSend = `⛔ **Cooldown:**\n*${customCooldownMessages[Math.floor(Math.random() * customCooldownMessages.length)]}*` + "\n";
 				toSend += command.cooldown.name ? `${capitalize(command.cooldown.name, true)} commands are` : "This command is";
 				
 				const cdTime = ((checkedCd.resets - Date.now()) / 1000).toFixed(1);

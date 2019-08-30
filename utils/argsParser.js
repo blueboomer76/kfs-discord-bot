@@ -3,10 +3,17 @@ const resolver = require("./objResolver.js");
 const listableTypes = ["channel", "emoji", "member", "role"];
 
 function parseArgQuotes(args, findAll) {
-	const matches1 = args.filter(a => /^"\S/.test(a)), matches2 = args.filter(a => /\S"$/.test(a));
-	if (matches1 && matches2) {
-		const indexes1 = matches1.map(match => args.indexOf(match)),
-			indexes2 = matches2.map(match => args.indexOf(match));
+	const indexes1 = [], indexes2 = [];
+	let matchRegex = /^"\S/;
+	const filter = (acc, val, i) => {
+		if (matchRegex.test(val)) acc.push(i);
+		return acc;
+	};
+	const matches1 = args.reduce(filter, []);
+	matchRegex = /\S"$/;
+	const matches2 = args.reduce(filter, []);
+
+	if (matches1.length > 0 && matches2.length > 0) {
 		for (let i = 0; i < matches1.length; i++) {
 			const i2Index = indexes2.find(ind => ind >= indexes1[i]);
 			if (i2Index != undefined) {
