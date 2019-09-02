@@ -39,7 +39,7 @@ module.exports = [
 				description: "Pauses actively playing audio"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const gvConnection = message.guild.voiceConnection;
 			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
@@ -55,7 +55,7 @@ module.exports = [
 			} else if (gvConnection.dispatcher.paused) {
 				return {cmdErr: "Cannot pause: audio is already paused"};
 			}
-			
+
 			gvConnection.dispatcher.pause();
 			message.channel.send("Successfully paused the audio. Use the `resume` command to resume the audio");
 		}
@@ -185,13 +185,13 @@ module.exports = [
 				usage: "queue [page]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const gvConnection = message.guild.voiceConnection;
 			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
 			const queue = gvConnection.queue;
 			if (!gvConnection.nowPlaying) return {cmdWarn: "There is no music in the queue."};
-			
+
 			const entries = [queue];
 			paginator.paginate(message, {title: `Music Queue - ${message.guild.name}`}, entries, {
 				limit: 5,
@@ -209,7 +209,7 @@ module.exports = [
 				description: "Resumes the audio"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const gvConnection = message.guild.voiceConnection;
 			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
@@ -225,7 +225,7 @@ module.exports = [
 			} else if (!gvConnection.dispatcher.paused) {
 				return {cmdErr: "Cannot resume: audio is already playing"};
 			}
-			
+
 			gvConnection.dispatcher.resume();
 			message.react("▶");
 		}
@@ -237,7 +237,7 @@ module.exports = [
 				description: "Skips the current audio track"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const gvConnection = message.guild.voiceConnection;
 			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
@@ -251,7 +251,7 @@ module.exports = [
 			} else if (!gvConnection.dispatcher) {
 				return {cmdErr: "Cannot skip: no audio is playing"};
 			}
-			
+
 			gvConnection.dispatcher.end();
 			message.react("⏩");
 		}
@@ -263,7 +263,7 @@ module.exports = [
 				description: "Stops actively playing audio"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const gvConnection = message.guild.voiceConnection;
 			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
@@ -277,7 +277,7 @@ module.exports = [
 			} else if (!gvConnection.dispatcher) {
 				return {cmdErr: "Cannot stop: no audio is playing"};
 			}
-	
+
 			gvConnection.nowPlaying = null;
 			gvConnection.queue = [];
 			gvConnection.dispatcher.end();
@@ -300,7 +300,7 @@ module.exports = [
 				usage: "volume <1-100>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const gvConnection = message.guild.voiceConnection;
 			if (!gvConnection) return {cmdErr: "I am not in a voice channel in this server!"};
@@ -314,7 +314,7 @@ module.exports = [
 			} else if (!gvConnection.dispatcher) {
 				return {cmdErr: "Cannot set volume: no audio is playing"};
 			}
-			
+
 			gvConnection.dispatcher.setVolume(args[0] / 100);
 			message.channel.send(`🔉 Volume of audio has been set to **${args[0]}/100**`);
 		}

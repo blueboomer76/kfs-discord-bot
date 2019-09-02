@@ -85,7 +85,7 @@ class KFSDiscordBot extends Client {
 			this.ideaWebhook = new WebhookClient(config.ideaWebhookID, config.ideaWebhookToken);
 		}
 	}
-	
+
 	loadCommands(altdir) {
 		const dir = altdir || "./commands/";
 		fs.readdir(dir, (err, files) => {
@@ -118,7 +118,7 @@ class KFSDiscordBot extends Client {
 			this.categories.sort();
 		});
 	}
-	
+
 	loadEvents() {
 		fs.readdir("./events/", (err, files) => {
 			if (err) throw err;
@@ -135,7 +135,7 @@ class KFSDiscordBot extends Client {
 			}
 		});
 	}
-	
+
 	logStats(writeSync = false) {
 		const cachedStats = this.cache.stats,
 			cumulativeStats = this.cache.cumulativeStats;
@@ -215,7 +215,7 @@ class KFSDiscordBot extends Client {
 			}
 		});
 	}
-	
+
 	async postBotsOnDiscordStats() {
 		request.post({
 			url: `https://bots.ondiscord.xyz/bot-api/bots/${this.user.id}/guilds`,
@@ -233,7 +233,7 @@ class KFSDiscordBot extends Client {
 			}
 		});
 	}
-	
+
 	async postBotsForDiscordStats() {
 		request.post({
 			url: `https://botsfordiscord.com/api/bot/${this.user.id}`,
@@ -252,7 +252,7 @@ class KFSDiscordBot extends Client {
 			}
 		});
 	}
-	
+
 	postMeme() {
 		request.get({
 			url: "https://reddit.com/r/memes/hot.json",
@@ -290,12 +290,12 @@ class KFSDiscordBot extends Client {
 	async handlePhoneMessage(message) {
 		const phoneCache = this.cache.phone;
 		if (this.checkDeletedPhoneChannels()) return;
-		
+
 		const affected = message.channel.id == phoneCache.channels[0].id ? 1 : 0;
 		let toSend = message.cleanContent.replace(/https?:\/\/\S+\.\S+/gi, "")
 			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
 		if (toSend.length > 1500) toSend = `${toSend.slice(0, 1500)}...`;
-		
+
 		phoneCache.lastMsgTime = Date.now();
 		phoneCache.msgCount++;
 		setTimeout(() => phoneCache.msgCount--, 5000);
@@ -305,7 +305,7 @@ class KFSDiscordBot extends Client {
 			this.resetPhone("☎ The phone connection was cut off due to possible overload.", true);
 		}
 	}
-	
+
 	async checkPhone() {
 		const phoneCache = this.cache.phone;
 		if (this.checkDeletedPhoneChannels()) return;
@@ -317,7 +317,7 @@ class KFSDiscordBot extends Client {
 			this.resetPhone("⏰ The phone call has timed out due to inactivity.");
 		}
 	}
-	
+
 	resetPhone(phoneMsg, overload) {
 		const phoneCache = this.cache.phone;
 		if (phoneMsg) {
@@ -334,7 +334,7 @@ class KFSDiscordBot extends Client {
 			}
 		}
 		phoneCache.channels = [];
-		
+
 		let phoneTimeout = phoneCache.timeout;
 		if (phoneTimeout) {clearTimeout(phoneTimeout); phoneTimeout = null}
 	}

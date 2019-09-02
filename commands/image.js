@@ -28,13 +28,13 @@ function getPosts(subreddit, checkNsfw, options) {
 			if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
 			if (!res) return reject("No response was received from Reddit.");
 			if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
-			
+
 			let results = res.body.data.children.filter(r => !r.data.stickied);
 			if (options.filterLocked) results = results.filter(r => !r.data.locked);
 			if (options.filterScores) results = results.filter(r => r.data.score > 0);
 			if (checkNsfw) {
 				const sfwResults = [], nsfwResults = [];
-				
+
 				for (const result of results) {
 					const postData = {
 						title: result.data.title,
@@ -46,7 +46,7 @@ function getPosts(subreddit, checkNsfw, options) {
 					};
 					if (result.data.over_18) {nsfwResults.push(postData)} else {sfwResults.push(postData)}
 				}
-				
+
 				resolve({sfw: sfwResults, nsfw: nsfwResults});
 			} else {
 				resolve(results.map(r => {
@@ -114,7 +114,7 @@ module.exports = [
 			this.cachedPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "antimeme", false, {filterScores: true});
@@ -140,7 +140,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			request.get("http://random.birb.pw/tweet.json", (err, res) => {
 				const requestRes = bot.checkRemoteRequest("random.birb.pw", err, res);
@@ -173,7 +173,7 @@ module.exports = [
 			this.cachedPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "bonehurtingjuice", false, {filterScores: true});
@@ -199,7 +199,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			request.get("http://aws.random.cat/meow", (err, res) => {
 				const requestRes = bot.checkRemoteRequest("random.cat", err, res);
@@ -233,7 +233,7 @@ module.exports = [
 			this.cachedNsfwPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "discord_irl", true, {filterScores: true});
@@ -259,7 +259,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			request.get("http://random.dog/woof.json", (err, res) => {
 				const requestRes = bot.checkRemoteRequest("random.dog", err, res);
@@ -291,7 +291,7 @@ module.exports = [
 			this.cachedPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "me_irl", false);

@@ -18,7 +18,7 @@ module.exports = [
 				usage: "8ball <question>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const magicMsgs = [
 				"Certainly",
@@ -63,7 +63,7 @@ module.exports = [
 			this.cachedPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				try {
@@ -72,7 +72,7 @@ module.exports = [
 					return {cmdWarn: err};
 				}
 			}
-			
+
 			const postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0];
 			message.channel.send(new RichEmbed()
 				.setTitle(postData.title.length > 250 ? `${postData.title.slice(0, 250)}...` : postData.title)
@@ -82,7 +82,7 @@ module.exports = [
 				.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
 			);
 		}
-		
+
 		getAntiJokes() {
 			return new Promise((resolve, reject) => {
 				request.get({
@@ -93,7 +93,7 @@ module.exports = [
 					if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
 					if (!res) return reject("No response was received from Reddit.");
 					if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
-					
+
 					this.lastChecked = Date.now();
 					const results = res.body.data.children
 						.filter(r => !r.data.stickied && r.data.score > 0)
@@ -140,7 +140,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			request.get({
 				url: "https://catfact.ninja/facts",
@@ -173,7 +173,7 @@ module.exports = [
 				usage: "choose <choice 1> <choice 2> [choices...]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args.length < 2) return {cmdWarn: "You need to provide at least 2 choices for me to choose from!"};
 			let choice = args[Math.floor(Math.random() * args.length)];
@@ -198,7 +198,7 @@ module.exports = [
 				usage: "coin [1-50]"
 			});
 		}
-	
+
 		async run(bot, message, args, flags) {
 			const iters = args[0] || 1;
 			if (iters == 1) {
@@ -231,7 +231,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			request.get({
 				url: "http://dog-api.kinduff.com/api/facts",
@@ -324,7 +324,7 @@ module.exports = [
 				.setColor(Math.floor(Math.random() * 16777216))
 			);
 		}
-		
+
 		getJokes() {
 			return new Promise((resolve, reject) => {
 				request.get({
@@ -335,7 +335,7 @@ module.exports = [
 					if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
 					if (!res) return reject("No response was received from Reddit.");
 					if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
-					
+
 					this.lastChecked = Date.now();
 					const results = res.body.data.children
 						.filter(r => !r.data.stickied && !r.data.over_18)
@@ -379,7 +379,7 @@ module.exports = [
 				usage: "numberfacts <number> [--(previous|next)]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const num = args[0],
 				hasPreviousFlag = flags.some(f => f.name == "previous"),
@@ -421,7 +421,7 @@ module.exports = [
 			this.cachedPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				try {
@@ -430,7 +430,7 @@ module.exports = [
 					return {cmdWarn: err};
 				}
 			}
-			
+
 			const postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0],
 				punEmbed = new RichEmbed()
 					.setTitle(postData.title.length > 250 ? `${postData.title.slice(0, 250)}...` : postData.title)
@@ -450,7 +450,7 @@ module.exports = [
 
 			message.channel.send(punEmbed);
 		}
-		
+
 		getPuns() {
 			return new Promise((resolve, reject) => {
 				request.get({
@@ -461,7 +461,7 @@ module.exports = [
 					if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
 					if (!res) return reject("No response was received from Reddit.");
 					if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
-					
+
 					this.lastChecked = Date.now();
 					const results = res.body.data.children
 						.filter(r => !r.data.stickied && r.data.score > 0)
@@ -521,7 +521,7 @@ module.exports = [
 								infiniteArgs: true,
 								type: "string"
 							}
-						],
+						]
 					}
 				],
 				perms: {
@@ -532,7 +532,7 @@ module.exports = [
 				usage: "quote <user | \"user\"> <quote> OR quote message <ID>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[0] == "message") {
 				message.channel.fetchMessage(args[1])
@@ -590,7 +590,7 @@ module.exports = [
 				{min: 1, msg: "Awful 😰"}
 			];
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const memberRegex = /^<@!?\d{17,19}>$/;
 			let hash = 0, toRate = args[0];
@@ -669,7 +669,7 @@ module.exports = [
 				usage: "say <message> [--embed]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			await message.delete().catch(() => {});
 			if (flags.some(f => f.name == "embed")) {
@@ -722,7 +722,7 @@ module.exports = [
 				{min: 1, msg: "Not a match! 💔"}
 			];
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[0].length < 2 || (args[1] && args[1].length < 2)) return {cmdWarn: "One of the ship names is too short."};
 			if (args[0].length > 100 || (args[1] && args[1].length > 100)) return {cmdWarn: "One of the ship names is too long."};

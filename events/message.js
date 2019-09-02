@@ -69,7 +69,7 @@ async function execCommand(runCommand, bot, message, args) {
 		if (args.error.startsWith("Multiple")) return {cmdErr: `**${args.error}**` + "\n" + args.message};
 		return {cmdErr: `**${args.error}**` + "\n" + args.message + "\n" + `▫ | Correct usage: \`${runCommand.usage}\`` + "\n" + `▫ | Get more help by using \`${bot.prefix}help ${runCommand.name}\``};
 	}
-		
+
 	return runCommand.run(bot, message, args, flags);
 }
 
@@ -86,11 +86,11 @@ module.exports = async (bot, message) => {
 		const args = message.content.slice(mentionMatch ? mentionMatch[0].length : bot.prefix.length).trim().split(/ +/g),
 			command = args.shift().toLowerCase(),
 			runCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
-		
+
 		if (!runCommand) return;
 		if (message.guild && !message.channel.permissionsFor(bot.user).has(["VIEW_CHANNEL", "SEND_MESSAGES"])) return;
 		if (cdChecker.check(bot, message, runCommand) == false) return;
-		
+
 		execCommand(runCommand, bot, message, args)
 			.then(runRes => {
 				/*
@@ -102,7 +102,7 @@ module.exports = async (bot, message) => {
 						noLog: true
 					}
 				*/
-				
+
 				if (runRes) {
 					if (runRes.cmdWarn) {
 						const errTitle = runRes.errTitle ? `**${runRes.errTitle}**` + "\n" : "";
@@ -112,14 +112,14 @@ module.exports = async (bot, message) => {
 						message.channel.send(`❗ ${errTitle}${runRes.cmdErr}`);
 					}
 				}
-				
+
 				if (!bot.ownerIDs.includes(message.author.id) && runCommand.cooldown.time != 0 && (!runRes || runRes.cooldown)) {
 					cdChecker.addCooldown(bot, message, runCommand, {
 						name: runCommand.cooldown.name || null,
 						time: runRes && runRes.cooldown && runRes.cooldown.time ? runRes.cooldown.time : null
 					});
 				}
-				
+
 				/*
 					The below condition can be replaced with this when bot owners and select commands are to be ignored.
 					if ((!runRes || (!runRes.noLog && !runRes.cmdWarn && !runRes.cmdErr)) && runCommand.name != "help" && runCommand.name != "phone" && !bot.ownerIDs.includes(message.author.id)) {

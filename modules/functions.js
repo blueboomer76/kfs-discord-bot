@@ -54,7 +54,7 @@ module.exports = {
 		const presences = {online: 0, idle: 0, dnd: 0, offline: 0},
 			channels = {text: 0, voice: 0, category: 0, dm: 0};
 		for (const user of bot.users.values()) presences[user.presence.status]++;
-		for (const channel of bot.channels.values()) channels[channel.type]++;		
+		for (const channel of bot.channels.values()) channels[channel.type]++;
 
 		return {
 			servers: bot.guilds.size,
@@ -125,7 +125,7 @@ module.exports = {
 		} else {
 			baseStr1 = Math.round((secDif - 5256000) / 31536000) + " years";
 		}
-		
+
 		const suffix = time1 <= time2 ? "ago" : "left"; // Duration flows from time1 to time2
 		return simple ? `${baseStr1} ${suffix}` : `${baseStr1} ${baseStr2}${suffix}`;
 	},
@@ -214,12 +214,12 @@ module.exports = {
 			if (foundSuffix.endsWith(key.short)) {matchLength = key.short.length; long = false; return true}
 			return false;
 		});
-		
+
 		let foundSuffix2 = foundSuffix;
 		if (foundTensSuffix) {
 			parsedNum *= foundTensSuffix.value;
 			if (matchLength == foundSuffix.length) return parsedNum;
-			
+
 			foundSuffix2 = foundSuffix2.slice(0, foundSuffix.length - matchLength);
 			if (long) {
 				if (foundSuffix2 == "tres" && foundTensSuffix.long == "vigint") return parsedNum * 1e+9;

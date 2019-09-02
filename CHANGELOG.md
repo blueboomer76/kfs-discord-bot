@@ -4,6 +4,13 @@
 
 # 1.X (current)
 
+## 1.5.17
+
+- Added option to add cooldown messages in the cooldown checker by config
+- Changed argument quote parser to use a shared function to find arguments that fit quote-related regexes
+- Fixed styling of code with more ESLint rules, such as brace use with one-line if statements
+- Reorganized duration and large number parsers in `modules/functions.js` along with renaming of variables to make it more understandable
+
 ## 1.5.12
 
 - Added "color" argument type

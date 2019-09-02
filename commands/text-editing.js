@@ -19,7 +19,7 @@ module.exports = [
 				usage: "clapify <text>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			let toClapify = args[0].split(" ");
 			if (toClapify.length == 1) toClapify = args[0].split("");
@@ -43,10 +43,10 @@ module.exports = [
 				usage: "cowsay <text>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
-			
+
 			const inputText = args[0].replace(/\n/g, " ");
 			let cowsayLines = [
 				"        \\   ^__^",
@@ -83,7 +83,7 @@ module.exports = [
 				for (let i = 0; i < lines.length; i++) {
 					lines[i] = lines[i].padEnd(50, " ");
 				}
-	
+
 				const toDisplayLines = [];
 				toDisplayLines.push(` ${"_".repeat(52)}`, `/ ${lines[0]} \\`);
 				if (lines.length > 2) {
@@ -94,7 +94,7 @@ module.exports = [
 				toDisplayLines.push(`\\ ${lines[lines.length - 1]} /`, ` ${"-".repeat(52)}`);
 				cowsayLines = toDisplayLines.concat(cowsayLines);
 			}
-			
+
 			message.channel.send("```" + cowsayLines.join("\n") + "```");
 		}
 	},
@@ -112,10 +112,10 @@ module.exports = [
 				usage: "emojify <text>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[0].length > 85) return {cmdWarn: "That text is too long, must be under 85 characters."};
-			
+
 			const chars = args[0].toLowerCase().split(""), letterRegex = /[a-z]/;
 			let emojified = "";
 			for (const c of chars) {
@@ -138,7 +138,7 @@ module.exports = [
 					}
 				}
 			}
-		
+
 			message.channel.send(emojified);
 		}
 	},
@@ -156,10 +156,10 @@ module.exports = [
 				usage: "owoify <text>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
-			
+
 			const owoifySuffixes = ["owo", "OWO", "uwu", "UwU", "X3", ":3", "***notices bulge** OwO, what's this?*"],
 				owoified = args[0].toLowerCase()
 					.replace(/[lr]+/g, "w")
@@ -190,7 +190,7 @@ module.exports = [
 				usage: "reverse <text> [--words]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
 
@@ -223,10 +223,10 @@ module.exports = [
 				usage: "scramble <text> [--(inner|words)]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
-			
+
 			const innerFlag = flags.some(f => f.name == "inner"),
 				wordsFlag = flags.some(f => f.name == "words"),
 				toScramble = args[0].match(wordsFlag ? wordGrouperRegex : grouperRegex);
