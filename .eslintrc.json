@@ -8,14 +8,7 @@
 		"ecmaVersion": 2017
 	},
 	"rules": {
-		"no-case-declarations": "warn",
-		"no-console": "off",
-		"no-unused-vars": [
-			"warn",
-			{
-				"argsIgnorePattern": "(bot|args|flags)"
-			}
-		],
+		"comma-dangle": "warn",
 		"indent": [
 			"error",
 			"tab",
@@ -27,6 +20,16 @@
 			"error",
 			"windows"
 		],
+		"no-case-declarations": "warn",
+		"no-console": "off",
+		"no-trailing-spaces": "error",
+		"no-unused-vars": [
+			"warn",
+			{
+				"argsIgnorePattern": "(bot|args|flags)"
+			}
+		],
+		"nonblock-statement-body-position": "error",
 		"prefer-const": "warn",
 		"quotes": [
 			"error",

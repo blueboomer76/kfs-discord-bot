@@ -36,7 +36,7 @@ async function checkArgs(bot, message, args, cmdArg) {
 		case "number": params = {min: arg.min || -Infinity, max: arg.max || Infinity}; break;
 		case "oneof": params = {list: arg.allowedValues};
 	}
-	
+
 	const resolved = await resolver.resolve(bot, message, args, arg.type, params);
 	if (resolved == null) {
 		if (cmdArg.shiftable) {
@@ -71,9 +71,9 @@ async function checkArgs(bot, message, args, cmdArg) {
 			return resolved[0];
 		} else {
 			const endMsg = resolved.length > 20 ? `...and ${resolved.length - 20} more.` : "";
-			let list = resolved.slice(0, 20);			
+			let list = resolved.slice(0, 20);
 			list = arg.type == "member" ? list.map(mem => `${mem.user.tag} (${mem.user.id})`) : list.map(obj => `${obj.name} (${obj.id})`);
-			
+
 			return {
 				error: `Multiple ${arg.type}s found`,
 				message: `These ${arg.type}s were matched:` + "\n" + "```" + list.join("\n") + "```" + endMsg

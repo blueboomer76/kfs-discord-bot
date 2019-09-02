@@ -48,7 +48,7 @@ module.exports = async bot => {
 					newBotGame = `on version ${version}`;
 					break;
 			}
-			
+
 			if (bot.cache.status.pos < 5) {
 				bot.cache.status.pos++;
 			} else {
@@ -61,7 +61,7 @@ module.exports = async bot => {
 		}
 		bot.user.setActivity(`${bot.prefix}help | ${newBotGame}`);
 	}, 1000 * 300);
-	
+
 	setInterval(() => {
 		bot.logStats();
 		if (Date.now() % (1000*10800) < 1000*3600) {

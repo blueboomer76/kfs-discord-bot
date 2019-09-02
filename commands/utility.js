@@ -77,7 +77,7 @@ module.exports = [
 				usage: "channelinfo [channel]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const channel = args[0] || message.channel,
 				createdDate = new Date(channel.createdTimestamp),
@@ -86,7 +86,7 @@ module.exports = [
 			if (channel.permissionsFor(everyoneRole).has("VIEW_CHANNEL")) {
 				accessible = channel.permissionsFor(everyoneRole).has("READ_MESSAGE_HISTORY") ? "Yes" : "Partial";
 			}
-			
+
 			const channelEmbed = new RichEmbed()
 				.setTitle(`Channel Info - ${channel.name}`)
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -95,7 +95,7 @@ module.exports = [
 				.addField("Type", capitalize(channel.type), true)
 				.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
 				.addField("Accessible to everyone", accessible, true);
-			
+
 			const uncategorized = message.guild.channels.filter(c => c.type != "category" && !c.parent);
 			let channels, pos = 0;
 			if (uncategorized.has(channel.id)) {
@@ -125,7 +125,7 @@ module.exports = [
 				pos++;
 			}
 			channelEmbed.addField("Position", pos + " / " + message.guild.channels.size, true);
-			
+
 			if (channel.type == "text") {
 				channelEmbed.addField("NSFW", channel.nsfw ? "Yes" : "No", true)
 					.addField("Topic", channel.topic || "No topic set");
@@ -133,7 +133,7 @@ module.exports = [
 				channelEmbed.addField("User Limit", channel.userLimit == 0 ? "None" : channel.userLimit, true)
 					.addField("Bitrate", `${channel.bitrate} bits`, true);
 			}
-	
+
 			message.channel.send(channelEmbed);
 		}
 	},
@@ -157,7 +157,7 @@ module.exports = [
 				usage: "color <hex color | rgb(0-255,0-255,0-255) | color name | 0-255,0-255,0-255 | decimal:0-16777215 | hsl(0-359,0-100,0-100)>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const decimalValue = parseInt(args[0]),
 				rgbValues = [Math.floor(decimalValue / 65536), Math.floor(decimalValue / 256) % 256, decimalValue % 256],
@@ -168,12 +168,12 @@ module.exports = [
 				hsvValues = convert.rgb.hsv(rgbValues),
 				xyzValues = convert.rgb.xyz(rgbValues),
 				grayscaleValue = Math.round(convert.rgb.gray.raw(rgbValues) * 2.55);
-				
+
 			message.channel.send(new RichEmbed()
 				.setTitle("Color - #" + hexValue)
 				.setDescription(`**Nearest CSS Color Name**: ${colorName}` + "\n" +
 				`**Hexadecimal (Hex)**: #${hexValue}` + "\n" +
-				`**RGB**: rgb(${rgbValues.join(", ")})` + "\n" + 
+				`**RGB**: rgb(${rgbValues.join(", ")})` + "\n" +
 				`**Decimal (Integer)**: ${decimalValue}` + "\n" +
 				`**HSL**: hsl(${hslValues[0]}, ${hslValues[1]}%, ${hslValues[2]}%)` + "\n" +
 				`**CMYK**: cmyk(${cmykValues[0]}%, ${cmykValues[1]}%, ${cmykValues[2]}%, ${cmykValues[3]}%)` + "\n" +
@@ -208,7 +208,7 @@ module.exports = [
 				usage: "emoji <custom emoji>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const emoji = args[0], createdDate = new Date(emoji.createdTimestamp);
 			message.channel.send(new RichEmbed()
@@ -259,7 +259,7 @@ module.exports = [
 				usage: "eval <code> [--console] [--inspect]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const consoleFlag = flags.some(f => f.name == "console");
 			let rawRes, beginEval, endEval;
@@ -320,7 +320,7 @@ module.exports = [
 				usage: "math <expression>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			let result;
 			try {
@@ -355,13 +355,13 @@ module.exports = [
 				usage: "roleinfo <role>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const role = args[0],
 				rolePos = role.calculatedPosition,
 				guildRoles = message.guild.roles.array();
 			guildRoles.splice(guildRoles.findIndex(r => r.calculatedPosition == 0), 1);
-	
+
 			const createdDate = new Date(role.createdTimestamp),
 				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id)),
@@ -371,7 +371,7 @@ module.exports = [
 				const roleName = guildRoles.find(r => r.calculatedPosition == i).name;
 				nearbyRoles.push(i == rolePos ? `**${roleName}**` : roleName);
 			}
-	
+
 			message.channel.send(new RichEmbed()
 				.setTitle(`Role Info - ${role.name}`)
 				.setColor(role.color)
@@ -410,7 +410,7 @@ module.exports = [
 					{
 						name: "ordered",
 						desc: "Whether the list should be ordered according to position"
-					},
+					}
 				],
 				perms: {
 					bot: ["ADD_REACTIONS", "EMBED_LINKS", "MANAGE_MESSAGES"],
@@ -420,7 +420,7 @@ module.exports = [
 				usage: "rolelist [page] [--ordered]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const orderedFlag = flags.find(f => f.name == "ordered");
 			const roles = message.guild.roles.array();
@@ -460,7 +460,7 @@ module.exports = [
 				usage: "rolemembers <role>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const role = args[0],
 				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
@@ -497,7 +497,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const guild = message.guild,
 				guildMembers = guild.large ? await fetchMembers(message) : guild.members;
@@ -517,7 +517,7 @@ module.exports = [
 				channels = {text: 0, voice: 0, category: 0};
 			for (const presence of guild.presences.values()) statuses[presence.status]++;
 			for (const channel of guild.channels.values()) channels[channel.type]++;
-			
+
 			message.channel.send(new RichEmbed()
 				.setTitle(`Server Info - ${guild.name}`)
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -567,7 +567,7 @@ module.exports = [
 				usage: "userinfo [user]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const userEmbed = new RichEmbed();
 			let user, member;
@@ -613,11 +613,11 @@ module.exports = [
 				let memRoles = member.roles.array();
 				memRoles.splice(memRoles.findIndex(role => role.calculatedPosition == 0), 1);
 				memRoles = memRoles.map(role => role.name);
-				
+
 				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 					guildMemArray = guildMembers.array();
 				guildMemArray.sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
-				
+
 				const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp), nearbyMems = [];
 				for (let i = joinPos - 2; i < joinPos + 3; i++) {
 					if (i < 0 || i >= message.guild.memberCount) continue;

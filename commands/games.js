@@ -10,12 +10,12 @@ module.exports = [
 				aliases: ["fish"]
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const commonObjs = ["🔋", "🛒", "👞", "📎"],
 				uncommonObjs = ["🐠", "🐡", "🐢", "🦐"],
 				rareObjs = ["🦑", "🐙", "🐸"];
-			
+
 			const rand = Math.random();
 			let fished;
 			if (rand < 0.45) {
@@ -27,7 +27,7 @@ module.exports = [
 			} else {
 				fished = rareObjs[Math.floor(Math.random() * rareObjs.length)];
 			}
-			
+
 			message.channel.send(`🎣 You used a fishing pole and caught: ${fished}!`);
 		}
 	},
@@ -46,7 +46,7 @@ module.exports = [
 				usage: "rps <r | rock | p | paper | s | scissors>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const choices = ["rock", "paper", "scissors"],
 				userChoice = args[0].length == 1 ? choices.find(c => c.startsWith(args[0])) : args[0],
@@ -78,7 +78,7 @@ module.exports = [
 			this.questions = [];
 			this.letters = ["A", "B", "C", "D"];
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (this.questions.length == 0) {
 				try {
@@ -87,21 +87,21 @@ module.exports = [
 					return {cmdWarn: err};
 				}
 			}
-			
+
 			const tQuestion = this.questions.splice(Math.floor(Math.random() * this.questions.length), 1)[0],
 				tempAnswers = tQuestion.otherAnswers,
 				answers = [],
 				numAnswers = tQuestion.otherAnswers.length + 1;
 			let answerLetter;
-			
+
 			tempAnswers.push(tQuestion.answer);
-			
+
 			for (let i = tempAnswers.length; i > 0; i--) {
 				const ans = tempAnswers.splice(Math.floor(Math.random() * i), 1)[0];
 				if (ans == tQuestion.answer) answerLetter = this.letters[numAnswers - i];
 				answers.push(ans);
 			}
-			
+
 			let i = -1;
 			message.channel.send("__**Trivia**__" + "\n" + tQuestion.question.replace(/&quot;/g, "\"").replace(/&#039;/g, "'") + "\n\n" + answers.map(a => {
 				i++;
@@ -125,7 +125,7 @@ module.exports = [
 						});
 				});
 		}
-		
+
 		getQuestions() {
 			return new Promise((resolve, reject) => {
 				request.get({
@@ -136,7 +136,7 @@ module.exports = [
 					if (err) return reject(`Could not request to Open Trivia Database: ${err.message} (${err.code})`);
 					if (!res) return reject("No response was received from Open Trivia Database.");
 					if (res.statusCode >= 400) return reject(`An error has been returned from Open Trivia Database: ${res.statusMessage} (${res.statusCode}). Try again later.`);
-					
+
 					const results = res.body.results.map(r => {
 						return {
 							category: r.category,

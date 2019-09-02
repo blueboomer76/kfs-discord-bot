@@ -68,7 +68,7 @@ module.exports = {
 					})
 					.catch(() => msg.channel.send("⚠ Failed to generate the image."));
 			})
-			.catch(() => msg.channel.send("⚠ Failed to read image contents."));	
+			.catch(() => msg.channel.send("⚠ Failed to read image contents."));
 	},
 	postJimpImage: (msg, img, fileName) => {
 		img.getBufferAsync(Jimp.MIME_PNG)

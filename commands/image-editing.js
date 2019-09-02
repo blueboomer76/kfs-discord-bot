@@ -41,11 +41,11 @@ module.exports = [
 				usage: "blur [image URL/mention/emoji] [--level <number>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			const levelFlag = flags.find(f => f.name == "level");
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "blur", {blur: levelFlag ? levelFlag.args : null});
 		}
@@ -75,7 +75,7 @@ module.exports = [
 				usage: "colorify [image URL/mention/emoji] <color: hex color | decimal:0-16777215 | ...>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
@@ -114,7 +114,7 @@ module.exports = [
 				usage: "composite <image 1> [images...]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args.length > 10) return {cmdWarn: "Too many images or emojis provided."};
 
@@ -193,8 +193,8 @@ module.exports = [
 				usage: "creatememe [image URL] <text> | [bottom text] [--disable-caps]"
 			});
 		}
-		
-		async run(bot, message, args, flags) {			
+
+		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
@@ -324,11 +324,11 @@ module.exports = [
 				usage: "deepfry [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "deepfry", {jpeg: true});
 		}
 	},
@@ -356,11 +356,11 @@ module.exports = [
 				usage: "flip [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "flip");
 		}
 	},
@@ -388,11 +388,11 @@ module.exports = [
 				usage: "flop [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "flop");
 		}
 	},
@@ -421,11 +421,11 @@ module.exports = [
 				usage: "grayscale [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "grayscale");
 		}
 	},
@@ -453,11 +453,11 @@ module.exports = [
 				usage: "invert [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "invert");
 		}
 	},
@@ -492,11 +492,11 @@ module.exports = [
 				usage: "mirror [image URL/mention/emoji] <(haah | right-to-left) | (hooh | bottom-to-top) | (waaw | left-to-right) | (woow | top-to-bottom)>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			const type = args[1];
 			Jimp.read(fetchedImg.data)
 				.then(img => {
@@ -513,7 +513,7 @@ module.exports = [
 						imgClone1.crop(imgHalfWidth, 0, imgHalfWidth, imgHeight);
 						imgClone2.crop(imgHalfWidth, 0, imgHalfWidth, imgHeight)
 							.mirror(true, false);
-						
+
 						imgToSend.composite(imgClone1, imgWidth/2, 0)
 							.composite(imgClone2, 0, 0);
 						fileName = "mirror-haah.png";
@@ -521,7 +521,7 @@ module.exports = [
 						imgClone1.crop(0, imgHalfHeight, imgWidth, imgHalfHeight);
 						imgClone2.crop(0, imgHalfHeight, imgWidth, imgHalfHeight)
 							.mirror(false, true);
-						
+
 						imgToSend.composite(imgClone1, 0, imgHalfHeight)
 							.composite(imgClone2, 0, 0);
 						fileName = "mirror-hooh.png";
@@ -529,7 +529,7 @@ module.exports = [
 						imgClone1.crop(0, 0, imgHalfWidth, imgHeight);
 						imgClone2.crop(0, 0, imgHalfWidth, imgHeight)
 							.mirror(true, false);
-						
+
 						imgToSend.composite(imgClone1, 0, 0)
 							.composite(imgClone2, imgHalfWidth, 0);
 						fileName = "mirror-waaw.png";
@@ -537,7 +537,7 @@ module.exports = [
 						imgClone1.crop(0, 0, imgWidth, imgHalfHeight);
 						imgClone2.crop(0, 0, imgWidth, imgHalfHeight)
 							.mirror(false, true);
-						
+
 						imgToSend.composite(imgClone1, 0, 0)
 							.composite(imgClone2, 0, imgHalfHeight);
 						fileName = "mirror-woow.png";
@@ -574,11 +574,11 @@ module.exports = [
 				usage: "needsmorejpeg [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "needsmorejpeg", {jpeg: true});
 		}
 	},
@@ -617,11 +617,11 @@ module.exports = [
 				usage: "pixelate [image URL/mention/emoji] [--pixels <number>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			const pixelsFlag = flags.find(f => f.name == "pixels");
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "pixelate", {pixels: pixelsFlag ? pixelsFlag.args : null});
 		}
@@ -651,11 +651,11 @@ module.exports = [
 				usage: "randomcrop [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "randomcrop");
 		}
 	},
@@ -694,11 +694,11 @@ module.exports = [
 				usage: "rotate [image URL/mention/emoji] [--degrees <1-359>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			const degreesFlag = flags.find(f => f.name == "degrees");
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "rotate", {rotation: degreesFlag ? degreesFlag.args : null});
 		}
@@ -727,11 +727,11 @@ module.exports = [
 				usage: "sepia [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "sepia");
 		}
 	},
@@ -771,14 +771,14 @@ module.exports = [
 				usage: "spin [image URL/mention/emoji] [--speed <1-5>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			const speedFlag = flags.find(f => f.name == "speed"),
 				img = new Canvas.Image();
-			
+
 			imageManager.getCanvasImage(img, fetchedImg.data, args[0] && args[0].isEmoji, () => {
 				let canvasDim = img.width < img.height ? img.width : img.height,
 					imgScale = 1,
@@ -800,7 +800,7 @@ module.exports = [
 				const ctx = Canvas.createCanvas(canvasDim, canvasDim).getContext("2d"),
 					encoder = new gifencoder(canvasDim, canvasDim),
 					stream = encoder.createReadStream();
-				
+
 				encoder.start();
 				encoder.setRepeat(0);
 				encoder.setDelay(speedFlag ? (6 - speedFlag.args) * 20 : 60);

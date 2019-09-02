@@ -15,7 +15,7 @@ class Argument {
 		this.parseSeperately = props.parseSeperately || false;
 		this.shiftable = props.shiftable || false;
 		this.type = props.type;
-		
+
 		if (props.allowedValues) this.allowedValues = props.allowedValues;
 		if (props.min) this.min = props.min;
 		if (props.max) this.max = props.max;

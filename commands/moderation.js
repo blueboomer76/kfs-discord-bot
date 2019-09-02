@@ -52,7 +52,7 @@ module.exports = [
 				usage: "addrole <user | \"user\"> <role>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
@@ -60,7 +60,7 @@ module.exports = [
 			if (role.managed) return {cmdWarn: `Role **${role.name}** cannot be added to **${member.user.tag}** since it is managed or integrated.`};
 			const compareTest = compareRolePositions(message, member, role, {action: `add the role **${role.name}** to`, type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
-	
+
 			member.addRole(role)
 				.then(() => message.channel.send(`✅ Role **${role.name}** has been added to the user **${member.user.tag}**.`))
 				.catch(err => message.channel.send("An error has occurred while trying to add the role: `" + err + "`"));
@@ -111,7 +111,7 @@ module.exports = [
 				usage: "ban <user> [--days <1-7>] [--reason <reason>] [--yes]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0],
 				daysFlag = flags.find(f => f.name == "days"),
@@ -142,7 +142,7 @@ module.exports = [
 				args: [
 					{
 						type: "string"
-					},
+					}
 				],
 				cooldown: {
 					time: 20000,
@@ -156,11 +156,11 @@ module.exports = [
 				usage: "createchannel <name>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const channelName = args[0].toLowerCase();
 			if (/[^0-9a-z-_]/.test(channelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
-				
+
 			message.guild.createChannel(channelName, {type: "text"})
 				.then(() => message.channel.send(`✅ The text channel **${channelName}** has been created.`))
 				.catch(err => message.channel.send("An error has occurred while trying to create the channel: `" + err + "`"));
@@ -190,7 +190,7 @@ module.exports = [
 				usage: "createrole <name>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const roleName = args[0];
 			message.guild.createRole({name: roleName})
@@ -208,7 +208,7 @@ module.exports = [
 					{
 						infiniteArgs: true,
 						type: "channel"
-					},
+					}
 				],
 				cooldown: {
 					time: 20000,
@@ -228,14 +228,14 @@ module.exports = [
 				usage: "deletechannel <name> [--yes]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const channel = args[0];
 			if (channel.createdTimestamp + 1.5552e+10 < Date.now() && !flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to delete the channel **${channel.name}** (ID ${channel.id}), which is more than 180 days old.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
-			
+
 			channel.delete()
 				.then(() => message.channel.send(`✅ The channel **${channel.name}** has been deleted.`))
 				.catch(err => message.channel.send("An error has occurred while trying to delete the channel: `" + err + "`"));
@@ -251,7 +251,7 @@ module.exports = [
 					{
 						infiniteArgs: true,
 						type: "role"
-					},
+					}
 				],
 				cooldown: {
 					time: 30000,
@@ -395,14 +395,14 @@ module.exports = [
 				usage: "kick <user> [--reason <reason>] [--yes]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0],
 				reasonFlag = flags.find(f => f.name == "reason");
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "kick", type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
-			
+
 			if (!flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to kick the user **${member.user.tag}** from this server.`);
 				if (promptRes) return {cmdWarn: promptRes};
@@ -442,7 +442,7 @@ module.exports = [
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "mute", type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
-			
+
 			const mcOverwrites = message.channel.permissionOverwrites.get(member.user.id);
 			if (mcOverwrites && new Permissions(mcOverwrites.deny).has("SEND_MESSAGES")) {
 				return {cmdWarn: `**${member.user.tag}** is already muted in this channel.`};
@@ -516,7 +516,7 @@ module.exports = [
 			});
 			this.options = ["attachments", "bots", "embeds", "images", "invites", "left", "links", "mentions", "reactions"];
 		}
-		
+
 		async run(bot, message, args, flags) {
 			await message.delete();
 
@@ -660,7 +660,7 @@ module.exports = [
 				usage: "removerole <user | \"user\"> <role>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
@@ -701,7 +701,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const newChannelName = args[0].toLowerCase();
 			if (/[^0-9a-z-_]/.test(newChannelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
-				
+
 			message.channel.setName(newChannelName)
 				.then(() => message.channel.send(`✅ This channel's name has been set to **${newChannelName}**.`))
 				.catch(err => message.channel.send("An error has occurred while trying to rename this channel: `" + err + "`"));
@@ -813,7 +813,7 @@ module.exports = [
 				usage: "setnickname <user | \"user\"> <new nick>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0], newNick = args[1];
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
@@ -854,12 +854,12 @@ module.exports = [
 				usage: "setrolecolor <role | \"role\"> <color: hex color | decimal:0-16777215 | ...>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const role = args[0], newRoleColor = args[1];
 			const compareTest = compareRolePositions(message, role, null, {action: "change the color of", type: "role"});
 			if (compareTest != true) return {cmdWarn: compareTest};
-			
+
 			role.edit({color: newRoleColor})
 				.then(() => message.channel.send(`✅ The color of role **${role.name}** has been set to **#${newRoleColor.toString(16)}**.`))
 				.catch(err => message.channel.send("An error has occurred while trying to set the color of the role: `" + err + "`"));
@@ -888,11 +888,11 @@ module.exports = [
 				usage: "settopic <new topic>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const newChannelTopic = args[0];
 			if (newChannelTopic.length > 1024) return {cmdWarn: "The topic to set is too long."};
-				
+
 			message.channel.setTopic(newChannelTopic)
 				.then(() => message.channel.send("✅ This channel's topic has changed."))
 				.catch(err => message.channel.send("An error has occurred while trying to set the topic: `" + err + "`"));
@@ -941,18 +941,18 @@ module.exports = [
 				usage: "softban <user | \"user\"> <days: 1-7> [--reason <reason>] [--yes]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0], reasonFlag = flags.find(f => f.name == "reason");
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "softban", type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
-			
+
 			if (!flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to softban the user **${member.user.tag}** in this server.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
-			
+
 			member.ban({
 				days: args[1],
 				reason: reasonFlag ? reasonFlag.args : null
@@ -1032,13 +1032,13 @@ module.exports = [
 				usage: "unmute <user>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0];
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "unmute", type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
-			
+
 			const mcOverwrites = message.channel.permissionOverwrites.get(member.user.id);
 			if (!mcOverwrites || !new Permissions(mcOverwrites.deny).has("SEND_MESSAGES")) {
 				return {cmdWarn: `**${member.user.tag}** is not muted in this channel.`};
