@@ -14,7 +14,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const suits = ["♠", "♥", "♣", "♦"],
 				values = ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
@@ -25,7 +25,7 @@ module.exports = [
 					deck.push({suit: suits[i], value: values[j]});
 				}
 			}
-			
+
 			memberGame = {
 				dealer: [this.drawFromDeck(deck)],
 				player: [this.drawFromDeck(deck), this.drawFromDeck(deck)],
@@ -33,33 +33,33 @@ module.exports = [
 				message: message,
 				botMessage: null
 			};
-			
+
 			await message.channel.send(this.showGame(memberGame, "start"))
 				.then(msg => memberGame.botMessage = msg);
-			
+
 			await this.awaitResponse(memberGame);
-			
+
 			delete message.member.bjGame;
 		}
-		
+
 		drawFromDeck(deck) {
 			return deck.splice(Math.floor(Math.random() * deck.length), 1)[0];
 		}
-		
+
 		showGame(game, state) {
 			const dealerValue = this.getHandValue(game.dealer),
 				playerValue = this.getHandValue(game.player),
 				mystery = state == "end" && playerValue <= 21 ? "" : ", ???";
 			let toDisplayDealer = game.dealer.map(card => `${card.value} ${card.suit}`).join(", "),
 				toDisplayPlayer = game.player.map(card => `${card.value} ${card.suit}`).join(", ");
-			
+
 			toDisplayDealer = `**Dealer:** ${toDisplayDealer}${mystery} (value ${dealerValue})`;
 			toDisplayPlayer = `**Player:** ${toDisplayPlayer} (value ${playerValue})`;
-			
+
 			if (state == "start") {
 				if (playerValue == 21) {
 					game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\nBLACKJACK!`);
-				} else {		
+				} else {
 					return `${toDisplayDealer}\n${toDisplayPlayer}\n\n` +
 					"Type `stand` to end your turn, or `hit` to draw another card.";
 				}
@@ -69,7 +69,7 @@ module.exports = [
 				"Type `stand` to end your turn, or `hit` to draw another card.");
 			} else {
 				if (!game.message.channel.messages.has(game.botMessage.id)) return;
-				
+
 				let result = "Tied";
 				if (playerValue > 21) {
 					result = "BUST";
@@ -80,11 +80,11 @@ module.exports = [
 				} else if (dealerValue > playerValue) {
 					result = "Dealer wins";
 				}
-				
+
 				game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\n${result}!`);
 			}
 		}
-		
+
 		getHandValue(hand) {
 			let handValue = 0;
 			for (const card of hand) {
@@ -102,7 +102,7 @@ module.exports = [
 			}
 			return handValue;
 		}
-		
+
 		async awaitResponse(game) {
 			await game.message.channel.awaitMessages(msg => msg.author.id == game.message.author.id && (msg.content == "hit" || msg.content == "stand"), {
 				max: 1,
@@ -124,14 +124,14 @@ module.exports = [
 				})
 				.catch(() => this.dealDealerCards(game));
 		}
-		
+
 		dealDealerCards(game) {
 			while (this.getHandValue(game.dealer) < 17) {
 				game.dealer.push(this.drawFromDeck(game.deck));
 			}
 			this.endGame(game);
 		}
-		
+
 		endGame(game) {this.showGame(game, "end")}
 	},
 	class FishyCommand extends Command {
@@ -142,12 +142,12 @@ module.exports = [
 				aliases: ["fish"]
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const commonObjs = ["🔋", "🛒", "👞", "📎"],
 				uncommonObjs = ["🐠", "🐡", "🐢", "🦐"],
 				rareObjs = ["🦑", "🐙", "🐸"];
-			
+
 			const rand = Math.random();
 			let fished;
 			if (rand < 0.45) {
@@ -159,7 +159,7 @@ module.exports = [
 			} else {
 				fished = rareObjs[Math.floor(Math.random() * rareObjs.length)];
 			}
-			
+
 			message.channel.send(`🎣 You used a fishing pole and caught: ${fished}!`);
 		}
 	},
@@ -178,7 +178,7 @@ module.exports = [
 				usage: "rps <r | rock | p | paper | s | scissors>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const choices = ["rock", "paper", "scissors"],
 				userChoice = args[0].length == 1 ? choices.find(c => c.startsWith(args[0])) : args[0],
@@ -205,14 +205,14 @@ module.exports = [
 				aliases: ["slot"]
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const symbols = ["🍒", "💵", "💰", "💎", "🍊", "🍋", "🍐", "🍉", "🍇", ":seven:"],
 				chosen = [];
 			for (let i = 0; i < 9; i++) {
 				chosen.push(symbols[Math.floor(Math.random() * symbols.length)]);
 			}
-			
+
 			let result = "lost...";
 			if (chosen[3] == chosen[4] || chosen[3] == chosen[5] || chosen[4] == chosen[5]) {
 				result = "matched 2 symbols!";
@@ -220,7 +220,7 @@ module.exports = [
 					result = chosen[3] == ":seven:" ? "got three 7's! Lucky!" : "matched 3 symbols!";
 				}
 			}
-			
+
 			message.channel.send("**🎰 | Slot Game**\n" +
 			"------------------\n" +
 			`${chosen[0]} : ${chosen[1]} : ${chosen[2]}\n\n` +
@@ -243,7 +243,7 @@ module.exports = [
 			this.questions = [];
 			this.letters = ["A", "B", "C", "D"];
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (this.questions.length == 0) {
 				try {
@@ -252,21 +252,21 @@ module.exports = [
 					return {cmdWarn: err};
 				}
 			}
-			
+
 			const tQuestion = this.questions.splice(Math.floor(Math.random() * this.questions.length), 1)[0],
 				tempAnswers = tQuestion.otherAnswers,
 				answers = [],
 				numAnswers = tQuestion.otherAnswers.length + 1;
 			let answerLetter;
-			
+
 			tempAnswers.push(tQuestion.answer);
-			
+
 			for (let i = tempAnswers.length; i > 0; i--) {
 				const ans = tempAnswers.splice(Math.floor(Math.random() * i), 1)[0];
 				if (ans == tQuestion.answer) answerLetter = this.letters[numAnswers - i];
 				answers.push(ans);
 			}
-			
+
 			let i = -1;
 			message.channel.send("__**Trivia**__" + "\n" + tQuestion.question.replace(/&quot;/g, "\"").replace(/&#039;/g, "'") + "\n\n" + answers.map(a => {
 				i++;
@@ -290,7 +290,7 @@ module.exports = [
 						});
 				});
 		}
-		
+
 		getQuestions() {
 			return new Promise((resolve, reject) => {
 				request.get({
@@ -300,7 +300,7 @@ module.exports = [
 				}, (err, res) => {
 					if (err) reject(`Could not request to Open Trivia Database: ${err.message} (${err.code})`);
 					if (res.statusCode >= 400) reject(`An error has been returned from Open Trivia Database: ${res.statusMessage} (${res.statusCode}). Try again later.`);
-					
+
 					const results = res.body.results.map(r => {
 						return {
 							category: r.category,
@@ -314,5 +314,5 @@ module.exports = [
 				});
 			});
 		}
-	},
+	}
 ];

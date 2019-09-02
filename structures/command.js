@@ -17,7 +17,7 @@ class Command {
 		this.perms = props.perms || {bot: [], user: [], role: null, level: 0};
 		this.subcommands = [];
 		this.usage = props.usage || this.name;
-		
+
 		if (props.args) {
 			for (const arg of props.args) this.args.push(new Argument(arg));
 		}
@@ -28,7 +28,7 @@ class Command {
 			for (const scmd of props.subcommands) this.subcommands.push(new SubCommand(scmd));
 		}
 	}
-	
+
 	async run() {
 		throw `The command ${this.name} does not have a run() method!`;
 	}

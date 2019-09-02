@@ -5,7 +5,7 @@ function setEntries(entries, limit, page) {
 	let displayed;
 	if (page > maxPage) page = maxPage;
 	if (page < 1) page = 1;
-	
+
 	if (limit > 1) {
 		displayed = entries[0].slice((page - 1) * limit, page * limit);
 	} else {
@@ -14,7 +14,7 @@ function setEntries(entries, limit, page) {
 			displayed.push(entries[i][page-1]);
 		}
 	}
-	
+
 	return {page: page, maxPage: maxPage, entries: displayed};
 }
 
@@ -34,19 +34,19 @@ function setEmbed(paginatedEmbed, displayed, options) {
 
 function paginateOnEdit(message, sentMessage, entries, oldEmbed, options) {
 	if (!message.channel.messages.has(sentMessage.id)) return;
-	
+
 	const entryData = setEntries(entries, options.limit, sentMessage.page);
 	let paginatedEmbed = new RichEmbed()
 		.setTitle(oldEmbed.title || "")
 		.setColor(oldEmbed.color)
 		.setFooter(`Page ${entryData.page} / ${entryData.maxPage} [${entries[0].length} entries]`);
-	
+
 	if (oldEmbed.author) {
 		paginatedEmbed.setAuthor(oldEmbed.author.name, oldEmbed.author.icon_url, oldEmbed.author.url);
 	}
 	if (oldEmbed.thumbnail) paginatedEmbed.setThumbnail(oldEmbed.thumbnail.url);
 	paginatedEmbed = setEmbed(paginatedEmbed, entryData.entries, options);
-	
+
 	sentMessage.edit("", {embed: paginatedEmbed});
 }
 
@@ -82,11 +82,11 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 		.setColor(options.embedColor || options.embedColor == 0 ? options.embedColor : Math.floor(Math.random() * 16777216))
 		.setFooter(`Page ${entryData.page} / ${entryData.maxPage} [${entries[0].length} entries]`);
 	paginatedEmbed = setEmbed(paginatedEmbed, entryData.entries, options);
-	
+
 	message.channel.send(options.embedText || "", {embed: paginatedEmbed})
 		.then(newMessage => {
 			if (entries[0].length <= options.limit) return;
-			
+
 			newMessage.page = options.page;
 			const emojiList = ["⬅", "➡"];
 			if (!options.noStop) emojiList.splice(1, 0, "⏹");
@@ -96,7 +96,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 					newMessage.react(emojiList[i]).catch(err => console.error(err));
 				}, i * 1000);
 			}
-			
+
 			const pgCollector = newMessage.createReactionCollector((reaction, user) => {
 				return user.id == message.author.id && emojiList.includes(reaction.emoji.name);
 			}, options.removeReactAfter ? {time: options.removeReactAfter} : {});
@@ -129,7 +129,7 @@ module.exports.paginate = (message, genEmbed, entries, options) => {
 								const cMsg = collected.array()[0];
 								newMessage.page = parseInt(cMsg.content);
 								paginateOnEdit(message, pgCollector.message, entries, paginatedEmbed, options);
-								
+
 								const toDelete = [];
 								if (message.channel.messages.has(newMessage2.id)) toDelete.push(newMessage2.id);
 								if (message.channel.messages.has(cMsg.id)) toDelete.push(cMsg.id);

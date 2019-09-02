@@ -93,7 +93,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			} else {
 				emoji = guildEmojis.get(obj);
 			}
-				
+
 			if (emoji) {
 				return [emoji];
 			} else {
@@ -101,7 +101,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 					return emoji.name.toLowerCase().includes(obj.toLowerCase());
 				});
 			}
-				
+
 			return list.length > 0 ? list : null;
 		}
 		case "function": {

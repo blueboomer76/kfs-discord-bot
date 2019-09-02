@@ -13,7 +13,7 @@ class FlagArgument {
 		this.num = props.num || 1;
 		this.optional = props.optional || false;
 		this.type = props.type;
-		
+
 		if (props.min) this.min = props.min;
 		if (props.max) this.max = props.max;
 		if (props.allowedValues) this.allowedValues = props.allowedValues;

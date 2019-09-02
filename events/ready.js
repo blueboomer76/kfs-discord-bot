@@ -17,13 +17,13 @@ module.exports = async bot => {
 	console.log("=".repeat(30) + " READY " + "=".repeat(30));
 	console.log(`[${new Date().toJSON()}] Bot has entered ready state.`);
 	bot.connectionRetries = 0;
-	
+
 	bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
 	bot.user.setActivity(`${bot.prefix}help | with you in ${bot.guilds.size} servers`);
 	bot.cache.guildCount = bot.guilds.size;
 	bot.cache.userCount = bot.users.size;
 	bot.cache.channelCount = bot.channels.size;
-	
+
 	setInterval(() => {
 		let newBotGame;
 		if (Math.random() < 0.5 && bot.cache.status.randomIters < 2) {
@@ -49,7 +49,7 @@ module.exports = async bot => {
 					newBotGame = `on version ${version}`;
 					break;
 			}
-			
+
 			if (bot.cache.status.pos < 5) {
 				bot.cache.status.pos++;
 			} else {
@@ -61,7 +61,7 @@ module.exports = async bot => {
 		}
 		bot.user.setActivity(`${bot.prefix}help | ${newBotGame}`);
 	}, 1000*300);
-	
+
 	setInterval(() => {
 		bot.logStats();
 		if (Date.now() % (1000*10800) < 1000*3600) {

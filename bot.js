@@ -77,7 +77,7 @@ class KendraBot extends Client {
 			this.ideaWebhook = new WebhookClient(config.ideaWebhook.id, config.ideaWebhook.token);
 		}
 	}
-	
+
 	loadCommands(altdir) {
 		const dir = altdir || "./commands/";
 		fs.readdir(dir, (err, files) => {
@@ -109,7 +109,7 @@ class KendraBot extends Client {
 			this.categories.sort();
 		});
 	}
-	
+
 	loadEvents() {
 		fs.readdir("./events/", (err, files) => {
 			if (err) throw err;
@@ -126,7 +126,7 @@ class KendraBot extends Client {
 			}
 		});
 	}
-	
+
 	logStats(sync = false) {
 		const cachedStats = this.cache.stats,
 			cumulativeStats = this.cache.cumulativeStats;
@@ -142,7 +142,7 @@ class KendraBot extends Client {
 			commandCurrentTotal += usageCache[cmdName];
 		}
 		cumulativeStats.commandTotal += commandCurrentTotal;
-		
+
 		if (Date.now() > cumulativeStats.lastSorted + 1000*86400*7) {
 			cumulativeStats.lastSorted = Date.now();
 			const tempNames = Object.keys(distrib),
@@ -179,7 +179,7 @@ class KendraBot extends Client {
 			});
 		}
 	}
-	
+
 	handleRemoteSiteError(message, site, err, res) {
 		const errBase = err ? `Could not request to ${site}: ${err.message} (${err.code})` : `An error has been returned from ${site}: ${res.statusMessage} (${res.statusCode})`;
 		message.channel.send("⚠ " + errBase + ". Try again later.");
@@ -204,7 +204,7 @@ class KendraBot extends Client {
 			}
 		});
 	}
-	
+
 	async postBotsForDiscordStats() {
 		request.post({
 			url: `https://botsfordiscord.com/api/bot/${this.user.id}`,
@@ -224,7 +224,7 @@ class KendraBot extends Client {
 			}
 		});
 	}
-	
+
 	async postDiscordBotsOrgStats() {
 		request.post({
 			url: `https://discordbots.org/api/bots/${this.user.id}/stats`,
@@ -243,7 +243,7 @@ class KendraBot extends Client {
 			}
 		});
 	}
-	
+
 	postMeme() {
 		request.get({
 			url: "https://reddit.com/r/memes/hot.json",
@@ -277,21 +277,21 @@ class KendraBot extends Client {
 	async handlePhoneMessage(message) {
 		const phoneCache = this.cache.phone;
 		if (this.checkDeletedPhoneChannels(this)) return;
-		
+
 		const toSend = message.cleanContent.replace(/https?:\/\/\S+\.\S+/gi, "")
 				.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, ""),
 			affected = message.channel.id == phoneCache.channels[0].id ? 1 : 0;
-		
+
 		phoneCache.lastMsgTime = Date.now();
 		phoneCache.msgCount++;
-		setTimeout(() => {phoneCache.msgCount--}, 5000);
-		
+		setTimeout(() => phoneCache.msgCount--, 5000);
+
 		phoneCache.channels[affected].send(`📞 ${toSend}`);
 		if (phoneCache.msgCount > 4) {
 			this.resetPhone(this, "☎️ The phone connection was cut off due to being overloaded.");
 		}
 	}
-	
+
 	async checkPhone(bot) {
 		const phoneCache = bot.cache.phone;
 		if (bot.checkDeletedPhoneChannels(bot)) return;
@@ -303,7 +303,7 @@ class KendraBot extends Client {
 			bot.resetPhone(bot, "⏰ The phone call has timed out due to inactivity.");
 		}
 	}
-	
+
 	resetPhone(bot, phoneMsg) {
 		const phoneCache = bot.cache.phone;
 		if (phoneMsg) {
@@ -311,7 +311,7 @@ class KendraBot extends Client {
 			phoneCache.channels[1].send(phoneMsg);
 		}
 		phoneCache.channels = [];
-		
+
 		let phoneTimeout = phoneCache.timeout;
 		if (phoneTimeout) {clearTimeout(phoneTimeout); phoneTimeout = null}
 	}

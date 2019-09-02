@@ -36,7 +36,7 @@ module.exports.applyJimpFilter = (img, filter, options) => {
 			img.invert();
 			break;
 		case "needsmorejpeg":
-			img.quality(1);	
+			img.quality(1);
 			break;
 		case "pixelate":
 			img.pixelate(options.pixels || getPixelFactor(img));
@@ -48,7 +48,7 @@ module.exports.applyJimpFilter = (img, filter, options) => {
 				offsetSum = baseX1 + baseY1 + (1 - baseX2),
 				newY2Offset = offsetSum < 0.1 ? 0.1 - offsetSum : 0,
 				baseY2 = (1 - newY2Offset) - Math.random() * (0.25 - newY2Offset);
-				
+
 			img.crop(
 				Math.floor(baseX1 * img.bitmap.width),
 				Math.floor(baseY1 * img.bitmap.height),

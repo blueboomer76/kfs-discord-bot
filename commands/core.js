@@ -25,7 +25,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			message.channel.send(new RichEmbed()
 				.setAuthor("About this bot", bot.user.avatarURL)
@@ -58,7 +58,7 @@ module.exports = [
 					{
 						name: "dm",
 						desc: "Sends the help message as a Direct Message instead"
-					},
+					}
 				],
 				perms: {
 					bot: ["EMBED_LINKS"],
@@ -82,7 +82,7 @@ module.exports = [
 				usage: "help [command] [--dm] OR help arguments"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const helpEmbed = new RichEmbed().setColor(Math.floor(Math.random() * 16777216));
 			if (args[0] == "arguments") {
@@ -117,7 +117,7 @@ module.exports = [
 					if (!bot.ownerIds.includes(message.author.id) && !bot.adminIds.includes(message.author.id)) {
 						cmds = cmds.filter(cmd => !cmd.disabled && !cmd.hidden);
 					}
-					
+
 					const cmdsByCat = {};
 					for (const category of bot.categories) cmdsByCat[category] = [];
 					for (const cmd of cmds.values()) {
@@ -177,7 +177,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			message.channel.send(new RichEmbed()
 				.setTitle("Kendra Bot References")
@@ -225,10 +225,10 @@ module.exports = [
 				usage: "load <category | \"category\"> <command> [class name]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const category = args[0], commandName = args[1];
-			
+
 			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."};
 			try {
 				const commandFile = category.toLowerCase().replace(/ /g, "-") + ".js",
@@ -241,7 +241,7 @@ module.exports = [
 				newCommand.category = capitalize(category, true);
 				bot.commands.set(commandName, newCommand);
 				if (newCommand.aliases.length > 0) {
-					for (const alias of newCommand.aliases) {bot.aliases.set(alias, newCommand.name)}
+					for (const alias of newCommand.aliases) bot.aliases.set(alias, newCommand.name);
 				}
 				message.channel.send(`The command **${commandName}** was loaded.`);
 			} catch(err) {
@@ -261,7 +261,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const phoneCache = bot.cache.phone;
 			await bot.checkDeletedPhoneChannels(bot);
@@ -274,7 +274,7 @@ module.exports = [
 					bot.cache.stats.callCurrentTotal++;
 					phoneCache.lastMsgTime = Date.now();
 					phoneCache.timeout = setTimeout(bot.checkPhone, 1000*3600, bot);
-					
+
 					message.channel.send("☎ A phone connection has started! Greet the other side!");
 					if (phoneCache.channels.length == 2) {
 						phoneMsg0 = "The other side has picked up the phone! Greet the other side!";
@@ -310,7 +310,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			message.channel.send("Ping?")
 				.then(msg => {
@@ -346,7 +346,7 @@ module.exports = [
 				usage: "reload <command> [command class name]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const command = args[0], commandName = command.name, category = command.category;
 			try {
@@ -399,7 +399,7 @@ module.exports = [
 				usage: "reloadfile <file path>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			try {
 				const res = delete require.cache[require.resolve(`../${args[0]}`)];
@@ -427,7 +427,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			await message.channel.send("Logging stats and shutting down the bot...");
 			process.exit();
@@ -460,12 +460,12 @@ module.exports = [
 				usage: "stats [processor]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const statsEmbed = new RichEmbed()
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setTimestamp(message.createdAt);
-			
+
 			if (args[0] == "processor") {
 				const totalMemory = os.totalmem(),
 					freeMemory = os.freemem(),
@@ -474,7 +474,7 @@ module.exports = [
 					heapTotal = processUsedMemory.heapTotal,
 					heapUsed = processUsedMemory.heapUsed,
 					cpuUsage1 = this.getCpuUsage(os.cpus());
-				
+
 				statsEmbed.setAuthor("Bot Stats - Processor", bot.user.avatarURL)
 					.setDescription("Here's some detailed stats about the host that this bot is on!")
 					.addField("Process Started", getDuration(Date.now() - process.uptime() * 1000), true)
@@ -484,7 +484,7 @@ module.exports = [
 					.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB` + "\n" +
 					`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)` + "\n" +
 					`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true);
-				
+
 				setTimeout(() => {
 					const cpus = os.cpus(), cpuUsage2 = this.getCpuUsage(cpus);
 					let totalUsage = 0;
@@ -492,7 +492,7 @@ module.exports = [
 						const idleDif = cpuUsage2[i].idle - cpuUsage1[i].idle, nonidleDif = cpuUsage2[i].nonidle - cpuUsage1[i].nonidle;
 						totalUsage += nonidleDif / (idleDif + nonidleDif);
 					}
-					
+
 					statsEmbed.addField("CPU Usage", (totalUsage / cpuUsage1.length * 100).toFixed(1) + "%", true)
 						.addField("Processor", cpus[0].model)
 						.addField("Processors Utilized", cpuUsage1.length);
@@ -507,7 +507,7 @@ module.exports = [
 					processUptime = process.uptime() * 1000,
 					serverCount = botStats.servers,
 					userCount = botStats.users;
-				
+
 				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL)
 					.setFooter(`⏰ Took: ${evalTime} | Stats as of`)
 					.setDescription(`Here's some detailed stats about this bot! *To see stats about the bot host, use \`${bot.prefix}stats processor\`*`)
@@ -535,7 +535,7 @@ module.exports = [
 				message.channel.send(statsEmbed);
 			}
 		}
-		
+
 		setRate(amount, duration) {
 			const amtPerDay = amount / duration * 8.64e+7;
 			if (amtPerDay > 43200) {
@@ -546,7 +546,7 @@ module.exports = [
 				return (amtPerDay/24).toFixed(2) + "/hr";
 			} else {
 				return amtPerDay.toFixed(2) + "/day";
-			}		
+			}
 		}
 
 		getCpuUsage(cpus) {
@@ -579,7 +579,7 @@ module.exports = [
 				usage: "suggest <suggestion>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			bot.ideaWebhook.send({
 				embeds: [{
@@ -626,7 +626,7 @@ module.exports = [
 				usage: "unload <command>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const command = args[0];
 			if (command.category == "Core" || command.name == "eval") return {cmdErr: "That command is not unloadable."};
@@ -683,7 +683,7 @@ module.exports = [
 				usage: "usage [page] OR usage command <command> [--current]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const distrib = bot.cache.cumulativeStats.commandDistrib,
 				cmdNames = Object.keys(distrib),
@@ -716,7 +716,7 @@ module.exports = [
 				} else {
 					cmdUsageEnd = ", last updated " + getDuration(bot.cache.cumulativeStats.lastSorted);
 				}
-				
+
 				message.channel.send(`Command **${command.name}** has been used **${cmdUses[distribIndex]}** times.` + "\n" +
 				`It is the #${distribIndex + 1} most used command${cmdUsageEnd}.`);
 			}

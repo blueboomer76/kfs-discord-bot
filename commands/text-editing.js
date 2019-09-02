@@ -19,7 +19,7 @@ module.exports = [
 				usage: "clapify <text>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const clapified = args[0].replace(/ /g, " 👏 ");
 			if (clapified.length >= 2000) return {cmdWarn: "Your input text to clapify is too long!", cooldown: null, noLog: true};
@@ -40,10 +40,10 @@ module.exports = [
 				usage: "cowsay <text>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters.", cooldown: null, noLog: true};
-			
+
 			let cowsayLines = [
 				"      \\   ^__^",
 				"       \\  (oo)\\_______",
@@ -51,7 +51,7 @@ module.exports = [
 				"             ||----w |",
 				"             ||     ||"
 			];
-			
+
 			if (args[0].length <= 50) {
 				cowsayLines.unshift(` ${"_".repeat(args[0].length + 2)}`,
 					`< ${args[0]} >`,
@@ -60,7 +60,7 @@ module.exports = [
 			} else {
 				const lines = [], words = args[0].split(" ");
 				let currLine = [], nextWidth = 0;
-				
+
 				for (let i = 0; i < words.length; i++) {
 					nextWidth += words[i].length;
 					if (i != 0) nextWidth++;
@@ -81,7 +81,7 @@ module.exports = [
 				for (let i = 0; i < lines.length; i++) {
 					lines[i] = lines[i].padEnd(50, " ");
 				}
-								
+
 				const toDisplayLines = [];
 				toDisplayLines.push(` ${"_".repeat(52)}`, `/ ${lines[0]} \\`);
 				if (lines.length > 2) {
@@ -92,7 +92,7 @@ module.exports = [
 				toDisplayLines.push(`\\ ${lines[lines.length - 1]} /`, ` ${"-".repeat(52)}`);
 				cowsayLines = toDisplayLines.concat(cowsayLines);
 			}
-			
+
 			message.channel.send("```" + cowsayLines.join("\n") + "```");
 		}
 	},
@@ -110,10 +110,10 @@ module.exports = [
 				usage: "emojify <text>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[0].length > 85) return {cmdWarn: "That text is too long, must be under 85 characters.", cooldown: null, noLog: true};
-			
+
 			const chars = args[0].toLowerCase().split(""), emojiRegex = /[a-z]/;
 			let emojified = "";
 			for (const c of chars) {
@@ -136,7 +136,7 @@ module.exports = [
 					}
 				}
 			}
-		
+
 			message.channel.send(emojified);
 		}
 	},
@@ -160,7 +160,7 @@ module.exports = [
 				usage: "reverse <text> [--words]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters.", cooldown: null, noLog: true};
 
@@ -192,10 +192,10 @@ module.exports = [
 				usage: "scramble <text> [--(inner|words)]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters.", cooldown: null, noLog: true};
-			
+
 			const innerFlag = flags.some(f => f.name == "inner"),
 				wordsFlag = flags.some(f => f.name == "words"),
 				toScramble = args[0].match(wordsFlag ? wordGrouperRegex : grouperRegex);
@@ -236,10 +236,10 @@ module.exports = [
 				usage: "weebify <text>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters.", cooldown: null, noLog: true};
-			
+
 			const weebifySuffixes = ["owo", "OWO", "uwu", "UwU", "X3", ":3", "***notices bulge** OwO, what's this?*"],
 				weebified = args[0].toLowerCase()
 					.replace(/[lr]+/g, "w")

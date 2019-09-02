@@ -86,7 +86,7 @@ module.exports = [
 				usage: "reddit [subreddit] [--((controversial|top) [hour|day|week|month|year|all] | (new|rising))] [--more] [--squeeze]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const compact = flags.some(f => f.name == "squeeze");
 			let subreddit;
@@ -105,7 +105,7 @@ module.exports = [
 					raw_json: 1
 				};
 			let postSort = "hot", timeSort;
-			
+
 			const topFlag = flags.find(f => f.name == "top"),
 				controversialFlag = flags.find(f => f.name == "controversial");
 			if (topFlag) {
@@ -121,7 +121,7 @@ module.exports = [
 				timeSort = controversialFlag.args[0] || "day";
 				reqQuery.t = timeSort;
 			}
-			
+
 			request.get({
 				url: `https://reddit.com/r/${subreddit}/${postSort}.json`,
 				qs: reqQuery,
@@ -130,7 +130,7 @@ module.exports = [
 				if (err) return message.channel.send(`Could not request to Reddit: ${err.message} (${err.code})`);
 				if (res.statusCode == 403) return message.channel.send("⚠ Unfortunately, that subreddit is inaccessible.");
 				if (res.statusCode >= 400) return message.channel.send(`⚠ An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode})`);
-				
+
 				let results = res.body.data.children;
 				if (!results[0]) return message.channel.send("⚠ A subreddit with that name does not exist, or it has no posts yet.");
 				if (results[0].kind != "t3") return message.channel.send("⚠ A subreddit with that name does not exist, but these related subreddits were found: " + "\n" + results.map(r => {
@@ -140,10 +140,10 @@ module.exports = [
 				results = results.filter(r => !r.data.stickied && !r.data.locked);
 				if (!message.channel.nsfw) results = results.filter(r => !r.data.over_18);
 				if (results.length == 0) return message.channel.send("⚠ No results found in the subreddit. *(You may try going to an NSFW channel to see all results)*");
-				
+
 				const viewAll = !args[0] || args[0] == "all" || args[0] == "popular",
 					entries = [[]];
-				
+
 				if (compact) {
 					for (const post of results) {
 						const postData = post.data,
@@ -160,11 +160,11 @@ module.exports = [
 						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`;
 						const postFlair = postData.link_flair_text;
 						if (postFlair) toDisplay += ` [${postFlair}]`;
-						
+
 						entries[0].push(`${toDisplay}\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author.replace(/_/g, "\\_")} | ${getDuration(postData.created_utc * 1000, null, true)}`);
 					}
 				}
-				
+
 				let embedTitle = "Reddit - ";
 				if (args[0] == "random") {
 					embedTitle += "Random subreddit!";
@@ -173,7 +173,7 @@ module.exports = [
 				} else {
 					embedTitle += "r/" + subreddit;
 				}
-				
+
 				if (postSort != "hot") {
 					if (postSort == "top" || postSort == "controversial") {
 						timeSort = timeSort == "all" ? "all-time" : "past " + timeSort;
@@ -182,7 +182,7 @@ module.exports = [
 						embedTitle += ` (${postSort} posts)`;
 					}
 				}
-				
+
 				paginator.paginate(message, {
 					title: embedTitle,
 					thumbnail: {
@@ -235,7 +235,7 @@ module.exports = [
 				usage: "urban <term> [--exact] [--page <number>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			request.get({
 				url: "http://api.urbandictionary.com/v0/define",
@@ -314,7 +314,7 @@ module.exports = [
 				usage: "wikipedia <term>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			request.get({
 				url: "https://en.wikipedia.org/w/api.php",
@@ -329,11 +329,11 @@ module.exports = [
 				json: true
 			}, (err, res) => {
 				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "Wikipedia", err, res);
-				
+
 				const result = Object.values(res.body.query.pages)[0];
 				let resultText = result.extract;
 				if (!resultText) return message.channel.send("⚠ Failed to find a Wikipedia article for that term. *(Make sure to check your capitalization)*");
-				
+
 				const firstSectionIndex = resultText.indexOf("==");
 				if (firstSectionIndex > 2000) {
 					resultText = resultText.slice(0, 2000) + "...";
@@ -342,7 +342,7 @@ module.exports = [
 				} else {
 					resultText = resultText.slice(0, firstSectionIndex + 500) + "...";
 				}
-				
+
 				message.channel.send(new RichEmbed()
 					.setTitle(`Wikipedia - ${result.title}`)
 					.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
@@ -376,7 +376,7 @@ module.exports = [
 			this.lastChecked = 0;
 			this.currComicNum = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			let comicToPost;
 			if (Date.now() > this.lastChecked + 1000*86400) {
@@ -403,7 +403,7 @@ module.exports = [
 				bot.handleRemoteSiteError(message, "XKCD", err.err, err.res);
 			}
 		}
-		
+
 		getComic(url) {
 			return new Promise((resolve, reject) => {
 				request.get(url || "https://xkcd.com/info.0.json", (err, res) => {
@@ -420,7 +420,7 @@ module.exports = [
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setDescription(comic.alt)
 				.setImage(comic.img)
-			);		
+			);
 		}
 	}
 ];

@@ -28,13 +28,13 @@ function getPosts(subreddit, checkNsfw, options) {
 		}, (err, res) => {
 			if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
 			if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
-			
+
 			let results = res.body.data.children.filter(r => !r.data.stickied);
 			if (options.filterLocked) results = results.filter(r => !r.data.locked);
 			if (options.filterScores) results = results.filter(r => r.data.score > 0);
 			if (checkNsfw) {
 				const sfwResults = [], nsfwResults = [];
-				
+
 				for (const result of results) {
 					const postData = {
 						title: result.data.title,
@@ -46,7 +46,7 @@ function getPosts(subreddit, checkNsfw, options) {
 					};
 					if (result.data.over_18) {nsfwResults.push(postData)} else {sfwResults.push(postData)}
 				}
-				
+
 				resolve({sfw: sfwResults, nsfw: nsfwResults});
 			} else {
 				resolve(results.map(r => {
@@ -116,7 +116,7 @@ module.exports = [
 			this.cachedNsfwPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "Animemes", true);
@@ -144,7 +144,7 @@ module.exports = [
 			this.cachedNsfwPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "anime_irl", true);
@@ -171,7 +171,7 @@ module.exports = [
 			this.cachedPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "antimeme", false);
@@ -200,7 +200,7 @@ module.exports = [
 			this.cachedNsfwPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "awwnime", true);
@@ -226,11 +226,11 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			request.get("http://random.birb.pw/tweet.json", (err, res) => {
 				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "random.birb.pw", err, res);
-				
+
 				message.channel.send(new RichEmbed()
 					.setTitle("Here's your random birb!")
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -259,7 +259,7 @@ module.exports = [
 			this.cachedPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "bonehurtingjuice", false);
@@ -285,7 +285,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			request.get("http://aws.random.cat/meow", (err, res) => {
 				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "random.cat", err, res);
@@ -318,7 +318,7 @@ module.exports = [
 			this.cachedNsfwPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "discord_irl", true, {filterScores: true});
@@ -344,7 +344,7 @@ module.exports = [
 				}
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			request.get("http://random.dog/woof.json", (err, res) => {
 				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "random.dog", err, res);
@@ -376,7 +376,7 @@ module.exports = [
 			this.cachedNsfwPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "me_irl", false);
@@ -403,7 +403,7 @@ module.exports = [
 			this.cachedPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "memes", false);
@@ -432,7 +432,7 @@ module.exports = [
 			this.cachedNsfwPosts = [];
 			this.lastChecked = 0;
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
 				const fetchRes = await setCommandPosts(this, "wholesomeanimemes", true);

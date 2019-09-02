@@ -10,7 +10,7 @@ async function execCommand(runCommand, bot, message, args) {
 	} else if (!runCommand.allowDMs) {
 		return {cmdErr: "This command cannot be used in Direct Messages.", noLog: true};
 	}
-	
+
 	const requiredPerms = runCommand.perms;
 	let userPermsAllowed = null, roleAllowed = null, faultMsg = "";
 	if (message.guild) {
@@ -53,7 +53,7 @@ async function execCommand(runCommand, bot, message, args) {
 		}
 	}
 	if (faultMsg.length > 0) return {errTitle: "Command permission error", cmdWarn: faultMsg, noLog: true};
-	
+
 	let flags = [];
 	if (runCommand.flags.length > 0) {
 		const parsedFlags = await argParser.parseFlags(bot, message, args, runCommand.flags);
@@ -72,7 +72,7 @@ async function execCommand(runCommand, bot, message, args) {
 			noLog: true
 		};
 	}
-		
+
 	return runCommand.run(bot, message, args, flags);
 }
 
@@ -88,11 +88,11 @@ module.exports = async (bot, message) => {
 			args = message.content.slice(mentionMatch ? mentionMatch[0].length : bot.prefix.length).trim().split(/ +/g),
 			command = args.shift().toLowerCase(),
 			runCommand = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
-		
+
 		if (!runCommand) return;
 		if (message.guild && !message.channel.permissionsFor(bot.user).has("SEND_MESSAGES")) return;
 		if (cdChecker.check(bot, message, runCommand) == false) return;
-		
+
 		execCommand(runCommand, bot, message, args)
 			.then(runRes => {
 				/*
@@ -104,7 +104,7 @@ module.exports = async (bot, message) => {
 						noLog: true
 					}
 				*/
-				
+
 				if (runRes) {
 					if (runRes.cmdWarn) {
 						const errTitle = runRes.errTitle ? `**${runRes.errTitle}**` + "\n" : "";
@@ -114,14 +114,14 @@ module.exports = async (bot, message) => {
 						message.channel.send(`❗ ${errTitle}${runRes.cmdErr}`);
 					}
 				}
-				
+
 				if (!bot.ownerIds.includes(message.author.id) && runCommand.cooldown.time != 0 && (!runRes || runRes.cooldown)) {
 					cdChecker.addCooldown(bot, message, runCommand, {
 						name: runCommand.cooldown.name || null,
 						time: runRes ? runRes.cooldown : null
 					});
 				}
-				
+
 				/*
 				The below condition can be replaced with this when bot owners are to be ignored.
 				if ((!runRes || !runRes.noLog) && runCommand.name != "help" && runCommand.name != "phone" && !bot.ownerIds.includes(message.author.id)) {

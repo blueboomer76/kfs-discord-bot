@@ -41,11 +41,11 @@ module.exports = [
 				usage: "blur [image URL/mention/emoji] [--level <number>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			const levelFlag = flags.find(f => f.name == "level");
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "blur", {blur: levelFlag ? levelFlag.args[0] : null});
 		}
@@ -75,7 +75,7 @@ module.exports = [
 				usage: "colorify [image URL/mention/emoji] <color: hex color | decimal:0-16777215 | ...>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
@@ -114,7 +114,7 @@ module.exports = [
 				usage: "composite <image 1> [images...]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args.length > 10) return {cmdWarn: "Too many images or emojis provided.", cooldown: null, noLog: true};
 
@@ -193,7 +193,7 @@ module.exports = [
 				usage: "creatememe [image URL] <text> | [bottom text] [--disable-caps]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			if (args[1].length > 400) return {cmdWarn: "The top and bottom text cannot be more than 400 characters in total."};
 
@@ -207,7 +207,7 @@ module.exports = [
 			} else {
 				const topText2 = args[1].slice(0, Math.floor(args[1].length / 2)),
 					lastIndex2 = topText2.lastIndexOf(" ");
-				
+
 				if (lastIndex2 != -1) {
 					topText = args[1].slice(0, lastIndex2);
 					bottomText = args[1].slice(lastIndex2);
@@ -226,7 +226,7 @@ module.exports = [
 
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			const img = new Canvas.Image();
 
 			imageManager.getCanvasImage(img, fetchedImg.data, args[0] && args[0].isEmoji, () => {
@@ -324,11 +324,11 @@ module.exports = [
 				usage: "deepfry [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "deepfry", {jpeg: true});
 		}
 	},
@@ -356,11 +356,11 @@ module.exports = [
 				usage: "flip [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "flip");
 		}
 	},
@@ -388,11 +388,11 @@ module.exports = [
 				usage: "flop [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "flop");
 		}
 	},
@@ -421,11 +421,11 @@ module.exports = [
 				usage: "greyscale [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "greyscale");
 		}
 	},
@@ -453,11 +453,11 @@ module.exports = [
 				usage: "invert [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "invert");
 		}
 	},
@@ -492,11 +492,11 @@ module.exports = [
 				usage: "mirror [image URL/mention/emoji] <(haah | right-to-left) | (hooh | bottom-to-top) | (waaw | left-to-right) | (woow | top-to-bottom)>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			const type = args[1];
 			Jimp.read(fetchedImg.data)
 				.then(img => {
@@ -512,7 +512,7 @@ module.exports = [
 						imgClone1.crop(imgWidth / 2, 0, imgWidth / 2, imgHeight);
 						imgClone2.crop(imgWidth / 2, 0, imgWidth / 2, imgHeight)
 							.mirror(true, false);
-						
+
 						imgToSend.composite(imgClone1, imgWidth/2, 0)
 							.composite(imgClone2, 0, 0);
 						fileName = "mirror-haah.png";
@@ -520,7 +520,7 @@ module.exports = [
 						imgClone1.crop(0, imgHalfHeight, imgWidth, imgHalfHeight);
 						imgClone2.crop(0, imgHalfHeight, imgWidth, imgHalfHeight)
 							.mirror(false, true);
-						
+
 						imgToSend.composite(imgClone1, 0, imgHalfHeight)
 							.composite(imgClone2, 0, 0);
 						fileName = "mirror-hooh.png";
@@ -528,7 +528,7 @@ module.exports = [
 						imgClone1.crop(0, 0, imgWidth / 2, imgHeight);
 						imgClone2.crop(0, 0, imgWidth / 2, imgHeight)
 							.mirror(true, false);
-						
+
 						imgToSend.composite(imgClone1, 0, 0)
 							.composite(imgClone2, imgWidth / 2, 0);
 						fileName = "mirror-waaw.png";
@@ -536,7 +536,7 @@ module.exports = [
 						imgClone1.crop(0, 0, imgWidth, imgHalfHeight);
 						imgClone2.crop(0, 0, imgWidth, imgHalfHeight)
 							.mirror(false, true);
-						
+
 						imgToSend.composite(imgClone1, 0, 0)
 							.composite(imgClone2, 0, imgHalfHeight);
 						fileName = "mirror-woow.png";
@@ -573,11 +573,11 @@ module.exports = [
 				usage: "needsmorejpeg [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "needsmorejpeg", {jpeg: true});
 		}
 	},
@@ -614,11 +614,11 @@ module.exports = [
 				usage: "pixelate [image URL/mention/emoji] [--pixels <number>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			const pixelsFlag = flags.find(f => f.name == "pixels");
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "pixelate", {pixels: pixelsFlag ? pixelsFlag.args[0] : null});
 		}
@@ -648,11 +648,11 @@ module.exports = [
 				usage: "randomcrop [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "randomcrop");
 		}
 	},
@@ -691,11 +691,11 @@ module.exports = [
 				usage: "rotate [image URL/mention/emoji] [--degrees <1-359>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			const degreesFlag = flags.find(f => f.name == "degrees");
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "rotate", {rotation: degreesFlag ? degreesFlag.args[0] : null});
 		}
@@ -724,11 +724,11 @@ module.exports = [
 				usage: "sepia [image URL/mention/emoji]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-			
+
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "sepia");
 		}
 	},
@@ -768,14 +768,14 @@ module.exports = [
 				usage: "spin [image URL/mention/emoji] [--speed <1-5>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			const speedFlag = flags.find(f => f.name == "speed"),
 				img = new Canvas.Image();
-			
+
 			imageManager.getCanvasImage(img, fetchedImg.data, args[0] && args[0].isEmoji, () => {
 				let canvasDim = img.width < img.height ? img.width : img.height,
 					imgScale = 1,
@@ -797,7 +797,7 @@ module.exports = [
 				const ctx = Canvas.createCanvas(canvasDim, canvasDim).getContext("2d"),
 					encoder = new gifencoder(canvasDim, canvasDim),
 					stream = encoder.createReadStream();
-				
+
 				encoder.start();
 				encoder.setRepeat(0);
 				encoder.setDelay(speedFlag ? (6 - speedFlag.args[0]) * 20 : 60);
@@ -863,7 +863,7 @@ module.exports = [
 				usage: "triggered [image URL/mention/emoji] [--level <1-5>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
@@ -873,7 +873,7 @@ module.exports = [
 				multiplier2 = multiplier - 15,
 				triggerImg = await Canvas.loadImage("assets/images/triggered.png"),
 				img = new Canvas.Image();
-			
+
 			imageManager.getCanvasImage(img, fetchedImg.data, args[0] && args[0].isEmoji, () => {
 				let imgScale = 1,
 					imgWidth = img.width,
@@ -893,7 +893,7 @@ module.exports = [
 					ctx = Canvas.createCanvas(canvasWidth, canvasHeight).getContext("2d"),
 					encoder = new gifencoder(canvasWidth, canvasHeight),
 					stream = encoder.createReadStream();
-				
+
 				encoder.start();
 				encoder.setRepeat(0);
 				encoder.setDelay(40);

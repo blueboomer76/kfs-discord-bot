@@ -53,13 +53,13 @@ module.exports = [
 				usage: "addrole <user | \"user\"> <role>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
 			const compareTest = compareRolePositions(message, member, role, {action: `add the role **${role.name}** to`, type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
 			if (member.roles.has(role.id)) return {cmdWarn: `User **${member.user.tag}** already has the role **${role.name}**.`};
-				
+
 			member.addRole(role)
 				.then(() => message.channel.send(`✅ Role **${role.name}** has been added to user **${member.user.tag}**.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -74,7 +74,7 @@ module.exports = [
 					{
 						infiniteArgs: true,
 						type: "member"
-					},
+					}
 				],
 				cooldown: {
 					time: 20000,
@@ -110,19 +110,19 @@ module.exports = [
 				usage: "ban <user> [--days <1-7>] [--reason <reason>] [--yes]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0],
 				daysFlag = flags.find(f => f.name == "days"),
 				reasonFlag = flags.find(f => f.name == "reason");
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "ban", type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
-			
+
 			if (!flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to ban the user **${member.user.tag}** from this server.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
-			
+
 			member.ban({
 				days: daysFlag ? daysFlag.args[0] : 0,
 				reason: reasonFlag ? reasonFlag.args[0] : null
@@ -140,7 +140,7 @@ module.exports = [
 				args: [
 					{
 						type: "string"
-					},
+					}
 				],
 				cooldown: {
 					time: 20000,
@@ -154,11 +154,11 @@ module.exports = [
 				usage: "createchannel <name>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const channelNameRegex = /[^0-9a-z-_]+/, channelName = args[0].toLowerCase();
 			if (channelNameRegex.test(channelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
-				
+
 			message.guild.createChannel(channelName)
 				.then(() => message.channel.send(`✅ The channel **${channelName}** has been created.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -188,7 +188,7 @@ module.exports = [
 				usage: "createrole <name>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			message.guild.createRole({name: args[0]})
 				.then(role => message.channel.send(`✅ Role **${role.name}** has been created.`))
@@ -205,7 +205,7 @@ module.exports = [
 					{
 						infiniteArgs: true,
 						type: "channel"
-					},
+					}
 				],
 				cooldown: {
 					time: 20000,
@@ -225,14 +225,14 @@ module.exports = [
 				usage: "deletechannel <name> [--yes]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const channel = args[0];
 			if (channel.createdTimestamp + 1.5552e+10 < Date.now() && !flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to delete the channel **${channel.name}** (ID ${channel.id}), which is more than 180 days old.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
-			
+
 			channel.delete()
 				.then(() => message.channel.send(`✅ The channel **${channel.name}** has been deleted.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -248,7 +248,7 @@ module.exports = [
 					{
 						infiniteArgs: true,
 						type: "role"
-					},
+					}
 				],
 				cooldown: {
 					time: 30000,
@@ -268,7 +268,7 @@ module.exports = [
 				usage: "deleterole <name>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const role = args[0];
 			const compareTest = compareRolePositions(message, role, null, {action: "delete", type: "role"});
@@ -277,7 +277,7 @@ module.exports = [
 				const promptRes = await promptor.prompt(message, `You are about to delete the role **${role.name}** (ID ${role.name}), which more than 10% of the members in this server have.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
-			
+
 			role.delete()
 				.then(() => message.channel.send(`✅ The role **${role.name}** has been deleted.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -325,7 +325,7 @@ module.exports = [
 				usage: "hackban <user id> [--days <1-7>] [--reason <reason>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const userId = args[0],
 				daysFlag = flags.find(f => f.name == "days"),
@@ -343,7 +343,7 @@ module.exports = [
 				const compareTest = compareRolePositions(message, memberWithId, memberWithId.highestRole, {action: "hackban", type: "user"});
 				if (compareTest != true) return {cmdWarn: compareTest};
 			}
-			
+
 			message.guild.ban(userId, {
 				days: daysFlag ? daysFlag.args[0] : 0,
 				reason: reasonFlag ? reasonFlag.args[0] : null
@@ -388,17 +388,17 @@ module.exports = [
 				usage: "kick <user> [--reason <reason>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0], reasonFlag = flags.find(f => f.name == "reason");
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "kick", type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
-			
+
 			if (!flags.some(f => f.name == "yes")) {
 				const promptRes = await promptor.prompt(message, `You are about to kick the user **${args[0].user.tag}** from this server.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
-			
+
 			member.kick(reasonFlag ? reasonFlag.args[0] : null)
 				.then(() => message.channel.send(`✅ User **${member.user.tag}** has been kicked from this server.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -427,7 +427,7 @@ module.exports = [
 				usage: "mute <user>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0];
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "mute", type: "user"});
@@ -506,7 +506,7 @@ module.exports = [
 			});
 			this.options = ["attachments", "bots", "embeds", "images", "invites", "left", "links", "mentions", "reactions"];
 		}
-		
+
 		async run(bot, message, args, flags) {
 			await message.delete();
 
@@ -649,13 +649,13 @@ module.exports = [
 				usage: "removerole <user | \"user\"> <role>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
 			const compareTest = compareRolePositions(message, member, role, {action: `remove the role **${role.name}** from`, type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
 			if (!member.roles.has(role.id)) return {cmdWarn: `User **${member.user.tag}** does not have a role named **${role.name}**.`};
-				
+
 			member.removeRole(role)
 				.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from user **${member.user.tag}**.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -684,11 +684,11 @@ module.exports = [
 				usage: "renamechannel <name>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const newChannelName = args[0].toLowerCase();
 			if (/[^0-9a-z-_]/.test(newChannelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
-				
+
 			message.channel.setName(newChannelName)
 				.then(() => message.channel.send(`✅ This channel's name has been set to **${newChannelName}**.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -723,12 +723,12 @@ module.exports = [
 				usage: "renamerole <role | \"role\"> <new role name>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const role = args[0], newRoleName = args[1];
 			const compareTest = compareRolePositions(message, role, null, {action: "rename", type: "role"});
 			if (compareTest != true) return {cmdWarn: compareTest};
-				
+
 			role.edit({name: newRoleName})
 				.then(() => message.channel.send(`✅ The role's name has been set to **${newRoleName}**.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -758,11 +758,11 @@ module.exports = [
 				usage: "resetnickname <user>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0];
 			if (member.nickname == null) return {cmdWarn: `User **${member.user.tag}** does not have a nickname in this server.`};
-				
+
 			member.setNickname("")
 				.then(() => message.channel.send(`✅ Nickname of **${member.user.tag}** has been reset.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -797,10 +797,10 @@ module.exports = [
 				usage: "setnickname <user | \"user\"> <new nick>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0], newNick = args[1];
-			
+
 			member.setNickname(newNick)
 				.then(() => message.channel.send(`✅ Nickname of user **${member.user.tag}** has been set to **${newNick}.**`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -835,12 +835,12 @@ module.exports = [
 				usage: "setrolecolor <role | \"role\"> <color: hex color | decimal:0-16777215 | ...>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const role = args[0], newRoleColor = args[1];
 			const compareTest = compareRolePositions(message, role, null, {action: "change the color of", type: "role"});
 			if (compareTest != true) return {cmdWarn: compareTest};
-			
+
 			role.edit({color: newRoleColor})
 				.then(() => message.channel.send(`✅ The color of role **${role.name}** has been set to **#${newRoleColor.toString(16)}**.`))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -869,11 +869,11 @@ module.exports = [
 				usage: "settopic <new topic>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const newChannelTopic = args[0];
 			if (newChannelTopic.length > 1024) return {cmdWarn: "The topic to set is too long."};
-				
+
 			message.channel.setTopic(newChannelTopic)
 				.then(() => message.channel.send("✅ This channel's topic has changed."))
 				.catch(err => message.channel.send("Oops! An error has occurred: ```" + err + "```"));
@@ -922,7 +922,7 @@ module.exports = [
 				usage: "softban <user | \"user\"> <days: 1-7> [--reason <reason>] [--yes]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0], reasonFlag = flags.find(f => f.name == "reason");
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "softban", type: "user"});
@@ -932,7 +932,7 @@ module.exports = [
 				const promptRes = await promptor.prompt(message, `You are about to softban the user **${member.user.tag}** in this server.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
-			
+
 			member.ban({
 				days: args[1],
 				reason: reasonFlag ? reasonFlag.args[0] : null
@@ -978,10 +978,10 @@ module.exports = [
 				usage: "unban <user id> [--reason <reason>]"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const userId = args[0], reasonFlag = flags.find(f => f.name == "reason");
-				
+
 			message.guild.unban(userId, reasonFlag ? reasonFlag.args[0] : null)
 				.then(() => message.channel.send(`✅ User with ID **${userId}** has been unbanned from this server.`))
 				.catch(() => message.channel.send("Could not unban the user with that ID. Make sure to check for typos in the ID and that the user is in the ban list."));
@@ -1010,7 +1010,7 @@ module.exports = [
 				usage: "unmute <user>"
 			});
 		}
-		
+
 		async run(bot, message, args, flags) {
 			const member = args[0];
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "unmute", type: "user"});
