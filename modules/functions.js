@@ -33,14 +33,14 @@ const specialNumberKeys = [
 	{short: "n", long: "nonillion", value: 1e+30}
 ];
 
-const capitalize = (str, capAll = false) => {
+function capitalize(str, capAll = false) {
 	str = str.toString();
 	if (capAll) {
 		return str.split(/[ -]/).map(str2 => str2.charAt(0).toUpperCase() + str2.slice(1)).join(" ");
 	} else {
 		return str.charAt(0).toUpperCase() + str.slice(1);
 	}
-};
+}
 
 module.exports = {
 	capitalize: capitalize,
@@ -178,9 +178,9 @@ module.exports = {
 			if (tens == 0) {
 				suffix = specialNumberKeys[num < 1000000 ? 0 : ones].long;
 			} else {
-				if (ones == 3 && tens == 2) {
+				if (tens == 2 && ones == 3) {
 					suffix = "tres";
-				} else if (ones == 7 && tens < 4) {
+				} else if (tens < 4 && ones == 7) {
 					suffix = "septen";
 				} else if (ones > 0) {
 					suffix = onesNumberKeys[ones - 1].long;

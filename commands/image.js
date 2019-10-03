@@ -56,7 +56,7 @@ function getPosts(subreddit, checkNsfw, options) {
 						score: r.data.score,
 						comments: r.data.num_comments,
 						author: r.data.author,
-						imageURL: r.data.url
+						imageURL: /v\.redd\.it/.test(r.data.url) && r.data.preview ? r.data.preview.images[0].source.url : r.data.url
 					};
 				}));
 			}

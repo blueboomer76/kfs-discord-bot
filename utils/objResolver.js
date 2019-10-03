@@ -1,7 +1,7 @@
-const fs = require("fs"),
+const {fetchMembers} = require("../modules/memberFetcher.js"),
+	fs = require("fs"),
 	convert = require("color-convert"),
-	twemoji = require("twemoji"),
-	{fetchMembers} = require("../modules/memberFetcher.js");
+	twemoji = require("twemoji");
 
 const colorRegexes = [
 		/^decimal:\d{1,8}$/,

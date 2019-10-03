@@ -156,8 +156,8 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const channelNameRegex = /[^0-9a-z-_]+/, channelName = args[0].toLowerCase();
-			if (channelNameRegex.test(channelName)) return {cmdWarn: "Channel names can only have numbers, lowercase letters, hyphens, or underscores."};
+			const channelName = args[0].toLowerCase();
+			if (/[^0-9a-z-_]+/.test(channelName)) return {cmdWarn: "Channel names can only have letters, numbers, hyphens, or underscores."};
 
 			message.guild.createChannel(channelName)
 				.then(() => message.channel.send(`✅ The channel **${channelName}** has been created.`))
