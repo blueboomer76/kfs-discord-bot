@@ -95,7 +95,7 @@ module.exports = [
 					if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 
 					this.lastChecked = Date.now();
-					const results = res.body.data.children
+					resolve(res.body.data.children
 						.filter(r => !r.data.stickied && r.data.score > 0)
 						.map(r => {
 							const rCrossposts = r.data.crosspost_parent_list;
@@ -117,8 +117,8 @@ module.exports = [
 								comments: r.data.num_comments,
 								author: r.data.author
 							};
-						});
-					resolve(results);
+						})
+					);
 				});
 			});
 		}
@@ -337,7 +337,7 @@ module.exports = [
 					if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 
 					this.lastChecked = Date.now();
-					const results = res.body.data.children
+					resolve(res.body.data.children
 						.filter(r => !r.data.stickied && !r.data.over_18)
 						.map(r => {
 							return {
@@ -347,8 +347,8 @@ module.exports = [
 								score: r.data.score,
 								comments: r.data.num_comments
 							};
-						});
-					resolve(results);
+						})
+					);
 				});
 			});
 		}
@@ -463,7 +463,7 @@ module.exports = [
 					if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 
 					this.lastChecked = Date.now();
-					const results = res.body.data.children
+					resolve(res.body.data.children
 						.filter(r => !r.data.stickied && r.data.score > 0)
 						.map(r => {
 							let punText = null;
@@ -487,8 +487,8 @@ module.exports = [
 								author: r.data.author,
 								imageURL: imageURL
 							};
-						});
-					resolve(results);
+						})
+					);
 				});
 			});
 		}
@@ -592,33 +592,35 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const memberRegex = /^<@!?\d{17,19}>$/;
-			let hash = 0, toRate = args[0];
-			if (memberRegex.test(toRate)) {
-				const memberRegex2 = /\d+/, member = message.guild.members.get(args[0].match(memberRegex2)[0]);
+			let toRate = args[0];
+			if (toRate.toLowerCase() == bot.user.username.toLowerCase() || toRate == bot.user.tag) {
+				return message.channel.send("I would rate myself a 10/10, of course.");
+			}
+
+			if (/^<@!?\d{17,19}>$/.test(toRate)) {
+				const member = message.guild.members.get(args[0].match(/\d+/)[0]);
 				toRate = member ? member.user.tag : args[0];
 			} else if (toRate.toLowerCase() == "me") {
-				toRate = message.member.user.tag;
+				toRate = message.author.tag;
 			}
+			let hash = 0;
 			for (let i = 0; i < toRate.length; i++) {
-				const c = toRate.charCodeAt(i);
-				hash = hash * 31 + c;
+				hash = hash * 31 + toRate.charCodeAt(i);
 				hash |= 0; // Convert to 32-bit integer
 			}
 
-			let rating = (Math.abs(hash % 90 / 10) + 1).toFixed(1), toSend;
-			if (toRate.toLowerCase() == bot.user.username.toLowerCase() || toRate == bot.user.tag) {
-				return message.channel.send("I would rate myself a 10/10, of course.");
-			} else if (toRate == message.author.tag || toRate.toLowerCase() == "me") {
+			let rating, toSend;
+			if (toRate == message.author.tag || toRate.toLowerCase() == "me") {
 				rating = (Math.abs(hash % 50 / 10) + 5).toFixed(1);
 				toSend = "I would rate you: ";
 			} else {
+				rating = (Math.abs(hash % 90 / 10) + 1).toFixed(1);
 				let toRateRaw = toRate;
 				if (toRateRaw.length > 1500) toRateRaw = toRateRaw.slice(0, 1500) + "...";
-				toSend = `I would rate \`${toRateRaw}\`: `;
+				toSend = "I would rate `" + toRateRaw + "`: ";
 			}
-			rating = parseFloat(rating);
 
+			// Set the color of the embed based on the rating
 			const rand = Math.floor(Math.random() * 255);
 			let r = 0, g = 0, b = 0;
 			switch (Math.floor(Math.random() * 3)) {
@@ -728,15 +730,15 @@ module.exports = [
 			if (args[0].length > 100 || (args[1] && args[1].length > 100)) return {cmdWarn: "One of the ship names is too long."};
 
 			const memberRegex = /^<@!?\d{17,19}>$/, memberRegex2 = /\d+/;
-			let hash = 0, toShip1 = args[0], toShip2 = args[1], member;
+			let toShip1 = args[0], toShip2 = args[1];
 
 			if (memberRegex.test(toShip1)) {
-				member = message.guild.members.get(args[0].match(memberRegex2)[0]);
+				const member = message.guild.members.get(args[0].match(memberRegex2)[0]);
 				toShip1 = member ? member.user.username : args[0];
 			}
 			if (toShip2) {
 				if (memberRegex.test(toShip2)) {
-					member = message.guild.members.get(args[1].match(memberRegex2)[0]);
+					const member = message.guild.members.get(args[1].match(memberRegex2)[0]);
 					toShip2 = member ? member.user.username : args[1];
 				}
 			} else {
@@ -744,23 +746,21 @@ module.exports = [
 				toShip1 = message.author.username;
 			}
 
-			const shipName = toShip1.slice(0, Math.floor(toShip1.length / 2)) + toShip2.slice(Math.floor(toShip2.length / 2));
-			for (let i = 0; i < toShip1.length; i++) {
-				hash = hash * 31 + toShip1.charCodeAt(i);
-				hash |= 0; // Convert to 32-bit integer
-			}
-			for (let i = 0; i < toShip2.length; i++) {
-				hash = hash * 31 + toShip2.charCodeAt(i);
+			const fullShipName = toShip1 + toShip2,
+				shipName = toShip1.slice(0, Math.floor(toShip1.length / 2)) + toShip2.slice(Math.floor(toShip2.length / 2));
+			let hash = 0;
+			for (let i = 0; i < fullShipName.length; i++) {
+				hash = hash * 31 + fullShipName.charCodeAt(i);
 				hash |= 0; // Convert to 32-bit integer
 			}
 
 			const shipRating = parseFloat((Math.abs(hash % 90) / 10 + 1).toFixed(1));
-			let shipDescription = `**Ship Name**: ${shipName}` + "\n" +
+			let shipDescription = "**Ship Name**: " + shipName + "\n" +
 				"**Ship Rating**: `" + "█".repeat(Math.round(shipRating)) + " ‍‍".repeat(10 - Math.round(shipRating)) + "` " + `**${shipRating}**/10` + "\n" +
 				this.shipStates[this.shipStates.findIndex(state => state.min <= shipRating)].msg;
 			if (toShip1 == toShip2) shipDescription += "\n\n" + "*Forever alone!*";
 			message.channel.send(new RichEmbed()
-				.setTitle(`${toShip1} 💗 ${toShip2}`)
+				.setTitle(toShip1 + " 💗 " + toShip2)
 				.setColor(131073 * Math.floor(shipRating * 12.5))
 				.setDescription(shipDescription)
 			);
