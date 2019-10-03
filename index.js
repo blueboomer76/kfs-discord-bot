@@ -3,8 +3,12 @@ const {DiscordAPIError} = require("discord.js"),
 	{token} = require("./config.json"),
 	fs = require("fs");
 
-if (parseFloat(process.versions.node) < 8) {
-	throw new Error("Incompatible Node version (Node version 8 or higher needed)");
+// Check system requirements
+if (parseInt(process.versions.node) < 8) {
+	throw new Error("Incompatible Node.js version: v8 or newer required");
+}
+if (process.arch == "ia32") {
+	throw new Error("Incompatible operating system: 64-bit required");
 }
 
 let storedStats;
