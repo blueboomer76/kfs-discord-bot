@@ -413,6 +413,49 @@ module.exports = [
 				.catch(err => message.channel.send("An error has occurred while trying to kick the user: `" + err + "`"));
 		}
 	},
+	class LockCommand extends Command {
+		constructor() {
+			super({
+				name: "lock",
+				description: "Locks a channel to the everyone role",
+				aliases: ["lockdown"],
+				args: [
+					{
+						infiniteArgs: true,
+						optional: true,
+						type: "channel"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_CHANNELS"],
+					user: ["MANAGE_CHANNELS"],
+					level: 0
+				},
+				usage: "lock [channel]"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			const channel = args[0] || message.channel,
+				channelTarget = args[0] ? "The channel **" + channel.name + "**": "This channel";
+
+			const ecOverwrites = channel.permissionOverwrites.get(message.guild.id);
+			if (ecOverwrites && new Permissions(ecOverwrites.deny).has("VIEW_CHANNEL")) {
+				return {cmdWarn: channelTarget + " is already locked to the everyone role."};
+			}
+			channel.overwritePermissions(message.guild.id, {
+				VIEW_CHANNEL: false
+			})
+				.then(() => {
+					message.channel.send(`✅ ${channelTarget} has been locked to the everyone role.`);
+				})
+				.catch(err => message.channel.send("An error has occurred while trying to lock this channel: `" + err + "`"));
+		}
+	},
 	class MuteCommand extends Command {
 		constructor() {
 			super({
@@ -1007,6 +1050,48 @@ module.exports = [
 			message.guild.unban(userID, reasonFlag ? reasonFlag.args : null)
 				.then(() => message.channel.send(`✅ User with ID **${userID}** has been unbanned from this server.`))
 				.catch(() => message.channel.send("Could not unban the user with that ID. Make sure to check for typos in the ID and that the user is in the ban list."));
+		}
+	},
+	class UnlockCommand extends Command {
+		constructor() {
+			super({
+				name: "unlock",
+				description: "Unlocks a channel to the everyone role",
+				args: [
+					{
+						infiniteArgs: true,
+						optional: true,
+						type: "channel"
+					}
+				],
+				cooldown: {
+					time: 20000,
+					type: "user"
+				},
+				perms: {
+					bot: ["MANAGE_CHANNELS"],
+					user: ["MANAGE_CHANNELS"],
+					level: 0
+				},
+				usage: "unlock [channel]"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			const channel = args[0] || message.channel,
+				channelTarget = args[0] ? "The channel **" + channel.name + "**": "This channel";
+
+			const ecOverwrites = channel.permissionOverwrites.get(message.guild.id);
+			if (!ecOverwrites || !new Permissions(ecOverwrites.deny).has("VIEW_CHANNEL")) {
+				return {cmdWarn: channelTarget + " is not locked to the everyone role."};
+			}
+			channel.overwritePermissions(message.guild.id, {
+				VIEW_CHANNEL: null
+			})
+				.then(() => {
+					message.channel.send(`✅ ${channelTarget} has been unlocked to the everyone role.`);
+				})
+				.catch(err => message.channel.send("An error has occurred while trying to unlock this channel: `" + err + "`"));
 		}
 	},
 	class UnmuteCommand extends Command {

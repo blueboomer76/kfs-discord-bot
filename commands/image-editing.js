@@ -659,6 +659,50 @@ module.exports = [
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "randomcrop");
 		}
 	},
+	class ResizeCommand extends Command {
+		constructor() {
+			super({
+				name: "resize",
+				description: "Resizes an image. Values above 1 will increase the image width and height, and those below 1 will decrease them. The scale cannot be exactly 1",
+				aliases: ["enlarge", "imagesize"],
+				args: [
+					{
+						optional: true,
+						shiftable: true,
+						type: "image"
+					},
+					{
+						type: "float",
+						min: 0.01,
+						max: 10,
+						errorMsg: "You need to enter a number to scale from 0.01 to 10, excluding 1."
+					}
+				],
+				cooldown: {
+					name: "image-editing",
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["ATTACH_FILES"],
+					user: [],
+					level: 0
+				},
+				usage: "resize [image URL/mention/emoji] <scale: 0.01-10>"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			if (args[1] == 1) return {cmdWarn: "The scale cannot be 1."};
+
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
+
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "resize", {
+				scale: args[1]
+			});
+		}
+	},
 	class RotateCommand extends Command {
 		constructor() {
 			super({

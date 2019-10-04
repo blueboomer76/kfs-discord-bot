@@ -147,7 +147,7 @@ module.exports = [
 				const requestRes = bot.checkRemoteRequest("random.birb.pw", err, res);
 				if (requestRes != true) return message.channel.send(requestRes);
 				message.channel.send(new RichEmbed()
-					.setTitle("Here's your random birb!")
+					.setTitle("🐦 Here's your random birb!")
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter("From random.birb.pw")
 					.setImage(`https://random.birb.pw/img/${JSON.parse(res.body).file}`)
@@ -206,7 +206,7 @@ module.exports = [
 				const requestRes = bot.checkRemoteRequest("random.cat", err, res);
 				if (requestRes != true) return message.channel.send(requestRes);
 				message.channel.send(new RichEmbed()
-					.setTitle("Here's your random cat!")
+					.setTitle("🐱 Here's your random cat!")
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter("From random.cat")
 					.setImage(JSON.parse(res.body).file)
@@ -266,10 +266,40 @@ module.exports = [
 				const requestRes = bot.checkRemoteRequest("random.dog", err, res);
 				if (requestRes != true) return message.channel.send(requestRes);
 				message.channel.send(new RichEmbed()
-					.setTitle("Here's your random dog!")
+					.setTitle("🐶 Here's your random dog!")
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter("From random.dog")
 					.setImage(JSON.parse(res.body).url)
+				);
+			});
+		}
+	},
+	class FoxCommand extends Command {
+		constructor() {
+			super({
+				name: "fox",
+				description: "Get a random fox!",
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				}
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			request.get("https://randomfox.ca/floof", (err, res) => {
+				const requestRes = bot.checkRemoteRequest("randomfox.ca", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
+				message.channel.send(new RichEmbed()
+					.setTitle("🦊 Here's your random fox!")
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter("From randomfox.ca")
+					.setImage(JSON.parse(res.body).image)
 				);
 			});
 		}

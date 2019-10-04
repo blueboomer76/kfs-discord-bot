@@ -104,6 +104,10 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			});
 			return list.length > 0 ? list : null;
 		}
+		case "float": {
+			const num = parseFloat(obj);
+			return !isNaN(num) && num >= params.min && num <= params.max ? num : null;
+		}
 		case "function": {
 			const testFunction = params.testFunction;
 			return testFunction(obj) ? obj : null;

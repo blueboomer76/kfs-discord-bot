@@ -33,6 +33,7 @@ async function checkArgs(bot, message, args, cmdArg) {
 	switch (arg.type) {
 		case "function": params = {testFunction: arg.testFunction}; break;
 		case "member": params = {allowRaw: arg.allowRaw}; break;
+		case "float":
 		case "number": params = {min: arg.min || -Infinity, max: arg.max || Infinity}; break;
 		case "oneof": params = {list: arg.allowedValues};
 	}
