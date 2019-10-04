@@ -57,6 +57,9 @@ module.exports.applyJimpFilter = (img, filter, options) => {
 			);
 			break;
 		}
+		case "resize":
+			img.scale(options.scale, options.scale);
+			break;
 		case "rotate":
 			img.rotate(options.rotation || 90);
 			break;

@@ -232,7 +232,7 @@ module.exports = [
 				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "random.birb.pw", err, res);
 
 				message.channel.send(new RichEmbed()
-					.setTitle("Here's your random birb!")
+					.setTitle("🐦 Here's your random birb!")
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter("From random.birb.pw")
 					.setImage(`https://random.birb.pw/img/${JSON.parse(res.body).file}`)
@@ -290,7 +290,7 @@ module.exports = [
 			request.get("http://aws.random.cat/meow", (err, res) => {
 				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "random.cat", err, res);
 				message.channel.send(new RichEmbed()
-					.setTitle("Here's your random cat!")
+					.setTitle("🐱 Here's your random cat!")
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter("From random.cat")
 					.setImage(JSON.parse(res.body).file)
@@ -349,10 +349,40 @@ module.exports = [
 			request.get("http://random.dog/woof.json", (err, res) => {
 				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "random.dog", err, res);
 				message.channel.send(new RichEmbed()
-					.setTitle("Here's your random dog!")
+					.setTitle("🐶 Here's your random dog!")
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter("From random.dog")
 					.setImage(JSON.parse(res.body).url)
+				);
+			});
+		}
+	},
+	class FoxCommand extends Command {
+		constructor() {
+			super({
+				name: "fox",
+				description: "Get a random fox!",
+				cooldown: {
+					time: 15000,
+					type: "channel"
+				},
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				}
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			request.get("https://randomfox.ca/floof", (err, res) => {
+				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "randomfox.ca", err, res);
+
+				message.channel.send(new RichEmbed()
+					.setTitle("🦊 Here's your random fox!")
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter("From randomfox.ca")
+					.setImage(JSON.parse(res.body).image)
 				);
 			});
 		}

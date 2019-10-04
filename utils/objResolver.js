@@ -104,6 +104,8 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 
 			return list.length > 0 ? list : null;
 		}
+		case "float":
+			return !isNaN(obj) && obj >= params.min && obj <= params.max ? parseFloat(obj) : null;
 		case "function": {
 			const testFunction = params.testFunction;
 			return testFunction(obj) ? obj : null;
