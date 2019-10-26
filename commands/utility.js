@@ -379,9 +379,11 @@ module.exports = [
 			const createdDate = new Date(role.createdTimestamp),
 				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id)),
-				nearbyRoles = [];
-			for (let i = rolePos + 2; i > rolePos - 3; i--) {
-				if (i <= 0 || i > guildRoles.length) continue;
+				nearbyRoles = [],
+				startPos = Math.min(rolePos + 2, guildRoles.length),
+				endPos = Math.max(rolePos - 2, 1);
+
+			for (let i = startPos; i >= endPos; i--) {
 				const roleName = guildRoles.find(r => r.calculatedPosition == i).name;
 				nearbyRoles.push(i == rolePos ? `**${roleName}**` : roleName);
 			}
@@ -628,19 +630,20 @@ module.exports = [
 
 			if (member) {
 				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
-					guildMemArray = guildMembers.array();
-				guildMemArray.sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
-
+					guildMemArray = guildMembers.array().sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
 				const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp),
-					nearbyMems = [];
-				for (let i = joinPos - 2; i < joinPos + 3; i++) {
-					if (i < 0 || i >= message.guild.memberCount) continue;
+					nearbyMems = [],
+					startPos = Math.max(joinPos - 2, 0),
+					endPos = Math.min(joinPos + 2, message.guild.memberCount - 1);
+				for (let i = startPos; i <= endPos; i++) {
 					nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
 				}
 
-				let memRoles = member.roles.array();
-				memRoles.splice(memRoles.findIndex(role => role.calculatedPosition == 0), 1);
-				memRoles = memRoles.map(role => role.name);
+				const memRoles = [];
+				for (const role of member.roles.values()) {
+					if (role.calculatedPosition == 0) continue;
+					memRoles.push(role.name);
+				}
 
 				let roleList;
 				if (memRoles.length == 0) {
