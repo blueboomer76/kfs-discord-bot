@@ -134,7 +134,7 @@ module.exports = {
 			- precision
 			- shortSuffix
 		*/
-		const parsedNum = typeof num != "number" ? parseFloat(num) : num;
+		let parsedNum = typeof num != "number" ? parseFloat(num) : num;
 		if (options.maxFullShow) {
 			if (options.maxFullShow < 1000 || options.maxFullShow >= 1e+15) {
 				throw new RangeError("The maximum number to show in full must be >= 1000 and < 1e+15.");
@@ -143,11 +143,14 @@ module.exports = {
 			options.maxFullShow = 1e+9;
 		}
 
+		const isNegative = num < 0;
+		if (isNegative) parsedNum *= -1;
+
 		const numFactor = Math.abs(parsedNum) / 1000;
 		if (numFactor < (options.maxFullShow / 1000)) {
-			return parsedNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+			return (isNegative ? "-" : "") + parsedNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 		} else if (numFactor >= 1e+300) {
-			return parsedNum.toString();
+			return (isNegative ? "-" : "") + parsedNum.toString();
 		}
 
 		// Build the string to be returned
@@ -189,11 +192,11 @@ module.exports = {
 			}
 			if (options.capSuffix) suffix = capitalize(suffix);
 		}
-		return (parsedNum < 0 ? "-" : "") + parseFloat(numString).toString() + (options.noSpace ? "" : " ") + suffix;
+		return (isNegative ? "-" : "") + parseFloat(numString).toString() + (options.noSpace ? "" : " ") + suffix;
 	},
 	parseLargeNumberInput: str => {
 		const trimmed = str.trim();
-		if (/^\d+(\.\d+)?$/.test(trimmed)) return parseFloat(trimmed);
+		if (/^\d+(\.\d+)?(e\+\d+)?$/.test(trimmed)) return parseFloat(trimmed);
 
 		const baseMatch = str.match(/^\d+(\.\d+)?/), suffixMatch = str.match(/(?!^)[a-z]+/i);
 		if (!baseMatch || !suffixMatch) return NaN;

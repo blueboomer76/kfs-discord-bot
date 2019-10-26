@@ -386,7 +386,7 @@ module.exports = [
 				.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No", true)
 				.addField("Mentionable", role.mentionable ? "Yes" : "No", true)
 				.addField("Managed", role.managed ? "Yes" : "No", true)
-				.addField("Role order", `${nearbyRoles.join(" > ")}`)
+				.addField("Role order", nearbyRoles.join(" > "))
 			);
 		}
 	},

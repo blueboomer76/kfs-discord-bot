@@ -166,8 +166,12 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			// Coming soon
 			break;
 		case "role": {
-			if (obj == "everyone" || obj == message.guild.id) return null;
-			const guildRoles = message.guild.roles, roleMatch = obj.match(/<@&\d+>/);
+			if (obj.toLowerCase() == "everyone" || obj == message.guild.id) return null;
+
+			const guildRoles = message.guild.roles.clone();
+			guildRoles.delete(message.guild.id);
+
+			const roleMatch = obj.match(/<@&\d+>/);
 			let role;
 			if (roleMatch) {
 				return [guildRoles.get(roleMatch[0].match(/\d+/)[0])];
