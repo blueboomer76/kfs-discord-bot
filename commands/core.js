@@ -518,7 +518,7 @@ module.exports = [
 					`Large: ${botStats.largeServers.toLocaleString()} (${(botStats.largeServers * 100 / serverCount).toFixed(1)}%)`
 					, true)
 					.addField("Users", `Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
-					`Online: ${botStats.presences.online.toLocaleString()} (${(botStats.presences.online / userCount * 100).toFixed(1)}%)`
+					`Online: ${botStats.statuses.online.toLocaleString()} (${(botStats.statuses.online / userCount * 100).toFixed(1)}%)`
 					, true)
 					.addField("Channels", `Text: ${botStats.channels.text.toLocaleString()} (${(botStats.channels.text / serverCount).toFixed(2)}/server)` + "\n" +
 					`Voice: ${botStats.channels.voice.toLocaleString()} (${(botStats.channels.voice / serverCount).toFixed(2)}/server)` + "\n" +

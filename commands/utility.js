@@ -1,6 +1,6 @@
 const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
-	{capitalize, getDuration} = require("../modules/functions.js"),
+	{capitalize, getDuration, getStatuses} = require("../modules/functions.js"),
 	{fetchMembers} = require("../modules/memberFetcher.js"),
 	paginator = require("../utils/paginator.js"),
 	convert = require("color-convert"),
@@ -378,9 +378,7 @@ module.exports = [
 				.setColor(role.color)
 				.setFooter(`ID: ${role.id}`)
 				.addField("Role created at", `${new Date(role.createdTimestamp).toUTCString()} (${getDuration(role.createdTimestamp)})`)
-				.addField(`Members in Role [${roleMembers.size} total]`,
-					`${roleMembers.filter(roleMem => roleMem.user.presence.status != "offline").size} Online`,
-					true)
+				.addField(`Members in Role [${roleMembers.size} total]`, `${getStatuses(roleMembers).notOffline} Online`, true)
 				.addField("Color", `Hex: ${role.hexColor}` + "\n" + `Decimal: ${role.color}`, true)
 				.addField("Position from top", `${message.guild.roles.size - rolePos} / ${message.guild.roles.size}`, true)
 				.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No", true)
@@ -501,10 +499,11 @@ module.exports = [
 			const guild = message.guild,
 				guildMembers = guild.large ? await fetchMembers(message) : guild.members,
 				botCount = guildMembers.filter(mem => mem.user.bot).size,
-				channels = {text: 0, voice: 0, category: 0},
-				statuses = {online: 0, idle: 0, dnd: 0, offline: guild.memberCount - guild.presences.size};
-			let guildVerif;
+				statuses = getStatuses(guild.members, guild.memberCount - guild.members.size),
+				channels = {text: 0, voice: 0, category: 0};
+			for (const channel of guild.channels.values()) channels[channel.type]++;
 
+			let guildVerif;
 			switch (guild.verificationLevel) {
 				case 0: guildVerif = "None"; break;
 				case 1: guildVerif = "Low (verified email)"; break;
@@ -512,9 +511,6 @@ module.exports = [
 				case 3: guildVerif = "High (member for 10 mins)"; break;
 				case 4: guildVerif = "Very High (verified phone)";
 			}
-
-			for (const channel of guild.channels.values()) channels[channel.type]++;
-			for (const presence of guild.presences.values()) statuses[presence.status]++;
 
 			message.channel.send(new RichEmbed()
 				.setTitle(`Server Info - ${guild.name}`)
@@ -529,8 +525,8 @@ module.exports = [
 				.addField("Explicit Filter", guild.explicitContentFilter == 0 ? "None" : (guild.explicitContentFilter == 1 ? "Low" : "High"), true)
 				.addField("2-Factor Auth Required", guild.mfaLevel == 0 ? "No" : "Yes", true)
 				.addField(`Members [${guild.memberCount} total]`,
-					`${statuses.online} Online (${(statuses.online / guild.memberCount * 100).toFixed(1)}%), ` +
-					`${statuses.idle} Idle, ${statuses.dnd} DND, ${statuses.offline} Offline` + "\n" +
+					`${statuses.online} Online, ${statuses.idle} Idle, ${statuses.dnd} DND (${(statuses.notOffline / guild.memberCount * 100).toFixed(1)}%)` + "\n" +
+					`${statuses.offline} Offline` + "\n" +
 					`${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,
 					true)
 				.addField(`Roles [${guild.roles.size} total]`, `\`${bot.prefix}rolelist\` to see all roles`, true)
