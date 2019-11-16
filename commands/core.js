@@ -524,7 +524,7 @@ module.exports = [
 						, true)
 					.addField("Users",
 						`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
-						`Online: ${botStats.presences.online.toLocaleString()} (${(botStats.presences.online / userCount * 100).toFixed(1)}%)`
+						`Online: ${botStats.statuses.online.toLocaleString()} (${(botStats.statuses.online / userCount * 100).toFixed(1)}%)`
 						, true)
 					.addField("Channels",
 						`Text: ${botStats.channels.text.toLocaleString()} (${(botStats.channels.text / serverCount).toFixed(2)}/server)` + "\n" +

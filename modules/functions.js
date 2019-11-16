@@ -42,6 +42,20 @@ function capitalize(str, capAll = false) {
 	}
 }
 
+function getStatuses(users, rawOffline = 0) {
+	const statuses = {
+		online: 0,
+		idle: 0,
+		dnd: 0,
+		offline: rawOffline,
+		notOffline: null
+	};
+
+	for (const user of users.values()) statuses[user.presence.status]++;
+	statuses.notOffline = statuses.online + statuses.idle + statuses.dnd;
+	return statuses;
+}
+
 module.exports = {
 	capitalize: capitalize,
 	getBotStats: bot => {
@@ -51,16 +65,16 @@ module.exports = {
 		for (const cmdName in cachedStats.commandUsages) {
 			commandCurrentTotal += cachedStats.commandUsages[cmdName];
 		}
-		const presences = {online: 0, idle: 0, dnd: 0, offline: 0},
+
+		const statuses = getStatuses(bot.users),
 			channels = {text: 0, voice: 0, category: 0, dm: 0};
-		for (const user of bot.users.values()) presences[user.presence.status]++;
 		for (const channel of bot.channels.values()) channels[channel.type]++;
 
 		return {
 			servers: bot.guilds.size,
 			largeServers: bot.guilds.filter(g => g.large).size,
 			users: bot.users.size,
-			presences: presences,
+			statuses: statuses,
 			channels: {
 				text: channels.text,
 				voice: channels.voice,
@@ -129,6 +143,7 @@ module.exports = {
 		const suffix = time1 <= time2 ? "ago" : "left"; // Duration flows from time1 to time2
 		return simple ? `${baseStr1} ${suffix}` : `${baseStr1} ${baseStr2}${suffix}`;
 	},
+	getStatuses: getStatuses,
 	parseLargeNumber: (num, options = {}) => {
 		/*
 			Parser options:
