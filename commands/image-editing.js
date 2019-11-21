@@ -690,6 +690,8 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
+			if (args[1] == 1) return {cmdWarn: "The scale cannot be 1."};
+
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 

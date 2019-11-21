@@ -1,5 +1,4 @@
 const {fetchMembers} = require("../modules/memberFetcher.js"),
-	fs = require("fs"),
 	convert = require("color-convert"),
 	twemoji = require("twemoji");
 
@@ -128,12 +127,11 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				return `https://cdn.discordapp.com/emojis/${emojiId}.${emojiExtension}`;
 			}
 
-			const twemojiResults = [];
-			twemoji.replace(obj, match => {twemojiResults.push(match); return match});
-			if (twemojiResults.length == 0) return null;
-			const twemojiCode = twemoji.convert.toCodePoint(twemojiResults[0]),
-				file = `node_modules/twemoji/2/svg/${twemojiCode}.svg`;
-			return fs.existsSync(file) ? {isEmoji: true, content: fs.readFileSync(file)} : null;
+			// The src attribute gets extracted from the resulting <img> tag string
+			const parsedEmoji = twemoji.parse(obj, {folder: "svg", ext: ".svg"}),
+				i = parsedEmoji.indexOf("https://twemoji.maxcdn.com/v/");
+
+			return i != -1 ? {isEmoji: true, content: parsedEmoji.slice(i, parsedEmoji.indexOf(".svg", i) + 4)} : null;
 		}
 		case "member": {
 			const memberMatch = obj.match(memberRegex), allowRaw = params.allowRaw;
