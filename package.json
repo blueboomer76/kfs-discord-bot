@@ -1,6 +1,6 @@
 {
   "name": "kfs-discord-bot",
-  "version": "1.5.17",
+  "version": "1.5.21",
   "description": "A multipurpose Discord bot for fun, moderation, utility, and more, written in discord.js",
   "main": "index.js",
   "dependencies": {
@@ -16,7 +16,7 @@
     "request": "^2.88.0",
     "rss-parser": "^3.6.0",
     "svg2png": "^4.1.1",
-    "twemoji": "^11.3.0",
+    "twemoji": "^12.0.1",
     "ytdl-core": "*"
   },
   "devDependencies": {
