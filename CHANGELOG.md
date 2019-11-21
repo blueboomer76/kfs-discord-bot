@@ -4,6 +4,11 @@
 
 # 1.X (current)
 
+## 1.5.21
+- Bumped `twemoji` dependency to version 12 and remove its file system lookups
+- Added "float" argument type for floating-point numbers
+- Added a new check for system architecture, preventing the bot from starting if `process.arch` is "ia32" (64-bit is required)
+
 ## 1.5.17
 - Added option to add cooldown messages in the cooldown checker by config
 - Changed argument quote parser to use a shared function to find arguments that fit quote-related regexes

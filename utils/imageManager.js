@@ -3,14 +3,30 @@ const {applyJimpFilter} = require("../modules/filters.js"),
 	request = require("request"),
 	svg2png = require("svg2png");
 
+function getEmojiImage(url) {
+	return new Promise((resolve, reject) => {
+		request.get({
+			url: url,
+			encoding: null
+		}, (err, res) => {
+			if (err) reject("Failed to fetch emoji: " + err.message);
+			if (res.statusCode >= 400) reject("Failed to fetch emoji: " + res.statusMessage);
+
+			svg2png(res.body, {width: 512, height: 512})
+				.then(pngBuffer => resolve(Buffer.from(pngBuffer)))
+				.catch(err => reject("SVG to PNG conversion failed: " + err));
+		});
+	});
+}
+
 module.exports = {
 	getImageResolvable: async (message, userInput) => {
 		const result = {data: null, error: null};
 		if (userInput && userInput.isEmoji) {
 			// User input is an emoji
-			await svg2png(userInput.content, {width: 512, height: 512})
-				.then(pngBuffer => result.data = Buffer.from(pngBuffer))
-				.catch(err => result.error = "SVG to PNG conversion failed: " + err);
+			await getEmojiImage(userInput.content)
+				.then(data => result.data = data)
+				.catch(err => result.error = err);
 		} else if (!userInput) {
 			// No user input given, search through messages
 			await message.channel.fetchMessages({limit: 25})
