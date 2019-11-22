@@ -365,10 +365,11 @@ module.exports = [
 				guildRoles = message.guild.roles,
 				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id)),
-				nearbyRoles = [];
+				nearbyRoles = [],
+				startPos = Math.min(rolePos + 2, guildRoles.size - 1),
+				endPos = Math.max(rolePos - 2, 0);
 
-			for (let i = rolePos + 2; i > rolePos - 3; i--) {
-				if (i < 0 || i >= guildRoles.size) continue;
+			for (let i = startPos; i >= endPos; i--) {
 				const roleName = guildRoles.find(r => r.calculatedPosition == i).name;
 				nearbyRoles.push(i == rolePos ? `**${roleName}**` : roleName);
 			}
@@ -601,17 +602,19 @@ module.exports = [
 			userEmbed.addField("Status", presence, true)
 				.addField("Bot user", user.bot ? "Yes" : "No", true);
 			if (member) {
-				let userRoles = member.roles.array();
-				userRoles.splice(userRoles.findIndex(role => role.id == message.guild.id), 1);
-				userRoles = userRoles.map(role => role.name);
+				const userRoles = [];
+				for (const role of member.roles.values()) {
+					if (role.id == message.guild.id) continue;
+					userRoles.push(role.name);
+				}
 
 				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
-					guildMemArray = guildMembers.array();
-				guildMemArray.sort((a,b) => a.joinedTimestamp - b.joinedTimestamp);
-
-				const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp), nearbyMems = [];
-				for (let i = joinPos - 2; i < joinPos + 3; i++) {
-					if (i < 0 || i >= message.guild.memberCount) continue;
+					guildMemArray = guildMembers.array().sort((a,b) => a.joinedTimestamp - b.joinedTimestamp);
+				const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp),
+					nearbyMems = [],
+					startPos = Math.max(joinPos - 2, 0),
+					endPos = Math.min(joinPos + 2, message.guild.memberCount - 1);
+				for (let i = startPos; i <= endPos; i++) {
 					nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
 				}
 

@@ -21,6 +21,7 @@ async function getMember(message, id) {
 }
 
 module.exports.resolve = async (bot, message, obj, type, params) => {
+	const lowerObj = obj.toLowerCase();
 	let list;
 	switch (type) {
 		case "boolean":
@@ -37,9 +38,10 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			if (channel) {
 				return [channel];
 			} else {
-				list = guildChannels.array().filter(chnl => {
-					return chnl.name.toLowerCase().includes(obj.toLowerCase());
-				});
+				list = [];
+				for (const chnl of guildChannels.values()) {
+					if (chnl.name.toLowerCase().includes(lowerObj)) list.push(chnl);
+				}
 			}
 			return list.length > 0 ? list : null;
 		}
@@ -96,19 +98,18 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			if (emoji) {
 				return [emoji];
 			} else {
-				list = guildEmojis.array().filter(emoji => {
-					return emoji.name.toLowerCase().includes(obj.toLowerCase());
-				});
+				list = [];
+				for (const emoji of guildEmojis.values()) {
+					if (emoji.name.toLowerCase().includes(lowerObj)) list.push(emoji);
+				}
 			}
 
 			return list.length > 0 ? list : null;
 		}
 		case "float":
 			return !isNaN(obj) && obj >= params.min && obj <= params.max ? parseFloat(obj) : null;
-		case "function": {
-			const testFunction = params.testFunction;
-			return testFunction(obj) ? obj : null;
-		}
+		case "function":
+			return params.testFunction(obj) ? obj : null;
 		case "image": {
 			if (memberRegex.test(obj)) {
 				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
@@ -146,13 +147,13 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			if (member) {
 				return member ? [member] : (allowRaw ? obj : null);
 			} else {
-				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
-					comparedObj = obj.toLowerCase();
-				list = guildMembers.array().filter(mem => {
-					return mem.user.tag.toLowerCase().includes(comparedObj) ||
-						mem.user.username.toLowerCase().includes(comparedObj) ||
-						mem.displayName.toLowerCase().includes(comparedObj);
-				});
+				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members;
+				list = [];
+				for (const mem of guildMembers.values()) {
+					if (mem.user.tag.toLowerCase().includes(lowerObj) ||
+						mem.user.username.toLowerCase().includes(lowerObj) ||
+						mem.displayName.toLowerCase().includes(lowerObj)) list.push(mem);
+				}
 			}
 			return list.length > 0 ? list : (allowRaw ? obj : null);
 		}
@@ -164,7 +165,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			// Coming soon
 			break;
 		case "role": {
-			if (obj.toLowerCase() == "everyone" || obj == message.guild.id) return null;
+			if (lowerObj == "everyone" || obj == message.guild.id) return null;
 
 			const guildRoles = message.guild.roles.clone();
 			guildRoles.delete(message.guild.id);
@@ -179,9 +180,10 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			if (role) {
 				return [role];
 			} else {
-				list = guildRoles.array().filter(role => {
-					return role.name.toLowerCase().includes(obj.toLowerCase());
-				});
+				list = [];
+				for (const role of guildRoles.values()) {
+					if (role.name.toLowerCase().includes(lowerObj)) list.push(role);
+				}
 			}
 			return list.length > 0 ? list : null;
 		}

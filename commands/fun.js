@@ -194,13 +194,12 @@ module.exports = [
 			if (iters == 1) {
 				message.channel.send("I flipped a coin and got " + (Math.random() < 0.5 ? "Heads" : "Tails"));
 			} else {
-				const res = [];
-				let heads = 0;
+				let res = "", heads = 0;
 				for (let i = 0; i < iters; i++) {
-					if (Math.random() < 0.5) {res.push("Heads"); heads++} else {res.push("Tails")}
+					if (Math.random() < 0.5) {res += "Heads "; heads++} else {res += "Tails "}
 				}
-				message.channel.send(`I flipped ${iters} coins and got: ${res.join(", ")}` + "\n" +
-				`(${heads} heads and ${iters-heads} tails)`);
+				message.channel.send("I flipped " + iters + " coins and got:\n" +
+					res + `\n(${heads} heads and ${iters - heads} tails)`);
 			}
 		}
 	},
