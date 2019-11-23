@@ -44,24 +44,26 @@ async function checkArgs(bot, message, args, cmdArg) {
 			return {shift: true};
 		} else {
 			const userInput = args.length > 1500 ? `${args.slice(0, 1500)}...` : args;
-			let argErrorMsg = listableTypes.includes(arg.type) ? `No ${arg.type}s were found matching \`${userInput}\`` : `\`${userInput}\` is not a valid ${arg.type}`;
+			let argErrorMsg = listableTypes.includes(arg.type) ?
+				`No ${arg.type}s were found matching \`${userInput}\`` : `\`${userInput}\` is not a valid ${arg.type}`;
 			if (cmdArg.errorMsg) {
 				argErrorMsg = cmdArg.errorMsg;
 			} else {
 				if (arg.type == "image") {
 					argErrorMsg = "A valid mention, image URL, or emoji must be provided";
 				} else if (arg.type == "number") {
-					argErrorMsg += "\n" + "The argument must be a number";
+					argErrorMsg += "\nThe argument must be a number";
 					if (arg.min || arg.max) {
 						argErrorMsg += " that is ";
 						if (arg.min) {
-							argErrorMsg += arg.max ? `in between ${params.min} and ${params.max}` : `greater than or equal to ${params.min}`;
+							argErrorMsg += arg.max ? `in between ${params.min} and ${params.max}` :
+								"greater than or equal to " + params.min;
 						} else {
-							argErrorMsg += `less than or equal to ${params.max}`;
+							argErrorMsg += "less than or equal to " + params.max;
 						}
 					}
 				} else if (arg.type == "oneof") {
-					argErrorMsg = `The argument must be one of these values: ${params.list.join(", ")}`;
+					argErrorMsg = "The argument must be one of these values: " + params.list.join(", ");
 				}
 			}
 			return {error: true, message: argErrorMsg};
@@ -73,7 +75,8 @@ async function checkArgs(bot, message, args, cmdArg) {
 		} else {
 			const endMsg = resolved.length > 20 ? `...and ${resolved.length - 20} more.` : "";
 			let list = resolved.slice(0, 20);
-			list = arg.type == "member" ? list.map(mem => `${mem.user.tag} (${mem.user.id})`) : list.map(obj => `${obj.name} (${obj.id})`);
+			list = arg.type == "member" ? list.map(mem => `${mem.user.tag} (${mem.user.id})`) :
+				list.map(obj => `${obj.name} (${obj.id})`);
 
 			return {
 				error: `Multiple ${arg.type}s found`,
@@ -104,7 +107,8 @@ module.exports = {
 				} else {
 					return {
 						error: "Invalid subcommand",
-						message: `You must provide one of these subcommands: ${subcommands.map(scmd => scmd.name).join(", ")}`
+						message: "You must provide one of these subcommands: " +
+							subcommands.map(scmd => scmd.name).join(", ")
 					};
 				}
 			}

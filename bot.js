@@ -31,27 +31,19 @@ class KFSDiscordBot extends Client {
 			},
 			{
 				name: "Bot Support",
-				validate: message => {
-					return this.supportIDs.includes(message.author.id);
-				}
+				validate: message => this.supportIDs.includes(message.author.id)
 			},
 			{
 				name: "Bot Moderator",
-				validate: message => {
-					return this.moderatorIDs.includes(message.author.id);
-				}
+				validate: message => this.moderatorIDs.includes(message.author.id)
 			},
 			{
 				name: "Bot Admin",
-				validate: message => {
-					return this.adminIDs.includes(message.author.id);
-				}
+				validate: message => this.adminIDs.includes(message.author.id)
 			},
 			{
 				name: "Bot Owner",
-				validate: message => {
-					return this.ownerIDs.includes(message.author.id);
-				}
+				validate: message => this.ownerIDs.includes(message.author.id)
 			}
 		];
 		this.cache = {
@@ -108,7 +100,7 @@ class KFSDiscordBot extends Client {
 						}
 						console.log(`${commandClasses.length} commands have been loaded in the category ${category}.`);
 					} else {
-						console.log(`No commands found in the category ${category}.`);
+						console.log("No commands found in the category " + category);
 					}
 				}
 			} else {
@@ -125,11 +117,11 @@ class KFSDiscordBot extends Client {
 			const evFiles = files.filter(f => f.endsWith(".js"));
 			if (evFiles.length > 0) {
 				for (const eventFile of evFiles) {
-					const eventName = eventFile.split(".")[0], ev = require(`./events/${eventFile}`);
+					const eventName = eventFile.split(".")[0], ev = require("./events/" + eventFile);
 					this.on(eventName, ev.bind(null, this));
-					delete require.cache[require.resolve(`./events/${eventFile}`)];
+					delete require.cache[require.resolve("./events/" + eventFile)];
 				}
-				console.log(`${evFiles.length} events have been loaded.`);
+				console.log(evFiles.length + " events have been loaded.");
 			} else {
 				throw new Error("No events found");
 			}
@@ -178,11 +170,12 @@ class KFSDiscordBot extends Client {
 		cachedStats.commandUsages = {};
 		cachedStats.lastCheck = Date.now();
 
+		const jsonString = JSON.stringify(cumulativeStats, null, 4);
 		if (writeSync) {
-			fs.writeFileSync("modules/stats.json", JSON.stringify(cumulativeStats, null, 4));
+			fs.writeFileSync("modules/stats.json", jsonString);
 		} else {
 			return new Promise((resolve, reject) => {
-				fs.writeFile("modules/stats.json", JSON.stringify(cumulativeStats, null, 4), err => {
+				fs.writeFile("modules/stats.json", jsonString, err => {
 					if (err) reject(err);
 					resolve();
 				});
@@ -265,7 +258,7 @@ class KFSDiscordBot extends Client {
 				const meme = res.body.data.children.filter(r => !r.data.stickied)[0].data;
 				this.channels.get(config.memeFeedChannel).send(new RichEmbed()
 					.setTitle(meme.title)
-					.setURL(`https://reddit.com${meme.permalink}`)
+					.setURL("https://reddit.com" + meme.permalink)
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter(`👍 ${meme.score} | 💬 ${meme.num_comments} | By: ${meme.author}`)
 					.setImage(/v\.redd\.it/.test(meme.url) && meme.preview ? meme.preview.images[0].source.url : meme.url)

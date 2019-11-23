@@ -75,7 +75,7 @@ module.exports = [
 
 			const postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0];
 			message.channel.send(new RichEmbed()
-				.setTitle(postData.title.length > 250 ? `${postData.title.slice(0, 250)}...` : postData.title)
+				.setTitle(postData.title.length > 250 ? postData.title.slice(0, 250) + "..." : postData.title)
 				.setURL("https://reddit.com" + postData.url)
 				.setDescription(postData.desc)
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -178,7 +178,7 @@ module.exports = [
 			if (args.length < 2) return {cmdWarn: "You need to provide at least 2 choices for me to choose from!"};
 			let choice = args[Math.floor(Math.random() * args.length)];
 			if (choice.length > 1500) choice = choice.slice(0, 1500) + "...";
-			message.channel.send(`I choose: **${choice}**`);
+			message.channel.send("I choose: **" + choice + "**");
 		}
 	},
 	class CoinCommand extends Command {
@@ -398,7 +398,8 @@ module.exports = [
 				const requestRes = bot.checkRemoteRequest("Number Facts API", err, res);
 				if (requestRes != true) return message.channel.send(requestRes);
 
-				message.channel.send(res.body.found || hasPreviousFlag || hasNextFlag ? "🔢 " + res.body.text : "No facts found! Try searching Wikipedia for **" + num + " (number)**");
+				message.channel.send(res.body.found || hasPreviousFlag || hasNextFlag ?
+					"🔢 " + res.body.text : "No facts found! Try searching Wikipedia for **" + num + " (number)**");
 			});
 		}
 	},
