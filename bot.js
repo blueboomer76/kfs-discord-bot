@@ -24,34 +24,24 @@ class KendraBot extends Client {
 			},
 			{
 				name: "Server Owner",
-				validate: message => {
-					return message.guild.owner.user.id == message.author.id;
-				}
+				validate: message => message.guild.owner.user.id == message.author.id
 			},
 			{
 				name: "Bot Support",
-				validate: message => {
-					return this.supportIds.includes(message.author.id);
-				}
+				validate: message => this.supportIds.includes(message.author.id)
 			},
 			{
 				name: "Bot Moderator",
-				validate: message => {
-					return this.moderatorIds.includes(message.author.id);
-				}
+				validate: message => this.moderatorIds.includes(message.author.id)
 			},
 			{
 				name: "Bot Admin",
-				validate: message => {
-					return this.adminIds.includes(message.author.id);
-				}
+				validate: message => this.adminIds.includes(message.author.id)
 			},
 			{
 				name: "Bot Owner",
-				validate: message => {
-					return this.ownerIds.includes(message.author.id);
+				validate: message => this.ownerIds.includes(message.author.id)
 				}
-			}
 		];
 		this.cache = {
 			guildCount: 0,
@@ -99,7 +89,7 @@ class KendraBot extends Client {
 						}
 						console.log(`${commandClasses.length} commands have been loaded in the category ${category}.`);
 					} else {
-						console.log(`No commands found in the category ${category}.`);
+						console.log("No commands found in the category " + category);
 					}
 				}
 			} else {
@@ -116,11 +106,11 @@ class KendraBot extends Client {
 			const evFiles = files.filter(f => f.endsWith(".js"));
 			if (evFiles.length > 0) {
 				for (const eventFile of evFiles) {
-					const eventName = eventFile.split(".")[0], ev = require(`./events/${eventFile}`);
+					const eventName = eventFile.split(".")[0], ev = require("./events/" + eventFile);
 					this.on(eventName, ev.bind(null, this));
-					delete require.cache[require.resolve(`./events/${eventFile}`)];
+					delete require.cache[require.resolve("./events/" + eventFile)];
 				}
-				console.log(`${evFiles.length} events have been loaded.`);
+				console.log(evFiles.length + " events have been loaded.");
 			} else {
 				throw new Error("No events found");
 			}
@@ -168,11 +158,12 @@ class KendraBot extends Client {
 		cachedStats.lastCheck = Date.now();
 		cachedStats.commandUsage = {};
 
+		const jsonString = JSON.stringify(cumulativeStats, null, 4);
 		if (sync) {
-			fs.writeFileSync("modules/stats.json", JSON.stringify(cumulativeStats, null, 4));
+			fs.writeFileSync("modules/stats.json", jsonString);
 		} else {
 			return new Promise((resolve, reject) => {
-				fs.writeFile("modules/stats.json", JSON.stringify(cumulativeStats, null, 4), err => {
+				fs.writeFile("modules/stats.json", jsonString, err => {
 					if (err) reject(err);
 					resolve();
 				});
@@ -181,7 +172,8 @@ class KendraBot extends Client {
 	}
 
 	handleRemoteSiteError(message, site, err, res) {
-		const errBase = err ? `Could not request to ${site}: ${err.message} (${err.code})` : `An error has been returned from ${site}: ${res.statusMessage} (${res.statusCode})`;
+		const errBase = err ? `Could not request to ${site}: ${err.message} (${err.code})` :
+			`An error has been returned from ${site}: ${res.statusMessage} (${res.statusCode})`;
 		message.channel.send("⚠ " + errBase + ". Try again later.");
 	}
 
@@ -253,7 +245,7 @@ class KendraBot extends Client {
 			const meme = res.body.data.children.filter(r => !r.data.stickied)[0].data;
 			this.channels.get(config.ownerServer.memeFeed).send(new RichEmbed()
 				.setTitle(meme.title)
-				.setURL(`https://reddit.com${meme.permalink}`)
+				.setURL("https://reddit.com" + meme.permalink)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`👍 ${meme.score} | 💬 ${meme.num_comments} | By: ${meme.author}`)
 				.setImage(meme.url)

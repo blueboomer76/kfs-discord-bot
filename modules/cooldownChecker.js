@@ -52,8 +52,10 @@ module.exports = {
 		if (checkedCd) {
 			if (!checkedCd.notified) {
 				checkedCd.notified = true;
-				let toSend = `⛔ **Cooldown:**\n*${customCooldownMessages[Math.floor(Math.random() * customCooldownMessages.length)]}*` + "\n";
-				toSend += command.cooldown.name ? `${capitalize(command.cooldown.name, true)} commands are` : "This command is";
+
+				const chosenMessage = customCooldownMessages[Math.floor(Math.random() * customCooldownMessages.length)];
+				let toSend = "⛔ **Cooldown:**\n" + `*${chosenMessage}*\n`;
+				toSend += command.cooldown.name ? capitalize(command.cooldown.name, true) + " commands are" : "This command is";
 
 				const cdTime = ((checkedCd.resets - Date.now()) / 1000).toFixed(1);
 				toSend += ` on cooldown for **${cdTime > 0 ? cdTime : 0.1} more seconds**`;
@@ -62,7 +64,7 @@ module.exports = {
 				} else if (cdType == "guild") {
 					toSend += " in this guild";
 				}
-				message.channel.send(`${toSend}!`);
+				message.channel.send(toSend + "!");
 			}
 			return false;
 		} else {

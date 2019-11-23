@@ -86,9 +86,9 @@ module.exports = [
 			}
 
 			const channelEmbed = new RichEmbed()
-				.setTitle(`Channel Info - ${channel.name}`)
+				.setTitle("Channel Info - " + channel.name)
 				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter(`ID: ${channel.id}`)
+				.setFooter("ID: " + channel.id)
 				.addField("Created at", `${new Date(channel.createdTimestamp).toUTCString()} (${getDuration(channel.createdTimestamp)})`)
 				.addField("Type", capitalize(channel.type), true)
 				.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
@@ -212,9 +212,9 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const emoji = args[0];
 			message.channel.send(new RichEmbed()
-				.setTitle(`Emoji - ${emoji.name}`)
+				.setTitle("Emoji - " + emoji.name)
 				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter(`ID: ${emoji.id}`)
+				.setFooter("ID: " + emoji.id)
 				.setImage(emoji.url)
 				.addField("Emoji created at", `${new Date(emoji.createdTimestamp).toUTCString()} (${getDuration(emoji.createdTimestamp)})`)
 				.addField("Roles which can use this emoji", emoji.roles.size == 0 ? "All roles" : emoji.roles.map(role => role.name).join(", "))
@@ -375,9 +375,9 @@ module.exports = [
 			}
 
 			message.channel.send(new RichEmbed()
-				.setTitle(`Role Info - ${role.name}`)
+				.setTitle("Role Info - " + role.name)
 				.setColor(role.color)
-				.setFooter(`ID: ${role.id}`)
+				.setFooter("ID: " + role.id)
 				.addField("Role created at", `${new Date(role.createdTimestamp).toUTCString()} (${getDuration(role.createdTimestamp)})`)
 				.addField(`Members in Role [${roleMembers.size} total]`, `${getStatuses(roleMembers).notOffline} Online`, true)
 				.addField("Color", `Hex: ${role.hexColor}` + "\n" + `Decimal: ${role.color}`, true)
@@ -514,7 +514,7 @@ module.exports = [
 			}
 
 			message.channel.send(new RichEmbed()
-				.setTitle(`Server Info - ${guild.name}`)
+				.setTitle("Server Info - " + guild.name)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setThumbnail(guild.iconURL)
 				.setFooter(`ID: ${guild.id} | Server stats as of`)
@@ -563,7 +563,6 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const userEmbed = new RichEmbed();
 			let user, member;
 			if (typeof args[0] == "string") {
 				let cmdErr = true;
@@ -590,9 +589,10 @@ module.exports = [
 			}
 			if (rawPresence.game) presence += ` (playing ${rawPresence.game.name})`;
 
-			userEmbed.setTitle(`User Info - ${user.tag}`)
+			const userEmbed = new RichEmbed()
+				.setTitle("User Info - " + user.tag)
 				.setThumbnail(user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`)
-				.setFooter(`ID: ${user.id}`)
+				.setFooter("ID: " + user.id)
 				.addField("Account created at", `${new Date(user.createdTimestamp).toUTCString()} (${getDuration(user.createdTimestamp)})`);
 
 			if (member) {
@@ -620,8 +620,8 @@ module.exports = [
 
 				userEmbed.addField("Nickname", member.nickname || "None", true)
 					.addField("Member #", joinPos + 1, true)
-					.addField("Join order", `${nearbyMems.join(" > ")}`)
-					.addField(`Roles - ${userRoles.length}`, userRoles.length == 0 ? "None" : userRoles.join(", "));
+					.addField("Join order", nearbyMems.join(" > "))
+					.addField("Roles - " + userRoles.length, userRoles.length == 0 ? "None" : userRoles.join(", "));
 
 				if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
 					userEmbed.setColor(member.displayColor);
