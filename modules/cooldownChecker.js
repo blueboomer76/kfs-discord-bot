@@ -1,6 +1,6 @@
 const {capitalize} = require("../modules/functions.js");
 
-const cdMessages = [
+let cooldownMessages = [
 	"You're calling me fast enough that I'm getting dizzy!",
 	"You have to wait before using the command again...",
 	"You're calling me a bit too fast, I am getting dizzy!",
@@ -8,6 +8,13 @@ const cdMessages = [
 	"Hang in there before using this command again...",
 	"Wait up, I am not done with my break"
 ];
+
+(function() {
+	const config = require("../config.json");
+	if (Array.isArray(config.customCooldownMessages)) {
+		cooldownMessages = cooldownMessages.concat(config.customCooldownMessages);
+	}
+})();
 
 function getIDByType(message, type) {
 	if (type == "user") {
@@ -59,8 +66,10 @@ module.exports = {
 		if (checkedCd) {
 			if (!checkedCd.notified) {
 				checkedCd.notified = true;
-				let toSend = `⛔ **Cooldown:**\n*${cdMessages[Math.floor(Math.random() * cdMessages.length)]}*` + "\n";
-				toSend += command.cooldown.name ? `${capitalize(command.cooldown.name, true)} commands are` : "This command is";
+
+				const chosenMessage = cooldownMessages[Math.floor(Math.random() * cooldownMessages.length)];
+				let toSend = "⛔ **Cooldown:**\n" + `*${chosenMessage}*\n`;
+				toSend += command.cooldown.name ? capitalize(command.cooldown.name, true) + " commands are" : "This command is";
 
 				const cdTime = ((checkedCd.resets - Date.now()) / 1000).toFixed(1);
 				toSend += ` on cooldown for **${cdTime > 0 ? cdTime : 0.1} more seconds**`;
@@ -69,7 +78,7 @@ module.exports = {
 				} else if (cdType == "guild") {
 					toSend += " in this server";
 				}
-				message.channel.send(`${toSend}!`);
+				message.channel.send(toSend + "!");
 			}
 			return false;
 		} else {

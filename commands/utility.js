@@ -80,7 +80,6 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			const channel = args[0] || message.channel,
-				createdDate = new Date(channel.createdTimestamp),
 				everyoneRole = message.guild.roles.find(r => r.calculatedPosition == 0);
 			let accessible = "No";
 			if (channel.permissionsFor(everyoneRole).has("VIEW_CHANNEL")) {
@@ -88,10 +87,10 @@ module.exports = [
 			}
 
 			const channelEmbed = new RichEmbed()
-				.setTitle(`Channel Info - ${channel.name}`)
+				.setTitle("Channel Info - " + channel.name)
 				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter(`ID: ${channel.id}`)
-				.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.setFooter("ID: " + channel.id)
+				.addField("Created at", `${new Date(channel.createdTimestamp).toUTCString()} (${getDuration(channel.createdTimestamp)})`)
 				.addField("Type", capitalize(channel.type), true)
 				.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
 				.addField("Accessible to everyone", accessible, true);
@@ -210,13 +209,13 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const emoji = args[0], createdDate = new Date(emoji.createdTimestamp);
+			const emoji = args[0];
 			message.channel.send(new RichEmbed()
-				.setTitle(`Emoji - ${emoji.name}`)
+				.setTitle("Emoji - " + emoji.name)
 				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter(`ID: ${emoji.id}`)
+				.setFooter("ID: " + emoji.id)
 				.setImage(emoji.url)
-				.addField("Emoji created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.addField("Emoji created at", `${new Date(emoji.createdTimestamp).toUTCString()} (${getDuration(emoji.createdTimestamp)})`)
 				.addField("Roles which can use this emoji", emoji.roles.size == 0 ? "All roles" : emoji.roles.map(role => role.name).join(", "))
 				.addField("Animated", emoji.animated ? "Yes" : "No", true)
 				.addField("Managed", emoji.managed ? "Yes" : "No", true)
@@ -374,9 +373,9 @@ module.exports = [
 			}
 
 			message.channel.send(new RichEmbed()
-				.setTitle(`Role Info - ${role.name}`)
+				.setTitle("Role Info - " + role.name)
 				.setColor(role.color)
-				.setFooter(`ID: ${role.id}`)
+				.setFooter("ID: " + role.id)
 				.addField("Role created at", `${new Date(role.createdTimestamp).toUTCString()} (${getDuration(role.createdTimestamp)})`)
 				.addField(`Members in Role [${roleMembers.size} total]`, `${getStatuses(roleMembers).notOffline} Online`, true)
 				.addField("Color", `Hex: ${role.hexColor}` + "\n" + `Decimal: ${role.color}`, true)
@@ -501,8 +500,7 @@ module.exports = [
 			const guild = message.guild,
 				guildMembers = guild.large ? await fetchMembers(message) : guild.members;
 
-			const createdDate = new Date(guild.createdTimestamp),
-				statuses = getStatuses(guild.members, guild.memberCount - guild.members.size),
+			const statuses = getStatuses(guild.members, guild.memberCount - guild.members.size),
 				channels = {text: 0, voice: 0, category: 0};
 			for (const channel of guild.channels.values()) channels[channel.type]++;
 
@@ -517,12 +515,12 @@ module.exports = [
 			const botCount = guildMembers.filter(mem => mem.user.bot).size;
 
 			message.channel.send(new RichEmbed()
-				.setTitle(`Server Info - ${guild.name}`)
+				.setTitle("Server Info - " + guild.name)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`ID: ${guild.id} | Server stats as of`)
 				.setThumbnail(guild.iconURL)
 				.setTimestamp(message.createdAt)
-				.addField("Created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`)
+				.addField("Created at", `${new Date(guild.createdTimestamp).toUTCString()} (${getDuration(guild.createdTimestamp)})`)
 				.addField("Owner", `${guild.owner.user.tag} \`(ID ${guild.owner.id})\``)
 				.addField("Region", guild.region, true)
 				.addField("Verification", guildVerif, true)
@@ -567,7 +565,6 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const userEmbed = new RichEmbed();
 			let user, member;
 			if (typeof args[0] == "string") {
 				let cmdErr = true;
@@ -582,15 +579,14 @@ module.exports = [
 				user = member.user;
 			}
 
-			const createdDate = new Date(user.createdTimestamp);
-			userEmbed.setTitle(`User Info - ${user.tag}`)
-				.setFooter(`ID: ${user.id}`)
+			const userEmbed = new RichEmbed()
+				.setTitle("User Info - " + user.tag)
+				.setFooter("ID: " + user.id)
 				.setThumbnail(user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`)
-				.addField("Account created at", `${createdDate.toUTCString()} (${getDuration(createdDate)})`);
+				.addField("Account created at", `${new Date(user.createdTimestamp).toUTCString()} (${getDuration(user.createdTimestamp)})`);
 
 			if (member) {
-				const joinedDate = new Date(member.joinedTimestamp);
-				userEmbed.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`);
+				userEmbed.addField("Joined this server at", `${new Date(member.joinedTimestamp).toUTCString()} (${getDuration(member.joinedTimestamp)})`);
 			}
 
 			const rawPresence = (member && member.presence) || user.presence;
@@ -627,7 +623,7 @@ module.exports = [
 					.addField("Nickname", member.nickname || "None", true)
 					.addField("Member #", joinPos + 1, true)
 					.addField("Join order", nearbyMems.join(" > "))
-					.addField(`Roles - ${memRoles.length}`, memRoles.length == 0 ? "None" : memRoles.join(", "));
+					.addField("Roles - " + memRoles.length, memRoles.length == 0 ? "None" : memRoles.join(", "));
 
 				if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
 					userEmbed.setColor(member.displayColor);

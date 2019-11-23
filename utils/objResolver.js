@@ -57,7 +57,8 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 					return parseInt(colorMatch.replace("#", ""), 16);
 				case 1: { // rgb(r,g,b) | e.g. rgb(1,2,3)
 					const rgbValues = colorMatch.slice(4, colorMatch.length - 1).split(",");
-					return rgbValues.some(value => value > 255) ? null : parseInt(rgbValues[0]) * 65536 + parseInt(rgbValues[1]) * 256 + parseInt(rgbValues[2]);
+					return rgbValues.some(value => value > 255) ? null :
+						parseInt(rgbValues[0]) * 65536 + parseInt(rgbValues[1]) * 256 + parseInt(rgbValues[2]);
 				}
 				case 2: { // hsl(h,s,l) | e.g. hsl(1,2,3)
 					const hslValues = colorMatch.slice(4, colorMatch.length - 1).split(",");
@@ -77,7 +78,8 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				}
 				case 5: { // r,g,b | e.g. 1,2,3
 					const rgbValues = colorMatch.split(",");
-					return rgbValues.some(value => value > 255) ? null : parseInt(rgbValues[0]) * 65536 + parseInt(rgbValues[1]) * 256 + parseInt(rgbValues[2]);
+					return rgbValues.some(value => value > 255) ? null :
+						parseInt(rgbValues[0]) * 65536 + parseInt(rgbValues[1]) * 256 + parseInt(rgbValues[2]);
 				}
 				case 6: { // CSS color name | e.g. blue
 					const nameRgbValues = convert.keyword.rgb(colorMatch);
@@ -142,7 +144,8 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			let member;
 
 			if (memberMatch) {
-				member = message.guild.large ? await getMember(message, memberMatch[0].match(/\d+/)[0]) : message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
+				member = message.guild.large ? await getMember(message, memberMatch[0].match(/\d+/)[0]) :
+					message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
 				return member ? [member] : (allowRaw ? obj : null);
 			} else if (/^\d{17,19}$/.test(obj)) {
 				member = message.guild.large ? await getMember(message, obj.match(/\d+/)[0]) : message.guild.members.get(obj.match(/\d+/)[0]);
