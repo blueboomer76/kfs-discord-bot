@@ -72,7 +72,18 @@ module.exports = [
 					time: 15000,
 					type: "channel"
 				},
-				usage: "colorify [image URL/mention/emoji] <color: hex color | decimal:0-16777215 | ...>"
+				flags: [
+					{
+						name: "intensity",
+						desc: "Set the intensity of the new color",
+						arg: {
+							type: "number",
+							min: 1,
+							max: 10
+						}
+					}
+				],
+				usage: "colorify [image URL/mention/emoji] <color: hex color | decimal:0-16777215 | ...> [--intensity <1-10>]"
 			});
 		}
 
@@ -80,8 +91,10 @@ module.exports = [
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
+			const intensityFlag = flags.find(f => f.name == "intensity");
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "colorify", {
-				colors: [Math.floor(args[1] / 65536), Math.floor((args[1] % 65536) / 256), args[1] % 256]
+				colors: [Math.floor(args[1] / 65536), Math.floor((args[1] % 65536) / 256), args[1] % 256],
+				intensity: intensityFlag ? intensityFlag.args : 5
 			});
 		}
 	},
@@ -624,6 +637,33 @@ module.exports = [
 
 			const pixelsFlag = flags.find(f => f.name == "pixels");
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "pixelate", {pixels: pixelsFlag ? pixelsFlag.args : null});
+		}
+	},
+	class RainbowifyCommand extends Command {
+		constructor() {
+			super({
+				name: "rainbowify",
+				description: "Makes a rainbow image of an existing image",
+				args: [
+					{
+						optional: true,
+						type: "image"
+					}
+				],
+				cooldown: {
+					name: "image-editing",
+					time: 15000,
+					type: "channel"
+				},
+				usage: "rainbowify [image URL/mention/emoji]"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
+
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "rainbowify");
 		}
 	},
 	class RandomCropCommand extends Command {

@@ -247,6 +247,10 @@ module.exports = [
 					{
 						name: "inspect",
 						desc: "Inspect the result using utils"
+					},
+					{
+						name: "promise",
+						desc: "Wait for the promise to resolve to a value if there is one"
 					}
 				],
 				hidden: true,
@@ -255,21 +259,29 @@ module.exports = [
 					user: [],
 					level: 5
 				},
-				usage: "eval <code> [--console] [--inspect]"
+				usage: "eval <code> [--console] [--inspect] [--promise]"
 			});
 		}
 
 		async run(bot, message, args, flags) {
 			const consoleFlag = flags.some(f => f.name == "console");
+			let isPromise = flags.some(f => f.name == "promise");
 			let rawRes, beginEval, endEval;
 			try {
 				beginEval = process.hrtime();
 				rawRes = eval(args[0]);
+				if (isPromise && rawRes instanceof Promise) {
+					await rawRes
+						.then(value => rawRes = value)
+						.catch(err => rawRes = this.getErrorString(err, consoleFlag));
+				}
 			} catch (err) {
-				rawRes = err instanceof Error && err.stack && !consoleFlag ? err.stack.split("    ", 3).join("    ") + "    ..." : err;
+				rawRes = this.getErrorString(err, consoleFlag);
+				isPromise = false;
 			} finally {
 				endEval = process.hrtime();
 			}
+
 			const ns = (endEval[0] - beginEval[0]) * 1e+9 + (endEval[1] - beginEval[1]);
 			let evalTime;
 			if (ns < 100000) {
@@ -285,23 +297,35 @@ module.exports = [
 				console.log(res);
 				message.react("✅");
 			} else {
-				const toEval = args[0].length < 1000 ? args[0] : args[0].slice(0, 1000) + "...",
+				const rawCodeFieldText = args[0].length < 1000 ? args[0] : args[0].slice(0, 1000) + "...",
 					resToSend = flags.some(f => f.name == "inspect") && typeof rawRes != "function" ? util.inspect(res) : res,
 					evalEmbed = new RichEmbed()
 						.setTitle("discord.js Evaluator")
 						.setColor(Math.floor(Math.random() * 16777216))
 						.setFooter("Execution took: " + evalTime)
 						.setTimestamp(message.createdAt)
-						.addField("Your code", "```javascript" + "\n" + toEval + "```");
+						.addField("Input Code", "```javascript" + "\n" + rawCodeFieldText + "```");
+
+				// Check if the result is longer than the allowed field length
 				if (resToSend != undefined && resToSend != null && resToSend.toString().length > 1000) {
 					console.log(res);
-					evalEmbed.addField("Result", "```javascript" + "\n" + resToSend.toString().slice(0, 1000) + "..." + "```")
+					evalEmbed
+						.addField(isPromise ? "Promise Result" : "Result",
+							"```javascript\n" + resToSend.toString().slice(0, 1000) + "...```")
 						.addField("Note", "The full result has been logged in the console.");
 				} else {
-					evalEmbed.addField("Result", "```javascript" + "\n" + resToSend + "```");
+					evalEmbed.addField(isPromise ? "Promise Result" : "Result", "```javascript\n" + resToSend + "```");
 				}
+
 				message.channel.send(evalEmbed);
 			}
+		}
+
+		getErrorString(err, isConsole) {
+			if (err instanceof Error && err.stack && isConsole) {
+				return err.stack.split("    ", 3).join("    ") + "    ...";
+			}
+			return err;
 		}
 	},
 	class MathCommand extends Command {
