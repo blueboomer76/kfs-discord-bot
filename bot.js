@@ -190,58 +190,19 @@ class KFSDiscordBot extends Client {
 		return true;
 	}
 
-	// Optional functions
-	async postDiscordBotsOrgStats() {
+	// General function for posting stats
+	postStatsToWebsite(website, requestHeader, requestBody) {
 		request.post({
-			url: `https://discordbots.org/api/bots/${this.user.id}/stats`,
-			headers: {
-				"Authorization": config.discordBotsOrgToken
-			},
-			body: {"server_count": this.guilds.size},
+			url: website,
+			headers: requestHeader,
+			body: requestBody,
 			json: true
 		}, (err, res) => {
-			const requestRes = this.checkRemoteRequest("discordbots.org", err, res);
+			const requestRes = this.checkRemoteRequest(website, err, res);
 			if (requestRes != true) {
 				console.error(`[Stats Posting] ${requestRes}`);
 			} else {
-				console.log("[Stats Posting] Stats successfully posted to discordbots.org");
-			}
-		});
-	}
-
-	async postBotsOnDiscordStats() {
-		request.post({
-			url: `https://bots.ondiscord.xyz/bot-api/bots/${this.user.id}/guilds`,
-			headers: {
-				"Authorization": config.botsOnDiscordToken
-			},
-			body: {"guildCount": this.guilds.size},
-			json: true
-		}, (err, res) => {
-			const requestRes = this.checkRemoteRequest("bots.ondiscord.xyz", err, res);
-			if (requestRes != true) {
-				console.error(`[Stats Posting] ${requestRes}`);
-			} else {
-				console.log("[Stats Posting] Stats successfully posted to bots.ondiscord.xyz");
-			}
-		});
-	}
-
-	async postBotsForDiscordStats() {
-		request.post({
-			url: `https://botsfordiscord.com/api/bot/${this.user.id}`,
-			headers: {
-				"Content-Type": "application/json",
-				"Authorization": config.botsForDiscordToken
-			},
-			body: {"server_count": this.guilds.size},
-			json: true
-		}, (err, res) => {
-			const requestRes = this.checkRemoteRequest("botsfordiscord.com", err, res);
-			if (requestRes != true) {
-				console.error(`[Stats Posting] ${requestRes}`);
-			} else {
-				console.log("[Stats Posting] Stats successfully posted to botsfordiscord.com");
+				console.log(`[Stats Posting] Stats successfully posted to ${website}`);
 			}
 		});
 	}
