@@ -9,7 +9,7 @@ module.exports.prompt = async (message, notice) => {
 		errors: ["time"]
 	})
 		.then(collected => {
-			if (collected.array()[0].content != code) promptRes = "You provided an invalid response, cancelling the operation.";
+			if (collected.values().next().value.content != code) promptRes = "You provided an invalid response, cancelling the operation.";
 		})
 		.catch(() => promptRes = "Operation has timed out after 30 seconds.");
 	return promptRes;

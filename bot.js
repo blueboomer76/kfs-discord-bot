@@ -41,7 +41,7 @@ class KendraBot extends Client {
 			{
 				name: "Bot Owner",
 				validate: message => this.ownerIds.includes(message.author.id)
-				}
+			}
 		];
 		this.cache = {
 			guildCount: 0,
@@ -177,61 +177,20 @@ class KendraBot extends Client {
 		message.channel.send("⚠ " + errBase + ". Try again later.");
 	}
 
-	// Optional functions
-	async postBotsOnDiscordStats() {
+	// General function for posting stats
+	postStatsToWebsite(website, requestHeader, requestBody) {
 		request.post({
-			url: `https://bots.ondiscord.xyz/bot-api/bots/${this.user.id}/guilds`,
-			headers: {
-				"Authorization": config.botsOnDiscordToken
-			},
-			body: {"guildCount": this.guilds.size},
+			url: website,
+			headers: requestHeader,
+			body: requestBody,
 			json: true
 		}, (err, res) => {
 			if (err) {
-				console.error(`Failed to post to bots.ondiscord.xyz:\n${err}`);
+				console.error("Failed to post to " + website + ":\n" + err);
 			} else if (res.statusCode >= 400) {
-				console.error(`An unexpected status code ${res.statusCode} was returned from bots.ondiscord.xyz`);
+				console.error("An unexpected status code " + res.statusCode + "was returned from " + website);
 			} else {
-				console.log("Stats successfully posted to bots.ondiscord.xyz");
-			}
-		});
-	}
-
-	async postBotsForDiscordStats() {
-		request.post({
-			url: `https://botsfordiscord.com/api/bot/${this.user.id}`,
-			headers: {
-				"Content-Type": "application/json",
-				"Authorization": config.botsForDiscordToken
-			},
-			body: {"server_count": this.guilds.size},
-			json: true
-		}, (err, res) => {
-			if (err) {
-				console.error(`Failed to post to botsfordiscord.com:\n${err}`);
-			} else if (res.statusCode >= 400) {
-				console.error(`An unexpected status code ${res.statusCode} was returned from botsfordiscord.com`);
-			} else {
-				console.log("Stats successfully posted to botsfordiscord.com");
-			}
-		});
-	}
-
-	async postDiscordBotsOrgStats() {
-		request.post({
-			url: `https://discordbots.org/api/bots/${this.user.id}/stats`,
-			headers: {
-				"Authorization": config.discordBotsOrgToken
-			},
-			body: {"server_count": this.guilds.size},
-			json: true
-		}, (err, res) => {
-			if (err) {
-				console.error(`Failed to post to discordbots.org:\n${err}`);
-			} else if (res.statusCode >= 400) {
-				console.error(`An unexpected status code ${res.statusCode} was returned from discordbots.org`);
-			} else {
-				console.log("Stats successfully posted to discordbots.org");
+				console.log("Stats successfully posted to " + website);
 			}
 		});
 	}
