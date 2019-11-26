@@ -115,7 +115,8 @@ module.exports = [
 					})
 						.then(collected => {
 							if (message.channel.messages.has(msg.id)) {
-								msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer! (You chose ${collected.array()[0].content.toUpperCase()})`);
+								msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer!` +
+									"(You chose " + collected.values().next().value.content.toUpperCase() + ")");
 							}
 						})
 						.catch(() => {

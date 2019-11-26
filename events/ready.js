@@ -67,9 +67,20 @@ module.exports = async bot => {
 
 		// Post stats every 3 hours
 		if (Date.now() % (1000*10800) < 1000*3600) {
-			if (config.botsOnDiscordToken) bot.postBotsOnDiscordStats();
-			if (config.botsForDiscordToken) bot.postBotsForDiscordStats();
-			if (config.discordBotsOrgToken) bot.postDiscordBotsOrgStats();
+			if (config.discordBotsOrgToken) {
+				bot.postStatsToWebsite(`https://discordbots.org/api/bots/${bot.user.id}/stats`,
+					{"Authorization": config.discordBotsOrgToken}, {"server_count": bot.guilds.size});
+			}
+			if (config.botsOnDiscordToken) {
+				bot.postStatsToWebsite(`https://bots.ondiscord.xyz/bot-api/bots/${bot.user.id}/guilds`,
+					{"Authorization": config.botsOnDiscordToken}, {"guildCount": bot.guilds.size});
+			}
+			if (config.botsForDiscordToken) {
+				bot.postStatsToWebsite("https://botsfordiscord.com/api/bot/" + bot.user.id, {
+					"Content-Type": "application/json",
+					"Authorization": config.botsForDiscordToken
+				}, {"server_count": bot.guilds.size});
+			}
 		}
 
 		// Post the RSS and meme feeds if configured
