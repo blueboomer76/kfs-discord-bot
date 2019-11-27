@@ -126,7 +126,8 @@ module.exports = async (bot, message) => {
 
 				/*
 					The below condition can be replaced with this when bot owners and select commands are to be ignored.
-					if ((!runRes || (!runRes.noLog && !runRes.cmdWarn && !runRes.cmdErr)) && runCommand.name != "help" && runCommand.name != "phone" && !bot.ownerIDs.includes(message.author.id)) {
+					if ((!runRes || (!runRes.noLog && !runRes.cmdWarn && !runRes.cmdErr)) && runCommand.name != "help" && runCommand.name != "phone" &&
+						!bot.ownerIDs.includes(message.author.id)) {
 				*/
 				if (!runRes || (!runRes.noLog && !runRes.cmdWarn && !runRes.cmdErr)) {
 					bot.cache.stats.commandUsages[runCommand.name] = (bot.cache.stats.commandUsages[runCommand.name] || 0) + 1;

@@ -130,9 +130,8 @@ module.exports = [
 
 				let results = res.body.data.children;
 				if (!results[0]) return message.channel.send("⚠ A subreddit with that name does not exist, or it has no posts yet.");
-				if (results[0].kind != "t3") return message.channel.send("⚠ A subreddit with that name does not exist, but these related subreddits were found: " + "\n" + results.map(r => {
-					return r.data.display_name;
-				}).join(", "));
+				if (results[0].kind != "t3") return message.channel.send("⚠ A subreddit with that name does not exist, " +
+					"but these related subreddits were found:\n" + results.map(r => r.data.display_name).join(", "));
 
 				results = results.filter(r => !r.data.stickied && !r.data.locked);
 				if (!message.channel.nsfw) results = results.filter(r => !r.data.over_18);
@@ -144,7 +143,7 @@ module.exports = [
 				if (compact) {
 					for (const post of results) {
 						const postData = post.data,
-							postTitle = postData.title.length > 150 ? `${postData.title.slice(0, 150)}...` : postData.title;
+							postTitle = postData.title.length > 150 ? postData.title.slice(0, 150) + "..." : postData.title;
 						let toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
 						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`;
 						entries[0].push(toDisplay);
@@ -152,13 +151,14 @@ module.exports = [
 				} else {
 					for (const post of results) {
 						const postData = post.data,
-							postTitle = postData.title.length > 200 ? `${postData.title.slice(0, 200)}...` : postData.title;
+							postTitle = postData.title.length > 200 ? postData.title.slice(0, 200) + "..." : postData.title;
 						let toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
 						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`;
 						const postFlair = postData.link_flair_text;
 						if (postFlair) toDisplay += ` [${postData.link_flair_text}]`;
 
-						entries[0].push(`${toDisplay}\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | u/${postData.author.replace(/_/g, "\\_")} | ${getDuration(postData.created_utc * 1000, null, true)}`);
+						entries[0].push(toDisplay + `\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | ` +
+							`u/${postData.author.replace(/_/g, "\\_")} | ${getDuration(postData.created_utc * 1000, null, true)}`);
 					}
 				}
 
@@ -259,13 +259,13 @@ module.exports = [
 				if (defList.length == 0) return message.channel.send("⚠ No definition found for that term.");
 
 				const entries = [
-					defList.map(def => `Urban Dictionary - ${def.word}`),
-					defList.map(def => def.definition.length > 2000 ? `${def.definition.slice(0, 2000)}...` : def.definition),
+					defList.map(def => "Urban Dictionary - " + def.word),
+					defList.map(def => def.definition.length > 2000 ? def.definition.slice(0, 2000) + "..." : def.definition),
 					defList.map(def => {
 						return [
 							{
 								name: "Example",
-								value: def.example.length > 0 ? (def.example.length > 1000 ? `${def.example.slice(0, 1000)}...` : def.example) : "No example given"
+								value: def.example.length > 0 ? (def.example.length > 1000 ? def.example.slice(0, 1000) + "..." : def.example) : "No example given"
 							},
 							{
 								name: "By",
@@ -348,7 +348,7 @@ module.exports = [
 					.setDescription(resultText)
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
-					.addField("Article URL", `https://en.wikipedia.org/wiki/${result.title.replace(/ /g, "_")}`)
+					.addField("Article URL", "https://en.wikipedia.org/wiki/" + result.title.replace(/ /g, "_"))
 				);
 			});
 		}

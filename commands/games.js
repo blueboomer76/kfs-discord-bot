@@ -104,10 +104,10 @@ module.exports = [
 
 			const responseChoices = this.letters.slice(0, numAnswers);
 			let i = -1;
-			message.channel.send("__**Trivia**__" + "\n" + questionData.question + "\n\n" + answers.map(a => {
-				i++;
-				return `${this.letters[i]} - ${a}`;
-			}).join("\n") + "\n\n" + "*Answer with the letter of your choice.*")
+			message.channel.send("__**Trivia**__\n" +
+				questionData.question + "\n\n" +
+				answers.map(a => {i++; return `${this.letters[i]} - ${a}`}).join("\n") + "\n\n" +
+				"*Answer with the letter of your choice.*")
 				.then(msg => {
 					msg.channel.awaitMessages(msg2 => msg2.author.id == message.author.id && responseChoices.includes(msg2.content.toUpperCase()), {
 						maxMatches: 1,

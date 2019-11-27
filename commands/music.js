@@ -20,7 +20,8 @@ module.exports = [
 					if (!mvChannel) {
 						return {cmdErr: "You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)"};
 					} else if (mvChannel.id != gvConnection.channel.id) {
-						return {cmdErr: "You need to be in the same voice channel as me to perform this command. (Overrides with server owner or `Manage Server` permission)"};
+						return {cmdErr: "You need to be in the same voice channel as me to perform this command. " +
+							"(Overrides with server owner or `Manage Server` permission)"};
 					}
 				}
 				if (gvConnection.dispatcher) {
@@ -154,7 +155,7 @@ module.exports = [
 					} else {
 						gvConnection.nowPlaying = gvConnection.queue.shift();
 						this.playQueue(msg, 0);
-						msg.channel.send(`Now playing: \`${gvConnection.nowPlaying}\``);
+						msg.channel.send("Now playing: `" + gvConnection.nowPlaying + "`");
 					}
 				}
 			});
@@ -193,12 +194,12 @@ module.exports = [
 			if (!gvConnection.nowPlaying) return {cmdWarn: "There is no music in the queue."};
 
 			const entries = [queue];
-			paginator.paginate(message, {title: `Music Queue - ${message.guild.name}`}, entries, {
+			paginator.paginate(message, {title: "Music Queue - " + message.guild.name}, entries, {
 				limit: 5,
 				numbered: true,
 				page: args[0] || 1,
 				params: null,
-				pinnedMsg: `Now playing: ${gvConnection.nowPlaying}\n\n**Next up:**\n`
+				pinnedMsg: "Now playing: " + gvConnection.nowPlaying + "\n\n" + "**Next up:**\n"
 			});
 		}
 	},
@@ -272,7 +273,8 @@ module.exports = [
 				if (!mvChannel) {
 					return {cmdErr: "You are not in a voice channel. (Overrides with server owner or `Manage Server` permission)"};
 				} else if (mvChannel.id != gvConnection.channel.id) {
-					return {cmdErr: "You need to be in the same voice channel as me to stop the audio. (Overrides with server owner or `Manage Server` permission)"};
+					return {cmdErr: "You need to be in the same voice channel as me to stop the audio. " +
+						"(Overrides with server owner or `Manage Server` permission)"};
 				}
 			} else if (!gvConnection.dispatcher) {
 				return {cmdErr: "Cannot stop: no audio is playing"};
@@ -316,7 +318,7 @@ module.exports = [
 			}
 
 			gvConnection.dispatcher.setVolume(args[0] / 100);
-			message.channel.send(`🔉 Volume of audio has been set to **${args[0]}/100**`);
+			message.channel.send("🔉 Volume of audio has been set to **" + args[0] + "/100**");
 		}
 	}
 ];

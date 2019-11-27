@@ -248,7 +248,7 @@ class KFSDiscordBot extends Client {
 		const affected = message.channel.id == phoneCache.channels[0].id ? 1 : 0;
 		let toSend = message.cleanContent.replace(/https?:\/\/\S+\.\S+/gi, "")
 			.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "");
-		if (toSend.length > 1500) toSend = `${toSend.slice(0, 1500)}...`;
+		if (toSend.length > 1500) toSend = toSend.slice(0, 1500) + "...";
 
 		phoneCache.lastMsgTime = Date.now();
 		phoneCache.msgCount++;

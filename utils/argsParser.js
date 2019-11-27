@@ -43,7 +43,7 @@ async function checkArgs(bot, message, args, cmdArg) {
 		if (cmdArg.shiftable) {
 			return {shift: true};
 		} else {
-			const userInput = args.length > 1500 ? `${args.slice(0, 1500)}...` : args;
+			const userInput = args.length > 1500 ? args.slice(0, 1500) + "..." : args;
 			let argErrorMsg = listableTypes.includes(arg.type) ?
 				`No ${arg.type}s were found matching \`${userInput}\`` : `\`${userInput}\` is not a valid ${arg.type}`;
 			if (cmdArg.errorMsg) {

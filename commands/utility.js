@@ -133,7 +133,7 @@ module.exports = [
 					.addField("Topic", channel.topic || "No topic set");
 			} else if (channel.type == "voice") {
 				channelEmbed.addField("User Limit", channel.userLimit == 0 ? "None" : channel.userLimit, true)
-					.addField("Bitrate", `${channel.bitrate} bits`, true);
+					.addField("Bitrate", channel.bitrate + " bits", true);
 			}
 
 			message.channel.send(channelEmbed);
@@ -173,17 +173,17 @@ module.exports = [
 
 			message.channel.send(new RichEmbed()
 				.setTitle("Color - #" + hexValue)
-				.setDescription(`**Nearest CSS Color Name**: ${colorName}` + "\n" +
-				`**Hexadecimal (Hex)**: #${hexValue}` + "\n" +
-				`**RGB**: rgb(${rgbValues.join(", ")})` + "\n" +
-				`**Decimal (Integer)**: ${decimalValue}` + "\n" +
-				`**HSL**: hsl(${hslValues[0]}, ${hslValues[1]}%, ${hslValues[2]}%)` + "\n" +
-				`**CMYK**: cmyk(${cmykValues[0]}%, ${cmykValues[1]}%, ${cmykValues[2]}%, ${cmykValues[3]}%)` + "\n" +
-				`**HSV**: hsv(${hsvValues[0]}, ${hsvValues[1]}%, ${hsvValues[2]}%)` + "\n" +
-				`**XYZ**: XYZ(${xyzValues.join(", ")})`)
+				.setDescription(`**Nearest CSS Color Name**: ${colorName}\n` +
+					`**Hexadecimal (Hex)**: #${hexValue}\n` +
+					`**RGB**: rgb(${rgbValues.join(", ")})\n` +
+					`**Decimal (Integer)**: ${decimalValue}\n` +
+					`**HSL**: hsl(${hslValues[0]}, ${hslValues[1]}%, ${hslValues[2]}%)\n` +
+					`**CMYK**: cmyk(${cmykValues[0]}%, ${cmykValues[1]}%, ${cmykValues[2]}%, ${cmykValues[3]}%)\n` +
+					`**HSV**: hsv(${hsvValues[0]}, ${hsvValues[1]}%, ${hsvValues[2]}%)\n` +
+					`**XYZ**: XYZ(${xyzValues.join(", ")})`)
 				.setColor(decimalValue)
-				.addField("Related colors", `**Grayscale**: rgb(${(grayscaleValue + ", ").repeat(2) + grayscaleValue})` + "\n" +
-				`**Inverted**: rgb(${rgbValues.map(v => 255 - v).join(", ")})`)
+				.addField("Related colors", `**Grayscale**: rgb(${(grayscaleValue + ", ").repeat(2) + grayscaleValue})\n` +
+					`**Inverted**: rgb(${rgbValues.map(v => 255 - v).join(", ")})`)
 			);
 		}
 	},
@@ -413,9 +413,9 @@ module.exports = [
 				.setColor(role.color)
 				.setFooter("ID: " + role.id)
 				.addField("Role created at", `${new Date(role.createdTimestamp).toUTCString()} (${getDuration(role.createdTimestamp)})`)
-				.addField(`Members in Role [${roleMembers.size} total]`, `${getStatuses(roleMembers).notOffline} Online`, true)
-				.addField("Color", `Hex: ${role.hexColor}` + "\n" + `Decimal: ${role.color}`, true)
-				.addField("Position from top", `${guildRoles.length - rolePos + 1} / ${guildRoles.length}`, true)
+				.addField(`Members in Role [${roleMembers.size} total]`, getStatuses(roleMembers).notOffline + " Online", true)
+				.addField("Color", "Hex: " + role.hexColor + "\nDecimal: " + role.color, true)
+				.addField("Position from top", (guildRoles.length - rolePos + 1) + " / " + guildRoles.length, true)
 				.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No", true)
 				.addField("Mentionable", role.mentionable ? "Yes" : "No", true)
 				.addField("Managed", role.managed ? "Yes" : "No", true)
@@ -460,7 +460,7 @@ module.exports = [
 			const roles = message.guild.roles.array();
 			roles.splice(roles.findIndex(r => r.calculatedPosition == 0), 1);
 			if (orderedFlag) roles.sort((a, b) => b.calculatedPosition - a.calculatedPosition);
-			paginator.paginate(message, {title: `List of roles - ${message.guild.name}`}, [roles.map(role => role.name)], {
+			paginator.paginate(message, {title: "List of roles - " + message.guild.name}, [roles.map(role => role.name)], {
 				limit: 25,
 				noStop: true,
 				numbered: orderedFlag,
@@ -503,7 +503,7 @@ module.exports = [
 			if (roleMembers.size == 0) return {cmdWarn: `There are no members in the role **${role.name}**.`};
 			if (roleMembers.size > 250) return {cmdWarn: `There are more than 250 members in the role **${role.name}**.`};
 
-			paginator.paginate(message, {title: `List of members in role - ${role.name}`}, [roleMembers.map(m => m.user.tag)], {
+			paginator.paginate(message, {title: "List of members in role - " + role.name}, [roleMembers.map(m => m.user.tag)], {
 				embedColor: role.color,
 				limit: 25,
 				noStop: true,
@@ -563,13 +563,13 @@ module.exports = [
 				.addField("Explicit Filter", guild.explicitContentFilter == 0 ? "None" : (guild.explicitContentFilter == 1 ? "Low" : "High"), true)
 				.addField("2-Factor Auth Required", guild.mfaLevel == 0 ? "No" : "Yes", true)
 				.addField(`Members [${guild.memberCount} total]`,
-					`${statuses.online} Online, ${statuses.idle} Idle, ${statuses.dnd} DND (${(statuses.notOffline / guild.memberCount * 100).toFixed(1)}%)` + "\n" +
-					`${statuses.offline} Offline` + "\n" +
+					`${statuses.online} Online, ${statuses.idle} Idle, ${statuses.dnd} DND (${(statuses.notOffline / guild.memberCount * 100).toFixed(1)}%)\n` +
+						statuses.offline + " Offline\n" +
 					`${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,
 					true)
 				.addField(`Roles [${guild.roles.size - 1} total]`, "Use `rolelist` to see all roles", true)
 				.addField(`Channels [${guild.channels.size} total]`,
-					`${channels.text} Text` + "\n" + `${channels.voice} Voice` + "\n" + `${channels.category} Categories`, true)
+					channels.text + " Text\n" + channels.voice + " Voice\n" + channels.category + " Categories", true)
 			);
 		}
 	},
