@@ -92,7 +92,8 @@ function sendRedditEmbed(command, message, checkNsfw) {
 			.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
 			.setImage(imageURL));
 	} else {
-		message.channel.send(`${imageURL} (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author} | ID: ${postData.url.match(/comments\/[0-9a-z]+(?=\/)/)[0].slice(9)})`);
+		message.channel.send(imageURL + `(👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author} | ` +
+			"ID: " + postData.url.match(/comments\/[0-9a-z]+(?=\/)/)[0].slice(9));
 	}
 }
 

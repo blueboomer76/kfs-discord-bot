@@ -103,10 +103,10 @@ module.exports = [
 			}
 
 			let i = -1;
-			message.channel.send("__**Trivia**__" + "\n" + tQuestion.question.replace(/&quot;/g, "\"").replace(/&#039;/g, "'") + "\n\n" + answers.map(a => {
-				i++;
-				return `${this.letters[i]} - ${a}`;
-			}).join("\n") + "\n\n" + "*Answer with the letter of your choice.*")
+			message.channel.send("__**Trivia**__\n" +
+				tQuestion.question.replace(/&quot;/g, "\"").replace(/&#039;/g, "'") + "\n\n" +
+				answers.map(a => {i++; return `${this.letters[i]} - ${a}`}).join("\n") + "\n\n" +
+				"*Answer with the letter of your choice.*")
 				.then(msg => {
 					msg.channel.awaitMessages(msg2 => msg2.author.id == message.author.id && (["A", "B", "C", "D"]).includes(msg2.content.toUpperCase()), {
 						max: 1,
@@ -115,7 +115,7 @@ module.exports = [
 					})
 						.then(collected => {
 							if (message.channel.messages.has(msg.id)) {
-								msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer!` +
+								msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer! ` +
 									"(You chose " + collected.values().next().value.content.toUpperCase() + ")");
 							}
 						})

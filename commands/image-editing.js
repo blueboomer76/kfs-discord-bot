@@ -144,7 +144,8 @@ module.exports = [
 				}
 
 				if (errs.length >= args.length - 1) {
-					return {cmdWarn: "Not enough images loaded successfully to produce a composite image." + "\n" + "```" + errs.join("\n") + "```"};
+					return {cmdWarn: "Not enough images loaded successfully to produce a composite image.\n" +
+						"```" + errs.join("\n") + "```"};
 				}
 			}
 
@@ -703,7 +704,8 @@ module.exports = [
 		constructor() {
 			super({
 				name: "resize",
-				description: "Resizes an image. Values above 1 will increase the image width and height, and those below 1 will decrease them. The scale cannot be exactly 1",
+				description: "Resizes an image. Values above 1 will increase the image width and height, " +
+					"and those below 1 will decrease them. The scale cannot be exactly 1",
 				aliases: ["enlarge", "imagesize"],
 				args: [
 					{

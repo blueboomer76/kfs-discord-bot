@@ -29,19 +29,22 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			message.channel.send(new RichEmbed()
 				.setAuthor("About this bot", bot.user.avatarURL)
-				.setDescription("A multipurpose Discord bot for fun, moderation, utility, and more. It has a phone command for connecting other servers together, and combines features from popular bots.")
+				.setDescription("A multipurpose Discord bot for fun, moderation, utility, and more. " +
+					"It has a phone command for connecting other servers together, and combines features from popular bots.")
 				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter(`Bot ID: ${bot.user.id}`)
+				.setFooter("Bot ID: " + bot.user.id)
 				.addField("Node.js Version", process.version.slice(1), true)
 				.addField("Discord.js Library Ver.", version, true)
 				.addField("Bot Version", packageInfo.version, true)
 				.addField("Bot Created", getDuration(bot.user.createdTimestamp), true)
-				.addField("Quick Stats", `${bot.cache.guildCount} Servers\n${bot.cache.userCount} Users\n${bot.cache.channelCount} Channels`, true)
-				.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
+				.addField("Quick Stats", bot.cache.guildCount + " Servers\n" + bot.cache.userCount + " Users\n" +
+					bot.cache.channelCount + " Channels", true)
+				.addField("Bot Invite",
+					`[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
 				.addField("Support Server", "[Go!](https://discord.gg/yB8TvWU)", true)
-				.addField("Upvote this bot", "discordbots.org: [Go!](https://discordbots.org/bots/333058410465722368/vote)" + "\n" +
-				"bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/333058410465722368)" + "\n" +
-				"botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/333058410465722368/vote)", true)
+				.addField("Upvote this bot", "discordbots.org: [Go!](https://discordbots.org/bots/333058410465722368/vote)\n" +
+					"bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/333058410465722368)\n" +
+					"botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/333058410465722368/vote)", true)
 			);
 		}
 	},
@@ -89,34 +92,34 @@ module.exports = [
 			if (args[0] == "arguments") {
 				message.channel.send(helpEmbed.setTitle("Argument Info")
 					.setDescription("Here's some argument info for commands:")
-					.addField("Argument Legend", "In command usage strings:" + "\n" +
-					"- Required argument (`<` and `>`) - needs to be provided for a command to work" + "\n" +
-					"- Optional argument (`[` and `]`) - not needed for a command to work" + "\n" +
-					"- Quotable argument (`arg | \"arg\"`) - can be quoted when more than one word is in an argument" + "\n" +
-					"- Infinite arguments (`...`) - more than one argument can be provided" + "\n" +
-					"- Key (`key:`) - represents the expected argument type" + "\n" +
-					"*Arguments may be nested together in certain commands.*")
-					.addField("Channels, Roles, and Users", "All of these can accept mentions, IDs or names." + "\n" +
-					"*User arguments also accept nicknames.*")
-					.addField("Images", "Images must be one of these forms:" + "\n" +
-					"- Link to an image ending in .gif, .jpg, .jpeg, or .png" + "\n" +
-					"- A user mention" + "\n" +
-					"- An emoji (e.g. ⬆)" + "\n" +
-					"*The bot will search through the last 25 messages for images if no arguments are given.*")
-					.addField("Colors", "Colors must be in one of these forms:" + "\n" +
-					"- Decimal (`decimal:number`), e.g. `decimal:1234567` [Range: `decimal:0`-`decimal:16777215`]" + "\n" +
-					"- Hexadecimal (`#rrggbb` or `rrggbb`), e.g. `#112233` or `112233` [Range: `#000000`-`#ffffff`]" + "\n" +
-					"- `rgb(r,g,b)`, e.g. `rgb(123,145,255)` [Range: `rgb(0,0,0)`-`rgb(255,255,255)`]" + "\n" +
-					"- CSS color name, e.g. `blue`" + "\n" +
-					"- `r,g,b`, e.g. `123,145,255` [Range: `0,0,0`-`255,255,255`]" + "\n" +
-					"- `hsl(h,s,l)`, e.g. `hsl(123,45,67)` or `hsl(123,45%,67%)` [Range: `hsl(0,0,0)`-`hsl(359,100,100)`]")
+					.addField("Argument Legend", "In command usage strings:\n" +
+						"- Required argument (`<` and `>`) - needs to be provided for a command to work\n" +
+						"- Optional argument (`[` and `]`) - not needed for a command to work\n" +
+						"- Quotable argument (`arg | \"arg\"`) - can be quoted when more than one word is in an argument\n" +
+						"- Infinite arguments (`...`) - more than one argument can be provided\n" +
+						"- Key (`key:`) - represents the expected argument type\n" +
+						"*Arguments may be nested together in certain commands.*")
+					.addField("Channels, Roles, and Users", "All of these can accept mentions, IDs or names.\n" +
+						"*User arguments also accept nicknames.*")
+					.addField("Images", "Images must be one of these forms:\n" +
+						"- Link to an image ending in .gif, .jpg, .jpeg, or .png\n" +
+						"- A user mention\n" +
+						"- An emoji (e.g. ⬆)\n" +
+						"*The bot will search through the last 25 messages for images if no arguments are given.*")
+					.addField("Colors", "Colors must be in one of these forms:\n" +
+						"- Decimal (`decimal:number`), e.g. `decimal:1234567` [Range: `decimal:0`-`decimal:16777215`]\n" +
+						"- Hexadecimal (`#rrggbb` or `rrggbb`), e.g. `#112233` or `112233` [Range: `#000000`-`#ffffff`]\n" +
+						"- `rgb(r,g,b)`, e.g. `rgb(123,145,255)` [Range: `rgb(0,0,0)`-`rgb(255,255,255)`]\n" +
+						"- CSS color name, e.g. `blue`\n" +
+						"- `r,g,b`, e.g. `123,145,255` [Range: `0,0,0`-`255,255,255`]\n" +
+						"- `hsl(h,s,l)`, e.g. `hsl(123,45,67)` or `hsl(123,45%,67%)` [Range: `hsl(0,0,0)`-`hsl(359,100,100)`]")
 				);
 			} else {
 				const command = args[0];
 				if (!command) {
 					helpEmbed.setTitle("All bot commands")
 						.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\`` + "\n" +
-						"To see argument help, use `" + bot.prefix + "help arguments`");
+							"To see argument help, use `" + bot.prefix + "help arguments`");
 					let cmds = bot.commands;
 					if (!bot.ownerIDs.includes(message.author.id) && !bot.adminIDs.includes(message.author.id)) {
 						cmds = cmds.filter(cmd => !cmd.disabled && !cmd.hidden);
@@ -141,7 +144,7 @@ module.exports = [
 							level: commandPerms.level > 0 ? `\nRequires being ${bot.permLevels[commandPerms.level].name}.` : ""
 						};
 
-					helpEmbed.setTitle(`Help - ${command.name}`)
+					helpEmbed.setTitle("Help - " + command.name)
 						.setFooter(`Category: ${command.category} | Don't include the usage symbols when running the command.`)
 						.addField("Description", command.description);
 					if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "));
@@ -150,10 +153,12 @@ module.exports = [
 					if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.map(e => "`" + e + "`").join("\n"));
 					if (command.allowDMs) helpEmbed.addField("Allows DMs", "Yes");
 					if (commandPerms.bot.length > 0 || commandPerms.user.length > 0 || commandPerms.role || commandPerms.level > 0) {
-						helpEmbed.addField("Permissions", `Bot - ${permReq.bot}` + "\n" + `User - ${permReq.user}${permReq.role}${permReq.level}`);
+						helpEmbed.addField("Permissions", `Bot - ${permReq.bot}\n` + `User - ${permReq.user}${permReq.role}${permReq.level}`);
 					}
-					helpEmbed.addField("Cooldown", command.cooldown.time != 0 ? `${command.cooldown.time / 1000} seconds per ${command.cooldown.type}` : "None");
+					helpEmbed.addField("Cooldown", command.cooldown.time != 0 ?
+						`${command.cooldown.time / 1000} seconds per ${command.cooldown.type}` : "None");
 				}
+
 				if (flags.some(f => f.name == "dm")) {
 					message.member.send(helpEmbed)
 						.catch(() => message.channel.send("Failed to send a help message as a DM. Check your settings and try again."));
@@ -186,11 +191,12 @@ module.exports = [
 				.setTitle("Bot References")
 				.setDescription("Exciting! Use these links to spread the fun!")
 				.setColor(Math.floor(Math.random() * 16777216))
-				.addField("Bot Invite", `[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
+				.addField("Bot Invite",
+					`[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
 				.addField("Support Server", "[Go!](https://discord.gg/yB8TvWU)", true)
-				.addField("Upvote this bot", "discordbots.org: [Go!](https://discordbots.org/bots/333058410465722368/vote)" + "\n" +
-				"bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/333058410465722368)" + "\n" +
-				"botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/333058410465722368/vote)", true)
+				.addField("Upvote this bot", "discordbots.org: [Go!](https://discordbots.org/bots/333058410465722368/vote)\n" +
+					"bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/333058410465722368)\n" +
+					"botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/333058410465722368/vote)", true)
 			);
 		}
 	},
@@ -236,16 +242,19 @@ module.exports = [
 				const commandFile = category.toLowerCase().replace(/ /g, "-") + ".js",
 					foundCmdFile = fs.existsSync("commands/advanced/" + commandFile) ? "./advanced/" + commandFile : "./" + commandFile;
 				delete require.cache[require.resolve(foundCmdFile)];
+
+				// Load the classes from the class array from each file
 				const commandClasses = require(foundCmdFile),
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[2] ? args[2].toLowerCase() : commandName));
-				if (!CommandClass) return {cmdWarn: "You need to give a third argument for the full class name before \"Command\", replacing all numbers in the command with the word."};
+				if (!CommandClass) return {cmdWarn: "You need to give a third argument for the full class name before \"Command\", " +
+					"replacing all numbers in the command with the word."};
 				const newCommand = new CommandClass();
 				newCommand.category = capitalize(category, true);
 				bot.commands.set(commandName, newCommand);
 				if (newCommand.aliases.length > 0) {
 					for (const alias of newCommand.aliases) bot.aliases.set(alias, newCommand.name);
 				}
-				message.channel.send(`The command **${commandName}** was loaded.`);
+				message.channel.send("The command **" + commandName + "** was loaded.");
 			} catch(err) {
 				return {cmdWarn: `A problem has occurred while trying to load the command **${commandName}**: \`${err}\``};
 			}
@@ -284,7 +293,7 @@ module.exports = [
 						phoneMsg0 = "Looks like someone else picked up the phone.";
 						phoneCache.channels.shift().send("☎ Someone else is now using the phone...");
 					}
-					phoneCache.channels[0].send(`☎ ${phoneMsg0}`);
+					phoneCache.channels[0].send("☎ " + phoneMsg0);
 				}
 			} else {
 				let phoneMsg;
@@ -296,7 +305,7 @@ module.exports = [
 					phoneCache.channels[affected].send("☎ The other side hung up the phone.");
 				}
 				bot.resetPhone(bot);
-				message.channel.send(`☎ ${phoneMsg}`);
+				message.channel.send("☎ " + phoneMsg);
 			}
 		}
 	},
@@ -316,7 +325,9 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			message.channel.send("Ping?")
 				.then(msg => {
-					msg.edit(`🏓 **Pong!**\nLatency: ${msg.createdTimestamp - message.createdTimestamp}ms\nAPI Latency: ${Math.round(bot.ping)}ms`);
+					msg.edit("🏓 **Pong!**\n" +
+						`Latency: ${msg.createdTimestamp - message.createdTimestamp}ms\n` +
+						`API Latency: ${Math.round(bot.ping)}ms`);
 				});
 		}
 	},
@@ -357,9 +368,12 @@ module.exports = [
 				const commandFile = category.toLowerCase().replace(/ /g, "-") + ".js",
 					foundCmdFile = fs.existsSync("commands/advanced/" + commandFile) ? "./advanced/" + commandFile : "./" + commandFile;
 				delete require.cache[require.resolve(foundCmdFile)];
+
+				// Load the classes from the class array from each file
 				const commandClasses = require(foundCmdFile),
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[1] ? args[1].toLowerCase() : commandName));
-				if (!CommandClass) return {cmdWarn: "You need to provide a second argument for the full class name before \"Command\", replacing all numbers in the command with the word."};
+				if (!CommandClass) return {cmdWarn: "You need to provide a second argument for the full class name before \"Command\", " +
+					"replacing all numbers in the command with the word."};
 				const newCommand = new CommandClass();
 				newCommand.category = category;
 				bot.commands.set(commandName, newCommand);
@@ -374,7 +388,7 @@ module.exports = [
 				}
 				message.react("✅");
 			} catch(err) {
-				return {cmdWarn: `A problem has occurred while trying to reload the command: \`${err}\``};
+				return {cmdWarn: "A problem has occurred while trying to reload the command: `" + err + "`"};
 			}
 		}
 	},
@@ -406,10 +420,10 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			try {
-				const res = delete require.cache[require.resolve(`../${args[0]}`)];
+				const res = delete require.cache[require.resolve("../" + args[0])];
 				message.channel.send(res ? "The file's require() cache has been cleared." : "Failed to reload that file.");
 			} catch(err) {
-				message.channel.send(`A problem has occurred while reloading the file: \`${err}\``);
+				message.channel.send("A problem has occurred while reloading the file: `" + err + "`");
 			}
 		}
 	},
@@ -482,12 +496,12 @@ module.exports = [
 				statsEmbed.setAuthor("Bot Stats - Processor", bot.user.avatarURL)
 					.setDescription("Here's some detailed stats about the host that this bot is on!")
 					.addField("Process Started", getDuration(Date.now() - process.uptime() * 1000), true)
-					.addField("Total Resident Set (RSS)", `${(processUsedMemory.rss / 1048576).toFixed(2)} MB`, true)
-					.addField("Heap Usage", `Total: ${(heapTotal / 1048576).toFixed(2)} MB`+ "\n" +
-					`Used: ${(heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
-					.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB` + "\n" +
-					`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)` + "\n" +
-					`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true);
+					.addField("Total Resident Set (RSS)", (processUsedMemory.rss / 1048576).toFixed(2) + " MB", true)
+					.addField("Heap Usage", `Total: ${(heapTotal / 1048576).toFixed(2)} MB\n` +
+						`Used: ${(heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
+					.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB\n` +
+						`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)\n` +
+						`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true);
 
 				setTimeout(() => {
 					const cpus = os.cpus(), cpuUsage2 = this.getCpuUsage(cpus);
@@ -514,47 +528,56 @@ module.exports = [
 					userCount = botStats.users;
 
 				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL)
-					.setFooter(`⏰ Took: ${evalTime} | Stats as of`)
-					.setDescription(`Here's some detailed stats about this bot! *To see stats about the bot host, use \`${bot.prefix}stats processor\`*`)
+					.setFooter("⏰ Took: " + evalTime + " | Stats as of")
+					.setDescription("Here's some detailed stats about this bot! *To see stats about the bot host, use `" + bot.prefix + "stats processor`*")
 					.addField("Bot Created", getDuration(bot.user.createdTimestamp), true)
 					.addField("Bot Last Ready", getDuration(bot.readyTimestamp), true)
 					.addField("Servers",
-						`Total: ${serverCount.toLocaleString()}` + "\n" +
-						`Large: ${botStats.largeServers.toLocaleString()} (${(botStats.largeServers * 100 / serverCount).toFixed(1)}%)`
-						, true)
+						"Total: " + serverCount.toLocaleString() + "\n" +
+						"Large: " + botStats.largeServers.toLocaleString() + ` (${(botStats.largeServers * 100 / serverCount).toFixed(1)}%)`,
+						true)
 					.addField("Users",
-						`Total: ${userCount.toLocaleString()} (${(userCount / serverCount).toFixed(1)}/server)` + "\n" +
-						`Online: ${botStats.statuses.online.toLocaleString()} (${(botStats.statuses.online / userCount * 100).toFixed(1)}%)`
-						, true)
+						"Total: " + userCount.toLocaleString() + ` (${(userCount / serverCount).toFixed(1)}/server)\n` +
+						"Online: " + botStats.statuses.online.toLocaleString() + ` (${(botStats.statuses.online / userCount * 100).toFixed(1)}%)`,
+						true)
 					.addField("Channels",
-						`Text: ${botStats.channels.text.toLocaleString()} (${(botStats.channels.text / serverCount).toFixed(2)}/server)` + "\n" +
-						`Voice: ${botStats.channels.voice.toLocaleString()} (${(botStats.channels.voice / serverCount).toFixed(2)}/server)` + "\n" +
-						`Categories: ${botStats.channels.categories.toLocaleString()} (${(botStats.channels.categories / serverCount).toFixed(2)}/server)`
-						, true)
+						"Text: " + botStats.channels.text.toLocaleString() +
+							` (${(botStats.channels.text / serverCount).toFixed(2)}/server)\n` +
+						"Voice: " + botStats.channels.voice.toLocaleString() +
+							` (${(botStats.channels.voice / serverCount).toFixed(2)}/server)\n` +
+						"Categories: " + botStats.channels.categories.toLocaleString() +
+							` (${(botStats.channels.categories / serverCount).toFixed(2)}/server)`,
+						true)
 					.addField("Commands",
-						`Session: ${botStats.sessionCommands.toLocaleString()} (${this.setRate(botStats.sessionCommands, processUptime)})` + "\n" +
-						`Total: ${botStats.totalCommands.toLocaleString()} (${this.setRate(botStats.totalCommands, duration)})`
-						, true)
+						"Session: " + botStats.sessionCommands.toLocaleString() +
+							` (${this.getRate(botStats.sessionCommands, processUptime)})\n` +
+						"Total: " + botStats.totalCommands.toLocaleString() +
+							` (${this.getRate(botStats.totalCommands, duration)})`,
+						true)
 					.addField("Phone Connections",
-						`Session: ${botStats.sessionCalls.toLocaleString()} (${this.setRate(botStats.sessionCalls, processUptime)})` + "\n" +
-						`Total: ${botStats.totalCalls.toLocaleString()} (${this.setRate(botStats.totalCalls, duration)})`
-						, true)
+						"Session: " + botStats.sessionCalls.toLocaleString() +
+							` (${this.getRate(botStats.sessionCalls, processUptime)})\n` +
+						"Total: " + botStats.totalCalls.toLocaleString() +
+							` (${this.getRate(botStats.totalCalls, duration)})`,
+						true)
 					.addField("Messages Seen",
-						`Session: ${botStats.sessionMessages.toLocaleString()} (${this.setRate(botStats.sessionMessages, processUptime)})` + "\n" +
-						`Total: ${botStats.totalMessages.toLocaleString()} (${this.setRate(botStats.totalMessages, duration)})`
-						, true);
+						"Session: " + botStats.sessionMessages.toLocaleString() +
+							` (${this.getRate(botStats.sessionMessages, processUptime)})\n` +
+						"Total: " + botStats.totalMessages.toLocaleString() +
+							` (${this.getRate(botStats.totalMessages, duration)})`,
+						true);
 				message.channel.send(statsEmbed);
 			}
 		}
 
-		setRate(amount, duration) {
+		getRate(amount, duration) {
 			const amtPerDay = amount / duration * 8.64e+7;
 			if (amtPerDay > 43200) {
-				return (amtPerDay/86400).toFixed(2) + "/sec";
+				return (amtPerDay / 86400).toFixed(2) + "/sec";
 			} else if (amtPerDay > 720) {
-				return (amtPerDay/1440).toFixed(2) + "/min";
+				return (amtPerDay / 1440).toFixed(2) + "/min";
 			} else if (amtPerDay > 12) {
-				return (amtPerDay/24).toFixed(2) + "/hr";
+				return (amtPerDay / 24).toFixed(2) + "/hr";
 			} else {
 				return amtPerDay.toFixed(2) + "/day";
 			}
@@ -601,7 +624,8 @@ module.exports = [
 			}
 			bot.ideaWebhook.send({
 				embeds: [{
-					description: args[0].replace(/https?:\/\/\S+\.\S+/gi, "").replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, ""),
+					description: args[0].replace(/https?:\/\/\S+\.\S+/gi, "")
+						.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, ""),
 					author: {
 						name: message.author.tag,
 						icon_url: message.author.avatarURL
@@ -655,7 +679,7 @@ module.exports = [
 				const toRemoveAliases = bot.aliases.filter(alias => alias == command.name);
 				for (const alias of toRemoveAliases.keys()) bot.aliases.delete(alias);
 			}
-			message.channel.send(`The command **${commandName}** was unloaded.`);
+			message.channel.send("The command **" + command.name + "** was unloaded.");
 		}
 	},
 	class UsageCommand extends Command {
@@ -737,8 +761,8 @@ module.exports = [
 					cmdUsageEnd = ", last updated " + getDuration(bot.cache.cumulativeStats.lastSorted);
 				}
 
-				message.channel.send(`Command **${command.name}** has been used **${cmdUses[usagesIndex]}** times.` + "\n" +
-				`It is the #${usagesIndex + 1} most used command${cmdUsageEnd}.`);
+				message.channel.send(`Command **${command.name}** has been used **${cmdUses[usagesIndex]}** times.\n` +
+					`It is the #${usagesIndex + 1} most used command${cmdUsageEnd}.`);
 			}
 		}
 	}

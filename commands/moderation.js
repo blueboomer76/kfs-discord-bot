@@ -232,7 +232,8 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const channel = args[0];
 			if (channel.createdTimestamp + 1.5552e+10 < Date.now() && !flags.some(f => f.name == "yes")) {
-				const promptRes = await promptor.prompt(message, `You are about to delete the channel **${channel.name}** (ID ${channel.id}), which is more than 180 days old.`);
+				const promptRes = await promptor.prompt(message,
+					`You are about to delete the channel **${channel.name}** (ID ${channel.id}), which is more than 180 days old.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
 
@@ -278,7 +279,8 @@ module.exports = [
 			const compareTest = compareRolePositions(message, role, null, {action: "delete", type: "role"});
 			if (compareTest != true) return {cmdWarn: compareTest};
 			if (role.members.size > 10 && role.members.size > message.guild.memberCount / 10 && !flags.some(f => f.name == "yes")) {
-				const promptRes = await promptor.prompt(message, `You are about to delete the role **${role.name}** (ID ${role.id}), which more than 10% of the members in this server have.`);
+				const promptRes = await promptor.prompt(message,
+					`You are about to delete the role **${role.name}** (ID ${role.id}), which more than 10% of the members in this server have.`);
 				if (promptRes) return {cmdWarn: promptRes};
 			}
 
@@ -356,7 +358,8 @@ module.exports = [
 				reason: reasonFlag ? reasonFlag.args : null
 			})
 				.then(() => message.channel.send(`✅ User with ID **${userID}** has been hackbanned from this server.`))
-				.catch(() => message.channel.send("Could not hackban the user with that ID. Make sure to check for typos in the ID and that the user is not already banned."));
+				.catch(() => message.channel.send("Could not hackban the user with that ID. " +
+					"Make sure to check for typos in the ID and that the user is not already banned."));
 		}
 	},
 	class KickCommand extends Command {
@@ -555,7 +558,8 @@ module.exports = [
 					user: ["MANAGE_MESSAGES"],
 					level: 0
 				},
-				usage: "purge <1-500> OR purge <1-100> [attachments] [bots] [embeds] [images] [invites] [left] [links] [mentions] [reactions] [--user <user>] [--text <text>] [--invert] [--no-delete]"
+				usage: "purge <1-500> OR purge <1-100> [attachments] [bots] [embeds] [images] [invites] [left] [links] [mentions] [reactions] " +
+					"[--user <user>] [--text <text>] [--invert] [--no-delete]"
 			});
 			this.options = ["attachments", "bots", "embeds", "images", "invites", "left", "links", "mentions", "reactions"];
 		}
@@ -602,7 +606,8 @@ module.exports = [
 									filter = msg => msg.member == null;
 									break;
 								case "links":
-									filter = msg => /https?:\/\/\S+\.\S+/gi.test(msg.content) || (msg.embeds[0] && msg.embeds.some(e => e.type == "article" || e.type == "link"));
+									filter = msg => /https?:\/\/\S+\.\S+/gi.test(msg.content) ||
+										(msg.embeds[0] && msg.embeds.some(e => e.type == "article" || e.type == "link"));
 									break;
 								case "mentions":
 									filter = msg => {
@@ -660,10 +665,10 @@ module.exports = [
 							deleteDistrib[author] = (deleteDistrib[author] || 0) + 1;
 						}
 						for (const author in deleteDistrib) {
-							breakdown += ` **\`${author}\`** - ${deleteDistrib[author]}` + "\n";
+							breakdown += ` **\`${author}\`** - ${deleteDistrib[author]}\n`;
 							deleteAfter += 500;
 						}
-						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!` + "\n\n" + "__**Breakdown**__:" + "\n" + breakdown)
+						message.channel.send(`🗑 Deleted ${messages.size} messages from this channel!` + "\n\n" + "__**Breakdown**__:\n" + breakdown)
 							.then(m => {
 								if (!flags.some(f => f.name == "no-delete")) {
 									m.delete(deleteAfter < 10000 ? deleteAfter : 10000).catch(() => {});
@@ -953,7 +958,8 @@ module.exports = [
 						type: "member"
 					},
 					{
-						missingArgMsg: "You need to provide a number of days to delete messages. Use `ban` without the `days` option instead if you do not want to delete any messages, or `kick` to simply remove the user.",
+						missingArgMsg: "You need to provide a number of days to delete messages. " +
+							"Use `ban` without the `days` option instead if you do not want to delete any messages, or `kick` to simply remove the user.",
 						type: "number",
 						min: 1,
 						max: 7
@@ -1049,7 +1055,8 @@ module.exports = [
 
 			message.guild.unban(userID, reasonFlag ? reasonFlag.args : null)
 				.then(() => message.channel.send(`✅ User with ID **${userID}** has been unbanned from this server.`))
-				.catch(() => message.channel.send("Could not unban the user with that ID. Make sure to check for typos in the ID and that the user is in the ban list."));
+				.catch(() => message.channel.send("Could not unban the user with that ID. " +
+					"Make sure to check for typos in the ID and that the user is in the ban list."));
 		}
 	},
 	class UnlockCommand extends Command {
@@ -1134,7 +1141,7 @@ module.exports = [
 				.then(channel => {
 					let toSend = `✅ User **${member.user.tag}** has been unmuted in this channel.`;
 					if (!channel.permissionsFor(member).has("VIEW_CHANNEL")) {
-						toSend += "\n" + "*This user is still unable to view this channel.*";
+						toSend += "\n*This user is still unable to view this channel.*";
 					}
 					message.channel.send(toSend);
 				})

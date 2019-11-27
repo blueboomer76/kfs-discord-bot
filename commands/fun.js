@@ -42,7 +42,8 @@ module.exports = [
 				"Outlook not so good",
 				"Very doubtful"
 			];
-			message.channel.send("🎱 " + (args[0].includes(" ") ? magicMsgs[Math.floor(Math.random() * 20)] : "You need to provide an actual question..."));
+			message.channel.send("🎱 " + (args[0].includes(" ") ? magicMsgs[Math.floor(Math.random() * 20)] :
+				"You need to provide an actual question..."));
 		}
 	},
 	class AntiJokeCommand extends Command {
@@ -424,8 +425,8 @@ module.exports = [
 
 			const postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0],
 				punEmbed = new RichEmbed()
-					.setTitle(postData.title.length > 250 ? `${postData.title.slice(0, 250)}...` : postData.title)
-					.setURL(`https://reddit.com${postData.url}`)
+					.setTitle(postData.title.length > 250 ? postData.title.slice(0, 250) + "..." : postData.title)
+					.setURL("https://reddit.com" + postData.url)
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`);
 			if (postData.desc) punEmbed.setDescription(postData.desc);
@@ -510,7 +511,8 @@ module.exports = [
 					.then(msg => {
 						const quoteEmbed = new RichEmbed()
 							.setDescription(msg.content || ((msg.embeds[0] && msg.embeds[0].description) || ""))
-							.setAuthor(msg.author.tag, msg.author.avatarURL || `https://cdn.discordapp.com/embed/avatars/${msg.author.discriminator % 5}.png`)
+							.setAuthor(msg.author.tag, msg.author.avatarURL ||
+								`https://cdn.discordapp.com/embed/avatars/${msg.author.discriminator % 5}.png`)
 							.setFooter("Sent")
 							.setTimestamp(msg.createdAt)
 							.addField("Jump to message", `[Click or tap here](${msg.url})`);
@@ -609,7 +611,7 @@ module.exports = [
 			const rMultiplier = (rating - 1) / 9;
 			message.channel.send(new RichEmbed()
 				.setDescription(toSend + "\n" +
-					"`" + "█".repeat(Math.round(rating)) + " ‍‍".repeat(10 - Math.round(rating)) + "` " + `**${rating}**/10` + "\n" +
+					"`" + "█".repeat(Math.round(rating)) + " ‍‍".repeat(10 - Math.round(rating)) + "` " + `**${rating}**/10\n` +
 					this.rateStates[this.rateStates.findIndex(state => state.min <= rating)].msg)
 				.setColor(Math.floor(r * rMultiplier) * 65536 + Math.floor(g * rMultiplier) * 256 + Math.floor(b * rMultiplier))
 			);
@@ -723,9 +725,10 @@ module.exports = [
 
 			const shipRating = parseFloat((Math.abs(hash % 90) / 10 + 1).toFixed(1));
 			let shipDescription = "**Ship Name**: " + shipName + "\n" +
-				"**Ship Rating**: `" + "█".repeat(Math.round(shipRating)) + " ‍‍".repeat(10 - Math.round(shipRating)) + "` " + `**${shipRating}**/10` + "\n" +
+				"**Ship Rating**: `" + "█".repeat(Math.round(shipRating)) + " ‍‍".repeat(10 - Math.round(shipRating)) + "`" +
+					`**${shipRating}**/10\n` +
 				this.shipStates[this.shipStates.findIndex(state => state.min <= shipRating)].msg;
-			if (toShip1 == toShip2) shipDescription += "\n\n" + "*Forever alone!*";
+			if (toShip1 == toShip2) shipDescription += "\n\n*Forever alone!*";
 			message.channel.send(new RichEmbed()
 				.setTitle(toShip1 + " 💗 " + toShip2)
 				.setColor(131073 * Math.floor(shipRating * 12.5))
