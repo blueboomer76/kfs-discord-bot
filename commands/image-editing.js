@@ -144,7 +144,8 @@ module.exports = [
 				}
 
 				if (errs.length >= args.length - 1) {
-					return {cmdWarn: "Not enough images loaded successfully to produce a composite image." + "\n" + "```" + errs.join("\n") + "```"};
+					return {cmdWarn: "Not enough images loaded successfully to produce a composite image.\n" +
+						"```" + errs.join("\n") + "```"};
 				}
 			}
 
@@ -243,7 +244,7 @@ module.exports = [
 			const img = new Canvas.Image();
 
 			imageManager.getCanvasImage(img, fetchedImg.data, args[0] && args[0].isEmoji, () => {
-				if (img.width < 100 || img.height < 100) return message.channel.send("Your image is too small, please enlarge it first or try another image.");
+				if (img.width < 100 || img.height < 100) return message.channel.send("The image is too small. Enlarge it first or try another image.");
 
 				const canvas = Canvas.createCanvas(img.width, img.height),
 					ctx = canvas.getContext("2d"),
@@ -700,7 +701,8 @@ module.exports = [
 		constructor() {
 			super({
 				name: "resize",
-				description: "Resizes an image. Values above 1 will increase the image width and height, and those below 1 will decrease them. The scale cannot be exactly 1",
+				description: "Resizes an image. Values above 1 will increase the image width and height, " +
+					"and those below 1 will decrease them. The scale cannot be exactly 1",
 				aliases: ["enlarge", "imagesize", "shrink"],
 				args: [
 					{
@@ -982,8 +984,18 @@ module.exports = [
 				encoder.setRepeat(0);
 				encoder.setDelay(40);
 				for (let i = 0; i < 8; i++) {
-					ctx.drawImage(img, Math.floor(multiplier * (Math.random() - 0.5)), imgY + Math.floor(multiplier * (Math.random() - 0.5)), Math.floor(imgWidth), Math.floor(imgHeight));
-					ctx.drawImage(triggerImg, Math.floor(multiplier2 * (Math.random() - 0.5)), Math.floor(multiplier2 * (Math.random() - 0.5)) + canvasHeight - triggerHeight, canvasWidth, triggerHeight);
+					// Draw the image itself with small variations in position
+					ctx.drawImage(img,
+						Math.floor(multiplier * (Math.random() - 0.5)), imgY + Math.floor(multiplier * (Math.random() - 0.5)),
+						Math.floor(imgWidth), Math.floor(imgHeight));
+
+					// Do the same for the bottom banner that says "Triggered"
+					ctx.drawImage(triggerImg,
+						Math.floor(multiplier2 * (Math.random() - 0.5)),
+						Math.floor(multiplier2 * (Math.random() - 0.5)) + canvasHeight - triggerHeight,
+						canvasWidth,
+						triggerHeight
+					);
 					encoder.addFrame(ctx);
 					ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 				}

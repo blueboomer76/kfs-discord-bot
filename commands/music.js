@@ -18,7 +18,8 @@ module.exports = [
 				await gvConnection.disconnect();
 				message.react("✅");
 			} else {
-				return {cmdErr: "This action cannot be performed unless you are in the same voice channel as me or have the `Manage Server` permission."};
+				return {cmdErr: "This action cannot be performed unless you are in the same voice channel as me " +
+					"or have the `Manage Server` permission."};
 			}
 		}
 	},
@@ -44,7 +45,7 @@ module.exports = [
 			}
 
 			gvConnection.dispatcher.pause();
-			message.channel.send(`Successfully paused currently playing music. Use \`${bot.prefix}resume\` to resume the audio`);
+			message.channel.send("Successfully paused currently playing music. Use `" + bot.prefix + "resume` to resume the audio");
 		}
 	},
 	class PlayCommand extends Command {
@@ -138,7 +139,7 @@ module.exports = [
 					} else {
 						gvConnection.nowPlaying = gvConnection.queue.shift();
 						this.playQueue(msg);
-						msg.channel.send(`Now playing: \`${gvConnection.nowPlaying.url}\``);
+						msg.channel.send("Now playing: `" + gvConnection.nowPlaying.url + "`");
 					}
 				}
 			});
@@ -177,12 +178,12 @@ module.exports = [
 			if (queue.length == 0 && !gvConnection.nowPlaying) return {cmdWarn: "There is no music in the queue."};
 
 			const entries = [queue.map(e => e.url)];
-			paginator.paginate(message, {title: `Music Queue - ${message.guild.name}`}, entries, {
+			paginator.paginate(message, {title: "Music Queue - " + message.guild.name}, entries, {
 				limit: 5,
 				numbered: true,
 				page: args[0] || 1,
 				params: null,
-				pinnedMsg: `Now playing: ${gvConnection.nowPlaying.url}\n\n**Next up:**\n`
+				pinnedMsg: "Now playing: " + gvConnection.nowPlaying.url + "\n\n" + "**Next up:**\n"
 			});
 		}
 	},
@@ -251,7 +252,8 @@ module.exports = [
 				gvConnection.dispatcher.end();
 				message.react("⏹");
 			} else {
-				return {cmdErr: "This action cannot be performed unless you are in the same voice channel as me or have the `Manage Server` permission."};
+				return {cmdErr: "This action cannot be performed unless you are in the same voice channel as me " +
+					"or have the `Manage Server` permission."};
 			}
 		}
 	},
@@ -282,7 +284,7 @@ module.exports = [
 			if (!gvConnection.dispatcher) return {cmdErr: "Cannot set volume: there is no music playing"};
 
 			gvConnection.dispatcher.setVolume(args[0] / 100);
-			message.channel.send(`🔉 Volume of music has been set to **${args[0]}/100**`);
+			message.channel.send("🔉 Volume of music has been set to **" + args[0] + "/100**");
 		}
 	}
 ];

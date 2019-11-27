@@ -128,8 +128,9 @@ module.exports = async (bot, message) => {
 				}
 
 				/*
-				The below condition can be replaced with this when bot owners are to be ignored.
-				if ((!runRes || !runRes.noLog) && runCommand.name != "help" && runCommand.name != "phone" && !bot.ownerIds.includes(message.author.id)) {
+					The below condition can be replaced with this when bot owners are to be ignored.
+					if ((!runRes || !runRes.noLog) && runCommand.name != "help" && runCommand.name != "phone" &&
+						!bot.ownerIds.includes(message.author.id)) {
 				*/
 
 				if (!runRes || !runRes.noLog) {

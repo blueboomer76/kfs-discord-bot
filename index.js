@@ -35,7 +35,7 @@ if (fs.existsSync("./commands/advanced")) bot.loadCommands("./commands/advanced/
 bot.loadEvents();
 
 process.on("uncaughtException", err => {
-	console.error(`[${new Date().toJSON()}] Exception:` + "\n" + err.stack);
+	console.error(`[${new Date().toJSON()}] Exception:\n` + err.stack);
 	if (!bot.user) process.exit(1);
 });
 

@@ -50,8 +50,8 @@ module.exports = [
 			const dealerValue = this.getHandValue(game.dealer),
 				playerValue = this.getHandValue(game.player),
 				mystery = state == "end" && playerValue <= 21 ? "" : ", ???";
-			let toDisplayDealer = game.dealer.map(card => `${card.value} ${card.suit}`).join(", "),
-				toDisplayPlayer = game.player.map(card => `${card.value} ${card.suit}`).join(", ");
+			let toDisplayDealer = game.dealer.map(card => card.value + " " + card.suit).join(", "),
+				toDisplayPlayer = game.player.map(card => card.value + " " + card.suit).join(", ");
 
 			toDisplayDealer = `**Dealer:** ${toDisplayDealer}${mystery} (value ${dealerValue})`;
 			toDisplayPlayer = `**Player:** ${toDisplayPlayer} (value ${playerValue})`;
@@ -61,12 +61,12 @@ module.exports = [
 					game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\nBLACKJACK!`);
 				} else {
 					return `${toDisplayDealer}\n${toDisplayPlayer}\n\n` +
-					"Type `stand` to end your turn, or `hit` to draw another card.";
+						"Type `stand` to end your turn, or `hit` to draw another card.";
 				}
 			} else if (state == "drawing") {
 				if (!game.message.channel.messages.has(game.botMessage.id)) return;
 				game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\n` +
-				"Type `stand` to end your turn, or `hit` to draw another card.");
+					"Type `stand` to end your turn, or `hit` to draw another card.");
 			} else {
 				if (!game.message.channel.messages.has(game.botMessage.id)) return;
 
@@ -268,10 +268,10 @@ module.exports = [
 			}
 
 			let i = -1;
-			message.channel.send("__**Trivia**__" + "\n" + tQuestion.question.replace(/&quot;/g, "\"").replace(/&#039;/g, "'") + "\n\n" + answers.map(a => {
-				i++;
-				return `${this.letters[i]} - ${a}`;
-			}).join("\n") + "\n\n" + "*Answer with the letter of your choice.*")
+			message.channel.send("__**Trivia**__\n" +
+				tQuestion.question.replace(/&quot;/g, "\"").replace(/&#039;/g, "'") + "\n\n" +
+				answers.map(a => {i++; return `${this.letters[i]} - ${a}`}).join("\n") + "\n\n" +
+				"*Answer with the letter of your choice.*")
 				.then(msg => {
 					msg.channel.awaitMessages(msg2 => msg2.author.id == message.author.id && (["A", "B", "C", "D"]).includes(msg2.content.toUpperCase()), {
 						max: 1,
@@ -280,7 +280,7 @@ module.exports = [
 					})
 						.then(collected => {
 							if (message.channel.messages.has(msg.id)) {
-								msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer!` +
+								msg.edit(msg.content + "\n\n" + `**${tQuestion.answer}**, choice ${answerLetter} is the correct answer! ` +
 									"(You chose " + collected.values().next().value.content.toUpperCase() + ")");
 							}
 						})
