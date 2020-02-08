@@ -1,4 +1,5 @@
-const KendraBot = require("./bot.js"),
+const {DiscordAPIError} = require("discord.js"),
+	KFSDiscordBot = require("./bot.js"),
 	{token} = require("./config.json"),
 	fs = require("fs");
 
@@ -10,19 +11,40 @@ if (process.arch == "ia32") {
 	throw new Error("Incompatible operating system: 64-bit required");
 }
 
-// Check for modules/stats.json
-if (!fs.existsSync("modules/stats.json")) {
-	fs.writeFileSync("modules/stats.json", JSON.stringify({
+let storedStats;
+try {
+	storedStats = require("./modules/stats.json");
+	if (isNaN(parseInt(storedStats.duration))) storedStats.duration = 0;
+	if (isNaN(parseInt(storedStats.commandTotal))) storedStats.commandTotal = 0;
+	if (isNaN(parseInt(storedStats.callTotal))) storedStats.callTotal = 0;
+	if (isNaN(parseInt(storedStats.messageTotal))) storedStats.messageTotal = 0;
+	if (isNaN(parseInt(storedStats.lastSorted))) storedStats.lastSorted = 0;
+	try {
+		for (const cmdName in storedStats.commandUsages) {
+			if (isNaN(parseInt(storedStats.commandUsages[cmdName]))) {
+				delete storedStats.commandUsages[cmdName];
+			}
+		}
+	} catch(err2) {
+		storedStats.commandUsages = {};
+	}
+} catch(err) {
+	storedStats = {
 		duration: 0,
-		messageTotal: 0,
 		commandTotal: 0,
 		callTotal: 0,
+		messageTotal: 0,
 		lastSorted: 0,
-		commandDistrib: {}
-	}, null, 4));
+		commandUsages: {}
+	};
 }
 
-const bot = new KendraBot({
+fs.writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {
+	if (err) throw err;
+	bot.cache.cumulativeStats = require("./modules/stats.json");
+});
+
+const bot = new KFSDiscordBot({
 	disableEveryone: true,
 	disabledEvents: [
 		"USER_NOTE_UPDATE",
@@ -40,7 +62,7 @@ process.on("uncaughtException", err => {
 });
 
 process.on("unhandledRejection", reason => {
-	if (reason && reason.name == "DiscordAPIError") {
+	if (reason instanceof DiscordAPIError) {
 		console.error(`[${new Date().toJSON()}] Discord API has returned an error: ${reason.message}`);
 		console.error(`Details - Code: ${reason.code}, Method: ${reason.method}, Path: ${reason.path}`);
 	} else {

@@ -16,13 +16,13 @@ const parserOptions = {
 module.exports = async bot => {
 	console.log("=".repeat(30) + " READY " + "=".repeat(30));
 	console.log(`[${new Date().toJSON()}] Bot has entered ready state.`);
-	bot.connectionRetries = 0;
-
-	bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
 	bot.user.setActivity(`${bot.prefix}help | with you in ${bot.guilds.size} servers`);
+
 	bot.cache.guildCount = bot.guilds.size;
 	bot.cache.userCount = bot.users.size;
 	bot.cache.channelCount = bot.channels.size;
+	bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
+	bot.connectionRetries = 0;
 
 	setInterval(() => {
 		let newBotGame;
@@ -31,7 +31,6 @@ module.exports = async bot => {
 			newBotGame = config.customStatusMessages[Math.floor(Math.random() * config.customStatusMessages.length)];
 		} else {
 			bot.cache.status.randomIters = 0;
-			newBotGame = `with you in ${bot.cache.guildCount} servers`;
 			switch (bot.cache.status.pos) {
 				case 0:
 					newBotGame = `with ${parseLargeNumber(bot.cache.userCount, parserOptions)} users`;
@@ -40,10 +39,10 @@ module.exports = async bot => {
 					newBotGame = `with ${parseLargeNumber(bot.cache.channelCount, parserOptions)} channels`;
 					break;
 				case 2:
-					newBotGame = parseLargeNumber(bot.cache.cumulativeStats.commandTotal, parserOptions) + "run commands";
+					newBotGame = parseLargeNumber(bot.cache.cumulativeStats.commandTotal, parserOptions) + " run commands";
 					break;
 				case 3:
-					newBotGame = parseLargeNumber(bot.cache.cumulativeStats.messageTotal, parserOptions) + "read messages";
+					newBotGame = parseLargeNumber(bot.cache.cumulativeStats.messageTotal, parserOptions) + " read messages";
 					break;
 				case 4:
 					newBotGame = "on version " + version;
@@ -57,10 +56,11 @@ module.exports = async bot => {
 				bot.cache.guildCount = bot.guilds.size;
 				bot.cache.userCount = bot.users.size;
 				bot.cache.channelCount = bot.channels.size;
+				newBotGame = `with you in ${bot.cache.guildCount} servers`;
 			}
 		}
 		bot.user.setActivity(bot.prefix + "help | " + newBotGame);
-	}, 1000*300);
+	}, 1000 * 300);
 
 	setInterval(() => {
 		bot.logStats();
@@ -84,12 +84,12 @@ module.exports = async bot => {
 		}
 
 		// Post the RSS and meme feeds if configured
-		if (config.ownerServer && config.ownerServer.rssFeed &&
+		if (config.rssFeedChannel && Array.isArray(config.rssFeedWebsites) &&
 			(rssFeedPostInt == 3600 || Date.now() % (1000 * rssFeedPostInt) < 1000*3600)) {
-			bot.postRssFeed(rssFeedPostAmt);
+			bot.postRSSFeed(rssFeedPostAmt);
 		}
-		if (config.ownerServer && config.ownerServer.memeFeed && Date.now() % (1000*21600) < 1000*3600) {
+		if (config.memeFeedChannel && Date.now() % (1000*21600) < 1000*3600) {
 			bot.postMeme();
 		}
-	}, 1000*3600);
+	}, 1000 * 3600);
 };

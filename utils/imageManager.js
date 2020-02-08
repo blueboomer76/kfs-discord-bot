@@ -32,17 +32,18 @@ module.exports = {
 			await message.channel.fetchMessages({limit: 25})
 				.then(msgs => {
 					for (const msg of msgs.values()) {
-						if (msg.embeds[0]) {
-							if (msg.embeds[0].type == "image") {
-								result.data = msg.embeds[0].url;
-								break;
-							} else if (msg.embeds[0].image) {
-								result.data = msg.embeds[0].image.url;
-								break;
-							}
-						} else if (msg.attachments.size > 0) {
+						if (msg.attachments.size > 0) {
 							result.data = msg.attachments.last().url;
 							break;
+						} else {
+							const lastEmbed = msg.embeds[msg.embeds.length - 1];
+							if (lastEmbed && lastEmbed.image) {
+								result.data = lastEmbed.image.url;
+								break;
+							} else if (lastEmbed && lastEmbed.type == "image") {
+								result.data = lastEmbed.url;
+								break;
+							}
 						}
 					}
 					if (!result.data) result.error = "No mention or emoji found, or image attachment found in recent messages";
@@ -66,7 +67,7 @@ module.exports = {
 				url: imgResolvable,
 				encoding: null
 			}, (err, res) => {
-				if (err || res.statusCode >= 400) {
+				if (err || !res || res.statusCode >= 400) {
 					reject("Failed to get source data for the image.");
 				} else {
 					canvasImg.src = res.body;

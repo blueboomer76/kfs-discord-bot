@@ -2,29 +2,6 @@ const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	request = require("request");
 
-const magicMsgs = [
-	"Certainly",
-	"It is decidedly so",
-	"Without a doubt",
-	"Yes, definitely",
-	"You may rely on it",
-	"As I see it, yes",
-	"Most likely",
-	"Outlook good",
-	"Sure",
-	"Signs point to yes",
-	"Reply hazy, try again",
-	"Ask again later",
-	"Better not tell you now",
-	"Cannot predict now",
-	"Concentrate and ask again",
-	"Don't count on it",
-	"My reply is no",
-	"My sources say no",
-	"Outlook not so good",
-	"Very doubtful"
-];
-
 module.exports = [
 	class EightBallCommand extends Command {
 		constructor() {
@@ -43,6 +20,28 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
+			const magicMsgs = [
+				"Certainly",
+				"It is decidedly so",
+				"Without a doubt",
+				"Yes, definitely",
+				"You may rely on it",
+				"As I see it, yes",
+				"Most likely",
+				"Outlook good",
+				"Sure",
+				"Signs point to yes",
+				"Reply hazy, try again",
+				"Ask again later",
+				"Better not tell you now",
+				"Cannot predict now",
+				"Concentrate and ask again",
+				"Don't count on it",
+				"My reply is no",
+				"My sources say no",
+				"Outlook not so good",
+				"Very doubtful"
+			];
 			message.channel.send("🎱 " + (args[0].includes(" ") ? magicMsgs[Math.floor(Math.random() * 20)] :
 				"You need to provide an actual question..."));
 		}
@@ -77,7 +76,7 @@ module.exports = [
 
 			const postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0];
 			message.channel.send(new RichEmbed()
-				.setTitle(postData.title.length > 250 ? postData.title.slice(0,250) + "..." : postData.title)
+				.setTitle(postData.title.length > 250 ? postData.title.slice(0, 250) + "..." : postData.title)
 				.setURL("https://reddit.com" + postData.url)
 				.setDescription(postData.desc)
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -93,6 +92,7 @@ module.exports = [
 					json: true
 				}, (err, res) => {
 					if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
+					if (!res) return reject("No response was received from Reddit.");
 					if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 
 					this.lastChecked = Date.now();
@@ -103,7 +103,7 @@ module.exports = [
 								rDesc = r.data.selftext || ((rCrossposts && rCrossposts[0].selftext) || "");
 							return {
 								title: r.data.title,
-								desc: rDesc.length > 2000 ? `${rDesc.slice(0,2000)}...` : rDesc,
+								desc: rDesc.length > 2000 ? `${rDesc.slice(0, 2000)}...` : rDesc,
 								url: r.data.permalink,
 								score: r.data.score,
 								comments: r.data.num_comments,
@@ -139,7 +139,8 @@ module.exports = [
 				qs: {limit: 3},
 				json: true
 			}, (err, res) => {
-				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "Cat Facts API", err, res);
+				const requestRes = bot.checkRemoteRequest("Cat Facts API", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 
 				message.channel.send(new RichEmbed()
 					.setTitle("🐱 Cat Facts")
@@ -167,16 +168,16 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (args.length < 2) return {cmdWarn: "You need to provide at least 2 choices for me to choose from!", cooldown: null, noLog: true};
+			if (args.length < 2) return {cmdWarn: "You need to provide at least 2 choices for me to choose from!"};
 			message.channel.send("I choose: **" + args[Math.floor(Math.random() * args.length)] + "**");
 		}
 	},
-	class CoinFlipCommand extends Command {
+	class CoinCommand extends Command {
 		constructor() {
 			super({
-				name: "coinflip",
+				name: "coin",
 				description: "Flip a coin. You can specify a number of coins to flip",
-				aliases: ["coin", "flipcoin"],
+				aliases: ["coinflip", "flipcoin"],
 				args: [
 					{
 						optional: true,
@@ -185,7 +186,7 @@ module.exports = [
 						max: 50
 					}
 				],
-				usage: "coinflip [1-50]"
+				usage: "coin [1-50]"
 			});
 		}
 
@@ -227,7 +228,8 @@ module.exports = [
 				qs: {number: 3},
 				json: true
 			}, (err, res) => {
-				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "Dog Facts API", err, res);
+				const requestRes = bot.checkRemoteRequest("Dog Facts API", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 
 				message.channel.send(new RichEmbed()
 					.setTitle("🐶 Dog Facts")
@@ -268,7 +270,7 @@ module.exports = [
 			}
 
 			let embedDesc = "", postData;
-			while (embedDesc.length < 1600) {
+			while (embedDesc.length < 1500) {
 				if (this.cachedPosts.length < 5) {
 					try {
 						this.cachedPosts = await this.getJokes();
@@ -279,15 +281,17 @@ module.exports = [
 
 				postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0];
 
-				const title = `**[${postData.title}](https://redd.it/${postData.id})**` + "\n",
-					toDisplayDesc = postData.desc,
-					meta = "\n" + `- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
+				const toDisplayDesc = `**[${postData.title}](https://redd.it/${postData.id})**` + "\n" +
+					postData.desc + "\n" +
+					`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
 
-				if (embedDesc.length == 0 && postData.desc.length >= 1600) {
-					embedDesc += title + toDisplayDesc + "..." + meta;
+				if (embedDesc.length == 0 && postData.desc.length >= 1500) {
+					embedDesc += `**[${postData.title}](https://redd.it/${postData.id})**` + "\n" +
+						postData.desc + "..." + "\n" +
+						`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
 					break;
 				} else if (embedDesc.length + toDisplayDesc.length > 2000) {
-					if (toDisplayDesc.length / (1600 - embedDesc.length) > 2) {
+					if (toDisplayDesc.length / (1500 - embedDesc.length) > 2) {
 						if (embedDesc.length < 1000) {
 							this.cachedPosts.push(postData);
 							continue;
@@ -295,11 +299,13 @@ module.exports = [
 							break;
 						}
 					} else {
-						embedDesc += title + toDisplayDesc.slice(0, 1600 - embedDesc.length) + "..." + meta;
+						embedDesc += `**[${postData.title}](https://redd.it/${postData.id})**` + "\n" +
+							postData.desc.slice(0, postData.desc.length - ((embedDesc.length + toDisplayDesc.length) - 2000)) + "..." + "\n" +
+							`- 👍 ${postData.score} | 💬 ${postData.comments}` + "\n\n";
 						break;
 					}
 				} else {
-					embedDesc += title + toDisplayDesc + meta;
+					embedDesc += toDisplayDesc;
 				}
 			}
 
@@ -318,16 +324,16 @@ module.exports = [
 					json: true
 				}, (err, res) => {
 					if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
+					if (!res) return reject("No response was received from Reddit.");
 					if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 
 					this.lastChecked = Date.now();
 					resolve(res.body.data.children
 						.filter(r => !r.data.stickied && !r.data.over_18)
 						.map(r => {
-							const rDesc = r.data.selftext.trim();
 							return {
 								title: r.data.title,
-								desc: rDesc.length > 1600 ? rDesc.slice(0, 1600) : rDesc,
+								desc: r.data.selftext.trim().slice(0, 1500),
 								id: r.data.id,
 								score: r.data.score,
 								comments: r.data.num_comments
@@ -381,7 +387,8 @@ module.exports = [
 				qs: reqQuery,
 				json: true
 			}, (err, res) => {
-				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "Number Facts API", err, res);
+				const requestRes = bot.checkRemoteRequest("Number Facts API", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 
 				message.channel.send(res.body.found || hasCeilFlag || hasFloorFlag ?
 					res.body.text : "No results found! Try searching Wikipedia for **" + num + " (number)**");
@@ -436,6 +443,7 @@ module.exports = [
 					json: true
 				}, (err, res) => {
 					if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
+					if (!res) return reject("No response was received from Reddit.");
 					if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 
 					this.lastChecked = Date.now();
@@ -467,9 +475,9 @@ module.exports = [
 						name: "message",
 						args: [
 							{
-								errorMsg: "Please provide a valid message ID.",
+								errorMsg: "You need to provide a valid message ID.",
 								type: "function",
-								testFunction: obj => obj.length >= 17 && obj.length < 19 && !isNaN(obj)
+								testFunction: obj => /^\d{17,19}$/.test(obj)
 							}
 						]
 					},
@@ -488,7 +496,12 @@ module.exports = [
 						]
 					}
 				],
-				usage: "quote <user | \"user\"> <quote> OR quote message <id>"
+				perms: {
+					bot: ["EMBED_LINKS"],
+					user: [],
+					level: 0
+				},
+				usage: "quote <user | \"user\"> <quote> OR quote message <ID>"
 			});
 		}
 
@@ -497,9 +510,9 @@ module.exports = [
 				message.channel.fetchMessage(args[1])
 					.then(msg => {
 						const quoteEmbed = new RichEmbed()
+							.setDescription(msg.content || ((msg.embeds[0] && msg.embeds[0].description) || ""))
 							.setAuthor(msg.author.tag, msg.author.avatarURL ||
 								`https://cdn.discordapp.com/embed/avatars/${msg.author.discriminator % 5}.png`)
-							.setDescription(msg.content || ((msg.embeds[0] && msg.embeds[0].description) || ""))
 							.setFooter("Sent")
 							.setTimestamp(msg.createdAt)
 							.addField("Jump to message", `[Click or tap here](${msg.url})`);
@@ -510,8 +523,8 @@ module.exports = [
 			} else {
 				const member = args[0];
 				message.channel.send(new RichEmbed()
-					.setAuthor(member.user.tag, member.user.avatarURL)
 					.setDescription(args[1])
+					.setAuthor(member.user.tag, member.user.avatarURL)
 					.setColor(member.displayColor)
 				);
 			}
@@ -521,8 +534,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "rate",
-				description: "Have the bot rate someone (or anything) for you",
-				aliases: ["opinion", "ratewaifu"],
+				description: "Have the bot rate someone or something for you",
 				args: [
 					{
 						infiniteArgs: true,
@@ -571,7 +583,7 @@ module.exports = [
 			}
 
 			let rating, toSend;
-			if (toRate == message.author.tag || toRate == "me") {
+			if (toRate == message.author.tag || toRate.toLowerCase() == "me") {
 				rating = (Math.abs(hash % 50 / 10) + 5).toFixed(1);
 				toSend = "I would rate you: ";
 			} else {
@@ -634,6 +646,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			await message.delete();
 			if (flags.some(f => f.name == "embed")) {
+				if (!message.guild.me.hasPermission("EMBED_LINKS")) return {cmdWarn: "To post an embed, the bot requires the `Embed Links` permission."};
 				message.channel.send(new RichEmbed()
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setDescription(args[0])
@@ -684,9 +697,7 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (args[0].length < 2 || (args[1] && args[1].length < 2)) {
-				return {cmdWarn: "One of the ship names is too short.", noLog: true, cooldown: null};
-			}
+			if (args[0].length < 2 || (args[1] && args[1].length < 2)) return {cmdWarn: "One of the ship names is too short."};
 			const memberRegex = /<@!?\d+>/, memberRegex2 = /\d+/;
 			let toShip1 = args[0], toShip2 = args[1];
 

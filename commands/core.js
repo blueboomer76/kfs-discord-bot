@@ -29,7 +29,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			message.channel.send(new RichEmbed()
 				.setAuthor("About this bot", bot.user.avatarURL)
-				.setDescription("**Kendra Discord Bot** - A multipurpose Discord bot for fun, moderation, utility, and more. " +
+				.setDescription("A multipurpose Discord bot for fun, moderation, utility, and more. " +
 					"It has a phone command for connecting other servers together, and combines features from popular bots.")
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter("Bot ID: " + bot.user.id)
@@ -40,11 +40,11 @@ module.exports = [
 				.addField("Quick Stats", bot.cache.guildCount + " Servers\n" + bot.cache.userCount + " Users\n" +
 					bot.cache.channelCount + " Channels", true)
 				.addField("Bot Invite",
-					`[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=403041398&scope=bot)`, true)
-				.addField("Kendra's server", "[Go!](https://discord.gg/yB8TvWU)", true)
-				.addField("Upvote this bot", "Discordbots.org: [Go!](https://discordbots.org/bots/429807759144386572/vote)\n" +
-					"Botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/429807759144386572/vote)\n" +
-					"Bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/429807759144386572)", true)
+					`[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
+				.addField("Support Server", "[Go!](https://discord.gg/yB8TvWU)", true)
+				.addField("Upvote this bot", "discordbots.org: [Go!](https://discordbots.org/bots/333058410465722368/vote)\n" +
+					"bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/333058410465722368)\n" +
+					"botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/333058410465722368/vote)", true)
 			);
 		}
 	},
@@ -117,10 +117,14 @@ module.exports = [
 			} else {
 				const command = args[0];
 				if (!command) {
+					helpEmbed.setTitle("All bot commands")
+						.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\`` + "\n" +
+							"To see argument help, use `" + bot.prefix + "help arguments`");
 					let cmds = bot.commands;
-					if (!bot.ownerIds.includes(message.author.id) && !bot.adminIds.includes(message.author.id)) {
+					if (!bot.ownerIDs.includes(message.author.id) && !bot.adminIDs.includes(message.author.id)) {
 						cmds = cmds.filter(cmd => !cmd.disabled && !cmd.hidden);
 					}
+					helpEmbed.setFooter(`There are ${cmds.size} commands available.`);
 
 					const cmdsByCat = {};
 					for (const category of bot.categories) cmdsByCat[category] = [];
@@ -130,10 +134,6 @@ module.exports = [
 					for (const cmdSet in cmdsByCat) {
 						helpEmbed.addField(cmdsByCat[cmdSet][0].c, cmdsByCat[cmdSet].map(cmd => cmd.n).join(", "));
 					}
-					helpEmbed.setTitle("All the commands for this bot")
-						.setDescription(`Use \`${bot.prefix}help <command>\` to get help for a command, e.g. \`${bot.prefix}help urban\`\n` +
-							"To see argument help, use `" + bot.prefix + "help arguments`")
-						.setFooter("There are " + cmds.size + " commands available.");
 				} else {
 					const commandFlags = command.flags.map(f => `\`--${f.name.toLowerCase()}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`),
 						commandPerms = command.perms,
@@ -143,6 +143,7 @@ module.exports = [
 							role: commandPerms.role ? `\nRequires having a role named ${commandPerms.role}.` : "",
 							level: commandPerms.level > 0 ? `\nRequires being ${bot.permLevels[commandPerms.level].name}.` : ""
 						};
+
 					helpEmbed.setTitle("Help - " + command.name)
 						.setFooter(`Category: ${command.category} | Don't include the usage symbols when running the command.`)
 						.addField("Description", command.description);
@@ -150,6 +151,7 @@ module.exports = [
 					if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"));
 					helpEmbed.addField("Usage", "`" + bot.prefix + command.usage + "`");
 					if (command.examples.length > 0) helpEmbed.addField("Examples", command.examples.map(e => "`" + e + "`").join("\n"));
+					if (command.allowDMs) helpEmbed.addField("Allows DMs", "Yes");
 					if (commandPerms.bot.length > 0 || commandPerms.user.length > 0 || commandPerms.role || commandPerms.level > 0) {
 						helpEmbed.addField("Permissions", `Bot - ${permReq.bot}\n` + `User - ${permReq.user}${permReq.role}${permReq.level}`);
 					}
@@ -186,16 +188,15 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			message.channel.send(new RichEmbed()
-				.setTitle("Kendra Bot References")
+				.setTitle("Bot References")
 				.setDescription("Exciting! Use these links to spread the fun!")
 				.setColor(Math.floor(Math.random() * 16777216))
 				.addField("Bot Invite",
-					`[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=403041398&scope=bot)`, true)
-				.addField("Kendra's server", "[Go!](https://discord.gg/yB8TvWU)", true)
-				.addField("Upvote this bot", "Discordbots.org: [Go!](https://discordbots.org/bots/429807759144386572/vote)\n" +
-					"Botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/429807759144386572/vote)\n" +
-					"Bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/429807759144386572)", true)
-				.addField("Github", "[Go!](https://github.com/blueboomer76/kendra-discord-bot)", true)
+					`[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
+				.addField("Support Server", "[Go!](https://discord.gg/yB8TvWU)", true)
+				.addField("Upvote this bot", "discordbots.org: [Go!](https://discordbots.org/bots/333058410465722368/vote)\n" +
+					"bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/333058410465722368)\n" +
+					"botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/333058410465722368/vote)", true)
 			);
 		}
 	},
@@ -207,9 +208,9 @@ module.exports = [
 				allowDMs: true,
 				args: [
 					{
+						allowQuotes: true,
 						infiniteArgs: true,
-						type: "string",
-						allowQuotes: true
+						type: "string"
 					},
 					{
 						type: "string"
@@ -229,12 +230,12 @@ module.exports = [
 					user: [],
 					level: 4
 				},
-				usage: "load <category | \"category\"> <command> [class name]"
+				usage: "load <category | \"category\"> <command> [command class name]"
 			});
 		}
 
 		async run(bot, message, args, flags) {
-			const category = args[0], commandName = args[1];
+			const category = capitalize(args[0]), commandName = args[1].toLowerCase();
 
 			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."};
 			try {
@@ -244,11 +245,9 @@ module.exports = [
 
 				// Load the classes from the class array from each file
 				const commandClasses = require(foundCmdFile),
-					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[2] || args[1]));
-				if (!CommandClass) {
-					return {cmdWarn: "Please provide a second argument for the full class name before \"Command\", " +
-						"replacing all numbers in the command with the word."};
-				}
+					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[2] ? args[2].toLowerCase() : commandName));
+				if (!CommandClass) return {cmdWarn: "You need to give a third argument for the full class name before \"Command\", " +
+					"replacing all numbers in the command with the word."};
 				const newCommand = new CommandClass();
 				newCommand.category = capitalize(category, true);
 				bot.commands.set(commandName, newCommand);
@@ -276,7 +275,7 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			const phoneCache = bot.cache.phone;
-			await bot.checkDeletedPhoneChannels(bot);
+			bot.checkDeletedPhoneChannels(bot);
 			if (!phoneCache.channels.some(c => c.id == message.channel.id)) {
 				phoneCache.channels.push(message.channel);
 				if (phoneCache.channels.length == 1) {
@@ -362,7 +361,9 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const command = args[0], commandName = command.name, category = command.category;
+			const command = args[0],
+				commandName = command.name,
+				category = command.category;
 			try {
 				const commandFile = category.toLowerCase().replace(/ /g, "-") + ".js",
 					foundCmdFile = fs.existsSync("commands/advanced/" + commandFile) ? "./advanced/" + commandFile : "./" + commandFile;
@@ -370,11 +371,9 @@ module.exports = [
 
 				// Load the classes from the class array from each file
 				const commandClasses = require(foundCmdFile),
-					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[1] || args[0].name));
-				if (!CommandClass) {
-					return {cmdWarn: "Please provide a second argument for the full class name before \"Command\", " +
-						"replacing all numbers in the command with the word."};
-				}
+					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[1] ? args[1].toLowerCase() : commandName));
+				if (!CommandClass) return {cmdWarn: "You need to provide a second argument for the full class name before \"Command\", " +
+					"replacing all numbers in the command with the word."};
 				const newCommand = new CommandClass();
 				newCommand.category = category;
 				bot.commands.set(commandName, newCommand);
@@ -397,7 +396,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "reloadfile",
-				description: "Reload a file.",
+				description: "Reload a file",
 				allowDMs: true,
 				args: [
 					{
@@ -524,12 +523,13 @@ module.exports = [
 					ms = endEval - beginEval,
 					evalTime = ms < 1000 ? ms + "ms" : (ms / 1000).toFixed(2) + "s",
 					processUptime = process.uptime() * 1000,
+					duration = bot.cache.cumulativeStats.duration + (Date.now() - bot.cache.stats.lastCheck),
 					serverCount = botStats.servers,
 					userCount = botStats.users;
 
 				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL)
 					.setFooter("⏰ Took: " + evalTime + " | Stats as of")
-					.setDescription("Here's some detailed stats about this bot! To see stats about the bot host, use `" + bot.prefix + "stats processor`*")
+					.setDescription("Here's some detailed stats about this bot! *To see stats about the bot host, use `" + bot.prefix + "stats processor`*")
 					.addField("Bot Created", getDuration(bot.user.createdTimestamp), true)
 					.addField("Bot Last Ready", getDuration(bot.readyTimestamp), true)
 					.addField("Servers",
@@ -548,23 +548,23 @@ module.exports = [
 						"Categories: " + botStats.channels.categories.toLocaleString() +
 							` (${(botStats.channels.categories / serverCount).toFixed(2)}/server)`,
 						true)
-					.addField("Messages Seen",
-						"Session: " + botStats.sessionMessages.toLocaleString() +
-							` (${this.getRate(botStats.sessionMessages, processUptime)})\n` +
-						"Total: " + botStats.totalMessages.toLocaleString() +
-							` (${this.getRate(botStats.totalMessages, bot.cache.cumulativeStats.duration)})`,
+					.addField("Commands",
+						"Session: " + botStats.sessionCommands.toLocaleString() +
+							` (${this.getRate(botStats.sessionCommands, processUptime)})\n` +
+						"Total: " + botStats.totalCommands.toLocaleString() +
+							` (${this.getRate(botStats.totalCommands, duration)})`,
 						true)
 					.addField("Phone Connections",
 						"Session: " + botStats.sessionCalls.toLocaleString() +
 							` (${this.getRate(botStats.sessionCalls, processUptime)})\n` +
 						"Total: " + botStats.totalCalls.toLocaleString() +
-							` (${this.getRate(botStats.totalCalls, bot.cache.cumulativeStats.duration)})`,
+							` (${this.getRate(botStats.totalCalls, duration)})`,
 						true)
-					.addField("Commands",
-						"Session: " + botStats.sessionCommands.toLocaleString() +
-							` (${this.getRate(botStats.sessionCommands, processUptime)})\n` +
-						"Total: " + botStats.totalCommands.toLocaleString() +
-							` (${this.getRate(botStats.totalCommands, bot.cache.cumulativeStats.duration)})`,
+					.addField("Messages Seen",
+						"Session: " + botStats.sessionMessages.toLocaleString() +
+							` (${this.getRate(botStats.sessionMessages, processUptime)})\n` +
+						"Total: " + botStats.totalMessages.toLocaleString() +
+							` (${this.getRate(botStats.totalMessages, duration)})`,
 						true);
 				message.channel.send(statsEmbed);
 			}
@@ -596,13 +596,13 @@ module.exports = [
 		constructor() {
 			super({
 				name: "suggest",
-				description: "Suggest new features for the bot, or report problems",
+				description: "Suggest new features or report problems",
 				aliases: ["feedback", "complain", "report"],
 				allowDMs: true,
 				args: [
 					{
+						missingArgMsg: "You must provide a suggestion or problem to send.",
 						infiniteArgs: true,
-						missingArgMsg: "You must provide a suggestion or problem to send to the official bot server.",
 						type: "string"
 					}
 				],
@@ -615,25 +615,33 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
+			if (!bot.ideaWebhook) return {cmdWarn: "The suggestions webhook has not been set up."};
+			let sourceFooter;
+			if (message.guild) {
+				sourceFooter = `#${message.channel.name} (ID ${message.channel.id}) in ${message.guild.name} (ID ${message.guild.id})`;
+			} else {
+				sourceFooter = `From ${message.author.tag}`;
+			}
 			bot.ideaWebhook.send({
 				embeds: [{
+					description: args[0].replace(/https?:\/\/\S+\.\S+/gi, "")
+						.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, ""),
 					author: {
 						name: message.author.tag,
 						icon_url: message.author.avatarURL
 					},
 					color: Math.floor(Math.random() * 16777216),
 					footer: {
-						text: `#${message.channel.name} (ID ${message.channel.id}) in ${message.guild.name} (ID ${message.guild.id})`,
+						text: sourceFooter,
 						timestamp: message.createdAt
-					},
-					description: args[0].replace(/https?:\/\/\S+\.\S+/gi, "")
-						.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, "")
+					}
 				}]
 			})
 				.then(() => {
-					message.channel.send("✅ Your suggestion has been sent to the support server.");
-				}).catch(() => {
-					message.channel.send("⚠ Failed to send suggestion to support server.");
+					message.channel.send("✅ The suggestion has been sent.");
+				})
+				.catch(() => {
+					message.channel.send("⚠ Failed to send the suggestion.");
 				});
 		}
 	},
@@ -663,9 +671,10 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const command = args[0];
-			if (command.category == "Core" || command.name == "eval") return {cmdErr: "That command is not unloadable."};
-			bot.commands.delete(command.name);
+			const command = args[0], commandName = command.name;
+			if (command.category == "Core" || commandName == "eval") return {cmdErr: "That command is not unloadable."};
+			delete require.cache[require.resolve(`./${command.category.toLowerCase().replace(/ /g, "-")}.js`)];
+			bot.commands.delete(commandName);
 			if (command.aliases.length > 0) {
 				const toRemoveAliases = bot.aliases.filter(alias => alias == command.name);
 				for (const alias of toRemoveAliases.keys()) bot.aliases.delete(alias);
@@ -691,7 +700,7 @@ module.exports = [
 					}
 				],
 				perms: {
-					bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
+					bot: ["ADD_REACTIONS", "EMBED_LINKS", "MANAGE_MESSAGES"],
 					user: [],
 					level: 0
 				},
@@ -720,9 +729,9 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const distrib = bot.cache.cumulativeStats.commandDistrib,
-				cmdNames = Object.keys(distrib),
-				cmdUses = Object.values(distrib),
+			const storedUsages = require("../modules/stats.json").commandUsages,
+				cmdNames = Object.keys(storedUsages),
+				cmdUses = Object.values(storedUsages),
 				tempArray = [];
 			for (let i = 0; i < cmdNames.length; i++) {
 				tempArray.push({name: cmdNames[i], uses: cmdUses[i]});
@@ -741,19 +750,19 @@ module.exports = [
 				});
 			} else {
 				const command = args[1];
-				let distribIndex = cmdNames.indexOf(command.name);
-				if (distribIndex == -1) return {cmdWarn: "The command **" + command.name + "** has not been used yet."};
+				let usagesIndex = cmdNames.indexOf(command.name);
+				if (usagesIndex == -1) return {cmdWarn: "The command **" + command.name + "** has not been used yet."};
 
 				let cmdUsageEnd = "";
 				if (flags.some(f => f.name == "current")) {
 					tempArray.sort((a, b) => b.uses - a.uses);
-					distribIndex = cmdNames.indexOf(command.name);
+					usagesIndex = cmdNames.indexOf(command.name);
 				} else {
 					cmdUsageEnd = ", last updated " + getDuration(bot.cache.cumulativeStats.lastSorted);
 				}
 
-				message.channel.send(`Command **${command.name}** has been used **${cmdUses[distribIndex]}** times.\n` +
-					`It is the #${distribIndex + 1} most used command${cmdUsageEnd}.`);
+				message.channel.send(`Command **${command.name}** has been used **${cmdUses[usagesIndex]}** times.\n` +
+					`It is the #${usagesIndex + 1} most used command${cmdUsageEnd}.`);
 			}
 		}
 	}

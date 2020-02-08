@@ -3,16 +3,16 @@ const {fetchMembers} = require("../modules/memberFetcher.js"),
 	twemoji = require("twemoji");
 
 const colorRegexes = [
-		/^decimal:\d{1,8}$/,
-		/^#?[0-9a-f]{6}$/,
-		/^rgb\((\d{1,3},){2}\d{1,3}\)/,
-		/^[a-z]+/,
+		/^#?[0-9a-f]{6}$/i,
+		/^rgb\((\d{1,3},){2}\d{1,3}\)/i,
+		/^hsl\((\d{1,3},){2}\d{1,3}\)/i,
+		/^c(my|ym)k\((\d{1,3},){2}\d{1,3}\)/i,
+		/^decimal:\d{1,8}$/i,
 		/^(\d{1,3},){2}\d{1,3}$/,
-		/^hsl\((\d{1,3},){2}\d{1,3}\)/,
-		/^c(my|ym)k\((\d{1,3},){2}\d{1,3}\)/
+		/^[a-z]+/i
 	],
-	emojiRegex = /<a?:[0-9A-Za-z_]{2,}:\d+>/,
-	memberRegex = /<@!?\d+>/;
+	emojiRegex = /<a?:[0-9A-Za-z_]{2,}:\d{17,19}>/,
+	memberRegex = /<@!?\d{17,19}>/;
 
 async function getMember(message, id) {
 	let member = null;
@@ -25,91 +25,94 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 	let list;
 	switch (type) {
 		case "boolean":
-			if (["yes", "y", "true", "enable"].includes(obj)) return true;
-			return ["no", "n", "false", "disable"].includes(obj) ? false : null;
+			if (["yes", "y", "true", "enable"].includes(lowerObj)) return true;
+			return ["no", "n", "false", "disable"].includes(lowerObj) ? false : null;
 		case "channel": {
-			const guildChannels = message.guild.channels, channelMatch = obj.match(/<#\d+>/);
+			const guildChannels = message.guild.channels,
+				channelMatch = obj.match(/<#\d{17,19}>/);
 			let channel;
 			if (channelMatch) {
-				return [guildChannels.get(channelMatch[0].match(/\d+/)[0])];
+				channel = guildChannels.get(channelMatch[0].match(/\d+/)[0]);
+				return channel ? [channel] : null;
 			} else {
 				channel = guildChannels.get(obj);
+				if (channel) return [channel];
 			}
-			if (channel) {
-				return [channel];
-			} else {
-				list = [];
-				for (const chnl of guildChannels.values()) {
-					if (chnl.name.toLowerCase().includes(lowerObj)) list.push(chnl);
-				}
+
+			list = [];
+			for (const chnl of guildChannels.values()) {
+				if (chnl.name.toLowerCase().includes(lowerObj)) list.push(chnl);
 			}
 			return list.length > 0 ? list : null;
 		}
 		case "color": {
-			const objWithNoSpaces = obj.replace(/[ %]/g, "").toLowerCase();
+			const objWithNoSpaces = lowerObj.replace(/[ %]/g, "").toLowerCase();
 			let i, colorMatch;
 			for (i = 0; i < colorRegexes.length; i++) {
 				const matched = objWithNoSpaces.match(colorRegexes[i]);
 				if (matched) {colorMatch = matched[0]; break}
 			}
 			switch (i) {
-				case 0: { // decimal:number | e.g. decimal:1234
-					const decimalValue = parseInt(colorMatch.slice(8));
-					return decimalValue < 16777216 ? decimalValue : null;
-				}
-				case 1: // #rrggbb or rrggbb | e.g. #112233 or 112233
+				case 0: // #rrggbb or rrggbb | e.g. #112233 or 112233
 					return parseInt(colorMatch.replace("#", ""), 16);
-				case 2: { // rgb(r,g,b) | e.g. rgb(1,2,3)
+				case 1: { // rgb(r,g,b) | e.g. rgb(1,2,3)
 					const rgbValues = colorMatch.slice(4, colorMatch.length - 1).split(",");
 					return rgbValues.some(value => value > 255) ? null :
 						parseInt(rgbValues[0]) * 65536 + parseInt(rgbValues[1]) * 256 + parseInt(rgbValues[2]);
 				}
-				case 3: { // CSS color name | e.g. blue
-					const nameRgbValues = convert.keyword.rgb(colorMatch);
-					return nameRgbValues ? nameRgbValues[0] * 65536 + nameRgbValues[1] * 256 + nameRgbValues[2] : null;
+				case 2: { // hsl(h,s,l) | e.g. hsl(1,2,3)
+					const hslValues = colorMatch.slice(4, colorMatch.length - 1).split(",");
+					if (hslValues[0] >= 360 || hslValues[1] > 100 || hslValues[2] > 100) return null;
+					const hslRgbValues = convert.hsl.rgb(hslValues);
+					return hslRgbValues[0] * 65536 + hslRgbValues[1] * 256 + hslRgbValues[2];
 				}
-				case 4: { // r,g,b | e.g. 1,2,3
+				case 3: {
+					const cmykValues = colorMatch.slice(5, colorMatch.length - 1).split(",");
+					if (cmykValues.some(value => value > 100)) return null;
+					const cmykRgbValues = convert.cmyk.rgb(cmykValues);
+					return cmykRgbValues[0] * 65536 + cmykRgbValues[1] * 256 + cmykRgbValues[2];
+				}
+				case 4: { // decimal:number | e.g. decimal:1234
+					const decimalValue = parseInt(colorMatch.slice(8));
+					return decimalValue < 16777216 ? decimalValue : null;
+				}
+				case 5: { // r,g,b | e.g. 1,2,3
 					const rgbValues = colorMatch.split(",");
 					return rgbValues.some(value => value > 255) ? null :
 						parseInt(rgbValues[0]) * 65536 + parseInt(rgbValues[1]) * 256 + parseInt(rgbValues[2]);
 				}
-				case 5: { // hsl(h,s,l) | e.g. hsl(1,2,3)
-					const hslValues = colorMatch.slice(4, colorMatch.length - 1).split(",");
-					if (hslValues[1] > 100 || hslValues[2] > 100) return null;
-					const hslRgbValues = convert.hsl.rgb(hslValues);
-					return hslRgbValues[0] * 65536 + hslRgbValues[1] * 256 + hslRgbValues[2];
+				case 6: { // CSS color name | e.g. blue
+					const nameRgbValues = convert.keyword.rgb(colorMatch);
+					return nameRgbValues ? nameRgbValues[0] * 65536 + nameRgbValues[1] * 256 + nameRgbValues[2] : null;
 				}
 				default:
 					return null;
 			}
 		}
 		case "command":
-			return bot.commands.get(obj) || bot.commands.get(bot.aliases.get(obj)) || null;
-		case "duration":
-			// Coming soon
-			break;
+			return bot.commands.get(lowerObj) || bot.commands.get(bot.aliases.get(lowerObj)) || null;
 		case "emoji": {
-			const guildEmojis = message.guild.emojis, emojiMatch = obj.match(emojiRegex);
+			const guildEmojis = message.guild.emojis,
+				emojiMatch = obj.match(emojiRegex);
 			let emoji;
 			if (emojiMatch) {
-				return [guildEmojis.get(emojiMatch[0].match(/\d+/)[0])];
+				emoji = guildEmojis.get(emojiMatch[0].match(/\d+/)[0]);
+				if (emoji) {return [emoji]} else {return null}
 			} else {
 				emoji = guildEmojis.get(obj);
+				if (emoji) return [emoji];
 			}
 
-			if (emoji) {
-				return [emoji];
-			} else {
-				list = [];
-				for (const emoji of guildEmojis.values()) {
-					if (emoji.name.toLowerCase().includes(lowerObj)) list.push(emoji);
-				}
+			list = [];
+			for (const emoji of guildEmojis.values()) {
+				if (emoji.name.toLowerCase().includes(lowerObj)) list.push(emoji);
 			}
-
 			return list.length > 0 ? list : null;
 		}
-		case "float":
-			return !isNaN(obj) && obj >= params.min && obj <= params.max ? parseFloat(obj) : null;
+		case "float": {
+			const num = parseFloat(obj);
+			return !isNaN(num) && num >= params.min && num <= params.max ? num : null;
+		}
 		case "function":
 			return params.testFunction(obj) ? obj : null;
 		case "image": {
@@ -125,9 +128,9 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			if (/^https?:\/\/.+\.(gif|jpe?g|png)$/i.test(obj)) return obj;
 			const emojiMatch = obj.match(emojiRegex);
 			if (emojiMatch) {
-				const emojiId = emojiMatch[0].match(/\d+/)[0],
+				const emojiID = emojiMatch[0].match(/\d+/)[0],
 					emojiExtension = /^<a:/.test(emojiMatch[0]) ? "gif" : "png";
-				return `https://cdn.discordapp.com/emojis/${emojiId}.${emojiExtension}`;
+				return `https://cdn.discordapp.com/emojis/${emojiID}.${emojiExtension}`;
 			}
 
 			// The src attribute gets extracted from the resulting <img> tag string
@@ -144,49 +147,43 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				member = message.guild.large ? await getMember(message, memberMatch[0].match(/\d+/)[0]) :
 					message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
 				return member ? [member] : (allowRaw ? obj : null);
+			} else if (/^\d{17,19}$/.test(obj)) {
+				member = message.guild.large ? await getMember(message, obj.match(/\d+/)[0]) : message.guild.members.get(obj.match(/\d+/)[0]);
+				if (member) return [member];
 			}
-			member = message.guild.members.get(obj);
 
-			if (member) {
-				return member ? [member] : (allowRaw ? obj : null);
-			} else {
-				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members;
-				list = [];
-				for (const mem of guildMembers.values()) {
-					if (mem.user.tag.toLowerCase().includes(lowerObj) ||
-						mem.user.username.toLowerCase().includes(lowerObj) ||
-						mem.displayName.toLowerCase().includes(lowerObj)) list.push(mem);
-				}
+			const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members;
+			list = [];
+			for (const mem of guildMembers.values()) {
+				if (mem.user.tag.toLowerCase().includes(lowerObj) ||
+					mem.user.username.toLowerCase().includes(lowerObj) ||
+					mem.displayName.toLowerCase().includes(lowerObj)) list.push(mem);
 			}
 			return list.length > 0 ? list : (allowRaw ? obj : null);
 		}
-		case "number":
-			return !isNaN(obj) && obj >= params.min && obj <= params.max ? parseInt(obj) : null;
+		case "number": {
+			const num = Math.floor(obj);
+			return !isNaN(num) && num >= params.min && num <= params.max ? num : null;
+		}
 		case "oneof":
-			return params.list.includes(obj) ? obj : null;
-		case "regex":
-			// Coming soon
-			break;
+			return params.list.includes(lowerObj) ? lowerObj : null;
 		case "role": {
-			if (lowerObj == "everyone" || obj == message.guild.id) return null;
-
 			const guildRoles = message.guild.roles.clone();
-			guildRoles.delete(message.guild.id);
+			guildRoles.delete(guildRoles.find(role => role.calculatedPosition == 0).id);
 
-			const roleMatch = obj.match(/<@&\d+>/);
+			const roleMatch = obj.match(/<@&\d{17,19}>/);
 			let role;
 			if (roleMatch) {
-				return [guildRoles.get(roleMatch[0].match(/\d+/)[0])];
+				role = guildRoles.get(roleMatch[0].match(/\d+/)[0]);
+				return role ? [role] : null;
 			} else {
 				role = guildRoles.get(obj);
+				if (role) return [role];
 			}
-			if (role) {
-				return [role];
-			} else {
-				list = [];
-				for (const role of guildRoles.values()) {
-					if (role.name.toLowerCase().includes(lowerObj)) list.push(role);
-				}
+
+			list = [];
+			for (const role of guildRoles.values()) {
+				if (role.name.toLowerCase().includes(lowerObj)) list.push(role);
 			}
 			return list.length > 0 ? list : null;
 		}

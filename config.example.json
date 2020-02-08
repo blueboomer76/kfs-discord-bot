@@ -1,33 +1,22 @@
 {
 	"token": "<your bot token>",
-	"discordBotsOrgToken": "<discordbots.org token>",
-	"botsForDiscordToken": "<botsfordiscord.com token>",
-	"botsOnDiscordToken": "<bots.ondiscord.xyz token>",
-	"ideaWebhook": {
-		"id": "<webhook id>",
-		"token": "<webhook token>"
-	},
+	"discordBotsOrgToken": "[discordbots.org token]",
+	"botsOnDiscordToken": "[bots.ondiscord.xyz token]",
+	"botsForDiscordToken": "[botsfordiscord.com token]",
+	"ideaWebhookID": "[webhook ID]",
+	"ideaWebhookToken": "[webhook token]",
 	"prefix": "k,",
-	"ownerIds": [
-		"<owner id>",
-		"<another owner id>"
+	"ownerIDs": [
+		"<array of owner IDs>"
 	],
-	"adminIds": ["<list of admin ids>"],
-	"botModIds": ["<list of bot moderator ids>"],
-	"moderatorIds": ["<list of moderator ids>"],
-	"supportIds": ["<list of support ids>"],
-	"ownerServer": {
-		"activity": "<main server channel id>",
-		"changelog": "<main server channel id>",
-		"id": "<main server id>",
-		"memeFeed": "<main server channel id>",
-		"modlog": "<main server channel id>",
-		"rssFeed": "<main server channel id>",
-		"welcome": "<main server channel id>"
-	},
+	"adminIDs": ["<array of admin IDs>"],
+	"botModIDs": ["<array of bot moderator IDs>"],
+	"moderatorIDs": ["array of moderator IDs>"],
+	"supportIDs": ["<array of support IDs>"],
+	"rssFeedChannel": "[RSS feed channel ID]",
+	"memeFeedChannel": "[meme feed channel ID]",
 	"customCooldownMessages": [
 		"You're calling me fast enough that I'm getting dizzy!",
-		"Watch out, seems like we might get a speeding ticket at this rate!",
 		"You have to wait before using the command again...",
 		"You're calling me a bit too fast, I am getting dizzy!",
 		"I am busy, try again after a bit",
@@ -43,7 +32,6 @@
 		"with spectrums",
 		"with variety"
 	],
-	"rssFeedWebsites": ["<list of rss feed websites>"],
-	"isBeta": false,
+	"rssFeedWebsites": ["[array of RSS feed websites]"],
 	"trackOwnerCommands": true
 }

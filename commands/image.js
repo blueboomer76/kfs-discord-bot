@@ -27,6 +27,7 @@ function getPosts(subreddit, checkNsfw, options) {
 			json: true
 		}, (err, res) => {
 			if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
+			if (!res) return reject("No response was received from Reddit.");
 			if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 
 			let results = res.body.data.children.filter(r => !r.data.stickied);
@@ -85,7 +86,7 @@ function sendRedditEmbed(command, message, checkNsfw) {
 	const embedTitle = postData.title, imageURL = postData.imageURL;
 	if (imageURL.startsWith("https://external-") || /\.(gif|jpe?g|png)$/.test(imageURL)) {
 		message.channel.send(new RichEmbed()
-			.setTitle(embedTitle.length > 250 ? embedTitle.slice(0,250) + "..." : embedTitle)
+			.setTitle(embedTitle.length > 250 ? embedTitle.slice(0, 250) + "..." : embedTitle)
 			.setURL("https://reddit.com" + postData.url)
 			.setColor(Math.floor(Math.random() * 16777216))
 			.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
@@ -97,63 +98,6 @@ function sendRedditEmbed(command, message, checkNsfw) {
 }
 
 module.exports = [
-	class AnimemeCommand extends Command {
-		constructor() {
-			super({
-				name: "animeme",
-				description: "Gets an \"animeme\", or simply the combination of anime and memes",
-				aliases: ["animememe", "memeanime"],
-				cooldown: {
-					time: 15000,
-					type: "channel"
-				},
-				perms: {
-					bot: ["EMBED_LINKS"],
-					user: [],
-					level: 0
-				}
-			});
-			this.cachedSfwPosts = [];
-			this.cachedNsfwPosts = [];
-			this.lastChecked = 0;
-		}
-
-		async run(bot, message, args, flags) {
-			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "Animemes", true);
-				if (fetchRes) return {cmdWarn: fetchRes};
-			}
-			sendRedditEmbed(this, message, true);
-		}
-	},
-	class AnimeIRLCommand extends Command {
-		constructor() {
-			super({
-				name: "animeirl",
-				description: "Anime but in real life",
-				cooldown: {
-					time: 15000,
-					type: "channel"
-				},
-				perms: {
-					bot: ["EMBED_LINKS"],
-					user: [],
-					level: 0
-				}
-			});
-			this.cachedSfwPosts = [];
-			this.cachedNsfwPosts = [];
-			this.lastChecked = 0;
-		}
-
-		async run(bot, message, args, flags) {
-			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "anime_irl", true);
-				if (fetchRes) return {cmdWarn: fetchRes};
-			}
-			sendRedditEmbed(this, message, true);
-		}
-	},
 	class AntiMemeCommand extends Command {
 		constructor() {
 			super({
@@ -181,35 +125,6 @@ module.exports = [
 			sendRedditEmbed(this, message, false);
 		}
 	},
-	class AwwnimeCommand extends Command {
-		constructor() {
-			super({
-				name: "awwnime",
-				description: "Cute anime",
-				aliases: ["awwanime", "cuteanime"],
-				cooldown: {
-					time: 15000,
-					type: "channel"
-				},
-				perms: {
-					bot: ["EMBED_LINKS"],
-					user: [],
-					level: 0
-				}
-			});
-			this.cachedSfwPosts = [];
-			this.cachedNsfwPosts = [];
-			this.lastChecked = 0;
-		}
-
-		async run(bot, message, args, flags) {
-			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "awwnime", true);
-				if (fetchRes) return {cmdWarn: fetchRes};
-			}
-			sendRedditEmbed(this, message, true);
-		}
-	},
 	class BirbCommand extends Command {
 		constructor() {
 			super({
@@ -230,8 +145,8 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			request.get("http://random.birb.pw/tweet.json", (err, res) => {
-				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "random.birb.pw", err, res);
-
+				const requestRes = bot.checkRemoteRequest("random.birb.pw", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 				message.channel.send(new RichEmbed()
 					.setTitle("🐦 Here's your random birb!")
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -289,7 +204,8 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			request.get("http://aws.random.cat/meow", (err, res) => {
-				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "random.cat", err, res);
+				const requestRes = bot.checkRemoteRequest("random.cat", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 				message.channel.send(new RichEmbed()
 					.setTitle("🐱 Here's your random cat!")
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -348,7 +264,8 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			request.get("http://random.dog/woof.json", (err, res) => {
-				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "random.dog", err, res);
+				const requestRes = bot.checkRemoteRequest("random.dog", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 				message.channel.send(new RichEmbed()
 					.setTitle("🐶 Here's your random dog!")
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -377,8 +294,8 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			request.get("https://randomfox.ca/floof", (err, res) => {
-				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "randomfox.ca", err, res);
-
+				const requestRes = bot.checkRemoteRequest("randomfox.ca", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 				message.channel.send(new RichEmbed()
 					.setTitle("🦊 Here's your random fox!")
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -422,7 +339,7 @@ module.exports = [
 				name: "meme",
 				description: "Gets a meme",
 				cooldown: {
-					time: 15000,
+					time: 20000,
 					type: "channel"
 				},
 				perms: {
@@ -441,35 +358,6 @@ module.exports = [
 				if (fetchRes) return {cmdWarn: fetchRes};
 			}
 			sendRedditEmbed(this, message, false);
-		}
-	},
-	class WholesomeCommand extends Command {
-		constructor() {
-			super({
-				name: "wholesome",
-				description: "Animemes that feel good",
-				aliases: ["wholesomeanimeme", "wsanimeme"],
-				cooldown: {
-					time: 15000,
-					type: "channel"
-				},
-				perms: {
-					bot: ["EMBED_LINKS"],
-					user: [],
-					level: 0
-				}
-			});
-			this.cachedSfwPosts = [];
-			this.cachedNsfwPosts = [];
-			this.lastChecked = 0;
-		}
-
-		async run(bot, message, args, flags) {
-			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "wholesomeanimemes", true);
-				if (fetchRes) return {cmdWarn: fetchRes};
-			}
-			sendRedditEmbed(this, message, true);
 		}
 	}
 ];

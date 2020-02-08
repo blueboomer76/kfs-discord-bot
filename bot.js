@@ -1,18 +1,18 @@
 const {Client, Collection, RichEmbed, WebhookClient} = require("discord.js"),
-	config = require("./config.json"),
 	{capitalize} = require("./modules/functions.js"),
+	config = require("./config.json"),
 	fs = require("fs"),
-	Parser = require("rss-parser"),
-	request = require("request");
+	request = require("request"),
+	Parser = require("rss-parser");
 
-class KendraBot extends Client {
+class KFSDiscordBot extends Client {
 	constructor(options) {
 		super(options);
-		this.ownerIds = config.ownerIds;
-		this.adminIds = config.adminIds;
-		this.botModIds = config.botModIds;
-		this.moderatorIds = config.moderatorIds;
-		this.supportIds = config.supportIds;
+		this.ownerIDs = config.ownerIDs;
+		this.adminIDs = config.adminIDs;
+		this.botModIDs = config.botModIDs;
+		this.moderatorIDs = config.moderatorIDs;
+		this.supportIDs = config.supportIDs;
 		this.commands = new Collection();
 		this.aliases = new Collection();
 		this.categories = [];
@@ -24,23 +24,26 @@ class KendraBot extends Client {
 			},
 			{
 				name: "Server Owner",
-				validate: message => message.guild.owner.user.id == message.author.id
+				validate: message => {
+					if (!message.guild) return false;
+					return message.guild.owner.user.id == message.author.id;
+				}
 			},
 			{
 				name: "Bot Support",
-				validate: message => this.supportIds.includes(message.author.id)
+				validate: message => this.supportIDs.includes(message.author.id)
 			},
 			{
 				name: "Bot Moderator",
-				validate: message => this.moderatorIds.includes(message.author.id)
+				validate: message => this.moderatorIDs.includes(message.author.id)
 			},
 			{
 				name: "Bot Admin",
-				validate: message => this.adminIds.includes(message.author.id)
+				validate: message => this.adminIDs.includes(message.author.id)
 			},
 			{
 				name: "Bot Owner",
-				validate: message => this.ownerIds.includes(message.author.id)
+				validate: message => this.ownerIDs.includes(message.author.id)
 			}
 		];
 		this.cache = {
@@ -49,22 +52,29 @@ class KendraBot extends Client {
 			channelCount: 0,
 			phone: {channels: [], msgCount: 0, lastMsgTime: 0, timeout: null},
 			recentCommands: [],
-			cumulativeStats: require("./modules/stats.json"),
+			cumulativeStats: {
+				duration: 0,
+				commandTotal: 0,
+				callTotal: 0,
+				messageTotal: 0,
+				lastSorted: 0,
+				commandUsages: {}
+			},
 			stats: {
-				lastCheck: Date.now(),
-				messageCurrentTotal: 0,
-				messageSessionTotal: 0,
-				callCurrentTotal: 0,
-				callSessionTotal: 0,
 				commandCurrentTotal: 0,
 				commandSessionTotal: 0,
-				commandUsage: {}
+				callCurrentTotal: 0,
+				callSessionTotal: 0,
+				messageCurrentTotal: 0,
+				messageSessionTotal: 0,
+				commandUsages: {},
+				lastCheck: Date.now()
 			},
 			status: {randomIters: 0, pos: 0}
 		};
 		this.connectionRetries = 0;
-		if (config.ideaWebhook) {
-			this.ideaWebhook = new WebhookClient(config.ideaWebhook.id, config.ideaWebhook.token);
+		if (config.ideaWebhookID && config.ideaWebhookToken) {
+			this.ideaWebhook = new WebhookClient(config.ideaWebhookID, config.ideaWebhookToken);
 		}
 	}
 
@@ -72,12 +82,13 @@ class KendraBot extends Client {
 		const dir = altdir || "./commands/";
 		fs.readdir(dir, (err, files) => {
 			if (err) throw err;
-			const categories = files.filter(f => f.endsWith(".js")).map(f => f.split(".").shift());
-			if (categories.length != 0) {
-				for (let category of categories) {
-					const commandClasses = require(dir + category + ".js");
-					category = capitalize(category.replace(/-/g, " "));
+			const cmdFiles = files.filter(f => f.endsWith(".js"));
+			if (cmdFiles.length > 0) {
+				for (const fileName of cmdFiles) {
+					const rawCategory = fileName.split(".").shift(),
+						category = capitalize(rawCategory.replace(/-/g, " "));
 					this.categories.push(category);
+					const commandClasses = require(dir + fileName);
 					if (commandClasses.length > 0) {
 						for (const CommandClass of commandClasses) {
 							const command = new CommandClass();
@@ -117,49 +128,50 @@ class KendraBot extends Client {
 		});
 	}
 
-	logStats(sync = false) {
+	logStats(writeSync = false) {
 		const cachedStats = this.cache.stats,
 			cumulativeStats = this.cache.cumulativeStats;
-		cumulativeStats.duration += Date.now() - cachedStats.lastCheck;
-		cumulativeStats.messageTotal += cachedStats.messageCurrentTotal;
-		cumulativeStats.callTotal += cachedStats.callCurrentTotal;
 
-		const usageCache = cachedStats.commandUsage,
-			distrib = cumulativeStats.commandDistrib;
+		cumulativeStats.duration += Date.now() - cachedStats.lastCheck;
+
+		const cachedUsages = cachedStats.commandUsages,
+			storedUsages = cumulativeStats.commandUsages;
 		let commandCurrentTotal = cachedStats.commandCurrentTotal;
-		for (const cmdName in usageCache) {
-			distrib[cmdName] = (distrib[cmdName] || 0) + usageCache[cmdName];
-			commandCurrentTotal += usageCache[cmdName];
+		for (const cmdName in cachedUsages) {
+			storedUsages[cmdName] = (storedUsages[cmdName] || 0) + cachedUsages[cmdName];
+			commandCurrentTotal += cachedUsages[cmdName];
 		}
 		cumulativeStats.commandTotal += commandCurrentTotal;
+		cumulativeStats.callTotal += cachedStats.callCurrentTotal;
+		cumulativeStats.messageTotal += cachedStats.messageCurrentTotal;
 
-		if (Date.now() > cumulativeStats.lastSorted + 1000*86400*7) {
+		if (Date.now() > cumulativeStats.lastSorted + 1000 * 86400 * 7) {
 			cumulativeStats.lastSorted = Date.now();
-			const tempNames = Object.keys(distrib),
-				tempUses = Object.values(distrib),
+			const tempNames = Object.keys(storedUsages),
+				tempUses = Object.values(storedUsages),
 				tempArray = [],
-				newDistrib = {};
+				newUsages = {};
 			for (let i = 0; i < tempNames.length; i++) {
 				tempArray.push({name: tempNames[i], uses: tempUses[i]});
 			}
 			tempArray.sort((a, b) => b.uses - a.uses);
 			for (let i = 0; i < tempArray.length; i++) {
-				newDistrib[tempArray[i].name] = tempArray[i].uses;
+				newUsages[tempArray[i].name] = tempArray[i].uses;
 			}
-			cumulativeStats.commandDistrib = newDistrib;
+			cumulativeStats.commandUsages = newUsages;
 		}
 
-		cachedStats.messageSessionTotal += cachedStats.messageCurrentTotal;
-		cachedStats.messageCurrentTotal = 0;
-		cachedStats.callSessionTotal += cachedStats.callCurrentTotal;
-		cachedStats.callCurrentTotal = 0;
 		cachedStats.commandSessionTotal += commandCurrentTotal;
 		cachedStats.commandCurrentTotal = 0;
+		cachedStats.callSessionTotal += cachedStats.callCurrentTotal;
+		cachedStats.callCurrentTotal = 0;
+		cachedStats.messageSessionTotal += cachedStats.messageCurrentTotal;
+		cachedStats.messageCurrentTotal = 0;
+		cachedStats.commandUsages = {};
 		cachedStats.lastCheck = Date.now();
-		cachedStats.commandUsage = {};
 
 		const jsonString = JSON.stringify(cumulativeStats, null, 4);
-		if (sync) {
+		if (writeSync) {
 			fs.writeFileSync("modules/stats.json", jsonString);
 		} else {
 			return new Promise((resolve, reject) => {
@@ -171,10 +183,11 @@ class KendraBot extends Client {
 		}
 	}
 
-	handleRemoteSiteError(message, site, err, res) {
-		const errBase = err ? `Could not request to ${site}: ${err.message} (${err.code})` :
-			`An error has been returned from ${site}: ${res.statusMessage} (${res.statusCode})`;
-		message.channel.send("⚠ " + errBase + ". Try again later.");
+	checkRemoteRequest(site, err, res) {
+		if (err) return `Could not request to ${site}: ${err.message} (${err.code})`;
+		if (!res) return `No response was received from ${site}.`;
+		if (res.statusCode >= 400) return `An error has been returned from ${site}: ${res.statusCode} (${res.statusMessage}). Try again later.`;
+		return true;
 	}
 
 	// General function for posting stats
@@ -185,12 +198,11 @@ class KendraBot extends Client {
 			body: requestBody,
 			json: true
 		}, (err, res) => {
-			if (err) {
-				console.error("Failed to post to " + website + ":\n" + err);
-			} else if (res.statusCode >= 400) {
-				console.error("An unexpected status code " + res.statusCode + "was returned from " + website);
+			const requestRes = this.checkRemoteRequest(website, err, res);
+			if (requestRes != true) {
+				console.error(`[Stats Posting] ${requestRes}`);
 			} else {
-				console.log("Stats successfully posted to " + website);
+				console.log(`[Stats Posting] Stats successfully posted to ${website}`);
 			}
 		});
 	}
@@ -200,19 +212,23 @@ class KendraBot extends Client {
 			url: "https://reddit.com/r/memes/hot.json",
 			json: true
 		}, (err, res) => {
-			if (err) return console.error(err);
-			const meme = res.body.data.children.filter(r => !r.data.stickied)[0].data;
-			this.channels.get(config.ownerServer.memeFeed).send(new RichEmbed()
-				.setTitle(meme.title)
-				.setURL("https://reddit.com" + meme.permalink)
-				.setColor(Math.floor(Math.random() * 16777216))
-				.setFooter(`👍 ${meme.score} | 💬 ${meme.num_comments} | By: ${meme.author}`)
-				.setImage(meme.url)
-			);
+			const requestRes = this.checkRemoteRequest("Reddit", err, res);
+			if (requestRes != true) {
+				console.error(`Failed to obtain a meme from Reddit: ${requestRes}`);
+			} else {
+				const meme = res.body.data.children.filter(r => !r.data.stickied)[0].data;
+				this.channels.get(config.memeFeedChannel).send(new RichEmbed()
+					.setTitle(meme.title)
+					.setURL("https://reddit.com" + meme.permalink)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setFooter(`👍 ${meme.score} | 💬 ${meme.num_comments} | By: ${meme.author}`)
+					.setImage(meme.url)
+				);
+			}
 		});
 	}
 
-	postRssFeed(amt = 1) {
+	postRSSFeed(amt = 1) {
 		const parser = new Parser();
 		parser.parseURL(config.rssFeedWebsites[Math.floor(Math.random() * config.rssFeedWebsites.length)])
 			.then(feed => {
@@ -220,7 +236,7 @@ class KendraBot extends Client {
 				for (let i = 0; i < amt; i++) {
 					urlList.push(feed.items.splice(Math.floor(Math.random() * feed.items.length), 1)[0].link);
 				}
-				this.channels.get(config.ownerServer.rssFeed).send(urlList.join("\n"));
+				this.channels.get(config.rssFeedChannel).send(urlList.join("\n"));
 			});
 	}
 
@@ -285,4 +301,4 @@ class KendraBot extends Client {
 	}
 }
 
-module.exports = KendraBot;
+module.exports = KFSDiscordBot;

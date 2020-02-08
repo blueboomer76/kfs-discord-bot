@@ -47,7 +47,7 @@ module.exports = [
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			const levelFlag = flags.find(f => f.name == "level");
-			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "blur", {blur: levelFlag ? levelFlag.args[0] : null});
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "blur", {blur: levelFlag ? levelFlag.args : null});
 		}
 	},
 	class ColorifyCommand extends Command {
@@ -94,7 +94,7 @@ module.exports = [
 			const intensityFlag = flags.find(f => f.name == "intensity");
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "colorify", {
 				colors: [Math.floor(args[1] / 65536), Math.floor((args[1] % 65536) / 256), args[1] % 256],
-				intensity: intensityFlag ? intensityFlag.args[0] : 5
+				intensity: intensityFlag ? intensityFlag.args : 5
 			});
 		}
 	},
@@ -129,7 +129,7 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (args.length > 10) return {cmdWarn: "Too many images or emojis provided.", cooldown: null, noLog: true};
+			if (args.length > 10) return {cmdWarn: "Too many images or emojis provided."};
 
 			const errs = [], imgs = [];
 			for (let i = 0; i < args.length; i++) {
@@ -209,98 +209,55 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (args[1].length > 400) return {cmdWarn: "The top and bottom text cannot be more than 400 characters in total."};
+			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
+			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			const pipeRegex = / ?\| /,
 				disableCapsFlag = flags.some(f => f.name == "disable-caps");
 			let topText, bottomText;
 			if (pipeRegex.test(args[1])) {
-				const memeTexts = args[1].split(/ ?\| /, 2);
+				const memeTexts = args[1].split(pipeRegex, 2);
 				topText = memeTexts[0];
 				bottomText = memeTexts[1];
 			} else {
-				const topText2 = args[1].slice(0, Math.floor(args[1].length / 2)),
-					lastIndex2 = topText2.lastIndexOf(" ");
-
-				if (lastIndex2 != -1) {
-					topText = args[1].slice(0, lastIndex2);
-					bottomText = args[1].slice(lastIndex2);
+				const rawTopText = args[1].slice(0, Math.floor(args[1].length / 2)),
+					lastSpaceIndex = rawTopText.lastIndexOf(" ");
+				if (lastSpaceIndex != -1) {
+					topText = args[1].slice(0, lastSpaceIndex);
+					bottomText = args[1].slice(lastSpaceIndex + 1);
 				} else {
-					const lastIndex3 = args[1].lastIndexOf(" ");
-					if (lastIndex3 != -1) {
-						topText = args[1].slice(0, lastIndex3);
-						bottomText = args[1].slice(lastIndex3);
+					const rawBottomText = args[1].slice(Math.floor(args[1].length / 2)),
+						lastSpaceIndex2 = rawBottomText.indexOf(" ");
+					if (lastSpaceIndex2 != -1) {
+						topText = rawTopText + rawBottomText.slice(0, lastSpaceIndex2);
+						bottomText = rawBottomText.slice(lastSpaceIndex2 + 1);
 					} else {
 						topText = args[1];
 					}
 				}
 			}
-			topText = disableCapsFlag ? topText : topText.toUpperCase();
-			bottomText = disableCapsFlag || !bottomText ? bottomText : bottomText.toUpperCase();
-
-			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
-			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
+			if (!disableCapsFlag) {
+				topText = topText.toUpperCase();
+				if (bottomText) bottomText = bottomText.toUpperCase();
+			}
 
 			const img = new Canvas.Image();
 
 			imageManager.getCanvasImage(img, fetchedImg.data, args[0] && args[0].isEmoji, () => {
-				if (img.width < 100 || img.height < 100) return message.channel.send("The image is too small. Enlarge it first or try another image.");
+				if (img.width < 100 || img.height < 100) return message.channel.send("You need to use an image 100 x 100 or larger.");
 
 				const canvas = Canvas.createCanvas(img.width, img.height),
-					ctx = canvas.getContext("2d"),
-					topTextFontSize = (topText.length > 100 ? 3600 / topText.length : 36) * (img.width / 500);
-
+					ctx = canvas.getContext("2d");
 				ctx.drawImage(img, 0, 0);
 
 				ctx.fillStyle = "#ffffff";
-				ctx.font = `semibold ${topTextFontSize}px Oswald`;
-				ctx.lineWidth = 4;
 				ctx.strokeStyle = "#000000";
 				ctx.textAlign = "center";
+				ctx.textBaseline = "middle";
 
-				const breakAt = Math.floor(topText.length * img.width * 0.8 / ctx.measureText(topText).width);
-				let remainTopText = topText, i = 1;
-				while (remainTopText.length > 0) {
-					let currLine = remainTopText.slice(0, breakAt);
-					if (remainTopText.length > breakAt) {
-						const lastIndex = currLine.lastIndexOf(" ");
-						if (lastIndex != -1) {
-							currLine = currLine.slice(0, lastIndex);
-							remainTopText = remainTopText.slice(lastIndex);
-						} else {
-							remainTopText = remainTopText.slice(breakAt);
-						}
-					} else {
-						remainTopText = "";
-					}
-
-					ctx.strokeText(currLine, canvas.width / 2, topTextFontSize * i * 1.2 + 10);
-					ctx.fillText(currLine, canvas.width / 2, topTextFontSize * i * 1.2 + 10);
-					i++;
-				}
+				this.drawText(canvas, ctx, topText, true);
 				if (bottomText) {
-					const bottomTextFontSize = (bottomText.length > 100 ? 3600 / bottomText.length : 36) * (img.width / 500);
-					ctx.font = `semibold ${bottomTextFontSize}px Oswald`;
-
-					let remainBottomText = bottomText, j = Math.floor(bottomText.length / breakAt);
-					while (remainBottomText.length > 0) {
-						let currLine = remainBottomText.slice(0, breakAt);
-						if (remainBottomText.length > breakAt) {
-							const lastIndex = currLine.lastIndexOf(" ");
-							if (lastIndex != -1) {
-								currLine = currLine.slice(0, lastIndex);
-								remainBottomText = remainBottomText.slice(lastIndex);
-							} else {
-								remainBottomText = remainBottomText.slice(breakAt);
-							}
-						} else {
-							remainBottomText = "";
-						}
-
-						ctx.strokeText(currLine, canvas.width / 2, bottomTextFontSize * j * -1.2 + img.height - 10);
-						ctx.fillText(currLine, canvas.width / 2, bottomTextFontSize * j * -1.2 + img.height - 10);
-						j--;
-					}
+					this.drawText(canvas, ctx, bottomText, false);
 				}
 
 				message.channel.send("", {
@@ -311,6 +268,49 @@ module.exports = [
 				});
 			})
 				.catch(err => message.channel.send("⚠ " + err));
+		}
+
+		drawText(canvas, ctx, text, isTop) {
+			let textFontSize = Math.max(canvas.height / 10, 10);
+			ctx.font = `semibold ${Math.floor(textFontSize)}px Oswald`;
+			let rawDrawingWidth = ctx.measureText(text).width,
+				widthRatio = rawDrawingWidth / canvas.width;
+			if (widthRatio > 3) {
+				textFontSize /= Math.sqrt(widthRatio / 3);
+				ctx.font = `semibold ${Math.floor(textFontSize)}px Oswald`;
+				rawDrawingWidth = ctx.measureText(text).width;
+				widthRatio = rawDrawingWidth / canvas.width;
+			}
+			textFontSize = Math.floor(textFontSize);
+			ctx.lineWidth = Math.ceil(textFontSize / 16);
+
+			const breakAt = Math.ceil(text.length / widthRatio);
+			let remainText = text,
+				offset = 0;
+			while (remainText.length > 0) {
+				let currLine = remainText.slice(0, breakAt);
+				if (remainText.length > breakAt) {
+					const lastIndex = currLine.lastIndexOf(" ");
+					if (lastIndex != -1) {
+						currLine = currLine.slice(0, lastIndex);
+						remainText = remainText.slice(lastIndex);
+					} else {
+						remainText = remainText.slice(breakAt);
+					}
+				} else {
+					remainText = "";
+				}
+
+				if (isTop) {
+					ctx.strokeText(currLine, canvas.width / 2, textFontSize * (offset * 1.2 + 1));
+					ctx.fillText(currLine, canvas.width / 2, textFontSize * (offset * 1.2 + 1));
+					offset++;
+				} else {
+					ctx.strokeText(currLine, canvas.width / 2, textFontSize * (offset * -1.2 - 1) + canvas.height);
+					ctx.fillText(currLine, canvas.width / 2, textFontSize * (offset * -1.2 - 1) + canvas.height);
+					offset--;
+				}
+			}
 		}
 	},
 	class DeepFryCommand extends Command {
@@ -410,12 +410,12 @@ module.exports = [
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "flop");
 		}
 	},
-	class GreyscaleCommand extends Command {
+	class GrayscaleCommand extends Command {
 		constructor() {
 			super({
-				name: "greyscale",
-				description: "Make an image grey",
-				aliases: ["gray", "grey", "grayscale"],
+				name: "grayscale",
+				description: "Make an image gray",
+				aliases: ["grayscale", "grey", "greyscale"],
 				args: [
 					{
 						optional: true,
@@ -432,7 +432,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "greyscale [image URL/mention/emoji]"
+				usage: "grayscale [image URL/mention/emoji]"
 			});
 		}
 
@@ -440,7 +440,7 @@ module.exports = [
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
-			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "greyscale");
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "grayscale");
 		}
 	},
 	class InvertCommand extends Command {
@@ -517,14 +517,15 @@ module.exports = [
 					const imgClone1 = img.clone(),
 						imgClone2 = img.clone(),
 						imgWidth = img.bitmap.width,
+						imgHalfWidth = imgWidth / 2,
 						imgHeight = img.bitmap.height,
 						imgHalfHeight = imgHeight / 2,
 						imgToSend = new Jimp(imgWidth, imgHeight);
 					let fileName;
 
 					if (type == "haah" || type == "right-to-left") {
-						imgClone1.crop(imgWidth / 2, 0, imgWidth / 2, imgHeight);
-						imgClone2.crop(imgWidth / 2, 0, imgWidth / 2, imgHeight)
+						imgClone1.crop(imgHalfWidth, 0, imgHalfWidth, imgHeight);
+						imgClone2.crop(imgHalfWidth, 0, imgHalfWidth, imgHeight)
 							.mirror(true, false);
 
 						imgToSend.composite(imgClone1, imgWidth/2, 0)
@@ -539,12 +540,12 @@ module.exports = [
 							.composite(imgClone2, 0, 0);
 						fileName = "mirror-hooh.png";
 					} else if (type == "waaw" || type == "left-to-right") {
-						imgClone1.crop(0, 0, imgWidth / 2, imgHeight);
-						imgClone2.crop(0, 0, imgWidth / 2, imgHeight)
+						imgClone1.crop(0, 0, imgHalfWidth, imgHeight);
+						imgClone2.crop(0, 0, imgHalfWidth, imgHeight)
 							.mirror(true, false);
 
 						imgToSend.composite(imgClone1, 0, 0)
-							.composite(imgClone2, imgWidth / 2, 0);
+							.composite(imgClone2, imgHalfWidth, 0);
 						fileName = "mirror-waaw.png";
 					} else {
 						imgClone1.crop(0, 0, imgWidth, imgHalfHeight);
@@ -616,8 +617,10 @@ module.exports = [
 					{
 						name: "pixels",
 						desc: "The width of each enlarged pixel",
-						type: "number",
-						min: 1
+						arg: {
+							type: "number",
+							min: 1
+						}
 					}
 				],
 				perms: {
@@ -634,7 +637,7 @@ module.exports = [
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			const pixelsFlag = flags.find(f => f.name == "pixels");
-			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "pixelate", {pixels: pixelsFlag ? pixelsFlag.args[0] : null});
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "pixelate", {pixels: pixelsFlag ? pixelsFlag.args : null});
 		}
 	},
 	class RainbowifyCommand extends Command {
@@ -703,7 +706,7 @@ module.exports = [
 				name: "resize",
 				description: "Resizes an image. Values above 1 will increase the image width and height, " +
 					"and those below 1 will decrease them. The scale cannot be exactly 1",
-				aliases: ["enlarge", "imagesize", "shrink"],
+				aliases: ["enlarge", "imagesize"],
 				args: [
 					{
 						optional: true,
@@ -783,7 +786,7 @@ module.exports = [
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			const degreesFlag = flags.find(f => f.name == "degrees");
-			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "rotate", {rotation: degreesFlag ? degreesFlag.args[0] : null});
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "rotate", {rotation: degreesFlag ? degreesFlag.args : null});
 		}
 	},
 	class SepiaCommand extends Command {
@@ -886,7 +889,7 @@ module.exports = [
 
 				encoder.start();
 				encoder.setRepeat(0);
-				encoder.setDelay(speedFlag ? (6 - speedFlag.args[0]) * 20 : 60);
+				encoder.setDelay(speedFlag ? (6 - speedFlag.args) * 20 : 60);
 				ctx.beginPath();
 				ctx.arc(canvasDim / 2, canvasDim / 2, canvasDim / 2, 0, Math.PI*2);
 				ctx.stroke();
@@ -907,104 +910,6 @@ module.exports = [
 					files: [{
 						attachment: stream,
 						name: "spin.gif"
-					}]
-				});
-			})
-				.catch(err => message.channel.send("⚠ " + err));
-		}
-	},
-	class TriggeredCommand extends Command {
-		constructor() {
-			super({
-				name: "triggered",
-				description: "Makes a triggered GIF!",
-				aliases: ["trigger"],
-				args: [
-					{
-						optional: true,
-						type: "image"
-					}
-				],
-				cooldown: {
-					name: "image-editing",
-					time: 15000,
-					type: "channel"
-				},
-				flags: [
-					{
-						name: "level",
-						desc: "Sets trigger intensity",
-						arg: {
-							type: "number",
-							min: 1,
-							max: 5
-						}
-					}
-				],
-				perms: {
-					bot: ["ATTACH_FILES"],
-					user: [],
-					level: 0
-				},
-				usage: "triggered [image URL/mention/emoji] [--level <1-5>]"
-			});
-		}
-
-		async run(bot, message, args, flags) {
-			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
-			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
-
-			const levelFlag = flags.find(f => f.name == "level"),
-				multiplier = levelFlag ? levelFlag.args[0] * 15 : 45,
-				multiplier2 = multiplier - 15,
-				triggerImg = await Canvas.loadImage("assets/images/triggered.png"),
-				img = new Canvas.Image();
-
-			imageManager.getCanvasImage(img, fetchedImg.data, args[0] && args[0].isEmoji, () => {
-				let imgScale = 1,
-					imgWidth = img.width,
-					imgHeight = img.height,
-					imgY = 0;
-				if (img.width < 250) {
-					imgScale = 250 / img.width;
-				} else if (img.width > 800) {
-					imgScale = 800 / img.width;
-				}
-				imgWidth = img.width * imgScale;
-				imgHeight = img.height * imgScale;
-				if (imgHeight > 800) imgY = -((imgHeight - 800) / 2);
-				const triggerHeight = imgHeight > 350 ? 150 : (imgHeight > 250 ? (imgHeight - 250) * 0.5 + 100 : 100),
-					canvasWidth = Math.floor(imgWidth),
-					canvasHeight = Math.floor((imgHeight < 800 ? imgHeight : 800) + triggerHeight),
-					ctx = Canvas.createCanvas(canvasWidth, canvasHeight).getContext("2d"),
-					encoder = new gifencoder(canvasWidth, canvasHeight),
-					stream = encoder.createReadStream();
-
-				encoder.start();
-				encoder.setRepeat(0);
-				encoder.setDelay(40);
-				for (let i = 0; i < 8; i++) {
-					// Draw the image itself with small variations in position
-					ctx.drawImage(img,
-						Math.floor(multiplier * (Math.random() - 0.5)), imgY + Math.floor(multiplier * (Math.random() - 0.5)),
-						Math.floor(imgWidth), Math.floor(imgHeight));
-
-					// Do the same for the bottom banner that says "Triggered"
-					ctx.drawImage(triggerImg,
-						Math.floor(multiplier2 * (Math.random() - 0.5)),
-						Math.floor(multiplier2 * (Math.random() - 0.5)) + canvasHeight - triggerHeight,
-						canvasWidth,
-						triggerHeight
-					);
-					encoder.addFrame(ctx);
-					ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-				}
-				encoder.finish();
-
-				message.channel.send("", {
-					files: [{
-						attachment: stream,
-						name: "triggered.gif"
 					}]
 				});
 			})

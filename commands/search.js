@@ -5,18 +5,14 @@ const {RichEmbed} = require("discord.js"),
 	request = require("request");
 
 const redirSubreddits = [
-	{name: "anime_irl", goTo: "animeirl"},
-	{name: "animemes", goTo: "animeme"},
 	{name: "antijokes", goTo: "antijoke"},
 	{name: "antimeme", goTo: "antimeme"},
-	{name: "awwnime", goTo: "awwnime"},
 	{name: "bonehurtingjuice", goTo: "bonehurtingjuice"},
 	{name: "discord_irl", goTo: "discordirl"},
 	{name: "jokes", goTo: "joke"},
 	{name: "me_irl", goTo: "meirl"},
 	{name: "memes", goTo: "meme"},
-	{name: "puns", goTo: "pun"},
-	{name: "wholesomeanimemes", goTo: "wholesome"}
+	{name: "puns", goTo: "pun"}
 ];
 
 module.exports = [
@@ -33,7 +29,7 @@ module.exports = [
 					}
 				],
 				cooldown: {
-					time: 15000,
+					time: 20000,
 					type: "channel"
 				},
 				examples: [
@@ -79,7 +75,7 @@ module.exports = [
 					}
 				],
 				perms: {
-					bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
+					bot: ["ADD_REACTIONS", "EMBED_LINKS", "MANAGE_MESSAGES"],
 					user: [],
 					level: 0
 				},
@@ -110,7 +106,7 @@ module.exports = [
 				controversialFlag = flags.find(f => f.name == "controversial");
 			if (topFlag) {
 				postSort = "top";
-				timeSort = topFlag.args[0] || "week";
+				timeSort = topFlag.args || "week";
 				reqQuery.t = timeSort;
 			} else if (flags.some(f => f.name == "new")) {
 				postSort = "new";
@@ -118,7 +114,7 @@ module.exports = [
 				postSort = "rising";
 			} else if (controversialFlag) {
 				postSort = "controversial";
-				timeSort = controversialFlag.args[0] || "day";
+				timeSort = controversialFlag.args || "day";
 				reqQuery.t = timeSort;
 			}
 
@@ -127,9 +123,10 @@ module.exports = [
 				qs: reqQuery,
 				json: true
 			}, (err, res) => {
-				if (err) return message.channel.send(`Could not request to Reddit: ${err.message} (${err.code})`);
+				if (err) return message.channel.send(`⚠ Could not request to Reddit: ${err.message}`);
+				if (!res) return message.channel.send("⚠ No response was received from Reddit.");
 				if (res.statusCode == 403) return message.channel.send("⚠ Unfortunately, that subreddit is inaccessible.");
-				if (res.statusCode >= 400) return message.channel.send(`⚠ An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode})`);
+				if (res.statusCode >= 400) return message.channel.send(`⚠ The request to Reddit failed with status code ${res.statusCode} (${res.statusMessage})`);
 
 				let results = res.body.data.children;
 				if (!results[0]) return message.channel.send("⚠ A subreddit with that name does not exist, or it has no posts yet.");
@@ -146,7 +143,7 @@ module.exports = [
 				if (compact) {
 					for (const post of results) {
 						const postData = post.data,
-							postTitle = postData.title.length < 150 ? postData.title : postData.title.slice(0, 150) + "...";
+							postTitle = postData.title.length > 150 ? postData.title.slice(0, 150) + "..." : postData.title;
 						let toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
 						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`;
 						entries[0].push(toDisplay);
@@ -154,11 +151,11 @@ module.exports = [
 				} else {
 					for (const post of results) {
 						const postData = post.data,
-							postTitle = postData.title.length < 200 ? postData.title : postData.title.slice(0, 200) + "...";
+							postTitle = postData.title.length > 200 ? postData.title.slice(0, 200) + "..." : postData.title;
 						let toDisplay = `[${postTitle}](https://redd.it/${postData.id})`;
 						if (viewAll) toDisplay += ` (${postData.subreddit_name_prefixed})`;
 						const postFlair = postData.link_flair_text;
-						if (postFlair) toDisplay += ` [${postFlair}]`;
+						if (postFlair) toDisplay += ` [${postData.link_flair_text}]`;
 
 						entries[0].push(toDisplay + `\n - 👍 ${postData.score} | 💬 ${postData.num_comments} | ` +
 							`u/${postData.author.replace(/_/g, "\\_")} | ${getDuration(postData.created_utc * 1000, null, true)}`);
@@ -228,7 +225,7 @@ module.exports = [
 					}
 				],
 				perms: {
-					bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
+					bot: ["ADD_REACTIONS", "EMBED_LINKS", "MANAGE_MESSAGES"],
 					user: [],
 					level: 0
 				},
@@ -242,7 +239,9 @@ module.exports = [
 				qs: {term: args[0]},
 				json: true
 			}, (err, res) => {
-				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "the Urban Dictionary", err, res);
+				const requestRes = bot.checkRemoteRequest("the Urban Dictionary", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
+
 				let defList = res.body.list;
 				if (flags.some(f => f.name == "exact")) {
 					const userWords = args[0].toLowerCase().split(" ");
@@ -261,12 +260,12 @@ module.exports = [
 
 				const entries = [
 					defList.map(def => "Urban Dictionary - " + def.word),
-					defList.map(def => def.definition.length < 2000 ? def.definition : def.definition.slice(0, 2000) + "..."),
+					defList.map(def => def.definition.length < 2000 ? def.definition.slice(0, 2000) + "..." : def.definition),
 					defList.map(def => {
 						return [
 							{
 								name: "Example",
-								value: def.example.length > 0 ? (def.example.length < 1000 ? def.example : def.example.slice(0, 1000) + "...") : "No example given"
+								value: def.example.length > 0 ? (def.example.length > 1000 ? def.example.slice(0, 1000) + "..." : def.example) : "No example given"
 							},
 							{
 								name: "By",
@@ -287,7 +286,7 @@ module.exports = [
 				}, entries, {
 					limit: 1,
 					numbered: false,
-					page: pageFlag ? pageFlag.args[0] : 1,
+					page: pageFlag ? pageFlag.args : 1,
 					params: ["title", "description", "fields"]
 				});
 			});
@@ -328,11 +327,12 @@ module.exports = [
 				},
 				json: true
 			}, (err, res) => {
-				if (err || (res && res.statusCode >= 400)) return bot.handleRemoteSiteError(message, "Wikipedia", err, res);
+				const requestRes = bot.checkRemoteRequest("Wikipedia", err, res);
+				if (requestRes != true) return message.channel.send(requestRes);
 
 				const result = Object.values(res.body.query.pages)[0];
 				let resultText = result.extract;
-				if (!resultText) return message.channel.send("⚠ Failed to find a Wikipedia article for that term. *(Make sure to check your capitalization)*");
+				if (!resultText) return message.channel.send("⚠ No Wikipedia article exists for that term. *(Make sure to check capitalization)*");
 
 				const firstSectionIndex = resultText.indexOf("==");
 				if (firstSectionIndex > 2000) {
@@ -345,9 +345,9 @@ module.exports = [
 
 				message.channel.send(new RichEmbed()
 					.setTitle(`Wikipedia - ${result.title}`)
-					.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
-					.setColor(Math.floor(Math.random() * 16777216))
 					.setDescription(resultText)
+					.setColor(Math.floor(Math.random() * 16777216))
+					.setThumbnail("https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png")
 					.addField("Article URL", "https://en.wikipedia.org/wiki/" + result.title.replace(/ /g, "_"))
 				);
 			});
@@ -363,7 +363,7 @@ module.exports = [
 						errorMsg: "Please provide \"random\", a number greater than 0, or supply no arguments.",
 						optional: true,
 						type: "function",
-						testFunction: obj => obj == "random" || obj > 0
+						testFunction: obj => obj.toLowerCase() == "random" || parseInt(obj) >= 1
 					}
 				],
 				perms: {
@@ -390,24 +390,24 @@ module.exports = [
 			}
 
 			try {
-				if (args[0] == "random") {
+				if (args[0] && args[0].toLowerCase() == "random") {
 					const comicNum = Math.floor(Math.random() * this.currComicNum);
 					this.postComic(message, `https://xkcd.com/${comicNum}/info.0.json`, {titlePrefix: "Random "});
-				} else if (args[0] > 0) {
+				} else if (parseInt(args[0]) > 0) {
 					if (args[0] > this.currComicNum) return {cmdWarn: "Invalid comic number provided."};
 					this.postComic(message, `https://xkcd.com/${args[0]}/info.0.json`);
 				} else {
 					this.postComic(message, null, {comic: comicToPost, titlePrefix: "Current "});
 				}
 			} catch(err) {
-				bot.handleRemoteSiteError(message, "XKCD", err.err, err.res);
+				return {cmdWarn: bot.checkRemoteRequest("XKCD", err.err, err.res)};
 			}
 		}
 
 		getComic(url) {
 			return new Promise((resolve, reject) => {
 				request.get(url || "https://xkcd.com/info.0.json", (err, res) => {
-					if (err || res.statusCode >= 400) reject({err: err, res: res});
+					if (err || !res || res.statusCode >= 400) reject({err: err, res: res});
 					resolve(JSON.parse(res.body));
 				});
 			});
@@ -417,8 +417,8 @@ module.exports = [
 			const comic = options.comic || await this.getComic(url);
 			message.channel.send(new RichEmbed()
 				.setTitle(`${options.titlePrefix || ""}XKCD Comic - ${comic.title} (#${comic.num})`)
-				.setColor(Math.floor(Math.random() * 16777216))
 				.setDescription(comic.alt)
+				.setColor(Math.floor(Math.random() * 16777216))
 				.setImage(comic.img)
 			);
 		}

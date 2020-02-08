@@ -16,7 +16,8 @@ stats.json
 
 # Test and advanced commands directory
 test/
+test.js
 commands/advanced/
 
-# VSCode stuff
-.vscode
+# Visual Studio Code
+.vscode/

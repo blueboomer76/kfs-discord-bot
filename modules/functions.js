@@ -36,9 +36,9 @@ const specialNumberKeys = [
 function capitalize(str, capAll = false) {
 	str = str.toString();
 	if (capAll) {
-		return str.split(/[ -]/).map(str2 => str2.charAt(0).toUpperCase() + str2.slice(1)).join(" ");
+		return str.split(/[ -]/).map(str2 => str2.charAt(0).toUpperCase() + str2.slice(1).toLowerCase()).join(" ");
 	} else {
-		return str.charAt(0).toUpperCase() + str.slice(1);
+		return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 	}
 }
 
@@ -59,9 +59,12 @@ function getStatuses(users, rawOffline = 0) {
 module.exports = {
 	capitalize: capitalize,
 	getBotStats: bot => {
-		const stats = bot.cache.stats, cumulativeStats = bot.cache.cumulativeStats;
-		let commandCurrentTotal = stats.commandCurrentTotal;
-		for (const cmdName in stats.commandUsage) commandCurrentTotal += stats.commandUsage[cmdName];
+		const cachedStats = bot.cache.stats,
+			cumulativeStats = bot.cache.cumulativeStats;
+		let commandCurrentTotal = cachedStats.commandCurrentTotal;
+		for (const cmdName in cachedStats.commandUsages) {
+			commandCurrentTotal += cachedStats.commandUsages[cmdName];
+		}
 
 		const statuses = getStatuses(bot.users),
 			channels = {text: 0, voice: 0, category: 0, dm: 0};
@@ -77,12 +80,12 @@ module.exports = {
 				voice: channels.voice,
 				categories: channels.category
 			},
-			sessionMessages: stats.messageCurrentTotal + stats.messageSessionTotal,
-			totalMessages: cumulativeStats.messageTotal + stats.messageCurrentTotal,
-			sessionCalls: stats.callCurrentTotal + stats.callSessionTotal,
-			totalCalls: cumulativeStats.callTotal + stats.callCurrentTotal,
-			sessionCommands: commandCurrentTotal + stats.commandSessionTotal,
-			totalCommands: cumulativeStats.commandTotal + commandCurrentTotal
+			sessionCommands: cachedStats.commandSessionTotal + commandCurrentTotal,
+			totalCommands: cumulativeStats.commandTotal + commandCurrentTotal,
+			sessionCalls: cachedStats.callSessionTotal + cachedStats.callCurrentTotal,
+			totalCalls: cumulativeStats.callTotal + cachedStats.callCurrentTotal,
+			sessionMessages: cachedStats.messageSessionTotal + cachedStats.messageCurrentTotal,
+			totalMessages: cumulativeStats.messageTotal + cachedStats.messageCurrentTotal
 		};
 	},
 	getDuration: (time1, time2, simple = false) => {
@@ -93,7 +96,7 @@ module.exports = {
 			time2 = Date.now();
 		}
 
-		const secDif = Math.abs(time2 - time1) / 1000;
+		const secDif = Math.abs((time2 - time1) / 1000);
 		let baseStr1 = "", baseStr2 = "";
 		if (secDif < 60) {
 			baseStr1 = secDif.toFixed(simple ? 0 : 1) + " seconds";
@@ -108,13 +111,13 @@ module.exports = {
 				baseStr1 = Math.floor(secDif / 86400) + " day";
 				baseStr2 = Math.floor((secDif % 86400) / 3600) + " hour";
 			} else {
-				const date1 = new Date(time1), date2 = new Date(time2);
+				const date1 = new Date(time1),
+					date2 = time2 ? new Date(time2) : new Date();
 				let yrDif = date2.getFullYear() - date1.getFullYear(),
 					moDif = date2.getMonth() - date1.getMonth(),
 					dayDif = date2.getDate() - date1.getDate();
 				if ((moDif == 0 && dayDif < 0) || moDif < 0) {yrDif--; moDif += 12}
 				if (dayDif < 0) {moDif--; dayDif += 30}
-
 				if (secDif < 31536000) {
 					baseStr1 = moDif + " month";
 					baseStr2 = dayDif + " day";
@@ -129,13 +132,16 @@ module.exports = {
 			}
 			if (!baseStr1.startsWith("1 ")) baseStr1 += "s";
 			if (!baseStr2.startsWith("1 ")) baseStr2 += "s";
-			if (!simple) baseStr1 += ",";
+			if (!simple) {
+				baseStr1 += ",";
+				baseStr2 += " ";
+			}
 		} else {
 			baseStr1 = Math.round((secDif - 5256000) / 31536000) + " years";
 		}
 
-		const suffix = time1 < time2 ? "ago" : "left"; // Duration flows from time1 to time2
-		return simple ? `${baseStr1} ${suffix}` : `${baseStr1} ${baseStr2} ${suffix}`;
+		const suffix = time1 <= time2 ? "ago" : "left"; // Duration flows from time1 to time2
+		return simple ? `${baseStr1} ${suffix}` : `${baseStr1} ${baseStr2}${suffix}`;
 	},
 	getStatuses: getStatuses,
 	parseLargeNumber: (num, options = {}) => {

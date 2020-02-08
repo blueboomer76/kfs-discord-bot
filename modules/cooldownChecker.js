@@ -1,7 +1,22 @@
-const {customCooldownMessages} = require("../config.json"),
-	{capitalize} = require("../modules/functions.js");
+const {capitalize} = require("../modules/functions.js");
 
-function getIdByType(message, type) {
+let cooldownMessages = [
+	"You're calling me fast enough that I'm getting dizzy!",
+	"You have to wait before using the command again...",
+	"You're calling me a bit too fast, I am getting dizzy!",
+	"I am busy, try again after a bit",
+	"Hang in there before using this command again...",
+	"Wait up, I am not done with my break"
+];
+
+(function() {
+	const config = require("../config.json");
+	if (Array.isArray(config.customCooldownMessages)) {
+		cooldownMessages = cooldownMessages.concat(config.customCooldownMessages);
+	}
+})();
+
+function getIDByType(message, type) {
 	if (type == "user") {
 		return message.author.id;
 	} else if (type == "channel") {
@@ -22,23 +37,22 @@ function findCooldown(bot, id, name, findIndex) {
 	Overrides are structured like this:
 	{
 		name: "image",
-		time: 60000,
-		type: "channel"
+		time: 60000
 	}
 */
 function addCooldown(bot, message, command, overrides) {
 	if (!overrides) overrides = {};
-	const cdName = overrides.name || command.name,
-		cdTime = overrides.time || command.cooldown.time,
-		cdId = getIdByType(message, overrides.type || command.cooldown.type);
+	const cdID = getIDByType(message, command.cooldown.type),
+		cdName = overrides.name || command.name,
+		cdTime = overrides.time || command.cooldown.time;
 
 	bot.cache.recentCommands.push({
-		id: cdId,
+		id: cdID,
 		name: cdName,
 		resets: Date.now() + cdTime,
 		notified: false
 	});
-	setTimeout(removeCooldown, cdTime, bot, cdId, cdName);
+	setTimeout(removeCooldown, cdTime, bot, cdID, cdName);
 }
 
 function removeCooldown(bot, id, name) {
@@ -48,12 +62,12 @@ function removeCooldown(bot, id, name) {
 module.exports = {
 	check: (bot, message, command) => {
 		const cdType = command.cooldown.type,
-			checkedCd = findCooldown(bot, getIdByType(message, cdType), command.cooldown.name || command.name, false);
+			checkedCd = findCooldown(bot, getIDByType(message, cdType), command.cooldown.name || command.name, false);
 		if (checkedCd) {
 			if (!checkedCd.notified) {
 				checkedCd.notified = true;
 
-				const chosenMessage = customCooldownMessages[Math.floor(Math.random() * customCooldownMessages.length)];
+				const chosenMessage = cooldownMessages[Math.floor(Math.random() * cooldownMessages.length)];
 				let toSend = "⛔ **Cooldown:**\n" + `*${chosenMessage}*\n`;
 				toSend += command.cooldown.name ? capitalize(command.cooldown.name, true) + " commands are" : "This command is";
 
@@ -62,7 +76,7 @@ module.exports = {
 				if (cdType == "channel") {
 					toSend += " in this channel";
 				} else if (cdType == "guild") {
-					toSend += " in this guild";
+					toSend += " in this server";
 				}
 				message.channel.send(toSend + "!");
 			}

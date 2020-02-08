@@ -49,8 +49,8 @@ module.exports.applyJimpFilter = (img, filter, options) => {
 		case "flop":
 			img.flip(false, true);
 			break;
-		case "greyscale":
-			img.greyscale();
+		case "grayscale":
+			img.grayscale();
 			break;
 		case "invert":
 			img.invert();
@@ -106,8 +106,12 @@ module.exports.applyJimpFilter = (img, filter, options) => {
 				newY2Offset = offsetSum < 0.1 ? 0.1 - offsetSum : 0,
 				baseY2 = (1 - newY2Offset) - Math.random() * (0.25 - newY2Offset);
 
-			img.crop(baseX1 * img.bitmap.width, baseY1 * img.bitmap.height,
-				baseX2 * img.bitmap.width, baseY2 * img.bitmap.height);
+			img.crop(
+				Math.floor(baseX1 * img.bitmap.width),
+				Math.floor(baseY1 * img.bitmap.height),
+				Math.floor((baseX2 - baseX1) * img.bitmap.width),
+				Math.floor((baseY2 - baseY1) * img.bitmap.height)
+			);
 			break;
 		}
 		case "resize":

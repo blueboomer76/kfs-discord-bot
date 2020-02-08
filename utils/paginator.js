@@ -5,7 +5,6 @@ function setEntries(entries, limit, page) {
 	let displayed;
 	if (page > maxPage) page = maxPage;
 	if (page < 1) page = 1;
-
 	if (limit > 1) {
 		displayed = entries[0].slice((page - 1) * limit, page * limit);
 	} else {
@@ -42,12 +41,12 @@ function paginateOnEdit(message, sentMessage, entries, oldEmbed, options) {
 		.setFooter(`Page ${entryData.page} / ${entryData.maxPage} [${entries[0].length} entries]`);
 
 	if (oldEmbed.author) {
-		paginatedEmbed.setAuthor(oldEmbed.author.name, oldEmbed.author.icon_url, oldEmbed.author.url);
+		paginatedEmbed.setAuthor(oldEmbed.author.name, oldEmbed.author.iconURL, oldEmbed.author.url);
 	}
 	if (oldEmbed.thumbnail) paginatedEmbed.setThumbnail(oldEmbed.thumbnail.url);
 	paginatedEmbed = setEmbed(paginatedEmbed, entryData.entries, options);
 
-	sentMessage.edit("", {embed: paginatedEmbed});
+	sentMessage.edit(paginatedEmbed);
 }
 
 function checkReaction(collector, limit) {
@@ -76,7 +75,7 @@ function checkReaction(collector, limit) {
 */
 
 module.exports.paginate = (message, genEmbed, entries, options) => {
-	if (options.numbered) entries[0] = entries[0].map((e, i) =>  `${i+1}. ${e}`);
+	if (options.numbered) entries[0] = entries[0].map((e, i) => `${i+1}. ${e}`);
 	const entryData = setEntries(entries, options.limit, options.page);
 	let paginatedEmbed = new RichEmbed(genEmbed)
 		.setColor(options.embedColor || options.embedColor == 0 ? options.embedColor : Math.floor(Math.random() * 16777216))

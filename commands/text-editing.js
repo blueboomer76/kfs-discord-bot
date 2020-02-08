@@ -1,7 +1,7 @@
 const Command = require("../structures/command.js");
 
-const grouperRegex = /<(a?:[0-9A-Za-z_]{2,}:|@!?|&|#)\d+>|[\u0080-\uFFFF]{2}|./g,
-	wordGrouperRegex = /<(a?:[0-9A-Za-z_]{2,}:|@!?|&|#)\d+>|([\u0080-\uFFFF]{2})+|[^ ]+/g;
+const grouperRegex = /<(a?:[0-9A-Za-z_]{2,}:|@!?|@&|#)\d+>|[\u0080-\uFFFF]{2}|./g,
+	wordGrouperRegex = /<(a?:[0-9A-Za-z_]{2,}:|@!?|@&|#)\d+>|([\u0080-\uFFFF]{2})+|\S+/g;
 
 module.exports = [
 	class ClapifyCommand extends Command {
@@ -21,8 +21,11 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const clapified = args[0].replace(/ /g, " 👏 ");
-			if (clapified.length >= 2000) return {cmdWarn: "Your input text to clapify is too long!", cooldown: null, noLog: true};
+			let toClapify = args[0].split(" ");
+			if (toClapify.length == 1) toClapify = args[0].split("");
+
+			const clapified = toClapify.join(" 👏 ");
+			if (clapified.length >= 2000) return {cmdWarn: "Your input text to clapify is too long!"};
 			message.channel.send(clapified);
 		}
 	},
@@ -42,7 +45,7 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters.", cooldown: null, noLog: true};
+			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
 
 			let cowsayLines = [
 				"      \\   ^__^",
@@ -66,7 +69,7 @@ module.exports = [
 					if (i != 0) nextWidth++;
 					if (words[i].length > 50) {
 						words.splice(i+1, 0, words[i].slice(50));
-						words[i] = words[i].slice(0,50);
+						words[i] = words[i].slice(0, 50);
 					}
 					if (nextWidth > 50) {
 						lines.push(currLine.join(" "));
@@ -112,12 +115,12 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (args[0].length > 85) return {cmdWarn: "That text is too long, must be under 85 characters.", cooldown: null, noLog: true};
+			if (args[0].length > 85) return {cmdWarn: "That text is too long, must be under 85 characters."};
 
-			const chars = args[0].toLowerCase().split(""), emojiRegex = /[a-z]/;
+			const chars = args[0].toLowerCase().split(""), letterRegex = /[a-z]/;
 			let emojified = "";
 			for (const c of chars) {
-				if (emojiRegex.test(c)) {
+				if (letterRegex.test(c)) {
 					emojified += `:regional_indicator_${c}: `;
 				} else {
 					switch (c) {
@@ -138,6 +141,34 @@ module.exports = [
 			}
 
 			message.channel.send(emojified);
+		}
+	},
+	class OwoifyCommand extends Command {
+		constructor() {
+			super({
+				name: "owoify",
+				description: "Transforms your text into owo form :3",
+				args: [
+					{
+						infiniteArgs: true,
+						type: "string"
+					}
+				],
+				usage: "owoify <text>"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
+
+			const owoifySuffixes = ["owo", "OWO", "uwu", "UwU", "X3", ":3", "***notices bulge** OwO, what's this?*"],
+				owoified = args[0].toLowerCase()
+					.replace(/[lr]+/g, "w")
+					.replace(/n/g, "ny")
+					.split(" ")
+					.map(word => Math.random() < 0.25 ? `${word.charAt(0)}-${word}` : word)
+					.join(" ");
+			message.channel.send(owoified + " " + owoifySuffixes[Math.floor(Math.random() * owoifySuffixes.length)]);
 		}
 	},
 	class ReverseCommand extends Command {
@@ -162,9 +193,10 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters.", cooldown: null, noLog: true};
+			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
 
-			message.channel.send(args[0].match(flags.some(f => f.name == "words") ? wordGrouperRegex : grouperRegex).reverse().join(" "));
+			const wordsFlag = flags.some(f => f.name == "words");
+			message.channel.send(args[0].match(wordsFlag ? wordGrouperRegex : grouperRegex).reverse().join(wordsFlag ? " " : ""));
 		}
 	},
 	class ScrambleCommand extends Command {
@@ -194,7 +226,7 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters.", cooldown: null, noLog: true};
+			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
 
 			const innerFlag = flags.some(f => f.name == "inner"),
 				wordsFlag = flags.some(f => f.name == "words"),
@@ -220,34 +252,6 @@ module.exports = [
 				}
 			}
 			message.channel.send(scrambled.join(wordsFlag ? " " : ""));
-		}
-	},
-	class WeebifyCommand extends Command {
-		constructor() {
-			super({
-				name: "weebify",
-				description: "Makes text sound like anime :3",
-				args: [
-					{
-						infiniteArgs: true,
-						type: "string"
-					}
-				],
-				usage: "weebify <text>"
-			});
-		}
-
-		async run(bot, message, args, flags) {
-			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters.", cooldown: null, noLog: true};
-
-			const weebifySuffixes = ["owo", "OWO", "uwu", "UwU", "X3", ":3", "***notices bulge** OwO, what's this?*"],
-				weebified = args[0].toLowerCase()
-					.replace(/[lr]+/g, "w")
-					.replace(/n/g, "ny")
-					.split(" ")
-					.map(word => Math.random() < 0.25 ? `${word.charAt(0)}-${word}` : word)
-					.join(" ");
-			message.channel.send(weebified + " " + weebifySuffixes[Math.floor(Math.random() * weebifySuffixes.length)]);
 		}
 	}
 ];

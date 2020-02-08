@@ -30,7 +30,7 @@ class Command {
 	}
 
 	async run() {
-		throw `The command ${this.name} does not have a run() method!`;
+		throw new Error(`The command ${this.name} does not have a run() method`);
 	}
 }
 

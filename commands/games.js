@@ -2,138 +2,6 @@ const Command = require("../structures/command.js"),
 	request = require("request");
 
 module.exports = [
-	class BlackjackCommand extends Command {
-		constructor() {
-			super({
-				name: "blackjack",
-				description: "Play blackjack with the bot!",
-				aliases: ["bj"],
-				cooldown: {
-					time: 60000,
-					type: "user"
-				}
-			});
-		}
-
-		async run(bot, message, args, flags) {
-			const suits = ["♠", "♥", "♣", "♦"],
-				values = ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
-				deck = [];
-			let memberGame = message.member.bjGame;
-			for (let i = 0; i < 4; i++) {
-				for (let j = 0; j < 13; j++) {
-					deck.push({suit: suits[i], value: values[j]});
-				}
-			}
-
-			memberGame = {
-				dealer: [this.drawFromDeck(deck)],
-				player: [this.drawFromDeck(deck), this.drawFromDeck(deck)],
-				deck: deck,
-				message: message,
-				botMessage: null
-			};
-
-			await message.channel.send(this.showGame(memberGame, "start"))
-				.then(msg => memberGame.botMessage = msg);
-
-			await this.awaitResponse(memberGame);
-
-			delete message.member.bjGame;
-		}
-
-		drawFromDeck(deck) {
-			return deck.splice(Math.floor(Math.random() * deck.length), 1)[0];
-		}
-
-		showGame(game, state) {
-			const dealerValue = this.getHandValue(game.dealer),
-				playerValue = this.getHandValue(game.player),
-				mystery = state == "end" && playerValue <= 21 ? "" : ", ???";
-			let toDisplayDealer = game.dealer.map(card => card.value + " " + card.suit).join(", "),
-				toDisplayPlayer = game.player.map(card => card.value + " " + card.suit).join(", ");
-
-			toDisplayDealer = `**Dealer:** ${toDisplayDealer}${mystery} (value ${dealerValue})`;
-			toDisplayPlayer = `**Player:** ${toDisplayPlayer} (value ${playerValue})`;
-
-			if (state == "start") {
-				if (playerValue == 21) {
-					game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\nBLACKJACK!`);
-				} else {
-					return `${toDisplayDealer}\n${toDisplayPlayer}\n\n` +
-						"Type `stand` to end your turn, or `hit` to draw another card.";
-				}
-			} else if (state == "drawing") {
-				if (!game.message.channel.messages.has(game.botMessage.id)) return;
-				game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\n` +
-					"Type `stand` to end your turn, or `hit` to draw another card.");
-			} else {
-				if (!game.message.channel.messages.has(game.botMessage.id)) return;
-
-				let result = "Tied";
-				if (playerValue > 21) {
-					result = "BUST";
-				} else if (dealerValue > 21) {
-					result = "Dealer Bust";
-				} else if (playerValue > dealerValue) {
-					result = "Player wins";
-				} else if (dealerValue > playerValue) {
-					result = "Dealer wins";
-				}
-
-				game.botMessage.edit(`${toDisplayDealer}\n${toDisplayPlayer}\n\n${result}!`);
-			}
-		}
-
-		getHandValue(hand) {
-			let handValue = 0;
-			for (const card of hand) {
-				if (card.value == "A") {
-					if (handValue > 10) {
-						handValue++;
-					} else {
-						handValue += 11;
-					}
-				} else if (card.value == "K" || card.value == "Q" || card.value == "J") {
-					handValue += 10;
-				} else {
-					handValue += card.value;
-				}
-			}
-			return handValue;
-		}
-
-		async awaitResponse(game) {
-			await game.message.channel.awaitMessages(msg => msg.author.id == game.message.author.id && (msg.content == "hit" || msg.content == "stand"), {
-				max: 1,
-				time: 20000,
-				errors: ["time"]
-			})
-				.then(collected => {
-					if (collected.values().next().value.content == "stand") {
-						this.dealDealerCards(game);
-					} else {
-						game.player.push(this.drawFromDeck(game.deck));
-						if (this.getHandValue(game.player) < 21) {
-							this.showGame(game, "drawing");
-							this.awaitResponse(game);
-						} else {
-							this.endGame(game, "end");
-						}
-					}
-				})
-				.catch(() => this.dealDealerCards(game));
-		}
-
-		dealDealerCards(game) {
-			while (this.getHandValue(game.dealer) < 17) {
-				game.dealer.push(this.drawFromDeck(game.deck));
-			}
-			this.endGame(game);
-		}
-
-		endGame(game) {this.showGame(game, "end")}
-	},
 	class FishyCommand extends Command {
 		constructor() {
 			super({
@@ -195,39 +63,6 @@ module.exports = [
 				rpsResult = win ? "You win" : "The bot wins";
 			}
 			message.channel.send(`You chose ${userChoice} and I choose ${botChoice}. ${rpsResult}!`);
-		}
-	},
-	class SlotsCommand extends Command {
-		constructor() {
-			super({
-				name: "slots",
-				description: "Roll the reels and try to match the symbols!",
-				aliases: ["slot"]
-			});
-		}
-
-		async run(bot, message, args, flags) {
-			const symbols = ["🍒", "💵", "💰", "💎", "🍊", "🍋", "🍐", "🍉", "🍇", ":seven:"],
-				chosen = [];
-			for (let i = 0; i < 9; i++) {
-				chosen.push(symbols[Math.floor(Math.random() * symbols.length)]);
-			}
-
-			let result = "lost...";
-			if (chosen[3] == chosen[4] || chosen[3] == chosen[5] || chosen[4] == chosen[5]) {
-				result = "matched 2 symbols!";
-				if (chosen[3] == chosen[4] && chosen[3] == chosen[5] && chosen[4] == chosen[5]) {
-					result = chosen[3] == ":seven:" ? "got three 7's! Lucky!" : "matched 3 symbols!";
-				}
-			}
-
-			message.channel.send("**🎰 | Slot Game**\n" +
-			"------------------\n" +
-			`${chosen[0]} : ${chosen[1]} : ${chosen[2]}\n\n` +
-			`${chosen[3]} : ${chosen[4]} : ${chosen[5]} **<<<**\n\n` +
-			`${chosen[6]} : ${chosen[7]} : ${chosen[8]}\n` +
-			"------------------\n" +
-			`You rolled the slots... and ${result}`);
 		}
 	},
 	class TriviaCommand extends Command {
@@ -299,8 +134,9 @@ module.exports = [
 					qs: {amount: 10},
 					json: true
 				}, (err, res) => {
-					if (err) reject(`Could not request to Open Trivia Database: ${err.message} (${err.code})`);
-					if (res.statusCode >= 400) reject(`An error has been returned from Open Trivia Database: ${res.statusMessage} (${res.statusCode}). Try again later.`);
+					if (err) return reject(`Could not request to Open Trivia Database: ${err.message} (${err.code})`);
+					if (!res) return reject("No response was received from Open Trivia Database.");
+					if (res.statusCode >= 400) return reject(`An error has been returned from Open Trivia Database: ${res.statusMessage} (${res.statusCode}). Try again later.`);
 
 					const results = res.body.results.map(r => {
 						return {

@@ -4,6 +4,25 @@
 
 # 1.X (current)
 
+## 1.6.0
+- Removed unnecessary commands and audio dependencies from the repository (now considered as advanced topics)
+- Made many changes to the bot
+
+## 1.5.21
+- Bumped `twemoji` dependency to version 12 and remove its file system lookups
+- Added "float" argument type for floating-point numbers
+- Added a new check for system architecture, preventing the bot from starting if `process.arch` is "ia32" (64-bit is required)
+
+## 1.5.17
+- Added option to add cooldown messages in the cooldown checker by config
+- Changed argument quote parser to use a shared function to find arguments that fit quote-related regexes
+- Fixed styling of code with more ESLint rules, such as brace use with one-line if statements
+- Reorganized duration and large number parsers in `modules/functions.js` along with renaming of variables to make it more understandable
+
+## 1.5.12
+- Added "color" argument type
+- Changed Reddit fetching methods to accept objects
+
 ## 1.5.7
 - Added a new argument property "allowRaw" to allow some unresolved objects to be handled in commands
 - Allowed the argument parser to be able to parse non-strings seperately
@@ -16,20 +35,18 @@
 - Edited methods for getting the amount of each type of channel and presence in a server
 - Changed the behavior and logged messages when the bot fails to reconnect
 - Changed `console.log` and `process.exit` expressions to more relevant ones with the appropriate values
-- Added `return` in front of `reject()` calls to prevent unnecessary errors from appearing in the console
 
 ## 1.5.0
 - Changed the storage method of command usage from array to object form
 - Added the command usage from `modules/stats.json` to the bot cache
 - Adapted more precise methods for measuring the execution time of functions
-- Bumped `discord.js` to 11.5.0 and edited associated depreciations
+- Edited associated depreciations with `discord.js` version 11.5
 - Added `mathjs` dependency
 - Simplified many expressions to use ternary operators or other efficient forms
 
 ## 1.4.17
 - Renamed and changed moderation command descriptions and operations
 - Added a new check for `commands/advanced` for advanced-level commands
-- Bumped versions in `package.json` to latest versions
 
 ## 1.4.11
 - Added a way to store cumulative bot stats to its cache
@@ -44,11 +61,11 @@
 
 ## 1.4.3
 - Added emoji support (both custom and default) for inputs to image commands
-- Added `svg2png` and `twemoji` dependencies
+- Added `gifencoder`, `svg2png`, and `twemoji` dependencies
 - Moved some code into the image manager
 
 ## 1.4.0
-- Added more advanced image commands with customizeable text and GIFs
+- Added more advanced image commands with customizable text
 - Added more commands in many categories
 - Changed the wording in some error messages
 - Moved some commands in Image category into a new category Image Editing
@@ -82,7 +99,6 @@
 - Changed the stats posting link for bots.discord.pw to bots.ondiscord.xyz
 
 ## 1.3.17
-- Changed dependency for headless scraper from `nightmare` to `puppeteer`
 - Added new commands: rolemembers, birb, and joke
 - Separated stats command into two parts: one for the bot and one for the host
 - Removed unnecessary require() calls
@@ -102,13 +118,9 @@
 
 ## 1.3.4
 - Added more image commands
-- Fixed bugs in newly added commands, including in the Search and Text Editing categories
 
 ## 1.3.0
 - Added a new category Text Editing
-
-## 1.2.29
-- Removed `cheerio` dependency for reddit and meme commands
 
 ## 1.2.26
 - Move commands into category files; `commands` now has no subfolders.
@@ -118,20 +130,18 @@
 ## 1.2.17
 - Changed argument parser to show alerts if multiple roles, channels, or members are matched
 - Adjusted the way bot mentions are handled
-- Added comment count to posts shown with reddit command
 
 ## 1.2.14
 - Moved commands in Bot category to Core category
 
 ## 1.2.8
 - Added Search category
-- Added more music commands, along with reddit command
+- Added more music commands
 - Changed `superagent` dependency to `request`
 
 ## 1.2.0
 - Added music commands (in beta)
-- Made lots of command, module, and util bug fixes
-- Added text option to purge command
+- Made command, module, and util bug fixes
 
 ## 1.1.3
 - Added a new category Games

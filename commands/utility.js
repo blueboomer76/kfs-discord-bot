@@ -34,7 +34,7 @@ module.exports = [
 			let user;
 			if (typeof args[0] == "string") {
 				let cmdErr = true;
-				if (args[0].length >= 17 && args[0].length < 19 && !isNaN(args[0])) {
+				if (/^\d{17,19}$/.test(args[0])) {
 					await bot.fetchUser(args[0])
 						.then(fetchedUser => {user = fetchedUser; cmdErr = false})
 						.catch(() => {});
@@ -46,8 +46,8 @@ module.exports = [
 			const avatarURL = user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
 			message.channel.send(new RichEmbed()
 				.setTitle("Avatar - " + user.tag)
-				.setColor(Math.floor(Math.random() * 16777216))
 				.setDescription("Avatar URL: " + avatarURL)
+				.setColor(Math.floor(Math.random() * 16777216))
 				.setImage(avatarURL)
 			);
 		}
@@ -79,10 +79,11 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const channel = args[0] || message.channel;
+			const channel = args[0] || message.channel,
+				everyoneRole = message.guild.roles.find(r => r.calculatedPosition == 0);
 			let accessible = "No";
-			if (channel.permissionsFor(message.guild.id).has("VIEW_CHANNEL")) {
-				accessible = channel.permissionsFor(message.guild.id).has("READ_MESSAGE_HISTORY") ? "Yes" : "Partial";
+			if (channel.permissionsFor(everyoneRole).has("VIEW_CHANNEL")) {
+				accessible = channel.permissionsFor(everyoneRole).has("READ_MESSAGE_HISTORY") ? "Yes" : "Partial";
 			}
 
 			const channelEmbed = new RichEmbed()
@@ -97,20 +98,20 @@ module.exports = [
 			const uncategorized = message.guild.channels.filter(c => c.type != "category" && !c.parent);
 			let channels, pos = 0;
 			if (uncategorized.has(channel.id)) {
-				channels = uncategorized.array().sort((a,b) => a.position - b.position);
+				channels = uncategorized.array().sort((a, b) => a.calculatedPosition - b.calculatedPosition);
 			} else {
-				const categoryId = channel.type == "category" ? channel.id : channel.parent.id,
-					catChannels = message.guild.channels.array().filter(c => c.type == "category").sort((a,b) => a.position - b.position);
+				const categoryID = channel.type == "category" ? channel.id : channel.parent.id,
+					catChannels = message.guild.channels.array().filter(c => c.type == "category").sort((a, b) => a.calculatedPosition - b.calculatedPosition);
 				pos += uncategorized.size;
 
 				let chnlParent;
 				for (const cat of catChannels) {
 					chnlParent = cat;
 					pos++;
-					if (chnlParent.id == categoryId) break;
+					if (chnlParent.id == categoryID) break;
 					pos += cat.children.size;
 				}
-				channels = chnlParent.children.array().sort((a,b) => a.position - b.position);
+				channels = chnlParent.children.array().sort((a, b) => a.calculatedPosition - b.calculatedPosition);
 			}
 			if (channel.type != "category") {
 				const textChannels = channels.filter(c => c.type == "text"),
@@ -133,8 +134,6 @@ module.exports = [
 			}
 
 			message.channel.send(channelEmbed);
-
-			// Others found: Disabled command(s) & features
 		}
 	},
 	class ColorCommand extends Command {
@@ -167,7 +166,7 @@ module.exports = [
 				hslValues = convert.rgb.hsl(rgbValues),
 				hsvValues = convert.rgb.hsv(rgbValues),
 				xyzValues = convert.rgb.xyz(rgbValues),
-				greyscaleValue = convert.rgb.gray(rgbValues);
+				grayscaleValue = Math.round(convert.rgb.gray.raw(rgbValues) * 2.55);
 
 			message.channel.send(new RichEmbed()
 				.setTitle("Color - #" + hexValue)
@@ -180,7 +179,7 @@ module.exports = [
 					`**HSV**: hsv(${hsvValues[0]}, ${hsvValues[1]}%, ${hsvValues[2]}%)\n` +
 					`**XYZ**: XYZ(${xyzValues.join(", ")})`)
 				.setColor(decimalValue)
-				.addField("Related colors", `**Greyscale**: rgb(${(greyscaleValue + ", ").repeat(2) + greyscaleValue})\n` +
+				.addField("Related colors", `**Grayscale**: rgb(${(grayscaleValue + ", ").repeat(2) + grayscaleValue})\n` +
 					`**Inverted**: rgb(${rgbValues.map(v => 255 - v).join(", ")})`)
 			);
 		}
@@ -298,13 +297,13 @@ module.exports = [
 				console.log(res);
 				message.react("✅");
 			} else {
-				const rawCodeFieldText = args[0].length < 1000 ? args[0] : args[0].slice(0,1000) + "...",
+				const rawCodeFieldText = args[0].length < 1000 ? args[0] : args[0].slice(0, 1000) + "...",
 					resToSend = flags.some(f => f.name == "inspect") && typeof rawRes != "function" ? util.inspect(res) : res,
 					evalEmbed = new RichEmbed()
 						.setTitle("discord.js Evaluator")
 						.setColor(Math.floor(Math.random() * 16777216))
-						.setTimestamp(message.createdAt)
 						.setFooter("Execution took: " + evalTime)
+						.setTimestamp(message.createdAt)
 						.addField("Input Code", "```javascript" + "\n" + rawCodeFieldText + "```");
 
 				// Check if the result is longer than the allowed field length
@@ -323,8 +322,8 @@ module.exports = [
 		}
 
 		getErrorString(err, isConsole) {
-			if (err && err.stack) {
-				return isConsole || !err.stack.split ? err.stack : err.stack.split("    ", 3).join("    ") + "    ...";
+			if (err instanceof Error && err.stack && isConsole) {
+				return err.stack.split("    ", 3).join("    ") + "    ...";
 			}
 			return err;
 		}
@@ -337,6 +336,7 @@ module.exports = [
 				aliases: ["calc", "calculate"],
 				args: [
 					{
+						infiniteArgs: true,
 						type: "string"
 					}
 				],
@@ -382,12 +382,14 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const role = args[0],
 				rolePos = role.calculatedPosition,
-				guildRoles = message.guild.roles,
-				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
+				guildRoles = message.guild.roles.array();
+			guildRoles.splice(guildRoles.findIndex(r => r.calculatedPosition == 0), 1);
+
+			const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
 				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id)),
 				nearbyRoles = [],
-				startPos = Math.min(rolePos + 2, guildRoles.size - 1),
-				endPos = Math.max(rolePos - 2, 0);
+				startPos = Math.min(rolePos + 2, guildRoles.length),
+				endPos = Math.max(rolePos - 2, 1);
 
 			for (let i = startPos; i >= endPos; i--) {
 				const roleName = guildRoles.find(r => r.calculatedPosition == i).name;
@@ -401,7 +403,7 @@ module.exports = [
 				.addField("Role created at", `${new Date(role.createdTimestamp).toUTCString()} (${getDuration(role.createdTimestamp)})`)
 				.addField(`Members in Role [${roleMembers.size} total]`, getStatuses(roleMembers).notOffline + " Online", true)
 				.addField("Color", "Hex: " + role.hexColor + "\nDecimal: " + role.color, true)
-				.addField("Position from top", (message.guild.roles.size - rolePos) + " / " + message.guild.roles.size, true)
+				.addField("Position from top", (guildRoles.length - rolePos + 1) + " / " + guildRoles.length, true)
 				.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No", true)
 				.addField("Mentionable", role.mentionable ? "Yes" : "No", true)
 				.addField("Managed", role.managed ? "Yes" : "No", true)
@@ -413,7 +415,7 @@ module.exports = [
 		constructor() {
 			super({
 				name: "rolelist",
-				description: "Get the guild's roles",
+				description: "Get the server's roles",
 				aliases: ["roles"],
 				args: [
 					{
@@ -433,7 +435,7 @@ module.exports = [
 					}
 				],
 				perms: {
-					bot: ["EMBED_LINKS", "MANAGE_MESSAGES"],
+					bot: ["ADD_REACTIONS", "EMBED_LINKS", "MANAGE_MESSAGES"],
 					user: [],
 					level: 0
 				},
@@ -442,9 +444,11 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const entries = message.guild.roles.array(), orderedFlag = flags.some(f => f.name == "ordered");
-			if (orderedFlag) entries.sort((a,b) => b.position - a.position);
-			paginator.paginate(message, {title: "List of roles - " + message.guild.name}, [entries.map(role => role.name)], {
+			const orderedFlag = flags.find(f => f.name == "ordered");
+			const roles = message.guild.roles.array();
+			roles.splice(roles.findIndex(r => r.calculatedPosition == 0), 1);
+			if (orderedFlag) roles.sort((a, b) => b.calculatedPosition - a.calculatedPosition);
+			paginator.paginate(message, {title: "List of roles - " + message.guild.name}, [roles.map(role => role.name)], {
 				limit: 25,
 				noStop: true,
 				numbered: orderedFlag,
@@ -518,9 +522,9 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			const guild = message.guild,
-				guildMembers = guild.large ? await fetchMembers(message) : guild.members,
-				botCount = guildMembers.filter(mem => mem.user.bot).size,
-				statuses = getStatuses(guild.members, guild.memberCount - guild.members.size),
+				guildMembers = guild.large ? await fetchMembers(message) : guild.members;
+
+			const statuses = getStatuses(guild.members, guild.memberCount - guild.members.size),
 				channels = {text: 0, voice: 0, category: 0};
 			for (const channel of guild.channels.values()) channels[channel.type]++;
 
@@ -532,15 +536,16 @@ module.exports = [
 				case 3: guildVerif = "High (member for 10 mins)"; break;
 				case 4: guildVerif = "Very High (verified phone)";
 			}
+			const botCount = guildMembers.filter(mem => mem.user.bot).size;
 
 			message.channel.send(new RichEmbed()
 				.setTitle("Server Info - " + guild.name)
 				.setColor(Math.floor(Math.random() * 16777216))
-				.setThumbnail(guild.iconURL)
 				.setFooter(`ID: ${guild.id} | Server stats as of`)
+				.setThumbnail(guild.iconURL)
 				.setTimestamp(message.createdAt)
 				.addField("Created at", `${new Date(guild.createdTimestamp).toUTCString()} (${getDuration(guild.createdTimestamp)})`)
-				.addField("Owner", `${guild.owner.user.tag} \`(ID ${guild.ownerID})\``)
+				.addField("Owner", `${guild.owner.user.tag} \`(ID ${guild.owner.id})\``)
 				.addField("Region", guild.region, true)
 				.addField("Verification", guildVerif, true)
 				.addField("Explicit Filter", guild.explicitContentFilter == 0 ? "None" : (guild.explicitContentFilter == 1 ? "Low" : "High"), true)
@@ -550,9 +555,9 @@ module.exports = [
 						statuses.offline + " Offline\n" +
 					`${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,
 					true)
-				.addField(`Roles [${guild.roles.size} total]`, `\`${bot.prefix}rolelist\` to see all roles`, true)
-				.addField(`Channels [${guild.channels.size} total]`, channels.text + " Text\n" + channels.voice + " Voice\n" +
-					channels.category + " Categories", true)
+				.addField(`Roles [${guild.roles.size - 1} total]`, "Use `rolelist` to see all roles", true)
+				.addField(`Channels [${guild.channels.size} total]`,
+					channels.text + " Text\n" + channels.voice + " Voice\n" + channels.category + " Categories", true)
 			);
 		}
 	},
@@ -587,16 +592,27 @@ module.exports = [
 			let user, member;
 			if (typeof args[0] == "string") {
 				let cmdErr = true;
-				if (args[0].length >= 17 && args[0].length < 19 && !isNaN(args[0])) {
+				if (/^\d{17,19}$/.test(args[0])) {
 					await bot.fetchUser(args[0])
 						.then(fetchedUser => {user = fetchedUser; cmdErr = false})
 						.catch(() => {});
 				}
-				if (cmdErr) return {cmdWarn: "No users found matching `" + args[0] + "`"};
+				if (cmdErr) return {cmdWarn: "No users found matching `" + args[0].slice(0, 1500) + "`"};
 			} else {
 				member = args[0] || message.member;
 				user = member.user;
 			}
+
+			const userEmbed = new RichEmbed()
+				.setTitle("User Info - " + user.tag)
+				.setFooter("ID: " + user.id)
+				.setThumbnail(user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`)
+				.addField("Account created at", `${new Date(user.createdTimestamp).toUTCString()} (${getDuration(user.createdTimestamp)})`);
+
+			if (member) {
+				userEmbed.addField("Joined this server at", `${new Date(member.joinedTimestamp).toUTCString()} (${getDuration(member.joinedTimestamp)})`);
+			}
+
 			const rawPresence = (member && member.presence) || user.presence;
 			let presence;
 			if (rawPresence.status == "online") {
@@ -609,28 +625,16 @@ module.exports = [
 				presence = "Offline";
 			}
 			if (rawPresence.game) presence += ` (playing ${rawPresence.game.name})`;
-
-			const userEmbed = new RichEmbed()
-				.setTitle("User Info - " + user.tag)
-				.setThumbnail(user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`)
-				.setFooter("ID: " + user.id)
-				.addField("Account created at", `${new Date(user.createdTimestamp).toUTCString()} (${getDuration(user.createdTimestamp)})`);
+			userEmbed.addField("Status", presence, true);
 
 			if (member) {
-				const joinedDate = new Date(member.joinedTimestamp);
-				userEmbed.addField("Joined this server at", `${joinedDate.toUTCString()} (${getDuration(joinedDate)})`);
-			}
-			userEmbed.addField("Status", presence, true)
-				.addField("Bot user", user.bot ? "Yes" : "No", true);
-			if (member) {
-				const userRoles = [];
+				const memRoles = [];
 				for (const role of member.roles.values()) {
-					if (role.id == message.guild.id) continue;
-					userRoles.push(role.name);
+					if (role.calculatedPosition == 0) continue;
+					memRoles.push(role.name);
 				}
-
 				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
-					guildMemArray = guildMembers.array().sort((a,b) => a.joinedTimestamp - b.joinedTimestamp);
+					guildMemArray = guildMembers.array().sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
 				const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp),
 					nearbyMems = [],
 					startPos = Math.max(joinPos - 2, 0),
@@ -639,10 +643,11 @@ module.exports = [
 					nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
 				}
 
-				userEmbed.addField("Nickname", member.nickname || "None", true)
+				userEmbed.addField("Bot user", user.bot ? "Yes" : "No", true)
+					.addField("Nickname", member.nickname || "None", true)
 					.addField("Member #", joinPos + 1, true)
 					.addField("Join order", nearbyMems.join(" > "))
-					.addField("Roles - " + userRoles.length, userRoles.length == 0 ? "None" : userRoles.join(", "));
+					.addField("Roles - " + memRoles.length, memRoles.length == 0 ? "None" : memRoles.join(", "));
 
 				if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
 					userEmbed.setColor(member.displayColor);
