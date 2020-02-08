@@ -4,6 +4,11 @@
 
 # 1.X (current)
 
+## 1.6.0
+
+- Removed `ffmpeg-binaries` and related dependencies along with their commands
+- Made many changes to the bot
+
 ## 1.5.21
 
 - Bumped `twemoji` dependency to version 12 and remove its file system lookups
