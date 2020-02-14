@@ -93,7 +93,9 @@ module.exports = async (bot, message) => {
 
 		if (!runCommand) return;
 		if (message.guild && !message.channel.permissionsFor(bot.user).has(["VIEW_CHANNEL", "SEND_MESSAGES"])) return;
-		if (cdChecker.check(bot, message, runCommand) == false) return;
+		if (!cdChecker.check(bot, message, runCommand, "user") ||
+			!cdChecker.check(bot, message, runCommand, "channel") ||
+			!cdChecker.check(bot, message, runCommand, "guild")) return;
 
 		execCommand(runCommand, bot, message, args)
 			.then(runRes => {
@@ -102,7 +104,7 @@ module.exports = async (bot, message) => {
 					{
 						cmdTitle: "Error title",
 						cmdErr: "Some error",
-						cooldown: {time: 90000},
+						cooldown: {time: 90000, type: "guild"},
 						noLog: true
 					}
 				*/
@@ -118,10 +120,12 @@ module.exports = async (bot, message) => {
 				}
 
 				if (!bot.ownerIDs.includes(message.author.id) && runCommand.cooldown.time != 0 && (!runRes || runRes.cooldown)) {
-					cdChecker.addCooldown(bot, message, runCommand, {
-						name: runCommand.cooldown.name || null,
-						time: runRes && runRes.cooldown && runRes.cooldown.time ? runRes.cooldown.time : null
-					});
+					const cdOverrides = {name: runCommand.cooldown.name || null};
+					if (runRes && runRes.cooldown) {
+						cdOverrides.time = runRes.cooldown.time || null;
+						cdOverrides.type = runRes.cooldown.type || null;
+					}
+					cdChecker.addCooldown(bot, message, runCommand, cdOverrides);
 				}
 
 				/*
