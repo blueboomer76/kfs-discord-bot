@@ -28,11 +28,6 @@ function getIDByType(message, type) {
 	}
 }
 
-function findCooldown(bot, id, name, findIndex) {
-	const filter = cd => cd.id == id && cd.name == name;
-	return findIndex ? bot.cache.recentCommands.findIndex(filter) : bot.cache.recentCommands.find(filter);
-}
-
 /*
 	Overrides are structured like this:
 	{
@@ -45,24 +40,20 @@ function addCooldown(bot, message, command, overrides) {
 	if (!overrides) overrides = {};
 	const cdID = getIDByType(message, overrides.type || command.cooldown.type),
 		cdName = overrides.name || command.name,
+		cdIdentifier = cdID + "-" + cdName,
 		cdTime = overrides.time || command.cooldown.time;
 
-	bot.cache.recentCommands.push({
-		id: cdID,
-		name: cdName,
+	bot.cache.recentCommands.set(cdIdentifier, {
 		resets: Date.now() + cdTime,
 		notified: false
 	});
-	setTimeout(removeCooldown, cdTime, bot, cdID, cdName);
-}
-
-function removeCooldown(bot, id, name) {
-	bot.cache.recentCommands.splice(findCooldown(bot, id, name, true), 1);
+	setTimeout(() => bot.cache.recentCommands.delete(cdIdentifier), cdTime);
 }
 
 module.exports = {
 	check: (bot, message, command, type) => {
-		const checkedCd = findCooldown(bot, getIDByType(message, type), command.cooldown.name || command.name, false);
+		const cdIdentifier = getIDByType(message, type) + "-" + (command.cooldown.name || command.name),
+			checkedCd = bot.cache.recentCommands.get(cdIdentifier);
 		if (checkedCd) {
 			if (!checkedCd.notified) {
 				checkedCd.notified = true;
@@ -72,7 +63,7 @@ module.exports = {
 				toSend += command.cooldown.name ? capitalize(command.cooldown.name, true) + " commands are" : "This command is";
 
 				const cdTime = ((checkedCd.resets - Date.now()) / 1000).toFixed(1);
-				toSend += ` on cooldown for **${cdTime > 0 ? cdTime : 0.1} more seconds**`;
+				toSend += ` on cooldown for **${Math.max(cdTime, 0.1)} more seconds**`;
 				if (message.guild) {
 					if (type == "channel") {
 						toSend += " in this channel";

@@ -4,6 +4,13 @@
 
 # 1.X (current)
 
+## 1.6.3
+
+- Refactored object resolver and allowed queries with one exact match to be returned instead of a list of matches
+- Changed `recentCommands` bot cache property from array to maps, using keys combining an ID and a cooldown name
+- Changed cooldown checker to check for user, channel, and guild cooldowns at the same time before executing a command
+- Allowed the cooldown checker to accept cooldown override types
+
 ## 1.6.0
 
 - Removed `ffmpeg-binaries` and related dependencies along with their commands

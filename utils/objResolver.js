@@ -20,31 +20,39 @@ async function getMember(message, id) {
 	return member;
 }
 
+function getListableObjects(rawTestObjs, testRegex, key) {
+	// Check regex matches first
+	const objRegexMatch = key.match(testRegex);
+	if (objRegexMatch) {
+		const objFromRegex = rawTestObjs.get(objRegexMatch[0].match(/\d+/)[0]);
+		return objFromRegex ? [objFromRegex] : null;
+	} else {
+		const objFromRegex = rawTestObjs.get(key);
+		if (objFromRegex) return [objFromRegex];
+	}
+
+	// Now check name matches
+	const lowerKey = key.toLowerCase();
+	const exactMatches = [],
+		inclusiveMatches = [];
+	for (const obj of rawTestObjs.values()) {
+		if (obj.name.toLowerCase().includes(lowerKey)) {
+			inclusiveMatches.push(obj);
+			if (obj.name == key) exactMatches.push(obj);
+		}
+	}
+	if (exactMatches.length == 1) return exactMatches;
+	return inclusiveMatches.length > 0 ? inclusiveMatches : null;
+}
+
 module.exports.resolve = async (bot, message, obj, type, params) => {
 	const lowerObj = obj.toLowerCase();
-	let list;
 	switch (type) {
 		case "boolean":
 			if (["yes", "y", "true", "enable"].includes(lowerObj)) return true;
 			return ["no", "n", "false", "disable"].includes(lowerObj) ? false : null;
-		case "channel": {
-			const guildChannels = message.guild.channels,
-				channelMatch = obj.match(/^<#\d{17,19}>$/);
-			let channel;
-			if (channelMatch) {
-				channel = guildChannels.get(channelMatch[0].match(/\d+/)[0]);
-				return channel ? [channel] : null;
-			} else {
-				channel = guildChannels.get(obj);
-				if (channel) return [channel];
-			}
-
-			list = [];
-			for (const chnl of guildChannels.values()) {
-				if (chnl.name.toLowerCase().includes(lowerObj)) list.push(chnl);
-			}
-			return list.length > 0 ? list : null;
-		}
+		case "channel":
+			return getListableObjects(message.guild.channels, /^<#\d{17,19}>$/, obj);
 		case "color": {
 			const objWithNoSpaces = lowerObj.replace(/[ %]/g, "").toLowerCase();
 			let i, colorMatch;
@@ -91,24 +99,8 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 		}
 		case "command":
 			return bot.commands.get(lowerObj) || bot.commands.get(bot.aliases.get(lowerObj)) || null;
-		case "emoji": {
-			const guildEmojis = message.guild.emojis,
-				emojiMatch = obj.match(emojiRegex);
-			let emoji;
-			if (emojiMatch) {
-				emoji = guildEmojis.get(emojiMatch[0].match(/\d+/)[0]);
-				if (emoji) {return [emoji]} else {return null}
-			} else {
-				emoji = guildEmojis.get(obj);
-				if (emoji) return [emoji];
-			}
-
-			list = [];
-			for (const emoji of guildEmojis.values()) {
-				if (emoji.name.toLowerCase().includes(lowerObj)) list.push(emoji);
-			}
-			return list.length > 0 ? list : null;
-		}
+		case "emoji":
+			return getListableObjects(message.guild.emojis, emojiRegex, obj);
 		case "float": {
 			const num = parseFloat(obj);
 			return !isNaN(num) && num >= params.min && num <= params.max ? num : null;
@@ -153,13 +145,16 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			}
 
 			const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members;
-			list = [];
+			const inclusiveMatches = [];
 			for (const mem of guildMembers.values()) {
-				if (mem.user.tag.toLowerCase().includes(lowerObj) ||
-					mem.user.username.toLowerCase().includes(lowerObj) ||
-					mem.displayName.toLowerCase().includes(lowerObj)) list.push(mem);
+				if (mem.user.tag.toLowerCase().includes(lowerObj)) {
+					inclusiveMatches.push(mem);
+					if (mem.user.tag == obj) return [mem];
+				} else if (mem.user.username.toLowerCase().includes(lowerObj) || mem.displayName.toLowerCase().includes(lowerObj)) {
+					inclusiveMatches.push(mem);
+				}
 			}
-			return list.length > 0 ? list : (allowRaw ? obj : null);
+			return inclusiveMatches.length > 0 ? inclusiveMatches : (allowRaw ? obj : null);
 		}
 		case "number": {
 			const num = Math.floor(obj);
@@ -170,22 +165,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 		case "role": {
 			const guildRoles = message.guild.roles.clone();
 			guildRoles.delete(guildRoles.find(role => role.calculatedPosition == 0).id);
-
-			const roleMatch = obj.match(/^<@&\d{17,19}>$/);
-			let role;
-			if (roleMatch) {
-				role = guildRoles.get(roleMatch[0].match(/\d+/)[0]);
-				return role ? [role] : null;
-			} else {
-				role = guildRoles.get(obj);
-				if (role) return [role];
-			}
-
-			list = [];
-			for (const role of guildRoles.values()) {
-				if (role.name.toLowerCase().includes(lowerObj)) list.push(role);
-			}
-			return list.length > 0 ? list : null;
+			return getListableObjects(guildRoles, /^<@&\d{17,19}>$/, obj);
 		}
 		case "string":
 			return obj.toString();

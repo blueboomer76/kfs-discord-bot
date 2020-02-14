@@ -51,7 +51,7 @@ class KFSDiscordBot extends Client {
 			userCount: 0,
 			channelCount: 0,
 			phone: {channels: [], msgCount: 0, lastMsgTime: 0, timeout: null},
-			recentCommands: [],
+			recentCommands: new Map(),
 			cumulativeStats: {
 				duration: 0,
 				commandTotal: 0,
