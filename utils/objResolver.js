@@ -164,7 +164,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			return params.list.includes(lowerObj) ? lowerObj : null;
 		case "role": {
 			const guildRoles = message.guild.roles.clone();
-			guildRoles.delete(guildRoles.find(role => role.calculatedPosition == 0).id);
+			guildRoles.delete(message.guild.defaultRole.id);
 			return getListableObjects(guildRoles, /^<@&\d{17,19}>$/, obj);
 		}
 		case "string":

@@ -93,9 +93,12 @@ module.exports = async (bot, message) => {
 
 		if (!runCommand) return;
 		if (message.guild && !message.channel.permissionsFor(bot.user).has(["VIEW_CHANNEL", "SEND_MESSAGES"])) return;
-		if (!cdChecker.check(bot, message, runCommand, "user") ||
+
+		const cdBypass = bot.ownerIDs.includes(message.author.id) || runCommand.cooldown.time == 0;
+		if (!cdBypass &&
+			(!cdChecker.check(bot, message, runCommand, "user") ||
 			!cdChecker.check(bot, message, runCommand, "channel") ||
-			!cdChecker.check(bot, message, runCommand, "guild")) return;
+			!cdChecker.check(bot, message, runCommand, "guild"))) return;
 
 		execCommand(runCommand, bot, message, args)
 			.then(runRes => {
@@ -119,7 +122,7 @@ module.exports = async (bot, message) => {
 					}
 				}
 
-				if (!bot.ownerIDs.includes(message.author.id) && runCommand.cooldown.time != 0 && (!runRes || runRes.cooldown)) {
+				if (!cdBypass && (!runRes || runRes.cooldown)) {
 					const cdOverrides = {name: runCommand.cooldown.name || null};
 					if (runRes && runRes.cooldown) {
 						cdOverrides.time = runRes.cooldown.time || null;

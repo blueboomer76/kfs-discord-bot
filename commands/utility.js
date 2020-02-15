@@ -88,11 +88,10 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const channel = args[0] || message.channel,
-				everyoneRole = message.guild.roles.find(r => r.calculatedPosition == 0);
+			const channel = args[0] || message.channel;
 			let accessible = "No";
-			if (channel.permissionsFor(everyoneRole).has("VIEW_CHANNEL")) {
-				accessible = channel.permissionsFor(everyoneRole).has("READ_MESSAGE_HISTORY") ? "Yes" : "Partial";
+			if (channel.permissionsFor(message.guild.defaultRole).has("VIEW_CHANNEL")) {
+				accessible = channel.permissionsFor(message.guild.defaultRole).has("READ_MESSAGE_HISTORY") ? "Yes" : "Partial";
 			}
 
 			const channelEmbed = new RichEmbed()

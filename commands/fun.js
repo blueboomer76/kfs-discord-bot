@@ -530,7 +530,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "quote <user | \"user\"> <quote> OR quote message <ID>"
+				usage: "quote <user | \"user\"> <quote> OR quote message <message ID>"
 			});
 		}
 

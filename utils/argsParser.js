@@ -75,12 +75,12 @@ async function checkArgs(bot, message, args, cmdArg) {
 		} else {
 			const endMsg = resolved.length > 20 ? `...and ${resolved.length - 20} more.` : "";
 			let list = resolved.slice(0, 20);
-			list = arg.type == "member" ? list.map(mem => `${mem.user.tag} (${mem.user.id})`) :
+			list = arg.type == "member" ? list.map(mem => `${mem.user.tag} (${mem.id})`) :
 				list.map(obj => `${obj.name} (${obj.id})`);
 
 			return {
 				error: `Multiple ${arg.type}s found`,
-				message: `These ${arg.type}s were matched:` + "\n" + "```" + list.join("\n") + "```" + endMsg
+				message: `These ${arg.type}s were matched:\n` + "```" + list.join("\n") + "```" + endMsg
 			};
 		}
 	}

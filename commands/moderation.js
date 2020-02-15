@@ -447,13 +447,13 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const channel = args[0] || message.channel,
 				channelTarget = args[0] ? "The channel **" + channel.name + "**": "This channel";
-			const everyoneRoleID = message.guild.roles.find(role => role.calculatedPosition == 0).id;
+			const defaultRoleID = message.guild.defaultRole.id;
 
-			const ecOverwrites = channel.permissionOverwrites.get(everyoneRoleID);
+			const ecOverwrites = channel.permissionOverwrites.get(defaultRoleID);
 			if (ecOverwrites && new Permissions(ecOverwrites.deny).has("VIEW_CHANNEL")) {
 				return {cmdWarn: channelTarget + " is already locked to the everyone role."};
 			}
-			channel.overwritePermissions(everyoneRoleID, {
+			channel.overwritePermissions(defaultRoleID, {
 				VIEW_CHANNEL: false
 			})
 				.then(() => {
@@ -494,7 +494,7 @@ module.exports = [
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "mute", type: "user", ignoreBot: true});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
-			const mcOverwrites = message.channel.permissionOverwrites.get(member.user.id);
+			const mcOverwrites = message.channel.permissionOverwrites.get(member.id);
 			if (mcOverwrites && new Permissions(mcOverwrites.deny).has("SEND_MESSAGES")) {
 				return {cmdWarn: `**${member.user.tag}** is already muted in this channel.`};
 			}
@@ -1048,7 +1048,7 @@ module.exports = [
 				reason: reasonFlag ? reasonFlag.args : null
 			})
 				.then(() => {
-					message.guild.unban(member.user.id)
+					message.guild.unban(member.id)
 						.then(() => message.channel.send(`✅ User **${member.user.tag}** has been softbanned.`))
 						.catch(() => message.channel.send("An error has occurred while trying to unban the user while softbanning."));
 				})
@@ -1130,13 +1130,13 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const channel = args[0] || message.channel,
 				channelTarget = args[0] ? "The channel **" + channel.name + "**": "This channel";
-			const everyoneRoleID = message.guild.roles.find(role => role.calculatedPosition == 0).id;
+			const defaultRoleID = message.guild.defaultRole.id;
 
-			const ecOverwrites = channel.permissionOverwrites.get(everyoneRoleID);
+			const ecOverwrites = channel.permissionOverwrites.get(defaultRoleID);
 			if (!ecOverwrites || !new Permissions(ecOverwrites.deny).has("VIEW_CHANNEL")) {
 				return {cmdWarn: channelTarget + " is not locked to the everyone role."};
 			}
-			channel.overwritePermissions(everyoneRoleID, {
+			channel.overwritePermissions(defaultRoleID, {
 				VIEW_CHANNEL: null
 			})
 				.then(() => {
@@ -1177,7 +1177,7 @@ module.exports = [
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "unmute", type: "user", ignoreBot: true});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
-			const mcOverwrites = message.channel.permissionOverwrites.get(member.user.id);
+			const mcOverwrites = message.channel.permissionOverwrites.get(member.id);
 			if (!mcOverwrites || !new Permissions(mcOverwrites.deny).has("SEND_MESSAGES")) {
 				return {cmdWarn: `**${member.user.tag}** is not muted in this channel.`};
 			}

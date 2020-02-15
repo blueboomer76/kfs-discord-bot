@@ -26,7 +26,7 @@ class KFSDiscordBot extends Client {
 				name: "Server Owner",
 				validate: message => {
 					if (!message.guild) return false;
-					return message.guild.owner.user.id == message.author.id;
+					return message.guild.owner.id == message.author.id;
 				}
 			},
 			{
