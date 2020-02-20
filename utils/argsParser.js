@@ -40,35 +40,36 @@ async function checkArgs(bot, message, args, cmdArg) {
 
 	const resolved = await resolver.resolve(bot, message, args, arg.type, params);
 	if (resolved == null) {
-		if (cmdArg.shiftable) {
-			return {shift: true};
+		if (cmdArg.shiftable) return {shift: true};
+
+		const userInput = args.length > 1500 ? args.slice(0, 1500) + "..." : args;
+		let argErrorMsg = listableTypes.includes(arg.type) ?
+			`No ${arg.type}s were found matching \`${userInput}\`` : `\`${userInput}\` is not a valid ${arg.type}`;
+		if (cmdArg.errorMsg) {
+			argErrorMsg = cmdArg.errorMsg;
 		} else {
-			const userInput = args.length > 1500 ? args.slice(0, 1500) + "..." : args;
-			let argErrorMsg = listableTypes.includes(arg.type) ?
-				`No ${arg.type}s were found matching \`${userInput}\`` : `\`${userInput}\` is not a valid ${arg.type}`;
-			if (cmdArg.errorMsg) {
-				argErrorMsg = cmdArg.errorMsg;
-			} else {
-				if (arg.type == "image") {
-					argErrorMsg = "A valid mention, image URL, or emoji must be provided";
-				} else if (arg.type == "number") {
-					argErrorMsg += "\nThe argument must be a number";
-					if (arg.min || arg.max) {
-						argErrorMsg += " that is ";
-						if (arg.min) {
-							argErrorMsg += arg.max ? `in between ${params.min} and ${params.max}` :
-								"greater than or equal to " + params.min;
-						} else {
-							argErrorMsg += "less than or equal to " + params.max;
-						}
+			if (arg.type == "image") {
+				argErrorMsg = "A valid mention, image URL, or emoji must be provided";
+			} else if (arg.type == "number") {
+				argErrorMsg += "\nThe argument must be a number";
+				if (arg.min || arg.max) {
+					argErrorMsg += " that is ";
+					if (arg.min) {
+						argErrorMsg += arg.max ? `in between ${params.min} and ${params.max}` :
+							"greater than or equal to " + params.min;
+					} else {
+						argErrorMsg += "less than or equal to " + params.max;
 					}
-				} else if (arg.type == "oneof") {
-					argErrorMsg = "The argument must be one of these values: " + params.list.join(", ");
 				}
+			} else if (arg.type == "oneof") {
+				argErrorMsg = "The argument must be one of these values: " + params.list.join(", ");
 			}
-			return {error: true, message: argErrorMsg};
 		}
+
+		// The error message is transformed outside this function
+		return {error: true, message: argErrorMsg};
 	}
+
 	if (listableTypes.includes(arg.type) && (!params || !params.allowRaw || Array.isArray(resolved))) {
 		if (resolved.length == 1) {
 			return resolved[0];
@@ -97,9 +98,8 @@ module.exports = {
 		if (subcommands.length > 0) {
 			const foundScmd = subcommands.find(scmd => scmd.name == args[0]);
 			if (foundScmd) {
-				subcmd = foundScmd.name;
+				subcmd = args.shift();
 				commandArgs = foundScmd.args;
-				args.shift();
 			} else {
 				const fallback = subcommands.find(scmd => scmd.name == "fallback");
 				if (fallback) {
@@ -118,38 +118,28 @@ module.exports = {
 		for (let i = 0; i < commandArgs.length; i++) {
 			const arg = commandArgs[i];
 			if (arg.infiniteArgs) {
-				if (arg.allowQuotes) {
-					const newArgs = parseArgQuotes(args.slice(i), arg.parseSeparately);
-					if (arg.parseSeparately) {
-						for (let j = 0; j < newArgs.length; j++) {
-							const parsedSepArg = await checkArgs(bot, message, newArgs[j], arg);
-							if (parsedSepArg.error) {
-								if (parsedSepArg.error == true) parsedSepArg.error = `Argument ${i+j+1} error`;
-								return parsedSepArg;
-							}
-							parsedArgs.push(parsedSepArg);
+				let newArgs = args.slice(i);
+				if (arg.allowQuotes) newArgs = parseArgQuotes(newArgs, arg.parseSeparately);
+
+				if (arg.parseSeparately) {
+					for (let j = 0; j < newArgs.length; j++) {
+						const parsedSepArg = await checkArgs(bot, message, newArgs[j], arg);
+						if (parsedSepArg.error) {
+							if (parsedSepArg.error == true) parsedSepArg.error = `Argument ${i+j+1} error`;
+							return parsedSepArg;
 						}
-						return parsedArgs;
-					} else {
-						args = args.slice(0, i).concat(newArgs);
+						parsedArgs.push(parsedSepArg);
 					}
+					return parsedArgs;
 				} else {
-					if (arg.parseSeparately) {
-						const newArgs = args.slice(i);
-						for (let j = 0; j < newArgs.length; j++) {
-							const parsedSepArg = await checkArgs(bot, message, newArgs[j], arg);
-							if (parsedSepArg.error) {
-								if (parsedSepArg.error == true) parsedSepArg.error = `Argument ${i+j+1} error`;
-								return parsedSepArg;
-							}
-							parsedArgs.push(parsedSepArg);
-						}
-						return parsedArgs;
+					if (arg.allowQuotes) {
+						args = args.slice(0, i).concat(newArgs);
 					} else {
 						args[i] = args.slice(i).join(" ");
 					}
 				}
 			}
+
 			if (!args[i]) {
 				if (!arg.optional) {
 					const neededType = arg.type == "oneof" ? "value" : arg.type;
@@ -175,6 +165,7 @@ module.exports = {
 			args[i] = parsedArg;
 			parsedArgs.push(parsedArg);
 		}
+
 		if (subcmd) parsedArgs.unshift(subcmd);
 
 		return parsedArgs;

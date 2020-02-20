@@ -109,24 +109,24 @@ module.exports = [
 				channels = uncategorized.array().sort((a, b) => a.calculatedPosition - b.calculatedPosition);
 			} else {
 				const categoryID = channel.type == "category" ? channel.id : channel.parent.id,
-					catChannels = message.guild.channels.array().filter(c => c.type == "category").sort((a, b) => a.calculatedPosition - b.calculatedPosition);
-				pos += uncategorized.size;
+					categoryChannels = message.guild.channels.array().filter(c => c.type == "category")
+						.sort((a, b) => a.calculatedPosition - b.calculatedPosition);
+				pos += uncategorized.size + 1;
 
-				let chnlParent;
-				for (const cat of catChannels) {
-					chnlParent = cat;
-					pos++;
-					if (chnlParent.id == categoryID) break;
-					pos += cat.children.size;
+				let categoryParent = categoryChannels[0], i = 0;
+				while (categoryParent.id != categoryID) {
+					pos += categoryParent.children.size + 1;
+					i++;
+					categoryParent = categoryChannels[i];
 				}
-				channels = chnlParent.children.array().sort((a, b) => a.calculatedPosition - b.calculatedPosition);
+				channels = categoryParent.children.array().sort((a, b) => a.calculatedPosition - b.calculatedPosition);
 			}
 			if (channel.type != "category") {
-				const textChannels = channels.filter(c => c.type == "text"),
-					voiceChannels = channels.filter(c => c.type == "voice");
+				const textChannels = channels.filter(c => c.type == "text");
 				if (channel.type == "text") {
 					pos += textChannels.findIndex(c => c.id == channel.id);
 				} else {
+					const voiceChannels = channels.filter(c => c.type == "voice");
 					pos += textChannels.length + voiceChannels.findIndex(c => c.id == channel.id);
 				}
 				pos++;

@@ -48,19 +48,11 @@ module.exports = [
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
 
 			const inputText = args[0].replace(/\n/g, " ");
-			let cowsayLines = [
-				"        \\   ^__^",
-				"         \\  (oo)\\_______",
-				"            (__)\\       )\\/\\",
-				"               ||----w |",
-				"               ||     ||"
-			];
-
+			let cowsayLines;
 			if (inputText.length <= 50) {
-				cowsayLines.unshift(` ${"_".repeat(inputText.length + 2)}`,
+				cowsayLines = [` ${"_".repeat(inputText.length + 2)}`,
 					`< ${inputText} >`,
-					` ${"-".repeat(inputText.length + 2)}`
-				);
+					` ${"-".repeat(inputText.length + 2)}`];
 			} else {
 				const lines = [];
 				let remainText = inputText;
@@ -77,25 +69,24 @@ module.exports = [
 					} else {
 						remainText = "";
 					}
-					lines.push(currLine);
+					lines.push(currLine.padEnd(50, " "));
 				}
 
-				for (let i = 0; i < lines.length; i++) {
-					lines[i] = lines[i].padEnd(50, " ");
-				}
-
-				const toDisplayLines = [];
-				toDisplayLines.push(` ${"_".repeat(52)}`, `/ ${lines[0]} \\`);
+				cowsayLines = [` ${"_".repeat(52)}`, `/ ${lines[0]} \\`];
 				if (lines.length > 2) {
 					for (let i = 1; i < lines.length - 1; i++) {
-						toDisplayLines.push(`| ${lines[i]} |`);
+						cowsayLines.push(`| ${lines[i]} |`);
 					}
 				}
-				toDisplayLines.push(`\\ ${lines[lines.length - 1]} /`, ` ${"-".repeat(52)}`);
-				cowsayLines = toDisplayLines.concat(cowsayLines);
+				cowsayLines.push(`\\ ${lines[lines.length - 1]} /`, ` ${"-".repeat(52)}`);
 			}
 
-			message.channel.send("```" + cowsayLines.join("\n") + "```");
+			message.channel.send("```" + cowsayLines.join("\n") + "\n" +
+				"        \\   ^__^\n" +
+				"         \\  (oo)\\_______\n" +
+				"            (__)\\       )\\/\\\n" +
+				"               ||----w |\n" +
+				"               ||     ||" + "```");
 		}
 	},
 	class EmojifyCommand extends Command {
