@@ -601,7 +601,6 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			await message.delete().catch(() => {});
 			if (args[0] == "message") {
 				this.performMessageDelete(message, args[1]);
 				return;
@@ -642,7 +641,7 @@ module.exports = [
 			const timestampLimit = Date.now() - 1.209e+9, // 2 weeks less 10 minutes
 				toDeleteIDs = [],
 				deleteDistrib = {};
-			let nextMessageID,
+			let nextMessageID = message.id,
 				currMsgGroup = 0,
 				outOfTimeRange = false,
 				fetchErr;
@@ -682,6 +681,8 @@ module.exports = [
 			}
 
 			// Delete the messages
+			const hasCommandTrigger = message.channel.messages.has(message.id);
+			if (hasCommandTrigger) toDeleteIDs.unshift(message.id);
 			const deleteGroupCount = Math.ceil(toDeleteIDs.length / 100);
 			for (let i = 0; i < deleteGroupCount; i++) {
 				let deleteErr;
@@ -701,7 +702,8 @@ module.exports = [
 			}
 			if (authorDisplayCount < authors.length) breakdown += `...and ${authors.length - 40} more.`;
 
-			message.channel.send(`🗑 Deleted ${toDeleteIDs.length} messages from this channel!` + "\n\n" + "__**Breakdown**__:\n" + breakdown)
+			message.channel.send(`🗑 Deleted ${hasCommandTrigger ? toDeleteIDs.length - 1 : toDeleteIDs.length} messages from this channel!` + "\n\n" +
+			"__**Breakdown**__:\n" + breakdown)
 				.then(m => {
 					if (!noDeleteFlag) {
 						m.delete(Math.min(500 * authors.length + 4500, 10000)).catch(() => {});
@@ -709,7 +711,8 @@ module.exports = [
 				});
 		}
 
-		performMessageDelete(message, id) {
+		async performMessageDelete(message, id) {
+			await message.delete().catch(() => {});
 			message.channel.fetchMessage(id)
 				.then(msg => msg.delete()
 					.catch(() => message.channel.send("⚠ An error occurred while trying to delete the message in this channel.")))

@@ -11,6 +11,7 @@ class FlagArgument {
 	constructor(props) {
 		this.errorMsg = props.errorMsg || null;
 		this.num = props.num || 1;
+		this.missingArgMsg = props.missingArgMsg || null;
 		this.optional = props.optional || false;
 		this.type = props.type;
 

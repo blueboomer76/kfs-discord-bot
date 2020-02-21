@@ -35,18 +35,10 @@ function paginateOnEdit(message, sentMessage, entries, oldEmbed, options) {
 	if (!message.channel.messages.has(sentMessage.id)) return;
 
 	const entryData = setEntries(entries, options.limit, sentMessage.page);
-	let paginatedEmbed = new RichEmbed()
-		.setTitle(oldEmbed.title || "")
-		.setColor(oldEmbed.color)
-		.setFooter(`Page ${entryData.page} / ${entryData.maxPage} [${entries[0].length} entries]`);
+	oldEmbed.setFooter(`Page ${entryData.page} / ${entryData.maxPage} [${entries[0].length} entries]`);
+	oldEmbed = setEmbed(oldEmbed, entryData.entries, options);
 
-	if (oldEmbed.author) {
-		paginatedEmbed.setAuthor(oldEmbed.author.name, oldEmbed.author.icon_url || oldEmbed.author.iconURL, oldEmbed.author.url);
-	}
-	if (oldEmbed.thumbnail) paginatedEmbed.setThumbnail(oldEmbed.thumbnail.url);
-	paginatedEmbed = setEmbed(paginatedEmbed, entryData.entries, options);
-
-	sentMessage.edit(options.embedText || "", {embed: paginatedEmbed});
+	sentMessage.edit(options.embedText || "", {embed: oldEmbed});
 }
 
 function checkReaction(collector, limit) {
@@ -73,10 +65,10 @@ function checkReaction(collector, limit) {
 	- removeReactAfter
 */
 
-module.exports.paginate = (message, genEmbed, entries, options) => {
+module.exports.paginate = (message, embedProps, entries, options) => {
 	if (options.numbered) entries[0] = entries[0].map((e, i) => `${i+1}. ${e}`);
 	const entryData = setEntries(entries, options.limit, options.page);
-	let paginatedEmbed = new RichEmbed(genEmbed)
+	let paginatedEmbed = new RichEmbed(embedProps)
 		.setColor(options.embedColor || options.embedColor == 0 ? options.embedColor : Math.floor(Math.random() * 16777216))
 		.setFooter(`Page ${entryData.page} / ${entryData.maxPage} [${entries[0].length} entries]`);
 	paginatedEmbed = setEmbed(paginatedEmbed, entryData.entries, options);

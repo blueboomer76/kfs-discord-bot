@@ -494,12 +494,12 @@ module.exports = [
 				statsEmbed.setAuthor("Bot Stats - Processor", bot.user.avatarURL)
 					.setDescription("Here's some detailed stats about the host that this bot is on!")
 					.addField("Process Started", getDuration(Date.now() - process.uptime() * 1000), true)
-					.addField("Total Resident Set (RSS)", (processUsedMemory.rss / 1048576).toFixed(2) + " MB", true)
-					.addField("Heap Usage", `Total: ${(heapTotal / 1048576).toFixed(2)} MB\n` +
-						`Used: ${(heapUsed / 1048576).toFixed(2)} MB (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
-					.addField("Memory", `Total: ${(totalMemory / 1073741824).toFixed(2)} GB\n` +
-						`Used: ${(usedMemory / 1073741824).toFixed(2)} GB (${(usedMemory / totalMemory * 100).toFixed(1)}%)\n` +
-						`Free: ${(freeMemory / 1073741824).toFixed(2)} GB (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true);
+					.addField("Total Resident Set (RSS)", this.getMemoryString(processUsedMemory.rss), true)
+					.addField("Heap Usage", `Total: ${this.getMemoryString(heapTotal)}\n` +
+						`Used: ${this.getMemoryString(heapUsed)} (${(heapUsed / heapTotal * 100).toFixed(1)}%)`, true)
+					.addField("Memory", `Total: ${this.getMemoryString(totalMemory)}\n` +
+						`Used: ${this.getMemoryString(usedMemory)} (${(usedMemory / totalMemory * 100).toFixed(1)}%)\n` +
+						`Free: ${this.getMemoryString(freeMemory)} (${(freeMemory / totalMemory * 100).toFixed(1)}%)`, true);
 
 				setTimeout(() => {
 					const cpus = os.cpus(), cpuUsage2 = this.getCpuUsage(cpus);
@@ -578,6 +578,16 @@ module.exports = [
 				return (amtPerDay / 24).toFixed(2) + "/hr";
 			} else {
 				return amtPerDay.toFixed(2) + "/day";
+			}
+		}
+
+		getMemoryString(bytes) {
+			if (bytes < Math.pow(2, 30)) {
+				return (bytes / Math.pow(2, 20)).toFixed(2) + " MB";
+			} else if (bytes < Math.pow(2, 40)) {
+				return (bytes / Math.pow(2, 30)).toFixed(2) + " GB";
+			} else {
+				return (bytes / Math.pow(2, 40)).toFixed(2) + " TB";
 			}
 		}
 

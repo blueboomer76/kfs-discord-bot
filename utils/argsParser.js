@@ -223,7 +223,7 @@ module.exports = {
 						const neededType = commandFlag.arg.type == "oneof" ? "value" : commandFlag.arg.type;
 						return {
 							error: "Missing flag argument at flag name " + commandFlag.name,
-							message: commandFlag.arg.errorMsg || `A valid ${neededType} must be provided.`
+							message: commandFlag.arg.missingArgMsg || `A valid ${neededType} must be provided.`
 						};
 					} else {
 						flags[i].args = null;
