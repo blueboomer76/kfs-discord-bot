@@ -2,7 +2,7 @@ const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	{capitalize, getDuration, getStatuses} = require("../modules/functions.js"),
 	{fetchMembers} = require("../modules/memberFetcher.js"),
-	paginator = require("../utils/paginator.js"),
+	Paginator = require("../utils/paginator.js"),
 	convert = require("color-convert"),
 	math = require("mathjs"),
 	util = require("util");
@@ -470,14 +470,12 @@ module.exports = [
 			const roles = message.guild.roles.array();
 			roles.splice(roles.findIndex(r => r.calculatedPosition == 0), 1);
 			if (orderedFlag) roles.sort((a, b) => b.calculatedPosition - a.calculatedPosition);
-			paginator.paginate(message, {title: "List of roles - " + message.guild.name}, [roles.map(role => role.name)], {
-				limit: 25,
+			new Paginator(message, [roles.map(role => role.name)], {title: "List of roles - " + message.guild.name}, {
 				noStop: true,
 				numbered: orderedFlag,
 				page: args[0] || 1,
-				params: null,
 				removeReactAfter: 60000
-			});
+			}).start();
 		}
 	},
 	class RoleMembersCommand extends Command {
@@ -513,15 +511,11 @@ module.exports = [
 			if (roleMembers.size == 0) return {cmdWarn: `There are no members in the role **${role.name}**.`};
 			if (roleMembers.size > 250) return {cmdWarn: `There are more than 250 members in the role **${role.name}**.`};
 
-			paginator.paginate(message, {title: "List of members in role - " + role.name}, [roleMembers.map(m => m.user.tag)], {
+			new Paginator(message, [roleMembers.map(m => m.user.tag)], {title: "List of members in role - " + role.name}, {
 				embedColor: role.color,
-				limit: 25,
 				noStop: true,
-				numbered: false,
-				page: 1,
-				params: null,
 				removeReactAfter: 60000
-			});
+			}).start();
 		}
 	},
 	class ServerInfoCommand extends Command {

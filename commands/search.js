@@ -1,7 +1,7 @@
 const {RichEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	{getDuration} = require("../modules/functions.js"),
-	paginator = require("../utils/paginator.js"),
+	Paginator = require("../utils/paginator.js"),
 	request = require("request");
 
 const redirSubreddits = [
@@ -180,19 +180,17 @@ module.exports = [
 					}
 				}
 
-				paginator.paginate(message, {
+				new Paginator(message, entries, {
 					title: embedTitle,
 					thumbnail: {
 						url: "https://www.redditstatic.com/new-icon.png"
 					}
-				}, entries, {
+				}, {
 					limit: compact ? 10 : 5,
 					noStop: viewAll,
 					numbered: true,
-					page: 1,
-					params: null,
 					reactTimeLimit: 60000
-				});
+				}).start();
 			});
 		}
 	},
@@ -281,14 +279,12 @@ module.exports = [
 					})
 				];
 				const pageFlag = flags.find(f => f.name == "page");
-				paginator.paginate(message, {
+				new Paginator(message, entries, {
 					thumbnail: {url: "https://i.imgur.com/Bg54V46.png"}
-				}, entries, {
-					limit: 1,
-					numbered: false,
+				}, {
 					page: pageFlag ? pageFlag.args : 1,
 					params: ["title", "description", "fields"]
-				});
+				}).start();
 			});
 		}
 	},

@@ -4,6 +4,12 @@
 
 # 1.X (current)
 
+## 1.6.7
+
+- Rewritten the paginator into class form while editing its internal methods
+- Changed the method for handling capitalizations in command file names
+- Changed the category structure stored in the bot and the `category` command property to `categoryID`
+
 ## 1.6.3
 
 - Refactored object resolver and allowed queries with one exact match to be returned instead of a list of matches

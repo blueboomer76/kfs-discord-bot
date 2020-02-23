@@ -1,7 +1,7 @@
 const {RichEmbed, WebhookClient, version} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	{getBotStats, getDuration, parsePerm} = require("../modules/functions.js"),
-	paginator = require("../utils/paginator.js"),
+	Paginator = require("../utils/paginator.js"),
 	packageInfo = require("../package.json"),
 	fs = require("fs"),
 	os = require("os");
@@ -768,13 +768,11 @@ module.exports = [
 				tempArray.sort((a, b) => b.uses - a.uses);
 				const entries = [tempArray.map(cmd => `${cmd.name} - used ${cmd.uses} times`)];
 
-				paginator.paginate(message, {title: "Most Popular Bot Commands"}, entries, {
-					limit: 25,
+				new Paginator(message, entries, {title: "Most Popular Bot Commands"}, {
 					noStop: true,
 					numbered: true,
-					page: args[0] || 1,
-					params: null
-				});
+					page: args[0]
+				}).start();
 			} else {
 				const command = args[1];
 				let usagesIndex = cmdNames.indexOf(command.name);
