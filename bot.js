@@ -81,21 +81,29 @@ class KFSDiscordBot extends Client {
 			if (err) throw err;
 			const cmdFiles = files.filter(f => f.endsWith(".js"));
 			if (cmdFiles.length > 0) {
-				for (const fileName of cmdFiles) {
-					const rawCategory = fileName.split(".").shift(),
-						category = capitalize(rawCategory.replace(/-/g, " "));
+				for (const rawFileName of cmdFiles) {
+					const fileName = rawFileName.split(".")[0],
+						rawCategory = fileName.replace(/-/g, " "),
+						category = /[A-Z]/.test(rawCategory) ? rawCategory : capitalize(rawCategory, true);
 					let commandClasses;
 					try {
-						commandClasses = require(dir + rawCategory + ".js");
+						commandClasses = require(dir + fileName + ".js");
 					} catch (err) {
 						console.error(`The category ${category} failed to load due to:`, err instanceof Error ? err.message : err);
 						continue;
 					}
-					this.categories.push(category);
+
+					const categoryIndex = this.categories.length;
+					this.categories.push({
+						id: categoryIndex,
+						name: category,
+						rawName: fileName
+					});
+
 					if (commandClasses.length > 0) {
 						for (const CommandClass of commandClasses) {
 							const command = new CommandClass();
-							command.category = category;
+							command.categoryID = categoryIndex;
 							this.commands.set(command.name, command);
 							if (command.aliases.length > 0) {
 								for (const alias of command.aliases) this.aliases.set(alias, command.name);
@@ -110,7 +118,17 @@ class KFSDiscordBot extends Client {
 				const err = "No command files or commands found in the directory: " + dir;
 				if (altdir) {console.error(err)} else {throw new Error(err)}
 			}
-			this.categories.sort();
+
+			const sortedCategories = this.categories.map(c => c); // Deep copy
+			sortedCategories.sort((a, b) => {
+				if (a.name < b.name) {
+					return -1;
+				} else if (a.name > b.name) {
+					return 1;
+				}
+				return 0;
+			});
+			this.categorySortedIndexes = sortedCategories.map(c => c.id);
 		});
 	}
 

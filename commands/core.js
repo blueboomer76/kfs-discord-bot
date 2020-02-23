@@ -1,6 +1,6 @@
 const {RichEmbed, WebhookClient, version} = require("discord.js"),
 	Command = require("../structures/command.js"),
-	{capitalize, getBotStats, getDuration, parsePerm} = require("../modules/functions.js"),
+	{getBotStats, getDuration, parsePerm} = require("../modules/functions.js"),
 	paginator = require("../utils/paginator.js"),
 	packageInfo = require("../package.json"),
 	fs = require("fs"),
@@ -126,13 +126,16 @@ module.exports = [
 					}
 					helpEmbed.setFooter(`There are ${cmds.size} commands available.`);
 
-					const cmdsByCat = {};
-					for (const category of bot.categories) cmdsByCat[category] = [];
-					for (const cmd of cmds.values()) {
-						cmdsByCat[cmd.category].push({n: cmd.name, c: cmd.category});
+					const categories = [], cmdsByCat = [];
+					for (let i = 0; i < bot.categories.length; i++) {
+						categories.push(bot.categories[i].name);
+						cmdsByCat.push([]);
 					}
-					for (const cmdSet in cmdsByCat) {
-						helpEmbed.addField(cmdsByCat[cmdSet][0].c, cmdsByCat[cmdSet].map(cmd => cmd.n).join(", "));
+					for (const cmd of cmds.values()) {
+						cmdsByCat[cmd.categoryID].push(cmd.name);
+					}
+					for (let i = 0; i < cmdsByCat.length; i++) {
+						helpEmbed.addField(categories[bot.categorySortedIndexes[i]], cmdsByCat[bot.categorySortedIndexes[i]].join(", "));
 					}
 				} else {
 					const commandFlags = command.flags.map(f => `\`--${f.name.toLowerCase()}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`),
@@ -145,7 +148,7 @@ module.exports = [
 						};
 
 					helpEmbed.setTitle("Help - " + command.name)
-						.setFooter(`Category: ${command.category} | Don't include the usage symbols when running the command.`)
+						.setFooter(`Category: ${bot.categories[command.categoryID].name} | Don't include the usage symbols when running the command.`)
 						.addField("Description", command.description);
 					if (command.aliases.length > 0) helpEmbed.addField("Aliases", command.aliases.join(", "));
 					if (command.flags.length > 0) helpEmbed.addField("Options", commandFlags.join("\n"));
@@ -233,11 +236,17 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const category = capitalize(args[0]), commandName = args[1].toLowerCase();
+			const categoryKey = args[0].toLowerCase().replace(/-/g, " "),
+				categoryIndex = bot.categories.findIndex(data => data.name.toLowerCase() == categoryKey);
+			if (categoryIndex == -1) return {cmdWarn: "Invalid category provided. If the category file was created after the process started, " +
+				"the bot needs to be restarted."};
 
-			if (bot.commands.has(commandName)) return {cmdErr: "A command with that name is already loaded."};
+			const categoryData = bot.categories[categoryIndex],
+				commandName = args[1].toLowerCase();
+			if (bot.commands.has(commandName)) return {cmdErr: `A command with the name **${commandName}** is already loaded.`};
+
 			try {
-				const commandFile = category.toLowerCase().replace(/ /g, "-") + ".js",
+				const commandFile = categoryData.rawName + ".js",
 					foundCmdFile = fs.existsSync("commands/advanced/" + commandFile) ? "./advanced/" + commandFile : "./" + commandFile;
 				delete require.cache[require.resolve(foundCmdFile)];
 
@@ -246,8 +255,9 @@ module.exports = [
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[2] ? args[2].toLowerCase() : commandName));
 				if (!CommandClass) return {cmdWarn: "Command not found. If the command class name does not start with the command name, " +
 					"provide a third argument for the full class name before \"Command\", replacing all numbers in the command with the word."};
+
 				const newCommand = new CommandClass();
-				newCommand.category = capitalize(category, true);
+				newCommand.categoryID = categoryIndex;
 				bot.commands.set(commandName, newCommand);
 				if (newCommand.aliases.length > 0) {
 					for (const alias of newCommand.aliases) bot.aliases.set(alias, newCommand.name);
@@ -361,9 +371,9 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const command = args[0],
 				commandName = command.name,
-				category = command.category;
+				categoryData = bot.categories[command.categoryID];
 			try {
-				const commandFile = category.toLowerCase().replace(/ /g, "-") + ".js",
+				const commandFile = categoryData.rawName + ".js",
 					foundCmdFile = fs.existsSync("commands/advanced/" + commandFile) ? "./advanced/" + commandFile : "./" + commandFile;
 				delete require.cache[require.resolve(foundCmdFile)];
 
@@ -372,8 +382,9 @@ module.exports = [
 					CommandClass = commandClasses.find(c => c.name.toLowerCase().slice(0, c.name.length - 7) == (args[1] ? args[1].toLowerCase() : commandName));
 				if (!CommandClass) return {cmdWarn: "Command not found. If the command class name does not start with the command name, " +
 					"provide a second argument for the full class name before \"Command\", replacing all numbers in the command with the word."};
+
 				const newCommand = new CommandClass();
-				newCommand.category = category;
+				newCommand.categoryID = command.categoryID;
 				bot.commands.set(commandName, newCommand);
 				if (newCommand.aliases.length > 0) {
 					const toRemoveAliases = bot.aliases.filter(alias => alias == commandName);
@@ -682,10 +693,12 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const command = args[0], commandName = command.name;
-			if (command.category == "Core" || commandName == "eval") return {cmdErr: "That command is not unloadable."};
+			const command = args[0],
+				commandName = command.name,
+				categoryData = bot.categories[command.categoryID];
+			if (categoryData.name == "Core" || commandName == "eval") return {cmdErr: "That command is not unloadable."};
 
-			const commandFile = command.category.toLowerCase().replace(/ /g, "-") + ".js",
+			const commandFile = categoryData.rawName + ".js",
 				foundCmdFile = fs.existsSync("commands/advanced/" + commandFile) ? "./advanced/" + commandFile : "./" + commandFile;
 			delete require.cache[require.resolve(foundCmdFile)];
 			bot.commands.delete(commandName);
