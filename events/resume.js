@@ -1,4 +1,4 @@
 module.exports = async (bot, replayed) => {
 	console.log(`[${new Date().toJSON()}] WebSocket has reconnected with ${replayed} replayed events.`);
-	bot.connectionRetries = 0;
+	bot.downtimeTimestampBase = null;
 };

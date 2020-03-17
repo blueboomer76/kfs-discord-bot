@@ -46,6 +46,8 @@ class KFSDiscordBot extends Client {
 				validate: message => this.ownerIDs.includes(message.author.id)
 			}
 		];
+
+		const now = Date.now();
 		this.cache = {
 			guildCount: 0,
 			userCount: 0,
@@ -68,11 +70,13 @@ class KFSDiscordBot extends Client {
 				messageCurrentTotal: 0,
 				messageSessionTotal: 0,
 				commandUsages: {},
-				lastCheck: Date.now()
+				lastCheck: now
 			},
 			status: {randomIters: 0, pos: 0}
 		};
-		this.connectionRetries = 0;
+
+		this.downtimeTimestampBase = now;
+		this.unavailableGuildIDs = [];
 	}
 
 	loadCommands(altdir) {
@@ -152,8 +156,13 @@ class KFSDiscordBot extends Client {
 	logStats(writeSync = false) {
 		const cachedStats = this.cache.stats,
 			cumulativeStats = this.cache.cumulativeStats;
+		const now = Date.now();
 
-		cumulativeStats.duration += Date.now() - cachedStats.lastCheck;
+		cumulativeStats.duration += now - cachedStats.lastCheck;
+		if (this.downtimeTimestampBase != null) {
+			cumulativeStats.duration -= now - this.downtimeTimestampBase;
+			this.downtimeTimestampBase = now;
+		}
 
 		const cachedUsages = cachedStats.commandUsages,
 			storedUsages = cumulativeStats.commandUsages;
@@ -166,8 +175,8 @@ class KFSDiscordBot extends Client {
 		cumulativeStats.callTotal += cachedStats.callCurrentTotal;
 		cumulativeStats.messageTotal += cachedStats.messageCurrentTotal;
 
-		if (Date.now() > cumulativeStats.lastSorted + 1000 * 86400 * 7) {
-			cumulativeStats.lastSorted = Date.now();
+		if (now > cumulativeStats.lastSorted + 1000 * 86400 * 7) {
+			cumulativeStats.lastSorted = now;
 			const tempNames = Object.keys(storedUsages),
 				tempUses = Object.values(storedUsages),
 				tempArray = [],
@@ -189,7 +198,7 @@ class KFSDiscordBot extends Client {
 		cachedStats.messageSessionTotal += cachedStats.messageCurrentTotal;
 		cachedStats.messageCurrentTotal = 0;
 		cachedStats.commandUsages = {};
-		cachedStats.lastCheck = Date.now();
+		cachedStats.lastCheck = now;
 
 		const jsonString = JSON.stringify(cumulativeStats, null, 4);
 		if (writeSync) {

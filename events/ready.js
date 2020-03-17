@@ -16,14 +16,21 @@ const parserOptions = {
 let initialized = false;
 
 module.exports = async bot => {
+	const now = new Date();
+
 	console.log("=".repeat(30) + " READY " + "=".repeat(30));
-	console.log(`[${new Date().toJSON()}] Bot has entered ready state.`);
+	console.log(`[${now.toJSON()}] Bot has entered ready state.`);
 	bot.user.setActivity(`${bot.prefix}help | with you in ${bot.guilds.size} servers`);
 
 	bot.cache.guildCount = bot.guilds.size;
 	bot.cache.userCount = bot.users.size;
 	bot.cache.channelCount = bot.channels.size;
 	bot.connectionRetries = 0;
+
+	if (bot.downtimeTimestampBase != null) {
+		bot.cache.cumulativeStats.duration -= now.getTime() - bot.downtimeTimestampBase;
+		bot.downtimeTimestampBase = null;
+	}
 
 	if (!initialized) {
 		initialized = true;
