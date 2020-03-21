@@ -106,16 +106,12 @@ module.exports.applyJimpFilter = (img, filter, options) => {
 				newY2Offset = offsetSum < 0.1 ? 0.1 - offsetSum : 0,
 				baseY2 = (1 - newY2Offset) - Math.random() * (0.25 - newY2Offset);
 
-			img.crop(
-				Math.floor(baseX1 * img.bitmap.width),
-				Math.floor(baseY1 * img.bitmap.height),
-				Math.floor((baseX2 - baseX1) * img.bitmap.width),
-				Math.floor((baseY2 - baseY1) * img.bitmap.height)
-			);
+			img.crop(baseX1 * img.bitmap.width, baseY1 * img.bitmap.height,
+				(baseX2 - baseX1) * img.bitmap.width, (baseY2 - baseY1) * img.bitmap.height);
 			break;
 		}
 		case "resize":
-			img.resize(img.bitmap.width * options.scale, img.bitmap.height * options.scale);
+			img.resize(img.bitmap.width * options.scaleX, img.bitmap.height * options.scaleY);
 			break;
 		case "rotate":
 			img.rotate(360 - (options.rotation || 90));

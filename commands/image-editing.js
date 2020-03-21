@@ -266,7 +266,7 @@ module.exports = [
 					this.drawText(canvas, ctx, bottomText, false);
 				}
 
-				message.channel.send("", {
+				message.channel.send({
 					files: [{
 						attachment: canvas.toBuffer(),
 						name: "meme.png"
@@ -729,6 +729,13 @@ module.exports = [
 						type: "float",
 						min: 0.01,
 						max: 10
+					},
+					{
+						errorMsg: "You need to enter a number to scale from 0.01 to 10, excluding 1.",
+						optional: true,
+						type: "float",
+						min: 0.01,
+						max: 10
 					}
 				],
 				cooldown: {
@@ -741,18 +748,25 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "resize [image URL/mention/emoji] <scale: 0.01-10>"
+				usage: "resize [image URL/mention/emoji] <scale: 0.01-10> OR resize [image URL/mention/emoji] <X scale: 0.01-10> <Y scale: 0.01-10>"
 			});
 		}
 
 		async run(bot, message, args, flags) {
-			if (args[1] == 1) return {cmdWarn: "The scale cannot be 1."};
+			if (args[2]) {
+				if (args[1] == 1 && args[2] == 1) {
+					return {cmdWarn: "The X and Y scales cannot be both 1."};
+				}
+			} else if (args[1] == 1) {
+				return {cmdWarn: "The scale cannot be 1."};
+			}
 
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
 			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "resize", {
-				scale: args[1]
+				scaleX: args[1],
+				scaleY: args[2] || args[1]
 			});
 		}
 	},
@@ -918,7 +932,7 @@ module.exports = [
 				}
 				encoder.finish();
 
-				message.channel.send("", {
+				message.channel.send({
 					files: [{
 						attachment: stream,
 						name: "spin.gif"

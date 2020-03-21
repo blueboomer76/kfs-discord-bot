@@ -491,6 +491,7 @@ module.exports = [
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) {
 				return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 			}
+			if (member.hasPermission("ADMINISTRATOR")) return {cmdWarn: "This command cannot be used on members with the `Administrator` permission."};
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "mute", type: "user", ignoreBot: true});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
@@ -907,6 +908,9 @@ module.exports = [
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) {
 				return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 			}
+			if (newNick == member.user.username) return {cmdWarn: "The new nickname cannot be the same as the user's username."};
+			if (newNick == member.nickname) return {cmdWarn: "The new nickname cannot be the same as the user's nickname in this server."};
+
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "set the nickname of", type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
@@ -1177,6 +1181,7 @@ module.exports = [
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) {
 				return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 			}
+			if (member.hasPermission("ADMINISTRATOR")) return {cmdWarn: "This command cannot be used on members with the `Administrator` permission."};
 			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "unmute", type: "user", ignoreBot: true});
 			if (compareTest != true) return {cmdWarn: compareTest};
 

@@ -57,7 +57,10 @@ function getStatuses(users, rawOffline = 0) {
 }
 
 module.exports = {
+	// General purpose
 	capitalize: capitalize,
+
+	// For the bot
 	getBotStats: bot => {
 		const cachedStats = bot.cache.stats,
 			cumulativeStats = bot.cache.cumulativeStats;
@@ -88,6 +91,14 @@ module.exports = {
 			totalMessages: cumulativeStats.messageTotal + cachedStats.messageCurrentTotal
 		};
 	},
+
+	// Discord related
+	getStatuses: getStatuses,
+	parsePerm: perm => {
+		return perm.split("_").map(p => capitalize(p.toLowerCase())).join(" ");
+	},
+
+	// For durations such as 1 day, 2 hours
 	getDuration: (time1, time2, simple = false) => {
 		if (time1 == undefined || isNaN(time1)) throw new TypeError("Time 1 requires a timestamp in milliseconds");
 		if (time2 != undefined) {
@@ -143,7 +154,8 @@ module.exports = {
 		const suffix = time1 <= time2 ? "ago" : "left"; // Duration flows from time1 to time2
 		return simple ? `${baseStr1} ${suffix}` : `${baseStr1} ${baseStr2}${suffix}`;
 	},
-	getStatuses: getStatuses,
+
+	// For large numbers such as 1.234e+65
 	parseLargeNumber: (num, options = {}) => {
 		/*
 			Parser options:
@@ -248,8 +260,5 @@ module.exports = {
 		if (long) {filter = key => key.long == foundSuffix2} else {filter = key => key.short == foundSuffix2}
 		const foundOnesSuffix = onesNumberKeys.find(filter);
 		return foundOnesSuffix ? parsedNum * foundOnesSuffix.value : NaN;
-	},
-	parsePerm: perm => {
-		return perm.split("_").map(p => capitalize(p.toLowerCase())).join(" ");
 	}
 };
