@@ -79,7 +79,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "reddit [subreddit] [--((controversial|top) [hour|day|week|month|year|all] | (new|rising))] [--more] [--squeeze]"
+				usage: "reddit [subreddit] [--((controversial | top) [hour | day | week | month | year | all] | (new | rising))] [--more] [--squeeze]"
 			});
 		}
 

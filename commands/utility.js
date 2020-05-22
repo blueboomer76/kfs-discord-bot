@@ -39,13 +39,10 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			let user;
 			if (typeof args[0] == "string") {
-				let cmdErr = true;
 				if (/^\d{17,19}$/.test(args[0])) {
-					await bot.fetchUser(args[0])
-						.then(fetchedUser => {user = fetchedUser; cmdErr = false})
-						.catch(() => {});
+					user = await bot.fetchUser(args[0]).catch(() => {});
 				}
-				if (cmdErr) {
+				if (!user) {
 					const userArgs = args[0].length > 1500 ? args[0].slice(0, 1500) + "..." : args[0];
 					return {cmdWarn: "No users found matching `" + userArgs + "`"};
 				}
@@ -407,7 +404,7 @@ module.exports = [
 				guildRoles = message.guild.roles.array();
 			guildRoles.splice(guildRoles.findIndex(r => r.calculatedPosition == 0), 1);
 
-			const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
+			const guildMembers = await fetchMembers(message),
 				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id)),
 				nearbyRoles = [],
 				startPos = Math.min(rolePos + 2, guildRoles.length),
@@ -505,7 +502,7 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			const role = args[0],
-				guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
+				guildMembers = await fetchMembers(message),
 				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id));
 
 			if (roleMembers.size == 0) return {cmdWarn: `There are no members in the role **${role.name}**.`};
@@ -538,7 +535,7 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			const guild = message.guild,
-				guildMembers = guild.large ? await fetchMembers(message) : guild.members;
+				guildMembers = await fetchMembers(message);
 
 			const statuses = getStatuses(guild.members, guild.memberCount - guild.members.size),
 				channels = {text: 0, voice: 0, category: 0};
@@ -608,13 +605,10 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			let user, member;
 			if (typeof args[0] == "string") {
-				let cmdErr = true;
 				if (/^\d{17,19}$/.test(args[0])) {
-					await bot.fetchUser(args[0])
-						.then(fetchedUser => {user = fetchedUser; cmdErr = false})
-						.catch(() => {});
+					user = await bot.fetchUser(args[0]).catch(() => {});
 				}
-				if (cmdErr) {
+				if (!user) {
 					const userArgs = args[0].length > 1500 ? args[0].slice(0, 1500) + "..." : args[0];
 					return {cmdWarn: "No users found matching `" + userArgs + "`"};
 				}
@@ -646,7 +640,7 @@ module.exports = [
 			userEmbed.addField("Status", presence, true);
 
 			if (member) {
-				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
+				const guildMembers = await fetchMembers(message),
 					guildMemArray = guildMembers.array().sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
 				const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp),
 					nearbyMems = [],

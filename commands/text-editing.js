@@ -211,7 +211,7 @@ module.exports = [
 						desc: "Scramble text using words"
 					}
 				],
-				usage: "scramble <text> [--(inner|words)]"
+				usage: "scramble <text> [--(inner | words)]"
 			});
 		}
 

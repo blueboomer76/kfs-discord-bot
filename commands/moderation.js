@@ -337,15 +337,9 @@ module.exports = [
 				daysFlag = flags.find(f => f.name == "days"),
 				reasonFlag = flags.find(f => f.name == "reason");
 			if (userID == message.author.id || userID == message.guild.owner.id || userID == bot.user.id) return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
-			let guildMembers, cmdErr = false;
-			if (!message.guild.large) {
-				guildMembers = message.guild.members;
-			} else {
-				await message.guild.fetchMembers()
-					.then(g => guildMembers = g.members)
-					.catch(() => cmdErr = true);
-			}
-			if (cmdErr) return {cmdWarn: "Unable to perform a hackban. Maybe try again?"};
+
+			const guildMembers = await message.guild.fetchMembers().catch(() => {});
+			if (!guildMembers) return {cmdWarn: "Unable to perform a hackban. Maybe try again?"};
 
 			const memberWithID = guildMembers.get(userID);
 			if (memberWithID) {

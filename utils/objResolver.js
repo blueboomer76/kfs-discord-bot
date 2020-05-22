@@ -14,12 +14,6 @@ const colorRegexes = [
 	emojiRegex = /^<a?:[0-9A-Za-z_]{2,}:\d{17,19}>$/,
 	memberRegex = /^<@!?\d{17,19}>$/;
 
-async function getMember(message, id) {
-	let member = null;
-	await message.guild.fetchMember(id).then(mem => member = mem).catch(() => {});
-	return member;
-}
-
 function getListableObjects(rawTestObjs, testRegex, key) {
 	// Check regex matches first
 	const objRegexMatch = key.match(testRegex);
@@ -109,7 +103,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			return params.testFunction(obj) ? obj : null;
 		case "image": {
 			if (memberRegex.test(obj)) {
-				const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members,
+				const guildMembers = await fetchMembers(message),
 					member = guildMembers.get(obj.match(/\d+/)[0]);
 				if (member) {
 					return member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`;
@@ -136,15 +130,14 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			let member;
 
 			if (memberMatch) {
-				member = message.guild.large ? await getMember(message, memberMatch[0].match(/\d+/)[0]) :
-					message.guild.members.get(memberMatch[0].match(/\d+/)[0]);
+				member = await message.guild.fetchMember(memberMatch[0].match(/\d+/)[0]).catch(() => {});
 				return member ? [member] : (allowRaw ? obj : null);
 			} else if (/^\d{17,19}$/.test(obj)) {
-				member = message.guild.large ? await getMember(message, obj.match(/\d+/)[0]) : message.guild.members.get(obj.match(/\d+/)[0]);
+				member = await message.guild.fetchMember(obj.match(/\d+/)[0]).catch(() => {});
 				if (member) return [member];
 			}
 
-			const guildMembers = message.guild.large ? await fetchMembers(message) : message.guild.members;
+			const guildMembers = await fetchMembers(message);
 			const inclusiveMatches = [];
 			for (const mem of guildMembers.values()) {
 				if (mem.user.tag.toLowerCase().includes(lowerObj)) {

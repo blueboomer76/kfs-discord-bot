@@ -376,7 +376,7 @@ module.exports = [
 						desc: "If no facts are found, find the next interesting number below the provided number"
 					}
 				],
-				usage: "numberfacts <number> [--(previous|next)]"
+				usage: "numberfacts <number> [--(previous | next)]"
 			});
 		}
 
