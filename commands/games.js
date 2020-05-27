@@ -31,6 +31,29 @@ module.exports = [
 			message.channel.send(`🎣 You used a fishing pole and caught: ${fished}!`);
 		}
 	},
+	class MineCommand extends Command {
+		constructor() {
+			super({
+				name: "mine",
+				description: "Search for minerals and more!"
+			});
+			this.mineOutcomes = [
+				{min: 0.975, text: "found a 💎 diamond!"},
+				{min: 0.95, text: "found a 💍 ring!"},
+				{min: 0.9, text: "found 🟨 some gold!"},
+				{min: 0.8, text: "found a 🏺 vase!"},
+				{min: 0.6, text: "found a 🧱 brick."},
+				{min: 0.4, text: "found 🦠 some microbes."},
+				{min: 0.2, text: "found an 👞 old shoe."},
+				{min: 0, text: "only found 🟫 dirt."}
+			];
+		}
+
+		async run(bot, message, args, flags) {
+			const rand = Math.random();
+			message.channel.send(`⛏ You used a pickaxe and ${this.mineOutcomes.find(o => o.min <= rand).text}`);
+		}
+	},
 	class RPSCommand extends Command {
 		constructor() {
 			super({

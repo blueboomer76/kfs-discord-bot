@@ -788,6 +788,10 @@ module.exports = [
 				},
 				flags: [
 					{
+						name: "crop",
+						desc: "Crops the excess part of the rotated image"
+					},
+					{
 						name: "degrees",
 						desc: "The amount of rotation to apply to the image",
 						arg: {
@@ -795,6 +799,10 @@ module.exports = [
 							min: 1,
 							max: 359
 						}
+					},
+					{
+						name: "reverse",
+						desc: "Inverts the rotation"
 					}
 				],
 				perms: {
@@ -802,7 +810,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "rotate [image URL/mention/emoji] [--degrees <1-359>]"
+				usage: "rotate [image URL/mention/emoji] [--crop] [--degrees <1-359>] [--reverse]"
 			});
 		}
 
@@ -810,8 +818,15 @@ module.exports = [
 			const fetchedImg = await imageManager.getImageResolvable(message, args[0]);
 			if (fetchedImg.error) return {cmdWarn: fetchedImg.error};
 
-			const degreesFlag = flags.find(f => f.name == "degrees");
-			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "rotate", {rotation: degreesFlag ? degreesFlag.args : null});
+			const degreesFlag = flags.find(f => f.name == "degrees"),
+				reverseFlag = flags.some(f => f.name == "reverse");
+			let rotation;
+			if (degreesFlag) {
+				rotation = reverseFlag ? 360 - degreesFlag.args : degreesFlag.args;
+			} else {
+				rotation = reverseFlag ? 90 : 270;
+			}
+			imageManager.applyJimpFilterAndPost(message, fetchedImg.data, "rotate", {rotation: rotation, crop: !flags.some(f => f.name == "crop")});
 		}
 	},
 	class SepiaCommand extends Command {
@@ -865,6 +880,10 @@ module.exports = [
 				},
 				flags: [
 					{
+						name: "reverse",
+						desc: "Spin in the opposite direction"
+					},
+					{
 						name: "speed",
 						desc: "Sets GIF speed",
 						arg: {
@@ -879,7 +898,7 @@ module.exports = [
 					user: [],
 					level: 0
 				},
-				usage: "spin [image URL/mention/emoji] [--speed <1-5>]"
+				usage: "spin [image URL/mention/emoji] [--reverse] [--speed <1-5>]"
 			});
 		}
 
@@ -922,9 +941,10 @@ module.exports = [
 				ctx.closePath();
 				ctx.clip();
 
+				const rotateFactor = flags.some(f => f.name == "reverse") ? -12 : 12;
 				for (let i = 0; i < 24; i++) {
 					ctx.translate(imgX + imgWidth / 2, imgY + imgHeight / 2);
-					ctx.rotate(Math.PI / 12);
+					ctx.rotate(Math.PI / rotateFactor);
 					ctx.translate(-(imgX + imgWidth / 2), -(imgY + imgHeight / 2));
 					ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
 					encoder.addFrame(ctx);

@@ -4,6 +4,34 @@ const grouperRegex = /<(a?:[0-9A-Za-z_]{2,}:|@!?|@&|#)\d+>|[\u0080-\uFFFF]{2}|./
 	wordGrouperRegex = /<(a?:[0-9A-Za-z_]{2,}:|@!?|@&|#)\d+>|([\u0080-\uFFFF]{2})+|\S+/g;
 
 module.exports = [
+	class AltCapsCommand extends Command {
+		constructor() {
+			super({
+				name: "altcaps",
+				description: "TuRnS YoUr tExT In AlTeRnAtInG TeXt",
+				aliases: ["alternatecap", "alternatecaps", "altcap"],
+				args: [
+					{
+						infiniteArgs: true,
+						type: "string"
+					}
+				],
+				usage: "altcaps <text>"
+			});
+		}
+
+		async run(bot, message, args, flags) {
+			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
+
+			const toAltCaps = args[0].split("");
+			let altCapResult = "";
+			for (let i = 0; i < toAltCaps.length; i++) {
+				altCapResult += i % 2 == 0 ? toAltCaps[i].toUpperCase() : toAltCaps[i].toLowerCase();
+			}
+
+			message.channel.send(altCapResult);
+		}
+	},
 	class ClapifyCommand extends Command {
 		constructor() {
 			super({
