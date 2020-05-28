@@ -160,6 +160,8 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
+			if (message.guild.channels.size >= 500) return {cmdWarn: "Cannot create channel since limit of 500 channels is reached."};
+
 			const channelName = args[0].toLowerCase();
 			message.guild.createChannel(channelName, {type: "text"})
 				.then(() => message.channel.send(`✅ The text channel **${channelName}** has been created.`))
@@ -192,6 +194,8 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
+			if (message.guild.roles.size >= 250) return {cmdWarn: "Cannot create role since limit of 250 roles is reached."};
+
 			const roleName = args[0];
 			message.guild.createRole({name: roleName})
 				.then(() => message.channel.send(`✅ Role **${roleName}** has been created.`))

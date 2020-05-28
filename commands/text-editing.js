@@ -76,11 +76,11 @@ module.exports = [
 			if (args[0].length > 1000) return {cmdWarn: "That text is too long, must be under 1000 characters."};
 
 			const inputText = args[0].replace(/\n/g, " ");
-			let cowsayLines;
+			let cowsayTopText;
 			if (inputText.length <= 50) {
-				cowsayLines = [` ${"_".repeat(inputText.length + 2)}`,
-					`< ${inputText} >`,
-					` ${"-".repeat(inputText.length + 2)}`];
+				cowsayTopText = ` ${"_".repeat(inputText.length + 2)}\n` +
+					`< ${inputText} >\n` +
+					` ${"-".repeat(inputText.length + 2)}`;
 			} else {
 				const lines = [];
 				let remainText = inputText;
@@ -100,16 +100,16 @@ module.exports = [
 					lines.push(currLine.padEnd(50, " "));
 				}
 
-				cowsayLines = [` ${"_".repeat(52)}`, `/ ${lines[0]} \\`];
+				cowsayTopText = ` ${"_".repeat(52)}\n` + `/ ${lines[0]} \\\n`;
 				if (lines.length > 2) {
 					for (let i = 1; i < lines.length - 1; i++) {
-						cowsayLines.push(`| ${lines[i]} |`);
+						cowsayTopText += `| ${lines[i]} |\n`;
 					}
 				}
-				cowsayLines.push(`\\ ${lines[lines.length - 1]} /`, ` ${"-".repeat(52)}`);
+				cowsayTopText += `\\ ${lines[lines.length - 1]} /\n` + ` ${"-".repeat(52)}`;
 			}
 
-			message.channel.send("```" + cowsayLines.join("\n") + "\n" +
+			message.channel.send("```" + cowsayTopText + "\n" +
 				"        \\   ^__^\n" +
 				"         \\  (oo)\\_______\n" +
 				"            (__)\\       )\\/\\\n" +
@@ -143,16 +143,16 @@ module.exports = [
 				} else {
 					switch (c) {
 						case " ": emojified += "   "; break;
-						case "0": emojified += ":zero: "; break;
-						case "1": emojified += ":one: "; break;
-						case "2": emojified += ":two: "; break;
-						case "3": emojified += ":three: "; break;
-						case "4": emojified += ":four: "; break;
-						case "5": emojified += ":five: "; break;
-						case "6": emojified += ":six: "; break;
-						case "7": emojified += ":seven: "; break;
-						case "8": emojified += ":eight: "; break;
-						case "9": emojified += ":nine: "; break;
+						case "0": emojified += "0️⃣ "; break;
+						case "1": emojified += "1️⃣ "; break;
+						case "2": emojified += "2️⃣ "; break;
+						case "3": emojified += "3️⃣ "; break;
+						case "4": emojified += "4️⃣ "; break;
+						case "5": emojified += "5️⃣ "; break;
+						case "6": emojified += "6️⃣ "; break;
+						case "7": emojified += "7️⃣ "; break;
+						case "8": emojified += "8️⃣ "; break;
+						case "9": emojified += "9️⃣ "; break;
 						default: emojified += c + " ";
 					}
 				}

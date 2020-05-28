@@ -85,11 +85,13 @@ class Paginator {
 						this.paginatorMessage.react(emojiList[i]).catch(err => console.error(err));
 					}, i * 1000);
 				}
-				this.addReactionCollector(this.message.author.id, emojiList);
+				this.addReactionCollector(emojiList);
 			});
 	}
 
-	addReactionCollector(id, emojis) {
+	addReactionCollector(emojis) {
+		const id = this.message.author.id;
+
 		this.collector = this.paginatorMessage.createReactionCollector((reaction, user) => {
 			return user.id == id && emojis.includes(reaction.emoji.name);
 		}, this.removeReactAfter ? {time: this.removeReactAfter} : {});
@@ -98,19 +100,16 @@ class Paginator {
 			switch (reaction.emoji.name) {
 				case "⬅":
 					this.paginateOnEdit(this.page - 1);
-					reaction.remove(id);
 					break;
 				case "➡":
 					this.paginateOnEdit(this.page + 1);
-					reaction.remove(id);
 					break;
 				case "⏹":
 					this.collector.stop();
 					this.paginatorMessage.delete();
-					break;
+					return;
 				case "🔢": {
 					const newMessage2 = await this.message.channel.send("What page do you want to go to?");
-					reaction.remove(id);
 					this.message.channel.awaitMessages(msg => msg.author.id == id && !isNaN(msg.content), {
 						maxMatches: 1,
 						time: 30000,
@@ -126,8 +125,12 @@ class Paginator {
 							if (toDelete.length > 0) this.message.channel.bulkDelete(toDelete);
 						})
 						.catch(() => {});
+					break;
 				}
+				default:
+					return;
 			}
+			reaction.remove(id);
 		});
 		this.collector.on("end", reactions => {
 			if (this.message.channel.messages.has(this.paginatorMessage.id) && !reactions.has("⏹")) this.paginatorMessage.clearReactions();

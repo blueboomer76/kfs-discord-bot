@@ -1,4 +1,5 @@
 const Command = require("../structures/command.js"),
+	{capitalize} = require("../modules/functions.js"),
 	request = require("request");
 
 module.exports = [
@@ -9,26 +10,25 @@ module.exports = [
 				description: "Catch fish and other objects with a fishing pole!",
 				aliases: ["fish"]
 			});
+			this.fishOutcomes = [
+				{min: 0.98333, text: "🦑"},
+				{min: 0.96666, text: "🐙"},
+				{min: 0.95, text: "🐸"},
+				{min: 0.9, text: "🐠"},
+				{min: 0.85, text: "🐡"},
+				{min: 0.8, text: "🐢"},
+				{min: 0.75, text: "🦐"},
+				{min: 0.45, text: "🐟"},
+				{min: 0.3375, text: "🔋"},
+				{min: 0.225, text: "🛒"},
+				{min: 0.1125, text: "👞"},
+				{min: 0, text: "📎"}
+			];
 		}
 
 		async run(bot, message, args, flags) {
-			const commonObjs = ["🔋", "🛒", "👞", "📎"],
-				uncommonObjs = ["🐠", "🐡", "🐢", "🦐"],
-				rareObjs = ["🦑", "🐙", "🐸"];
-
 			const rand = Math.random();
-			let fished;
-			if (rand < 0.45) {
-				fished = commonObjs[Math.floor(Math.random() * commonObjs.length)];
-			} else if (rand < 0.75) {
-				fished = "🐟";
-			} else if (rand < 0.95) {
-				fished = uncommonObjs[Math.floor(Math.random() * uncommonObjs.length)];
-			} else {
-				fished = rareObjs[Math.floor(Math.random() * rareObjs.length)];
-			}
-
-			message.channel.send(`🎣 You used a fishing pole and caught: ${fished}!`);
+			message.channel.send(`🎣 You used a fishing pole and caught: ${this.fishOutcomes.find(o => o.min <= rand).text}!`);
 		}
 	},
 	class MineCommand extends Command {
@@ -117,6 +117,7 @@ module.exports = [
 				answers = [];
 			let answerLetter;
 
+			// All answers are included in tempAnswers
 			tempAnswers.push(questionData.answer);
 
 			for (let i = tempAnswers.length; i > 0; i--) {
@@ -126,10 +127,10 @@ module.exports = [
 			}
 
 			const responseChoices = this.letters.slice(0, numAnswers);
-			let i = -1;
 			message.channel.send("__**Trivia**__\n" +
 				questionData.question + "\n\n" +
-				answers.map(a => {i++; return `${this.letters[i]} - ${a}`}).join("\n") + "\n\n" +
+				answers.map((a, i) => `${this.letters[i]} - ${a}`).join("\n") + "\n\n" +
+				"(Category: `" + questionData.category + "` | Difficulty: `" + capitalize(questionData.type) + "`)\n" +
 				"*Answer with the letter of your choice.*")
 				.then(msg => {
 					msg.channel.awaitMessages(msg2 => msg2.author.id == message.author.id && responseChoices.includes(msg2.content.toUpperCase()), {

@@ -285,9 +285,7 @@ module.exports = [
 				beginEval = process.hrtime();
 				rawRes = eval(args[0]);
 				if (isPromise && rawRes instanceof Promise) {
-					await rawRes
-						.then(value => rawRes = value)
-						.catch(err => rawRes = this.getErrorString(err, consoleFlag));
+					rawRes = await rawRes.catch(err => this.getErrorString(err, consoleFlag));
 				}
 			} catch (err) {
 				rawRes = this.getErrorString(err, consoleFlag);
