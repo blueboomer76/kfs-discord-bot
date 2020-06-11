@@ -1,4 +1,4 @@
-const {RichEmbed} = require("discord.js");
+const {MessageEmbed} = require("discord.js");
 
 class Paginator {
 	constructor(message, entries, embedProps, options) {
@@ -16,7 +16,7 @@ class Paginator {
 			- reactTimeLimit
 			- removeReactAfter
 		*/
-		this.paginatorEmbed = new RichEmbed(embedProps)
+		this.paginatorEmbed = new MessageEmbed(embedProps)
 			.setColor(options.embedColor || options.embedColor == 0 ? options.embedColor : Math.floor(Math.random() * 16777216));
 
 		this.message = message;
@@ -111,7 +111,7 @@ class Paginator {
 				case "🔢": {
 					const newMessage2 = await this.message.channel.send("What page do you want to go to?");
 					this.message.channel.awaitMessages(msg => msg.author.id == id && !isNaN(msg.content), {
-						maxMatches: 1,
+						max: 1,
 						time: 30000,
 						errors: ["time"]
 					})
@@ -120,8 +120,8 @@ class Paginator {
 							this.paginateOnEdit(parseInt(cMsg.content));
 
 							const toDelete = [];
-							if (this.message.channel.messages.has(newMessage2.id)) toDelete.push(newMessage2.id);
-							if (this.message.channel.messages.has(cMsg.id)) toDelete.push(cMsg.id);
+							if (this.message.channel.messages.cache.has(newMessage2.id)) toDelete.push(newMessage2.id);
+							if (this.message.channel.messages.cache.has(cMsg.id)) toDelete.push(cMsg.id);
 							if (toDelete.length > 0) this.message.channel.bulkDelete(toDelete);
 						})
 						.catch(() => {});
@@ -130,10 +130,10 @@ class Paginator {
 				default:
 					return;
 			}
-			reaction.remove(id);
+			reaction.users.remove(id);
 		});
 		this.collector.on("end", reactions => {
-			if (this.message.channel.messages.has(this.paginatorMessage.id) && !reactions.has("⏹")) this.paginatorMessage.clearReactions();
+			if (this.message.channel.messages.cache.has(this.paginatorMessage.id) && !reactions.has("⏹")) this.paginatorMessage.reactions.removeAll();
 		});
 		this.lastReactionTime = 0;
 		setTimeout(() => this.checkReaction(), this.reactTimeLimit);
@@ -141,7 +141,7 @@ class Paginator {
 
 	paginateOnEdit(page) {
 		this.setPage(page);
-		if (!this.message.channel.messages.has(this.paginatorMessage.id)) return;
+		if (!this.message.channel.messages.cache.has(this.paginatorMessage.id)) return;
 		this.paginatorMessage.edit(this.embedText, this.setEmbed());
 	}
 

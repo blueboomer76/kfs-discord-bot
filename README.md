@@ -4,7 +4,7 @@ A multipurpose Discord bot for fun, moderation, utility, and more, written in di
 
 ## Installation
 
-*Requires Node.js 8 or newer and a 64-bit operating system.*
+*Requires Node.js 12 or newer and a 64-bit operating system. 1.X bot versions running on Node.js 8 or newer will no longer be supported starting October 8, 2020.*
 
 1. Install a program that can clone GitHub repositories, such as Git Bash for Windows
 2. Run `git clone` with this repository's clone URL

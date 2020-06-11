@@ -20,11 +20,11 @@ module.exports = async bot => {
 
 	console.log("=".repeat(30) + " READY " + "=".repeat(30));
 	console.log(`[${now.toJSON()}] Bot has entered ready state.`);
-	bot.user.setActivity(`${bot.prefix}help | with you in ${bot.guilds.size} servers`);
+	bot.user.setActivity(`${bot.prefix}help | with you in ${bot.guilds.cache.size} servers`);
 
-	bot.cache.guildCount = bot.guilds.size;
-	bot.cache.userCount = bot.users.size;
-	bot.cache.channelCount = bot.channels.size;
+	bot.cache.guildCount = bot.guilds.cache.size;
+	bot.cache.userCount = bot.users.cache.size;
+	bot.cache.channelCount = bot.channels.cache.size;
 	bot.connectionRetries = 0;
 
 	if (bot.downtimeTimestampBase != null) {
@@ -64,9 +64,9 @@ module.exports = async bot => {
 					bot.cache.status.pos++;
 				} else {
 					bot.cache.status.pos = 0;
-					bot.cache.guildCount = bot.guilds.size;
-					bot.cache.userCount = bot.users.size;
-					bot.cache.channelCount = bot.channels.size;
+					bot.cache.guildCount = bot.guilds.cache.size;
+					bot.cache.userCount = bot.users.cache.size;
+					bot.cache.channelCount = bot.channels.cache.size;
 					newBotGame = `with you in ${bot.cache.guildCount} servers`;
 				}
 			}
@@ -80,17 +80,17 @@ module.exports = async bot => {
 			if (Date.now() % (1000*10800) < 1000*3600) {
 				if (config.discordBotsOrgToken) {
 					bot.postStatsToWebsite(`https://discordbots.org/api/bots/${bot.user.id}/stats`,
-						{"Authorization": config.discordBotsOrgToken}, {"server_count": bot.guilds.size});
+						{"Authorization": config.discordBotsOrgToken}, {"server_count": bot.guilds.cache.size});
 				}
 				if (config.botsOnDiscordToken) {
 					bot.postStatsToWebsite(`https://bots.ondiscord.xyz/bot-api/bots/${bot.user.id}/guilds`,
-						{"Authorization": config.botsOnDiscordToken}, {"guildCount": bot.guilds.size});
+						{"Authorization": config.botsOnDiscordToken}, {"guildCount": bot.guilds.cache.size});
 				}
 				if (config.botsForDiscordToken) {
 					bot.postStatsToWebsite("https://botsfordiscord.com/api/bot/" + bot.user.id, {
 						"Content-Type": "application/json",
 						"Authorization": config.botsForDiscordToken
-					}, {"server_count": bot.guilds.size});
+					}, {"server_count": bot.guilds.cache.size});
 				}
 			}
 

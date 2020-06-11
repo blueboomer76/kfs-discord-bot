@@ -1,4 +1,4 @@
-const {Client, Collection, RichEmbed} = require("discord.js"),
+const {Client, Collection, MessageEmbed} = require("discord.js"),
 	{capitalize} = require("./modules/functions.js"),
 	config = require("./config.json"),
 	fs = require("fs"),
@@ -247,7 +247,7 @@ class KFSDiscordBot extends Client {
 				console.error(`Failed to obtain a meme from Reddit: ${requestRes}`);
 			} else {
 				const meme = res.body.data.children.filter(r => !r.data.stickied)[0].data;
-				this.channels.get(config.memeFeedChannel).send(new RichEmbed()
+				this.channels.cache.get(config.memeFeedChannel).send(new MessageEmbed()
 					.setTitle(meme.title)
 					.setURL("https://reddit.com" + meme.permalink)
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -266,7 +266,7 @@ class KFSDiscordBot extends Client {
 				for (let i = 0; i < amt; i++) {
 					urlList.push(feed.items.splice(Math.floor(Math.random() * feed.items.length), 1)[0].link);
 				}
-				this.channels.get(config.rssFeedChannel).send(urlList.join("\n"));
+				this.channels.cache.get(config.rssFeedChannel).send(urlList.join("\n"));
 			});
 	}
 

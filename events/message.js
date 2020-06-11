@@ -6,7 +6,7 @@ async function execCommand(runCommand, bot, message, args) {
 	if (runCommand.disabled) return {cmdErr: "This command is currently disabled."};
 	if (message.guild) {
 		if (runCommand.nsfw && !message.channel.nsfw) return {cmdErr: "Please go to a NSFW channel to use this command."};
-		if (message.guild.large && !message.member) await message.guild.fetchMember(message.author);
+		if (message.guild.large && !message.member) await message.guild.members.fetch(message.author);
 	} else if (!runCommand.allowDMs) {
 		return {cmdErr: "This command cannot be used in Direct Messages."};
 	}
@@ -31,7 +31,9 @@ async function execCommand(runCommand, bot, message, args) {
 				}
 			}
 		}
-		if (requiredPerms.role) roleAllowed = message.author.id == message.guild.owner.id || message.member.roles.some(role => role.name.toLowerCase() == requiredPerms.role.toLowerCase());
+		if (requiredPerms.role) {
+			roleAllowed = message.author.id == message.guild.owner.id || message.member.roles.cache.some(role => role.name.toLowerCase() == requiredPerms.role.toLowerCase());
+		}
 		if (userPermsAllowed == false && roleAllowed == null) {
 			faultMsg += "\nYou need these permissions to run this command:\n" + requiredPerms.user.map(p => parsePerm(p)).join(", ");
 		} else if (userPermsAllowed == false && roleAllowed == false) {

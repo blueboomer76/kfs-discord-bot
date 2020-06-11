@@ -69,14 +69,14 @@ module.exports = {
 			commandCurrentTotal += cachedStats.commandUsages[cmdName];
 		}
 
-		const statuses = getStatuses(bot.users),
+		const statuses = getStatuses(bot.users.cache),
 			channels = {text: 0, voice: 0, category: 0, dm: 0};
-		for (const channel of bot.channels.values()) channels[channel.type]++;
+		for (const channel of bot.channels.cache.values()) channels[channel.type]++;
 
 		return {
-			servers: bot.guilds.size,
-			largeServers: bot.guilds.filter(g => g.large).size,
-			users: bot.users.size,
+			servers: bot.guilds.cache.size,
+			largeServers: bot.guilds.cache.filter(g => g.large).size,
+			users: bot.users.cache.size,
 			statuses: statuses,
 			channels: {
 				text: channels.text,

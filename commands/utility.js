@@ -1,4 +1,4 @@
-const {RichEmbed} = require("discord.js"),
+const {MessageEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	{capitalize, getDuration, getStatuses} = require("../modules/functions.js"),
 	{fetchMembers} = require("../modules/memberFetcher.js"),
@@ -32,7 +32,25 @@ module.exports = [
 					time: 15000,
 					type: "channel"
 				},
-				usage: "avatar [user]"
+				flags: [
+					{
+						name: "format",
+						desc: "The file format to output (one of GIF, JPG, PNG, WEBP)",
+						arg: {
+							type: "oneof",
+							allowedValues: ["gif", "jpg", "png", "webp"]
+						}
+					},
+					{
+						name: "size",
+						desc: "The size of the avatar (can be 16, 32, 64 ... 4096)",
+						arg: {
+							type: "oneof",
+							allowedValues: ["16", "32", "64", "128", "256", "512", "1024", "2048", "4096"]
+						}
+					}
+				],
+				usage: "avatar [user] [--format <gif/jpg/png/webp>] [--size <number>]"
 			});
 		}
 
@@ -40,7 +58,7 @@ module.exports = [
 			let user;
 			if (typeof args[0] == "string") {
 				if (/^\d{17,19}$/.test(args[0])) {
-					user = await bot.fetchUser(args[0]).catch(() => {});
+					user = await bot.users.fetch(args[0]).catch(() => {});
 				}
 				if (!user) {
 					const userArgs = args[0].length > 1500 ? args[0].slice(0, 1500) + "..." : args[0];
@@ -49,8 +67,15 @@ module.exports = [
 			} else {
 				user = (args[0] && args[0].user) || message.author;
 			}
-			const avatarURL = user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
-			message.channel.send(new RichEmbed()
+
+			const formatFlag = flags.find(f => f.name == "format"),
+				sizeFlag = flags.find(f => f.name == "size");
+			const avatarURL = user.avatarURL({
+				format: formatFlag ? formatFlag.args : "png",
+				dynamic: true,
+				size: sizeFlag ? parseInt(sizeFlag.args) : undefined
+			}) || `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
+			message.channel.send(new MessageEmbed()
 				.setTitle("Avatar - " + user.tag)
 				.setDescription("Avatar URL: " + avatarURL)
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -87,11 +112,11 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const channel = args[0] || message.channel;
 			let accessible = "No";
-			if (channel.permissionsFor(message.guild.defaultRole).has("VIEW_CHANNEL")) {
-				accessible = channel.permissionsFor(message.guild.defaultRole).has("READ_MESSAGE_HISTORY") ? "Yes" : "Partial";
+			if (channel.permissionsFor(message.guild.roles.everyone).has("VIEW_CHANNEL")) {
+				accessible = channel.permissionsFor(message.guild.roles.everyone).has("READ_MESSAGE_HISTORY") ? "Yes" : "Partial";
 			}
 
-			const channelEmbed = new RichEmbed()
+			const channelEmbed = new MessageEmbed()
 				.setTitle("Channel Info - " + channel.name)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter("ID: " + channel.id)
@@ -100,14 +125,14 @@ module.exports = [
 				.addField("Category Parent", channel.parent ? channel.parent.name : "None", true)
 				.addField("Accessible to everyone", accessible, true);
 
-			const uncategorized = message.guild.channels.filter(c => c.type != "category" && !c.parent);
+			const uncategorized = message.guild.channels.cache.filter(c => c.type != "category" && !c.parent);
 			let channels, pos = 0;
 			if (uncategorized.has(channel.id)) {
-				channels = uncategorized.array().sort((a, b) => a.calculatedPosition - b.calculatedPosition);
+				channels = uncategorized.array().sort((a, b) => a.position - b.position);
 			} else {
 				const categoryID = channel.type == "category" ? channel.id : channel.parent.id,
-					categoryChannels = message.guild.channels.array().filter(c => c.type == "category")
-						.sort((a, b) => a.calculatedPosition - b.calculatedPosition);
+					categoryChannels = message.guild.channels.cache.array().filter(c => c.type == "category")
+						.sort((a, b) => a.position - b.position);
 				pos += uncategorized.size + 1;
 
 				let categoryParent = categoryChannels[0], i = 0;
@@ -116,7 +141,7 @@ module.exports = [
 					i++;
 					categoryParent = categoryChannels[i];
 				}
-				channels = categoryParent.children.array().sort((a, b) => a.calculatedPosition - b.calculatedPosition);
+				channels = categoryParent.children.array().sort((a, b) => a.position - b.position);
 			}
 			if (channel.type != "category") {
 				const textChannels = channels.filter(c => c.type == "text");
@@ -128,7 +153,7 @@ module.exports = [
 				}
 				pos++;
 			}
-			channelEmbed.addField("Position", pos + " / " + message.guild.channels.size, true);
+			channelEmbed.addField("Position", pos + " / " + message.guild.channels.cache.size, true);
 
 			if (channel.type == "text") {
 				channelEmbed.addField("NSFW", channel.nsfw ? "Yes" : "No", true)
@@ -173,7 +198,7 @@ module.exports = [
 				xyzValues = convert.rgb.xyz(rgbValues),
 				grayscaleValue = Math.round(convert.rgb.gray.raw(rgbValues) * 2.55);
 
-			message.channel.send(new RichEmbed()
+			message.channel.send(new MessageEmbed()
 				.setTitle("Color - #" + hexValue)
 				.setDescription(`**Nearest CSS Color Name**: ${colorName}\n` +
 					`**Hexadecimal (Hex)**: #${hexValue}\n` +
@@ -217,14 +242,14 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const emoji = args[0];
 			let emojiRoleList;
-			if (emoji.roles.size == 0) {
+			if (emoji.roles.cache.size == 0) {
 				emojiRoleList = "All roles";
 			} else {
-				emojiRoleList = emoji.roles.map(role => role.name).join(", ");
+				emojiRoleList = emoji.roles.cache.map(role => role.name).join(", ");
 				if (emojiRoleList.length > 1000) emojiRoleList = emojiRoleList.slice(0, 1000) + "...";
 			}
 
-			message.channel.send(new RichEmbed()
+			message.channel.send(new MessageEmbed()
 				.setTitle("Emoji - " + emoji.name)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter("ID: " + emoji.id)
@@ -310,7 +335,7 @@ module.exports = [
 				message.react("✅");
 			} else {
 				const rawCodeFieldText = args[0].length > 1000 ? args[0].slice(0, 1000) + "..." : args[0],
-					evalEmbed = new RichEmbed()
+					evalEmbed = new MessageEmbed()
 						.setTitle("discord.js Evaluator")
 						.setColor(Math.floor(Math.random() * 16777216))
 						.setFooter("Execution took: " + evalTime)
@@ -398,22 +423,22 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			const role = args[0],
-				rolePos = role.calculatedPosition,
-				guildRoles = message.guild.roles.array();
-			guildRoles.splice(guildRoles.findIndex(r => r.calculatedPosition == 0), 1);
+				rolePos = role.position,
+				guildRoles = message.guild.roles.cache.array();
+			guildRoles.splice(guildRoles.findIndex(r => r.position == 0), 1);
 
 			const guildMembers = await fetchMembers(message),
-				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id)),
+				roleMembers = guildMembers.filter(mem => mem.roles.cache.has(role.id)),
 				nearbyRoles = [],
 				startPos = Math.min(rolePos + 2, guildRoles.length),
 				endPos = Math.max(rolePos - 2, 1);
 
 			for (let i = startPos; i >= endPos; i--) {
-				const roleName = guildRoles.find(r => r.calculatedPosition == i).name;
+				const roleName = guildRoles.find(r => r.position == i).name;
 				nearbyRoles.push(i == rolePos ? `**${roleName}**` : roleName);
 			}
 
-			message.channel.send(new RichEmbed()
+			message.channel.send(new MessageEmbed()
 				.setTitle("Role Info - " + role.name)
 				.setColor(role.color)
 				.setFooter("ID: " + role.id)
@@ -462,9 +487,9 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			const orderedFlag = flags.find(f => f.name == "ordered");
-			const roles = message.guild.roles.array();
-			roles.splice(roles.findIndex(r => r.calculatedPosition == 0), 1);
-			if (orderedFlag) roles.sort((a, b) => b.calculatedPosition - a.calculatedPosition);
+			const roles = message.guild.roles.cache.array();
+			roles.splice(roles.findIndex(r => r.position == 0), 1);
+			if (orderedFlag) roles.sort((a, b) => b.position - a.position);
 			new Paginator(message, [roles.map(role => role.name)], {title: "List of roles - " + message.guild.name}, {
 				noStop: true,
 				numbered: orderedFlag,
@@ -501,7 +526,7 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const role = args[0],
 				guildMembers = await fetchMembers(message),
-				roleMembers = guildMembers.filter(mem => mem.roles.has(role.id));
+				roleMembers = guildMembers.filter(mem => mem.roles.cache.has(role.id));
 
 			if (roleMembers.size == 0) return {cmdWarn: `There are no members in the role **${role.name}**.`};
 			if (roleMembers.size > 250) return {cmdWarn: `There are more than 250 members in the role **${role.name}**.`};
@@ -535,30 +560,22 @@ module.exports = [
 			const guild = message.guild,
 				guildMembers = await fetchMembers(message);
 
-			const statuses = getStatuses(guild.members, guild.memberCount - guild.members.size),
+			const statuses = getStatuses(guild.members.cache, guild.memberCount - guild.members.cache.size),
 				channels = {text: 0, voice: 0, category: 0};
-			for (const channel of guild.channels.values()) channels[channel.type]++;
+			for (const channel of guild.channels.cache.values()) channels[channel.type]++;
 
-			let guildVerif;
-			switch (guild.verificationLevel) {
-				case 0: guildVerif = "None"; break;
-				case 1: guildVerif = "Low (verified email)"; break;
-				case 2: guildVerif = "Medium (registered for 5 mins)"; break;
-				case 3: guildVerif = "High (member for 10 mins)"; break;
-				case 4: guildVerif = "Very High (verified phone)";
-			}
 			const botCount = guildMembers.filter(mem => mem.user.bot).size;
 
-			message.channel.send(new RichEmbed()
+			message.channel.send(new MessageEmbed()
 				.setTitle("Server Info - " + guild.name)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`ID: ${guild.id} | Server stats as of`)
-				.setThumbnail(guild.iconURL)
+				.setThumbnail(guild.iconURL({format: "png", dynamic: true}))
 				.setTimestamp(message.createdAt)
 				.addField("Server created at", getDateAndDurationString(guild.createdTimestamp))
 				.addField("Owner", `${guild.owner.user.tag} \`(ID ${guild.owner.id})\``)
 				.addField("Region", guild.region, true)
-				.addField("Verification", guildVerif, true)
+				.addField("Verification", capitalize(guild.verificationLevel), true)
 				.addField("Explicit Filter", guild.explicitContentFilter == 0 ? "None" : (guild.explicitContentFilter == 1 ? "Low" : "High"), true)
 				.addField("2-Factor Auth Required", guild.mfaLevel == 0 ? "No" : "Yes", true)
 				.addField(`Members [${guild.memberCount} total]`,
@@ -567,8 +584,8 @@ module.exports = [
 						statuses.offline + " Offline\n" +
 					`${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,
 					true)
-				.addField(`Roles [${guild.roles.size - 1} total]`, "Use `rolelist` to see all roles", true)
-				.addField(`Channels [${guild.channels.size} total]`,
+				.addField(`Roles [${guild.roles.cache.size - 1} total]`, "Use `rolelist` to see all roles", true)
+				.addField(`Channels [${guild.channels.cache.size} total]`,
 					channels.text + " Text\n" + channels.voice + " Voice\n" + channels.category + " Categories", true)
 			);
 		}
@@ -604,7 +621,7 @@ module.exports = [
 			let user, member;
 			if (typeof args[0] == "string") {
 				if (/^\d{17,19}$/.test(args[0])) {
-					user = await bot.fetchUser(args[0]).catch(() => {});
+					user = await bot.users.fetch(args[0]).catch(() => {});
 				}
 				if (!user) {
 					const userArgs = args[0].length > 1500 ? args[0].slice(0, 1500) + "..." : args[0];
@@ -615,27 +632,28 @@ module.exports = [
 				user = member.user;
 			}
 
-			const userEmbed = new RichEmbed()
+			const userEmbed = new MessageEmbed()
 				.setTitle("User Info - " + user.tag)
 				.setFooter("ID: " + user.id)
-				.setThumbnail(user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`)
+				.setThumbnail(user.avatarURL({format: "png", dynamic: true}) || `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`)
 				.addField("Account created at", getDateAndDurationString(user.createdTimestamp));
 
 			if (member) userEmbed.addField("Joined this server at", getDateAndDurationString(member.joinedTimestamp));
 
-			const rawPresence = (member && member.presence) || user.presence;
-			let presence;
-			if (rawPresence.status == "online") {
-				presence = "Online";
-			} else if (rawPresence.status == "idle") {
-				presence = "Idle";
-			} else if (rawPresence.status == "dnd") {
-				presence = "Do Not Disturb";
-			} else {
-				presence = "Offline";
+			const rawPresence = (member && member.presence) || user.presence,
+				presence = rawPresence.status == "dnd" ? "Do Not Disturb" : capitalize(rawPresence.status);
+			let customStatus = "",
+				activityString = "";
+			for (const activity of rawPresence.activities) {
+				if (activity.type == "CUSTOM_STATUS") {
+					customStatus = "\n" + "__Custom Status__: " + activity.state;
+				} else {
+					const typeString = activity.type == "LISTENING" ? "Listening to" : capitalize(activity.type);
+					activityString += "\n__" + typeString + "__ " + activity.name;
+				}
 			}
-			if (rawPresence.game) presence += ` (playing ${rawPresence.game.name})`;
-			userEmbed.addField("Status", presence, true);
+
+			userEmbed.addField("Status", presence + customStatus + activityString, true);
 
 			if (member) {
 				const guildMembers = await fetchMembers(message),
@@ -649,8 +667,8 @@ module.exports = [
 				}
 
 				const memRoles = [];
-				for (const role of member.roles.values()) {
-					if (role.calculatedPosition == 0) continue;
+				for (const role of member.roles.cache.values()) {
+					if (role.position == 0) continue;
 					memRoles.push(role.name);
 				}
 
@@ -668,7 +686,7 @@ module.exports = [
 					.addField("Join order", nearbyMems.join(" > "))
 					.addField("Roles - " + memRoles.length, roleList);
 
-				if (member.displayColor != 0 || (member.colorRole && member.colorRole.color == 0)) {
+				if (member.displayColor != 0 || (member.roles.color && member.roles.color.color == 0)) {
 					userEmbed.setColor(member.displayColor);
 				}
 			}

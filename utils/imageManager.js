@@ -29,7 +29,7 @@ module.exports = {
 				.catch(err => result.error = err);
 		} else if (!userInput) {
 			// No user input given, search through messages
-			await message.channel.fetchMessages({limit: 25})
+			await message.channel.messages.fetch({limit: 25})
 				.then(msgs => {
 					for (const msg of msgs.values()) {
 						if (msg.attachments.size > 0) {

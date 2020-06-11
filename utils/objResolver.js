@@ -46,7 +46,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			if (["yes", "y", "true", "enable"].includes(lowerObj)) return true;
 			return ["no", "n", "false", "disable"].includes(lowerObj) ? false : null;
 		case "channel":
-			return getListableObjects(message.guild.channels, /^<#\d{17,19}>$/, obj);
+			return getListableObjects(message.guild.channels.cache, /^<#\d{17,19}>$/, obj);
 		case "color": {
 			const objWithNoSpaces = lowerObj.replace(/[ %]/g, "").toLowerCase();
 			let i, colorMatch;
@@ -94,7 +94,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 		case "command":
 			return bot.commands.get(lowerObj) || bot.commands.get(bot.aliases.get(lowerObj)) || null;
 		case "emoji":
-			return getListableObjects(message.guild.emojis, emojiRegex, obj);
+			return getListableObjects(message.guild.emojis.cache, emojiRegex, obj);
 		case "float": {
 			const num = parseFloat(obj);
 			return !isNaN(num) && num >= params.min && num <= params.max ? num : null;
@@ -106,7 +106,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				const guildMembers = await fetchMembers(message),
 					member = guildMembers.get(obj.match(/\d+/)[0]);
 				if (member) {
-					return member.user.avatarURL || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`;
+					return member.user.avatarURL({format: "png"}) || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`;
 				} else {
 					return null;
 				}
@@ -130,10 +130,10 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			let member;
 
 			if (memberMatch) {
-				member = await message.guild.fetchMember(memberMatch[0].match(/\d+/)[0]).catch(() => {});
+				member = await message.guild.members.fetch(memberMatch[0].match(/\d+/)[0]).catch(() => {});
 				return member ? [member] : (allowRaw ? obj : null);
 			} else if (/^\d{17,19}$/.test(obj)) {
-				member = await message.guild.fetchMember(obj.match(/\d+/)[0]).catch(() => {});
+				member = await message.guild.members.fetch(obj.match(/\d+/)[0]).catch(() => {});
 				if (member) return [member];
 			}
 
@@ -156,8 +156,8 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 		case "oneof":
 			return params.list.includes(lowerObj) ? lowerObj : null;
 		case "role": {
-			const guildRoles = message.guild.roles.clone();
-			guildRoles.delete(message.guild.defaultRole.id);
+			const guildRoles = message.guild.roles.cache.clone();
+			guildRoles.delete(message.guild.roles.everyone.id);
 			return getListableObjects(guildRoles, /^<@&\d{17,19}>$/, obj);
 		}
 		case "string":

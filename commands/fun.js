@@ -1,4 +1,4 @@
-const {RichEmbed} = require("discord.js"),
+const {MessageEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	request = require("request");
 
@@ -75,7 +75,7 @@ module.exports = [
 			}
 
 			const postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0];
-			message.channel.send(new RichEmbed()
+			message.channel.send(new MessageEmbed()
 				.setTitle(postData.title.length > 250 ? postData.title.slice(0, 250) + "..." : postData.title)
 				.setURL("https://reddit.com" + postData.url)
 				.setDescription(postData.desc)
@@ -150,7 +150,7 @@ module.exports = [
 			}, (err, res) => {
 				const requestRes = bot.checkRemoteRequest("Cat Facts API", err, res);
 				if (requestRes != true) return message.channel.send(requestRes);
-				message.channel.send(new RichEmbed()
+				message.channel.send(new MessageEmbed()
 					.setTitle("🐱 Cat Facts")
 					.setDescription(res.body.data.map(entry => entry.fact).join("\n\n"))
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -240,7 +240,7 @@ module.exports = [
 			}, (err, res) => {
 				const requestRes = bot.checkRemoteRequest("Dog Facts API", err, res);
 				if (requestRes != true) return message.channel.send(requestRes);
-				message.channel.send(new RichEmbed()
+				message.channel.send(new MessageEmbed()
 					.setTitle("🐶 Dog Facts")
 					.setDescription(res.body.facts.join("\n\n"))
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -318,7 +318,7 @@ module.exports = [
 				}
 			}
 
-			message.channel.send(new RichEmbed()
+			message.channel.send(new MessageEmbed()
 				.setTitle("Here's some jokes!")
 				.setDescription(embedDesc)
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -433,7 +433,7 @@ module.exports = [
 			}
 
 			const postData = this.cachedPosts.splice(Math.floor(Math.random() * this.cachedPosts.length), 1)[0],
-				punEmbed = new RichEmbed()
+				punEmbed = new MessageEmbed()
 					.setTitle(postData.title.length > 250 ? postData.title.slice(0, 250) + "..." : postData.title)
 					.setURL("https://reddit.com" + postData.url)
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -536,11 +536,11 @@ module.exports = [
 
 		async run(bot, message, args, flags) {
 			if (args[0] == "message") {
-				message.channel.fetchMessage(args[1])
+				message.channel.messages.fetch(args[1])
 					.then(msg => {
-						const quoteEmbed = new RichEmbed()
+						const quoteEmbed = new MessageEmbed()
 							.setDescription(msg.content || ((msg.embeds[0] && msg.embeds[0].description) || ""))
-							.setAuthor(msg.author.tag, msg.author.avatarURL ||
+							.setAuthor(msg.author.tag, msg.author.avatarURL({format: "png", dynamic: true}) ||
 								`https://cdn.discordapp.com/embed/avatars/${msg.author.discriminator % 5}.png`)
 							.setFooter("Sent")
 							.setTimestamp(msg.createdAt)
@@ -551,9 +551,9 @@ module.exports = [
 					.catch(() => message.channel.send("⚠ A message with that ID was not found in this channel."));
 			} else {
 				const member = args[0];
-				message.channel.send(new RichEmbed()
+				message.channel.send(new MessageEmbed()
 					.setDescription(args[1])
-					.setAuthor(member.user.tag, member.user.avatarURL)
+					.setAuthor(member.user.tag, member.user.avatarURL({format: "png", dynamic: true}))
 					.setColor(member.displayColor)
 				);
 			}
@@ -600,7 +600,7 @@ module.exports = [
 			}
 
 			if (/^<@!?\d{17,19}>$/.test(toRate)) {
-				const member = message.guild.members.get(args[0].match(/\d+/)[0]);
+				const member = message.guild.members.cache.get(args[0].match(/\d+/)[0]);
 				toRate = member ? member.user.tag : args[0];
 			} else if (toRate.toLowerCase() == "me") {
 				toRate = message.author.tag;
@@ -640,7 +640,7 @@ module.exports = [
 			}
 
 			const rMultiplier = (rating - 1) / 9;
-			message.channel.send(new RichEmbed()
+			message.channel.send(new MessageEmbed()
 				.setDescription(toSend + "\n" +
 					"`" + "█".repeat(Math.round(rating)) + " ‍‍".repeat(10 - Math.round(rating)) + "` " + `**${rating}**/10\n` +
 					this.rateStates.find(state => state.min <= rating).msg)
@@ -678,7 +678,7 @@ module.exports = [
 			await message.delete().catch(() => {});
 			if (flags.some(f => f.name == "embed")) {
 				if (!message.channel.permissionsFor(bot.user).has("EMBED_LINKS")) return {cmdWarn: "To post an embed, the bot requires the `Embed Links` permission."};
-				message.channel.send(new RichEmbed()
+				message.channel.send(new MessageEmbed()
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setDescription(args[0])
 				);
@@ -735,12 +735,12 @@ module.exports = [
 			let toShip1 = args[0], toShip2 = args[1];
 
 			if (memberRegex.test(toShip1)) {
-				const member = message.guild.members.get(args[0].match(memberRegex2)[0]);
+				const member = message.guild.members.cache.get(args[0].match(memberRegex2)[0]);
 				toShip1 = member ? member.user.username : args[0];
 			}
 			if (toShip2) {
 				if (memberRegex.test(toShip2)) {
-					const member = message.guild.members.get(args[1].match(memberRegex2)[0]);
+					const member = message.guild.members.cache.get(args[1].match(memberRegex2)[0]);
 					toShip2 = member ? member.user.username : args[1];
 				}
 			} else {
@@ -762,7 +762,7 @@ module.exports = [
 					`**${shipRating}**/10\n` +
 				this.shipStates.find(state => state.min <= shipRating).msg;
 			if (toShip1 == toShip2) shipDescription += "\n\n*Forever alone!*";
-			message.channel.send(new RichEmbed()
+			message.channel.send(new MessageEmbed()
 				.setTitle(toShip1 + " 💗 " + toShip2)
 				.setColor(131073 * Math.floor(shipRating * 12.5))
 				.setDescription(shipDescription)

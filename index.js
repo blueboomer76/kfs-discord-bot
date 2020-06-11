@@ -4,19 +4,15 @@ const {DiscordAPIError} = require("discord.js"),
 	fs = require("fs");
 
 // Check system requirements
-if (parseInt(process.versions.node) < 8) {
-	throw new Error("Incompatible Node.js version: v8 or newer required");
+if (parseInt(process.versions.node) < 12) {
+	throw new Error("Incompatible Node.js version: v12 or newer required");
 }
 if (process.arch == "ia32") {
 	throw new Error("Incompatible operating system: 64-bit required");
 }
 
 const bot = new KFSDiscordBot({
-	disableEveryone: true,
-	disabledEvents: [
-		"USER_NOTE_UPDATE",
-		"USER_SETTINGS_UPDATE"
-	]
+	disableMentions: "everyone"
 });
 
 let storedStats;
@@ -79,8 +75,23 @@ process.on("exit", () => {
 	bot.logStats(true);
 });
 
-bot.login(token)
-	.catch(err => {
-		console.error("Bot failed to login:");
-		console.error(err);
-	});
+(async function() {
+	let loginInterval = 1000;
+	let loginDone = false;
+	while (loginInterval <= 512000 && !loginDone) {
+		loginDone = await bot.login(token)
+			.then(() => true)
+			.catch(async err => {
+				console.error(`[${new Date().toJSON()}] Bot failed to login:`);
+				console.error(err);
+
+				console.log("The login will be retried in " + loginInterval / 1000 + " seconds (maximum 512).");
+				await new Promise(resolve => setTimeout(resolve, loginInterval));
+
+				loginInterval *= 2;
+				return false;
+			});
+	}
+
+	if (!loginDone) process.exit();
+})();

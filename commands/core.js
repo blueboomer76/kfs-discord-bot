@@ -1,4 +1,4 @@
-const {RichEmbed, WebhookClient, version} = require("discord.js"),
+const {MessageEmbed, WebhookClient, version} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	{getBotStats, getDuration, parsePerm} = require("../modules/functions.js"),
 	Paginator = require("../utils/paginator.js"),
@@ -27,8 +27,8 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			message.channel.send(new RichEmbed()
-				.setAuthor("About this bot", bot.user.avatarURL)
+			message.channel.send(new MessageEmbed()
+				.setAuthor("About this bot", bot.user.avatarURL({format: "png"}))
 				.setDescription("A multipurpose Discord bot for fun, moderation, utility, and more. " +
 					"It has a phone command for connecting other servers together, and combines features from popular bots.")
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -88,7 +88,7 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const helpEmbed = new RichEmbed().setColor(Math.floor(Math.random() * 16777216));
+			const helpEmbed = new MessageEmbed().setColor(Math.floor(Math.random() * 16777216));
 			if (args[0] == "arguments") {
 				message.channel.send(helpEmbed.setTitle("Argument Info")
 					.setDescription("Here's some argument info for commands:")
@@ -188,7 +188,7 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			message.channel.send(new RichEmbed()
+			message.channel.send(new MessageEmbed()
 				.setTitle("Bot References")
 				.setDescription("Exciting! Use these links to spread the fun!")
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -335,7 +335,7 @@ module.exports = [
 				.then(msg => {
 					msg.edit("🏓 **Pong!**\n" +
 						`Latency: ${msg.createdTimestamp - message.createdTimestamp}ms\n` +
-						`API Latency: ${Math.round(bot.ping)}ms`);
+						`API Latency: ${Math.round(bot.ws.ping)}ms`);
 				});
 		}
 	},
@@ -489,7 +489,7 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const statsEmbed = new RichEmbed()
+			const statsEmbed = new MessageEmbed()
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setTimestamp(message.createdAt);
 
@@ -502,7 +502,7 @@ module.exports = [
 					heapUsed = processUsedMemory.heapUsed,
 					cpuUsage1 = this.getCpuUsage(os.cpus());
 
-				statsEmbed.setAuthor("Bot Stats - Processor", bot.user.avatarURL)
+				statsEmbed.setAuthor("Bot Stats - Processor", bot.user.avatarURL({format: "png"}))
 					.setDescription("Here's some detailed stats about the host that this bot is on!")
 					.addField("Process Started", getDuration(Date.now() - process.uptime() * 1000), true)
 					.addField("Total Resident Set (RSS)", this.getMemoryString(processUsedMemory.rss), true)
@@ -536,7 +536,7 @@ module.exports = [
 					serverCount = botStats.servers,
 					userCount = botStats.users;
 
-				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL)
+				statsEmbed.setAuthor("Bot Stats", bot.user.avatarURL({format: "png"}))
 					.setFooter("⏰ Took: " + evalTime + " | Stats as of")
 					.setDescription("Here's some detailed stats about this bot! *To see stats about the bot host, use `" + bot.prefix + "stats processor`*")
 					.addField("Bot Created", getDuration(bot.user.createdTimestamp), true)
@@ -650,7 +650,7 @@ module.exports = [
 						.replace(/(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi, ""),
 					author: {
 						name: message.author.tag,
-						icon_url: message.author.avatarURL
+						icon_url: message.author.avatarURL({format: "png", dynamic: true})
 					},
 					color: Math.floor(Math.random() * 16777216),
 					footer: {

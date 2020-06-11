@@ -6,16 +6,16 @@ function compareRolePositions(message, target, role, options) {
 	let err = "";
 	if (options.type == "role") {
 		const tempErr = `I cannot ${options.action} the role **${target.name}** since its position is at or higher than `;
-		if (message.guild.owner.id != message.author.id && target.comparePositionTo(message.member.highestRole) >= 0) {
+		if (message.guild.owner.id != message.author.id && target.comparePositionTo(message.member.roles.highest) >= 0) {
 			err = tempErr + "your highest role. This can be overridden with server owner.";
-		} else if (!options.ignoreBot && target.comparePositionTo(message.guild.me.highestRole) >= 0) {
+		} else if (!options.ignoreBot && target.comparePositionTo(message.guild.me.roles.highest) >= 0) {
 			err = tempErr + "my highest role.";
 		}
 	} else {
 		const tempErr = `I cannot ${options.action} the user **${target.user.tag}** since the user's highest role is at or higher than `;
-		if (message.guild.owner.id != message.author.id && role.comparePositionTo(message.member.highestRole) >= 0) {
+		if (message.guild.owner.id != message.author.id && role.comparePositionTo(message.member.roles.highest) >= 0) {
 			err = tempErr + "yours. This can be overridden with server owner.";
-		} else if (!options.ignoreBot && role.comparePositionTo(message.guild.me.highestRole) >= 0) {
+		} else if (!options.ignoreBot && role.comparePositionTo(message.guild.me.roles.highest) >= 0) {
 			err = tempErr + "mine.";
 		}
 	}
@@ -56,12 +56,12 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
-			if (member.roles.has(role.id)) return {cmdWarn: `User **${member.user.tag}** already has the role **${role.name}**.`};
+			if (member.roles.cache.has(role.id)) return {cmdWarn: `User **${member.user.tag}** already has the role **${role.name}**.`};
 			if (role.managed) return {cmdWarn: `Role **${role.name}** cannot be added to **${member.user.tag}** since it is managed or integrated.`};
 			const compareTest = compareRolePositions(message, member, role, {action: `add the role **${role.name}** to`, type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
-			member.addRole(role)
+			member.roles.add(role)
 				.then(() => message.channel.send(`✅ Role **${role.name}** has been added to the user **${member.user.tag}**.`))
 				.catch(err => message.channel.send("An error has occurred while trying to add the role: `" + err + "`"));
 		}
@@ -119,7 +119,7 @@ module.exports = [
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) {
 				return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 			}
-			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "ban", type: "user"});
+			const compareTest = compareRolePositions(message, member, member.roles.highest, {action: "ban", type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
 			if (!flags.some(f => f.name == "yes")) {
@@ -160,10 +160,10 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (message.guild.channels.size >= 500) return {cmdWarn: "Cannot create channel since limit of 500 channels is reached."};
+			if (message.guild.channels.cache.size >= 500) return {cmdWarn: "Cannot create channel since limit of 500 channels is reached."};
 
 			const channelName = args[0].toLowerCase();
-			message.guild.createChannel(channelName, {type: "text"})
+			message.guild.channels.create(channelName, {type: "text"})
 				.then(() => message.channel.send(`✅ The text channel **${channelName}** has been created.`))
 				.catch(err => message.channel.send("An error has occurred while trying to create the channel: `" + err + "`"));
 		}
@@ -194,10 +194,14 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (message.guild.roles.size >= 250) return {cmdWarn: "Cannot create role since limit of 250 roles is reached."};
+			if (message.guild.roles.cache.size >= 250) return {cmdWarn: "Cannot create role since limit of 250 roles is reached."};
 
 			const roleName = args[0];
-			message.guild.createRole({name: roleName})
+			message.guild.roles.create({
+				data: {
+					name: roleName
+				}
+			})
 				.then(() => message.channel.send(`✅ Role **${roleName}** has been created.`))
 				.catch(err => message.channel.send("An error has occurred while trying to create the role: `" + err + "`"));
 		}
@@ -342,16 +346,16 @@ module.exports = [
 				reasonFlag = flags.find(f => f.name == "reason");
 			if (userID == message.author.id || userID == message.guild.owner.id || userID == bot.user.id) return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 
-			const guildMembers = await message.guild.fetchMembers().catch(() => {});
+			const guildMembers = await message.guild.members.fetch().catch(() => {});
 			if (!guildMembers) return {cmdWarn: "Unable to perform a hackban. Maybe try again?"};
 
 			const memberWithID = guildMembers.get(userID);
 			if (memberWithID) {
-				const compareTest = compareRolePositions(message, memberWithID, memberWithID.highestRole, {action: "hackban", type: "user"});
+				const compareTest = compareRolePositions(message, memberWithID, memberWithID.roles.highest, {action: "hackban", type: "user"});
 				if (compareTest != true) return {cmdWarn: compareTest};
 			}
 
-			message.guild.ban(userID, {
+			message.guild.members.ban(userID, {
 				days: daysFlag ? daysFlag.args : 0,
 				reason: reasonFlag ? reasonFlag.args : null
 			})
@@ -403,7 +407,7 @@ module.exports = [
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) {
 				return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 			}
-			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "kick", type: "user"});
+			const compareTest = compareRolePositions(message, member, member.roles.highest, {action: "kick", type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
 			if (!flags.some(f => f.name == "yes")) {
@@ -445,13 +449,13 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const channel = args[0] || message.channel,
 				channelTarget = args[0] ? "The channel **" + channel.name + "**": "This channel";
-			const defaultRoleID = message.guild.defaultRole.id;
+			const everyoneRoleID = message.guild.roles.everyone.id;
 
-			const ecOverwrites = channel.permissionOverwrites.get(defaultRoleID);
+			const ecOverwrites = channel.permissionOverwrites.get(everyoneRoleID);
 			if (ecOverwrites && new Permissions(ecOverwrites.deny).has("VIEW_CHANNEL")) {
 				return {cmdWarn: channelTarget + " is already locked to the everyone role."};
 			}
-			channel.overwritePermissions(defaultRoleID, {
+			channel.updateOverwrite(everyoneRoleID, {
 				VIEW_CHANNEL: false
 			})
 				.then(() => {
@@ -490,14 +494,14 @@ module.exports = [
 				return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 			}
 			if (member.hasPermission("ADMINISTRATOR")) return {cmdWarn: "This command cannot be used on members with the `Administrator` permission."};
-			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "mute", type: "user", ignoreBot: true});
+			const compareTest = compareRolePositions(message, member, member.roles.highest, {action: "mute", type: "user", ignoreBot: true});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
 			const mcOverwrites = message.channel.permissionOverwrites.get(member.id);
 			if (mcOverwrites && new Permissions(mcOverwrites.deny).has("SEND_MESSAGES")) {
 				return {cmdWarn: `**${member.user.tag}** is already muted in this channel.`};
 			}
-			message.channel.overwritePermissions(member, {
+			message.channel.updateOverwrite(member, {
 				SEND_MESSAGES: false
 			})
 				.then(channel => {
@@ -622,8 +626,8 @@ module.exports = [
 				if (promptRes.error) return {cmdWarn: promptRes.error};
 
 				const toDeleteFromPrompt = [];
-				if (message.channel.messages.has(promptRes.noticeMsg.id)) toDeleteFromPrompt.push(promptRes.noticeMsg.id);
-				if (message.channel.messages.has(promptRes.responseMsg.id)) toDeleteFromPrompt.push(promptRes.responseMsg.id);
+				if (message.channel.messages.cache.has(promptRes.noticeMsg.id)) toDeleteFromPrompt.push(promptRes.noticeMsg.id);
+				if (message.channel.messages.cache.has(promptRes.responseMsg.id)) toDeleteFromPrompt.push(promptRes.responseMsg.id);
 				await message.channel.bulkDelete(toDeleteFromPrompt).catch(() => {});
 			}
 
@@ -645,7 +649,7 @@ module.exports = [
 				outOfTimeRange = false,
 				fetchErr;
 			while (currMsgGroup < msgGroupCount && !outOfTimeRange) {
-				await message.channel.fetchMessages({
+				await message.channel.messages.fetch({
 					limit: currMsgGroup == msgGroupCount - 1 ? args[0] % 100 : 100,
 					before: nextMessageID
 				})
@@ -680,7 +684,7 @@ module.exports = [
 			}
 
 			// Delete the messages
-			const hasCommandTrigger = message.channel.messages.has(message.id);
+			const hasCommandTrigger = message.channel.messages.cache.has(message.id);
 			if (hasCommandTrigger) toDeleteIDs.unshift(message.id);
 			const deleteGroupCount = Math.ceil(toDeleteIDs.length / 100);
 			for (let i = 0; i < deleteGroupCount; i++) {
@@ -705,14 +709,14 @@ module.exports = [
 			"__**Breakdown**__:\n" + breakdown)
 				.then(m => {
 					if (!noDeleteFlag) {
-						m.delete(Math.min(500 * authors.length + 4500, 10000)).catch(() => {});
+						m.delete({timeout: Math.min(500 * authors.length + 4500, 10000)}).catch(() => {});
 					}
 				});
 		}
 
 		async performMessageDelete(message, id) {
 			await message.delete().catch(() => {});
-			message.channel.fetchMessage(id)
+			message.channel.messages.fetch(id)
 				.then(msg => msg.delete()
 					.catch(() => message.channel.send("⚠ An error occurred while trying to delete the message in this channel.")))
 				.catch(() => message.channel.send("⚠ A message with that ID was not found in this channel."));
@@ -751,12 +755,12 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const member = args[0], role = args[1];
 			if (member.id == message.author.id || member.id == bot.user.id) return {cmdWarn: "This command cannot be used on yourself or the bot."};
-			if (!member.roles.has(role.id)) return {cmdWarn: `User **${member.user.tag}** does not have a role named **${role.name}**.`};
+			if (!member.roles.cache.has(role.id)) return {cmdWarn: `User **${member.user.tag}** does not have a role named **${role.name}**.`};
 			if (role.managed) return {cmdWarn: `Role **${role.name}** cannot be removed from **${member.user.tag}** since it is managed or integrated.`};
 			const compareTest = compareRolePositions(message, member, role, {action: `remove the role **${role.name}** from`, type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
-			member.removeRole(role)
+			member.roles.remove(role)
 				.then(() => message.channel.send(`✅ Role **${role.name}** has been removed from user **${member.user.tag}**.`))
 				.catch(err => message.channel.send("An error has occurred while trying to remove the role: `" + err + "`"));
 		}
@@ -863,7 +867,7 @@ module.exports = [
 				return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 			}
 			if (!member.nickname) return {cmdWarn: `User **${member.user.tag}** does not have a nickname in this server.`};
-			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "reset the nickname of", type: "user"});
+			const compareTest = compareRolePositions(message, member, member.roles.highest, {action: "reset the nickname of", type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
 			member.setNickname("")
@@ -909,7 +913,7 @@ module.exports = [
 			if (newNick == member.user.username) return {cmdWarn: "The new nickname cannot be the same as the user's username."};
 			if (newNick == member.nickname) return {cmdWarn: "The new nickname cannot be the same as the user's nickname in this server."};
 
-			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "set the nickname of", type: "user"});
+			const compareTest = compareRolePositions(message, member, member.roles.highest, {action: "set the nickname of", type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
 			member.setNickname(newNick)
@@ -1040,7 +1044,7 @@ module.exports = [
 			if (member.id == message.author.id || member.id == message.guild.owner.id || member.id == bot.user.id) {
 				return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 			}
-			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "softban", type: "user"});
+			const compareTest = compareRolePositions(message, member, member.roles.highest, {action: "softban", type: "user"});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
 			if (!flags.some(f => f.name == "yes")) {
@@ -1053,7 +1057,7 @@ module.exports = [
 				reason: reasonFlag ? reasonFlag.args : null
 			})
 				.then(() => {
-					message.guild.unban(member.id)
+					message.guild.members.unban(member.id)
 						.then(() => message.channel.send(`✅ User **${member.user.tag}** has been softbanned.`))
 						.catch(() => message.channel.send("An error has occurred while trying to unban the user while softbanning."));
 				})
@@ -1101,7 +1105,7 @@ module.exports = [
 				return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 			}
 
-			message.guild.unban(userID, reasonFlag ? reasonFlag.args : null)
+			message.guild.members.unban(userID, reasonFlag ? reasonFlag.args : null)
 				.then(() => message.channel.send(`✅ User with ID **${userID}** has been unbanned from this server.`))
 				.catch(() => message.channel.send("Could not unban the user with that ID. " +
 					"Make sure to check for typos in the ID and that the user is in the ban list."));
@@ -1135,13 +1139,13 @@ module.exports = [
 		async run(bot, message, args, flags) {
 			const channel = args[0] || message.channel,
 				channelTarget = args[0] ? "The channel **" + channel.name + "**": "This channel";
-			const defaultRoleID = message.guild.defaultRole.id;
+			const everyoneRoleID = message.guild.roles.everyone.id;
 
-			const ecOverwrites = channel.permissionOverwrites.get(defaultRoleID);
+			const ecOverwrites = channel.permissionOverwrites.get(everyoneRoleID);
 			if (!ecOverwrites || !new Permissions(ecOverwrites.deny).has("VIEW_CHANNEL")) {
 				return {cmdWarn: channelTarget + " is not locked to the everyone role."};
 			}
-			channel.overwritePermissions(defaultRoleID, {
+			channel.updateOverwrite(everyoneRoleID, {
 				VIEW_CHANNEL: null
 			})
 				.then(() => {
@@ -1180,14 +1184,14 @@ module.exports = [
 				return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 			}
 			if (member.hasPermission("ADMINISTRATOR")) return {cmdWarn: "This command cannot be used on members with the `Administrator` permission."};
-			const compareTest = compareRolePositions(message, member, member.highestRole, {action: "unmute", type: "user", ignoreBot: true});
+			const compareTest = compareRolePositions(message, member, member.roles.highest, {action: "unmute", type: "user", ignoreBot: true});
 			if (compareTest != true) return {cmdWarn: compareTest};
 
 			const mcOverwrites = message.channel.permissionOverwrites.get(member.id);
 			if (!mcOverwrites || !new Permissions(mcOverwrites.deny).has("SEND_MESSAGES")) {
 				return {cmdWarn: `**${member.user.tag}** is not muted in this channel.`};
 			}
-			message.channel.overwritePermissions(member, {
+			message.channel.updateOverwrite(member, {
 				SEND_MESSAGES: null
 			})
 				.then(channel => {

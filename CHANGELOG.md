@@ -2,7 +2,14 @@
 
 *The full changelog is available on the Discord support server.*
 
-# 1.X (current)
+# 2.X (current)
+
+## 2.0.0-beta.1
+
+- Upgraded discord.js from version 11 to 12
+- Removed support for Node.js versions older than 12 due to discord.js dependency
+
+# 1.X
 
 ## 1.6.7
 

@@ -134,18 +134,18 @@ module.exports = [
 				"*Answer with the letter of your choice.*")
 				.then(msg => {
 					msg.channel.awaitMessages(msg2 => msg2.author.id == message.author.id && responseChoices.includes(msg2.content.toUpperCase()), {
-						maxMatches: 1,
+						max: 1,
 						time: 30000,
 						errors: ["time"]
 					})
 						.then(collected => {
-							if (message.channel.messages.has(msg.id)) {
+							if (message.channel.messages.cache.has(msg.id)) {
 								msg.edit(msg.content + "\n\n" + `**${questionData.answer}**, choice ${answerLetter} is the correct answer! ` +
 									"(You chose " + collected.values().next().value.content.toUpperCase() + ")");
 							}
 						})
 						.catch(() => {
-							if (message.channel.messages.has(msg.id)) {
+							if (message.channel.messages.cache.has(msg.id)) {
 								msg.edit(msg.content + "\n\n" + "*You did not answer in time, try again!*");
 							}
 						});

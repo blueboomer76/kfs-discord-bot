@@ -1,4 +1,4 @@
-const {RichEmbed} = require("discord.js"),
+const {MessageEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	request = require("request");
 
@@ -84,7 +84,7 @@ function sendRedditEmbed(command, message, checkNsfw) {
 
 	const embedTitle = postData.title, imageURL = postData.imageURL;
 	if (imageURL.startsWith("https://external-") || /\.(gif|jpe?g|png)$/.test(imageURL)) {
-		message.channel.send(new RichEmbed()
+		message.channel.send(new MessageEmbed()
 			.setTitle(embedTitle.length > 250 ? embedTitle.slice(0, 250) + "..." : embedTitle)
 			.setURL("https://reddit.com" + postData.url)
 			.setColor(Math.floor(Math.random() * 16777216))
@@ -146,7 +146,7 @@ module.exports = [
 			request.get("http://random.birb.pw/tweet.json", (err, res) => {
 				const requestRes = bot.checkRemoteRequest("random.birb.pw", err, res);
 				if (requestRes != true) return message.channel.send(requestRes);
-				message.channel.send(new RichEmbed()
+				message.channel.send(new MessageEmbed()
 					.setTitle("🐦 Here's your random birb!")
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter("From random.birb.pw")
@@ -205,7 +205,7 @@ module.exports = [
 			request.get("http://aws.random.cat/meow", (err, res) => {
 				const requestRes = bot.checkRemoteRequest("random.cat", err, res);
 				if (requestRes != true) return message.channel.send(requestRes);
-				message.channel.send(new RichEmbed()
+				message.channel.send(new MessageEmbed()
 					.setTitle("🐱 Here's your random cat!")
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter("From random.cat")
@@ -265,7 +265,7 @@ module.exports = [
 			request.get("http://random.dog/woof.json", (err, res) => {
 				const requestRes = bot.checkRemoteRequest("random.dog", err, res);
 				if (requestRes != true) return message.channel.send(requestRes);
-				message.channel.send(new RichEmbed()
+				message.channel.send(new MessageEmbed()
 					.setTitle("🐶 Here's your random dog!")
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter("From random.dog")
@@ -295,7 +295,7 @@ module.exports = [
 			request.get("https://randomfox.ca/floof", (err, res) => {
 				const requestRes = bot.checkRemoteRequest("randomfox.ca", err, res);
 				if (requestRes != true) return message.channel.send(requestRes);
-				message.channel.send(new RichEmbed()
+				message.channel.send(new MessageEmbed()
 					.setTitle("🦊 Here's your random fox!")
 					.setColor(Math.floor(Math.random() * 16777216))
 					.setFooter("From randomfox.ca")

@@ -1,4 +1,4 @@
-const {RichEmbed} = require("discord.js"),
+const {MessageEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	{getDuration} = require("../modules/functions.js"),
 	Paginator = require("../utils/paginator.js"),
@@ -339,7 +339,7 @@ module.exports = [
 					resultText = resultText.slice(0, firstSectionIndex + 500) + "...";
 				}
 
-				message.channel.send(new RichEmbed()
+				message.channel.send(new MessageEmbed()
 					.setTitle(`Wikipedia - ${result.title}`)
 					.setDescription(resultText)
 					.setColor(Math.floor(Math.random() * 16777216))
@@ -411,7 +411,7 @@ module.exports = [
 
 		async postComic(message, url, options = {}) {
 			const comic = options.comic || await this.getComic(url);
-			message.channel.send(new RichEmbed()
+			message.channel.send(new MessageEmbed()
 				.setTitle(`${options.titlePrefix || ""}XKCD Comic - ${comic.title} (#${comic.num})`)
 				.setDescription(comic.alt)
 				.setColor(Math.floor(Math.random() * 16777216))
