@@ -20,6 +20,7 @@ class Argument {
 		if (props.min) this.min = props.min;
 		if (props.max) this.max = props.max;
 		if (props.allowRaw) this.allowRaw = props.allowRaw;
+		if (props.mentionOnly) this.mentionOnly = props.mentionOnly;
 	}
 }
 

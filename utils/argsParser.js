@@ -32,7 +32,7 @@ async function checkArgs(bot, message, args, cmdArg) {
 	let params;
 	switch (arg.type) {
 		case "function": params = {testFunction: arg.testFunction}; break;
-		case "member": params = {allowRaw: arg.allowRaw}; break;
+		case "member": params = {allowRaw: arg.allowRaw, mentionOnly: arg.mentionOnly}; break;
 		case "float":
 		case "number": params = {min: arg.min || -Infinity, max: arg.max || Infinity}; break;
 		case "oneof": params = {list: arg.allowedValues};
@@ -74,7 +74,13 @@ async function checkArgs(bot, message, args, cmdArg) {
 		if (resolved.length == 1) {
 			return resolved[0];
 		} else {
-			const endMsg = resolved.length > 20 ? `...and ${resolved.length - 20} more.` : "";
+			let endMsg;
+			if (arg.type == "member" && resolved.length > 70 && !bot.intents.has("GUILD_MEMBERS")) {
+				endMsg = "...and 50+ more.";
+			} else {
+				endMsg = resolved.length > 20 ? "...and " + resolved.length + " more." : "";
+			}
+
 			let list = resolved.slice(0, 20);
 			list = arg.type == "member" ? list.map(mem => `${mem.user.tag} (${mem.id})`) :
 				list.map(obj => `${obj.name} (${obj.id})`);

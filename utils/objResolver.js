@@ -1,4 +1,5 @@
-const {fetchMembers} = require("../modules/memberFetcher.js"),
+const {Constants, DiscordAPIError} = require("discord.js"),
+	{fetchMembers} = require("../modules/memberFetcher.js"),
 	convert = require("color-convert"),
 	twemoji = require("twemoji");
 
@@ -13,6 +14,57 @@ const colorRegexes = [
 	],
 	emojiRegex = /^<a?:[0-9A-Za-z_]{2,}:\d{17,19}>$/,
 	memberRegex = /^<@!?\d{17,19}>$/;
+
+let userFetcherFunction;
+
+async function fetchMemberByID(message, id, allowRaw) {
+	return await message.guild.members.fetch(id)
+		.catch(err => {
+			if (err instanceof DiscordAPIError && err.code == Constants.APIErrors.UNKNOWN_MEMBER && allowRaw) {
+				return id;
+			} else {
+				return null;
+			}
+		});
+}
+
+function getUserFetcherFunction(bot) {
+	if (bot.intents.has("GUILD_MEMBERS")) {
+		userFetcherFunction = async (message, obj, allowRaw) => {
+			const guildMembers = await fetchMembers(message);
+			const lowerObj = obj.toLowerCase();
+
+			const inclusiveMatches = [];
+			for (const mem of guildMembers.values()) {
+				if (mem.user.tag.toLowerCase().includes(lowerObj)) {
+					inclusiveMatches.push(mem);
+					if (mem.user.tag == obj) return [mem];
+				} else if (mem.user.username.toLowerCase().includes(lowerObj) || mem.displayName.toLowerCase().includes(lowerObj)) {
+					inclusiveMatches.push(mem);
+				}
+			}
+			return inclusiveMatches.length > 0 ? inclusiveMatches : (allowRaw ? obj : null);
+		};
+	} else {
+		// Limited user fetching due to intents
+		userFetcherFunction = async (message, obj) => {
+			return message.guild.members.fetch({query: obj, limit: 75})
+				.then(members => {
+					if (members.size != 0) {
+						const memberArray = members.array();
+						const discrimMatch = obj.match(/#\d{4}$/);
+						if (discrimMatch) {
+							const discrim = discrimMatch[0].match(/\d+/)[0];
+							return memberArray.filter(m => m.discrim == discrim);
+						}
+						return memberArray;
+					}
+					return null;
+				})
+				.catch(() => null);
+		};
+	}
+}
 
 function getListableObjects(rawTestObjs, testRegex, key) {
 	// Check regex matches first
@@ -102,9 +154,9 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 		case "function":
 			return params.testFunction(obj) ? obj : null;
 		case "image": {
-			if (memberRegex.test(obj)) {
-				const guildMembers = await fetchMembers(message),
-					member = guildMembers.get(obj.match(/\d+/)[0]);
+			const memberMatch = obj.match(memberRegex);
+			if (memberMatch) {
+				const member = await fetchMemberByID(message, obj.match(/\d+/)[0], false);
 				if (member) {
 					return member.user.avatarURL({format: "png"}) || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`;
 				} else {
@@ -112,6 +164,9 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				}
 			}
 			if (/^https?:\/\/.+\.(gif|jpe?g|png)$/i.test(obj)) return obj;
+			if (lowerObj == "guild" || lowerObj == "server") return message.guild.iconURL({format: "png"}) || null;
+			if (lowerObj == "avatar") return message.author.avatarURL({format: "png"}) || null;
+
 			const emojiMatch = obj.match(emojiRegex);
 			if (emojiMatch) {
 				const emojiID = emojiMatch[0].match(/\d+/)[0],
@@ -130,24 +185,18 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			let member;
 
 			if (memberMatch) {
-				member = await message.guild.members.fetch(memberMatch[0].match(/\d+/)[0]).catch(() => {});
+				member = await fetchMemberByID(message, obj.match(/\d+/)[0], allowRaw);
 				return member ? [member] : (allowRaw ? obj : null);
+			} else if (params.mentionOnly) {
+				return allowRaw ? obj : null;
 			} else if (/^\d{17,19}$/.test(obj)) {
-				member = await message.guild.members.fetch(obj.match(/\d+/)[0]).catch(() => {});
+				member = await fetchMemberByID(message, obj.match(/\d+/)[0], allowRaw);
 				if (member) return [member];
 			}
 
-			const guildMembers = await fetchMembers(message);
-			const inclusiveMatches = [];
-			for (const mem of guildMembers.values()) {
-				if (mem.user.tag.toLowerCase().includes(lowerObj)) {
-					inclusiveMatches.push(mem);
-					if (mem.user.tag == obj) return [mem];
-				} else if (mem.user.username.toLowerCase().includes(lowerObj) || mem.displayName.toLowerCase().includes(lowerObj)) {
-					inclusiveMatches.push(mem);
-				}
-			}
-			return inclusiveMatches.length > 0 ? inclusiveMatches : (allowRaw ? obj : null);
+			if (!userFetcherFunction) getUserFetcherFunction(bot);
+
+			return await userFetcherFunction(message, obj, allowRaw);
 		}
 		case "number": {
 			const num = Math.floor(obj);

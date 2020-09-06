@@ -27,6 +27,8 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
+			const userSuffix = bot.intents.has(["GUILD_MEMBERS", "GUILD_PRESENCES"]) ? "Users" : "Active Users";
+
 			message.channel.send(new MessageEmbed()
 				.setAuthor("About this bot", bot.user.avatarURL({format: "png"}))
 				.setDescription("A multipurpose Discord bot for fun, moderation, utility, and more. " +
@@ -37,7 +39,7 @@ module.exports = [
 				.addField("Discord.js Library Ver.", version, true)
 				.addField("Bot Version", packageInfo.version, true)
 				.addField("Bot Created", getDuration(bot.user.createdTimestamp), true)
-				.addField("Quick Stats", bot.cache.guildCount + " Servers\n" + bot.cache.userCount + " Users\n" +
+				.addField("Quick Stats", bot.cache.guildCount + " Servers\n" + bot.cache.userCount + ` ${userSuffix}\n` +
 					bot.cache.channelCount + " Channels", true)
 				.addField("Bot Invite",
 					`[Go!](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&permissions=405921878&scope=bot)`, true)
@@ -544,11 +546,19 @@ module.exports = [
 					.addField("Servers",
 						"Total: " + serverCount.toLocaleString() + "\n" +
 						"Large: " + botStats.largeServers.toLocaleString() + ` (${(botStats.largeServers * 100 / serverCount).toFixed(1)}%)`,
-						true)
-					.addField("Users",
+						true);
+
+				const userFieldName = bot.intents.has("GUILD_MEMBERS") ? "Users" : "Active Users";
+				if (bot.intents.has("GUILD_PRESENCES")) {
+					statsEmbed.addField(userFieldName,
 						"Total: " + userCount.toLocaleString() + ` (${(userCount / serverCount).toFixed(1)}/server)\n` +
 						"Online: " + botStats.statuses.online.toLocaleString() + ` (${(botStats.statuses.online / userCount * 100).toFixed(1)}%)`,
-						true)
+						true);
+				} else {
+					statsEmbed.addField(userFieldName, "Total: " + userCount.toLocaleString() + ` (${(userCount / serverCount).toFixed(2)}/server)`, true);
+				}
+
+				statsEmbed
 					.addField("Channels",
 						"Text: " + botStats.channels.text.toLocaleString() +
 							` (${(botStats.channels.text / serverCount).toFixed(2)}/server)\n` +

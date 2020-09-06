@@ -1,6 +1,6 @@
-const {DiscordAPIError} = require("discord.js"),
+const {Constants, DiscordAPIError, Intents} = require("discord.js"),
 	KFSDiscordBot = require("./bot.js"),
-	{token} = require("./config.json"),
+	{intents, token} = require("./config.json"),
 	fs = require("fs");
 
 // Check system requirements
@@ -11,8 +11,14 @@ if (process.arch == "ia32") {
 	throw new Error("Incompatible operating system: 64-bit required");
 }
 
+const parsedIntents = new Intents(["GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS"]);
+if (Array.isArray(intents) || !isNaN(parseInt(intents))) parsedIntents.add(intents);
+
 const bot = new KFSDiscordBot({
-	disableMentions: "everyone"
+	disableMentions: "everyone",
+	ws: {
+		intents: parsedIntents
+	}
 });
 
 let storedStats;
@@ -76,6 +82,11 @@ process.on("exit", () => {
 });
 
 (async function() {
+	const testIntents = [];
+	for (const intent of new Intents(Intents.PRIVILEGED).toArray()) {
+		if (parsedIntents.has(intent)) testIntents.push(intent);
+	}
+
 	let loginInterval = 1000;
 	let loginDone = false;
 	while (loginInterval <= 512000 && !loginDone) {
@@ -85,10 +96,19 @@ process.on("exit", () => {
 				console.error(`[${new Date().toJSON()}] Bot failed to login:`);
 				console.error(err);
 
+				if (err instanceof DiscordAPIError && err.code == Constants.WSCodes["4014"]) {
+					const nextIntent = testIntents.pop();
+					console.error(`Login failed due to intents, retrying without the ${nextIntent} intent.`);
+					parsedIntents.remove(nextIntent);
+
+					loginInterval = 1000; // Reset the login interval
+				} else {
+					loginInterval *= 2;
+				}
+
 				console.log("The login will be retried in " + loginInterval / 1000 + " seconds (maximum 512).");
 				await new Promise(resolve => setTimeout(resolve, loginInterval));
 
-				loginInterval *= 2;
 				return false;
 			});
 	}

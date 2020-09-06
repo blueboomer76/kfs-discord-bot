@@ -427,30 +427,41 @@ module.exports = [
 				guildRoles = message.guild.roles.cache.array();
 			guildRoles.splice(guildRoles.findIndex(r => r.position == 0), 1);
 
-			const guildMembers = await fetchMembers(message),
-				roleMembers = guildMembers.filter(mem => mem.roles.cache.has(role.id)),
-				nearbyRoles = [],
+			const nearbyRoles = [],
 				startPos = Math.min(rolePos + 2, guildRoles.length),
 				endPos = Math.max(rolePos - 2, 1);
-
 			for (let i = startPos; i >= endPos; i--) {
 				const roleName = guildRoles.find(r => r.position == i).name;
 				nearbyRoles.push(i == rolePos ? `**${roleName}**` : roleName);
 			}
 
-			message.channel.send(new MessageEmbed()
+			const roleInfoEmbed = new MessageEmbed()
 				.setTitle("Role Info - " + role.name)
 				.setColor(role.color)
 				.setFooter("ID: " + role.id)
-				.addField("Role created at", getDateAndDurationString(role.createdTimestamp))
-				.addField(`Members in Role [${roleMembers.size} total]`, getStatuses(roleMembers).notOffline + " Online", true)
+				.addField("Role created at", getDateAndDurationString(role.createdTimestamp));
+
+			if (bot.intents.has("GUILD_MEMBERS")) {
+				const hasGuildPresencesIntent = bot.intents.has("GUILD_PRESENCES");
+				const guildMembers = await fetchMembers(message, hasGuildPresencesIntent);
+				const roleMembers = guildMembers.filter(mem => mem.roles.cache.has(role.id));
+
+				roleInfoEmbed.addField(`Members in Role [${roleMembers.size} total]`,
+					hasGuildPresencesIntent ? getStatuses(roleMembers).notOffline + " Online" :
+						"No Additional Data Available", true);
+			} else {
+				roleInfoEmbed.addField("Members in Role", "No Data", true);
+			}
+
+			roleInfoEmbed
 				.addField("Color", "Hex: " + role.hexColor + "\nDecimal: " + role.color, true)
 				.addField("Position from top", (guildRoles.length - rolePos + 1) + " / " + guildRoles.length, true)
 				.addField("Displays separately (hoisted)", role.hoist ? "Yes" : "No", true)
 				.addField("Mentionable", role.mentionable ? "Yes" : "No", true)
 				.addField("Managed", role.managed ? "Yes" : "No", true)
-				.addField("Role order", nearbyRoles.join(" > "))
-			);
+				.addField("Role order", nearbyRoles.join(" > "));
+
+			message.channel.send(roleInfoEmbed);
 		}
 	},
 	class RoleListCommand extends Command {
@@ -524,6 +535,8 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
+			if (!bot.intents.has("GUILD_MEMBERS")) return {cmdErr: "This command cannot be run since no data is available."};
+
 			const role = args[0],
 				guildMembers = await fetchMembers(message),
 				roleMembers = guildMembers.filter(mem => mem.roles.cache.has(role.id));
@@ -557,16 +570,12 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			const guild = message.guild,
-				guildMembers = await fetchMembers(message);
+			const guild = message.guild;
 
-			const statuses = getStatuses(guild.members.cache, guild.memberCount - guild.members.cache.size),
-				channels = {text: 0, voice: 0, category: 0};
+			const channels = {text: 0, voice: 0, category: 0};
 			for (const channel of guild.channels.cache.values()) channels[channel.type]++;
 
-			const botCount = guildMembers.filter(mem => mem.user.bot).size;
-
-			message.channel.send(new MessageEmbed()
+			const serverInfoEmbed = new MessageEmbed()
 				.setTitle("Server Info - " + guild.name)
 				.setColor(Math.floor(Math.random() * 16777216))
 				.setFooter(`ID: ${guild.id} | Server stats as of`)
@@ -577,17 +586,29 @@ module.exports = [
 				.addField("Region", guild.region, true)
 				.addField("Verification", capitalize(guild.verificationLevel), true)
 				.addField("Explicit Filter", guild.explicitContentFilter == 0 ? "None" : (guild.explicitContentFilter == 1 ? "Low" : "High"), true)
-				.addField("2-Factor Auth Required", guild.mfaLevel == 0 ? "No" : "Yes", true)
-				.addField(`Members [${guild.memberCount} total]`,
+				.addField("2-Factor Auth Required", guild.mfaLevel == 0 ? "No" : "Yes", true);
+
+			if (bot.intents.has(["GUILD_MEMBERS", "GUILD_PRESENCES"])) {
+				const guildMembers = await fetchMembers(message, true);
+				const botCount = guildMembers.filter(mem => mem.user.bot).size;
+				const statuses = getStatuses(guild.members.cache, guild.memberCount - guild.members.cache.size);
+
+				serverInfoEmbed.addField(`Members [${guild.memberCount} total]`,
 					`${statuses.online} Online, ${statuses.idle} Idle, ${statuses.dnd} DND ` +
 						`(${(statuses.notOffline / guild.memberCount * 100).toFixed(1)}%) /\n` +
 						statuses.offline + " Offline\n" +
 					`${botCount} Bots (${(botCount / guild.memberCount * 100).toFixed(1)}%)`,
-					true)
+					true);
+			} else {
+				serverInfoEmbed.addField(`Members [${guild.memberCount} total]`, "No Other Data Available", true);
+			}
+
+			serverInfoEmbed
 				.addField(`Roles [${guild.roles.cache.size - 1} total]`, "Use `rolelist` to see all roles", true)
 				.addField(`Channels [${guild.channels.cache.size} total]`,
-					channels.text + " Text\n" + channels.voice + " Voice\n" + channels.category + " Categories", true)
-			);
+					channels.text + " Text\n" + channels.voice + " Voice\n" + channels.category + " Categories", true);
+
+			message.channel.send(serverInfoEmbed);
 		}
 	},
 	class UserInfoCommand extends Command {
@@ -640,30 +661,42 @@ module.exports = [
 
 			if (member) userEmbed.addField("Joined this server at", getDateAndDurationString(member.joinedTimestamp));
 
-			const rawPresence = (member && member.presence) || user.presence,
-				presence = rawPresence.status == "dnd" ? "Do Not Disturb" : capitalize(rawPresence.status);
-			let customStatus = "",
-				activityString = "";
-			for (const activity of rawPresence.activities) {
-				if (activity.type == "CUSTOM_STATUS") {
-					customStatus = "\n" + "__Custom Status__: " + activity.state;
-				} else {
-					const typeString = activity.type == "LISTENING" ? "Listening to" : capitalize(activity.type);
-					activityString += "\n__" + typeString + "__ " + activity.name;
+			if (bot.intents.has("GUILD_PRESENCES")) {
+				const rawPresence = (member && member.presence) || user.presence,
+					presence = rawPresence.status == "dnd" ? "Do Not Disturb" : capitalize(rawPresence.status);
+				let customStatus = "",
+					activityString = "";
+				for (const activity of rawPresence.activities) {
+					if (activity.type == "CUSTOM_STATUS") {
+						customStatus = "\n" + "__Custom Status__: " + activity.state;
+					} else {
+						const typeString = activity.type == "LISTENING" ? "Listening to" : capitalize(activity.type);
+						activityString += "\n__" + typeString + "__ " + activity.name;
+					}
 				}
+
+				userEmbed.addField("Status", presence + customStatus + activityString, true);
+			} else {
+				userEmbed.addField("Status", "No Data");
 			}
 
-			userEmbed.addField("Status", presence + customStatus + activityString, true);
-
 			if (member) {
-				const guildMembers = await fetchMembers(message),
-					guildMemArray = guildMembers.array().sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
-				const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp),
-					nearbyMems = [],
-					startPos = Math.max(joinPos - 2, 0),
-					endPos = Math.min(joinPos + 2, message.guild.memberCount - 1);
-				for (let i = startPos; i <= endPos; i++) {
-					nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
+				userEmbed.addField("Bot user", user.bot ? "Yes" : "No", true)
+					.addField("Nickname", member.nickname || "None", true);
+
+				if (bot.intents.has("GUILD_MEMBERS")) {
+					const guildMembers = await fetchMembers(message),
+						guildMemArray = guildMembers.array().sort((a, b) => a.joinedTimestamp - b.joinedTimestamp);
+					const joinPos = guildMemArray.findIndex(mem => mem.joinedTimestamp == member.joinedTimestamp),
+						nearbyMems = [],
+						startPos = Math.max(joinPos - 2, 0),
+						endPos = Math.min(joinPos + 2, message.guild.memberCount - 1);
+					for (let i = startPos; i <= endPos; i++) {
+						nearbyMems.push(i == joinPos ? `**${guildMemArray[i].user.username}**` : guildMemArray[i].user.username);
+					}
+
+					userEmbed.addField("Member #", joinPos + 1, true)
+						.addField("Join order", nearbyMems.join(" > "));
 				}
 
 				const memRoles = [];
@@ -680,11 +713,7 @@ module.exports = [
 					if (roleList.length > 1000) roleList = roleList.slice(0, 1000) + "...";
 				}
 
-				userEmbed.addField("Bot user", user.bot ? "Yes" : "No", true)
-					.addField("Nickname", member.nickname || "None", true)
-					.addField("Member #", joinPos + 1, true)
-					.addField("Join order", nearbyMems.join(" > "))
-					.addField("Roles - " + memRoles.length, roleList);
+				userEmbed.addField("Roles - " + memRoles.length, roleList);
 
 				if (member.displayColor != 0 || (member.roles.color && member.roles.color.color == 0)) {
 					userEmbed.setColor(member.displayColor);

@@ -566,8 +566,10 @@ module.exports = [
 				description: "Have the bot rate someone or something for you",
 				args: [
 					{
+						allowRaw: true,
 						infiniteArgs: true,
-						type: "string"
+						mentionOnly: true,
+						type: "member"
 					}
 				],
 				perms: {
@@ -594,17 +596,17 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			let toRate = args[0];
-			if (toRate.toLowerCase() == bot.user.username.toLowerCase() || toRate == bot.user.tag) {
-				return message.channel.send("I would rate myself a 10/10, of course.");
+			let toRate;
+			if (typeof args[0] == "string") {
+				if (args[0].toLowerCase() == bot.user.username.toLowerCase() || args[0] == bot.user.tag) {
+					return message.channel.send("I would rate myself a 10/10, of course.");
+				} else {
+					toRate = args[0].toLowerCase() == "me" ? message.author.tag : args[0];
+				}
+			} else {
+				toRate = args[0].user.tag;
 			}
 
-			if (/^<@!?\d{17,19}>$/.test(toRate)) {
-				const member = message.guild.members.cache.get(args[0].match(/\d+/)[0]);
-				toRate = member ? member.user.tag : args[0];
-			} else if (toRate.toLowerCase() == "me") {
-				toRate = message.author.tag;
-			}
 			let hash = 0;
 			for (let i = 0; i < toRate.length; i++) {
 				hash = hash * 31 + toRate.charCodeAt(i);
@@ -695,13 +697,17 @@ module.exports = [
 				args: [
 					{
 						allowQuotes: true,
+						allowRaw: true,
 						infiniteArgs: true,
-						type: "string"
+						mentionOnly: true,
+						type: "member"
 					},
 					{
+						allowRaw: true,
 						infiniteArgs: true,
+						mentionOnly: true,
 						optional: true,
-						type: "string"
+						type: "member"
 					}
 				],
 				perms: {
@@ -728,21 +734,22 @@ module.exports = [
 		}
 
 		async run(bot, message, args, flags) {
-			if (args[0].length < 2 || (args[1] && args[1].length < 2)) return {cmdWarn: "One of the ship names is too short."};
-			if (args[0].length > 100 || (args[1] && args[1].length > 100)) return {cmdWarn: "One of the ship names is too long."};
+			const args0IsString = typeof args[0] == "string",
+				args1IsString = typeof args[1] == "string";
 
-			const memberRegex = /^<@!?\d{17,19}>$/, memberRegex2 = /\d+/;
-			let toShip1 = args[0], toShip2 = args[1];
-
-			if (memberRegex.test(toShip1)) {
-				const member = message.guild.members.cache.get(args[0].match(memberRegex2)[0]);
-				toShip1 = member ? member.user.username : args[0];
-			}
-			if (toShip2) {
-				if (memberRegex.test(toShip2)) {
-					const member = message.guild.members.cache.get(args[1].match(memberRegex2)[0]);
-					toShip2 = member ? member.user.username : args[1];
+			if (args0IsString || (args[1] && args1IsString)) {
+				if ((args0IsString && args[0].length < 2) || (args[1] && args1IsString && args[1].length < 2)) {
+					return {cmdWarn: "One of the ship names is too short."};
 				}
+				if ((args0IsString && args[0].length > 100) || (args[1] && args1IsString && args[1].length > 100)) {
+					return {cmdWarn: "One of the ship names is too long."};
+				}
+			}
+
+			let toShip1 = args0IsString ? args[0] : args[0].user.username,
+				toShip2;
+			if (args[1]) {
+				toShip2 = args1IsString ? args[1] : args[1].user.username;
 			} else {
 				toShip2 = toShip1;
 				toShip1 = message.author.username;

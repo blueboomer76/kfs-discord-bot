@@ -4,6 +4,11 @@
 
 # 2.X (current)
 
+## 2.0.0-beta.2
+
+- Adjusted bot and added checks for event intents
+- Added new argument property `mentionOnly` for accepting user mentions only
+
 ## 2.0.0-beta.1
 
 - Upgraded discord.js from version 11 to 12

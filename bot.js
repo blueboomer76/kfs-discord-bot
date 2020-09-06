@@ -1,4 +1,4 @@
-const {Client, Collection, MessageEmbed} = require("discord.js"),
+const {Client, Collection, Intents, MessageEmbed} = require("discord.js"),
 	{capitalize} = require("./modules/functions.js"),
 	config = require("./config.json"),
 	fs = require("fs"),
@@ -74,6 +74,8 @@ class KFSDiscordBot extends Client {
 			},
 			status: {randomIters: 0, pos: 0}
 		};
+
+		this.intents = new Intents(this.options.ws.intents);
 
 		this.downtimeTimestampBase = now;
 		this.unavailableGuildIDs = [];

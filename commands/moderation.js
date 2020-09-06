@@ -1,4 +1,4 @@
-const {Permissions} = require("discord.js"),
+const {Constants, DiscordAPIError, Permissions} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	promptor = require("../modules/codePromptor.js");
 
@@ -346,11 +346,27 @@ module.exports = [
 				reasonFlag = flags.find(f => f.name == "reason");
 			if (userID == message.author.id || userID == message.guild.owner.id || userID == bot.user.id) return {cmdWarn: "This command cannot be used on yourself, the server owner, or the bot."};
 
-			const guildMembers = await message.guild.members.fetch().catch(() => {});
-			if (!guildMembers) return {cmdWarn: "Unable to perform a hackban. Maybe try again?"};
+			let memberWithID, userWithID;
+			await message.guild.members.fetch(userID)
+				.then(member => {
+					memberWithID = member;
+					userWithID = member.user;
+				})
+				.catch(async err => {
+					if (err instanceof DiscordAPIError) {
+						if (err.code == Constants.APIErrors.UNKNOWN_MEMBER) {
+							userWithID = await bot.users.fetch(userID).catch(() => undefined);
+						} else if (err.code == Constants.APIErrors.UNKNOWN_USER) {
+							userWithID = null;
+						}
+					}
+				});
 
-			const memberWithID = guildMembers.get(userID);
-			if (memberWithID) {
+			if (userWithID == undefined) {
+				return {cmdWarn: "Unable to perform a hackban. Maybe try again?"};
+			} else if (userWithID == null) {
+				return {cmdWarn: "No user with ID `" + userID + "` found!"};
+			} else if (memberWithID) {
 				const compareTest = compareRolePositions(message, memberWithID, memberWithID.roles.highest, {action: "hackban", type: "user"});
 				if (compareTest != true) return {cmdWarn: compareTest};
 			}
