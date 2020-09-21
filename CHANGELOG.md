@@ -4,6 +4,11 @@
 
 # 2.X (current)
 
+## 2.0.0-beta.3
+
+- Changed non-CDN discordapp.com links to discord.com
+- Added regex capturing groups
+
 ## 2.0.0-beta.2
 
 - Adjusted bot and added checks for event intents

@@ -607,7 +607,7 @@ module.exports = [
 				bots: msg => msg.author.bot,
 				embeds: msg => msg.embeds[0],
 				images: msg => msg.embeds[0] && (msg.embeds[0].type == "image" || msg.embeds[0].image),
-				invites: msg => /(www\.)?(discord\.(gg|me|io)|discordapp\.com\/invite)\/[0-9a-z]+/gi.test(msg.content),
+				invites: msg => /(www\.)?(discord\.(gg|me|io)|discord\.com\/invite)\/[0-9a-z]+/gi.test(msg.content),
 				left: msg => msg.member == null,
 				links: msg => /https?:\/\/\S+\.\S+/gi.test(msg.content) ||
 					(msg.embeds[0] && msg.embeds.some(e => e.type == "article" || e.type == "link")),

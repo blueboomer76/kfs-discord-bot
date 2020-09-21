@@ -444,7 +444,7 @@ module.exports = [
 				if (postData.imageURL.startsWith("https://external-") || /\.(gif|jpe?g|png)$/.test(postData.imageURL)) {
 					punEmbed.setImage(postData.imageURL);
 				} else {
-					message.channel.send(`${postData.imageURL} (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author} | ID: ${postData.url.match(/comments\/[0-9a-z]+(?=\/)/)[0].slice(9)})`);
+					message.channel.send(`${postData.imageURL} (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author} | ID: ${postData.url.match(/comments\/([0-9a-z]+)(?=\/)/)[1]})`);
 					return;
 				}
 			}

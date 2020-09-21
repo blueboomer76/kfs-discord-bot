@@ -19,6 +19,6 @@ Update the bot by running `git pull` to get the latest features and bug fixes.
 
 *`assets/Oswald-Regular.ttf` in this repository is an open sourced [Google Font](https://developers.google.com/fonts) used in some image-based commands.*
 
-[Bot Invite](https://discordapp.com/oauth2/authorize?client_id=333058410465722368&permissions=405921878&scope=bot)
+[Bot Invite](https://discord.com/oauth2/authorize?client_id=333058410465722368&permissions=405921878&scope=bot)
 
-Official Discord Server: [![Server Widget](https://discordapp.com/api/guilds/308063187696091140/widget.png)](https://discord.gg/yB8TvWU)
+Official Discord Server: [![Server Widget](https://discord.com/api/guilds/308063187696091140/widget.png)](https://discord.gg/yB8TvWU)

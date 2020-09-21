@@ -12,8 +12,8 @@ const colorRegexes = [
 		/^(\d{1,3},){2}\d{1,3}$/,
 		/^[a-z]+$/i
 	],
-	emojiRegex = /^<a?:[0-9A-Za-z_]{2,}:\d{17,19}>$/,
-	memberRegex = /^<@!?\d{17,19}>$/;
+	emojiRegex = /^<a?:[0-9A-Za-z_]{2,}:(\d{17,19})>$/,
+	memberRegex = /^<@!?(\d{17,19})>$/;
 
 let userFetcherFunction;
 
@@ -70,7 +70,7 @@ function getListableObjects(rawTestObjs, testRegex, key) {
 	// Check regex matches first
 	const objRegexMatch = key.match(testRegex);
 	if (objRegexMatch) {
-		const objFromRegex = rawTestObjs.get(objRegexMatch[0].match(/\d+/)[0]);
+		const objFromRegex = rawTestObjs.get(objRegexMatch[1]);
 		return objFromRegex ? [objFromRegex] : null;
 	} else {
 		const objFromRegex = rawTestObjs.get(key);
@@ -98,7 +98,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			if (["yes", "y", "true", "enable"].includes(lowerObj)) return true;
 			return ["no", "n", "false", "disable"].includes(lowerObj) ? false : null;
 		case "channel":
-			return getListableObjects(message.guild.channels.cache, /^<#\d{17,19}>$/, obj);
+			return getListableObjects(message.guild.channels.cache, /^<#(\d{17,19})>$/, obj);
 		case "color": {
 			const objWithNoSpaces = lowerObj.replace(/[ %]/g, "").toLowerCase();
 			let i, colorMatch;
@@ -156,7 +156,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 		case "image": {
 			const memberMatch = obj.match(memberRegex);
 			if (memberMatch) {
-				const member = await fetchMemberByID(message, obj.match(/\d+/)[0], false);
+				const member = await fetchMemberByID(message, memberMatch[1], false);
 				if (member) {
 					return member.user.avatarURL({format: "png"}) || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`;
 				} else {
@@ -169,7 +169,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 
 			const emojiMatch = obj.match(emojiRegex);
 			if (emojiMatch) {
-				const emojiID = emojiMatch[0].match(/\d+/)[0],
+				const emojiID = emojiMatch[1],
 					emojiExtension = /^<a:/.test(emojiMatch[0]) ? "gif" : "png";
 				return `https://cdn.discordapp.com/emojis/${emojiID}.${emojiExtension}`;
 			}
@@ -185,13 +185,16 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			let member;
 
 			if (memberMatch) {
-				member = await fetchMemberByID(message, obj.match(/\d+/)[0], allowRaw);
+				member = await fetchMemberByID(message, memberMatch[1], allowRaw);
 				return member ? [member] : (allowRaw ? obj : null);
 			} else if (params.mentionOnly) {
 				return allowRaw ? obj : null;
-			} else if (/^\d{17,19}$/.test(obj)) {
-				member = await fetchMemberByID(message, obj.match(/\d+/)[0], allowRaw);
-				if (member) return [member];
+			} else {
+				const idMatch = obj.match(/^\d{17,19}$/);
+				if (idMatch) {
+					member = await fetchMemberByID(message, idMatch[0], allowRaw);
+					if (member) return [member];
+				}
 			}
 
 			if (!userFetcherFunction) getUserFetcherFunction(bot);
@@ -207,7 +210,7 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 		case "role": {
 			const guildRoles = message.guild.roles.cache.clone();
 			guildRoles.delete(message.guild.roles.everyone.id);
-			return getListableObjects(guildRoles, /^<@&\d{17,19}>$/, obj);
+			return getListableObjects(guildRoles, /^<@&(\d{17,19})>$/, obj);
 		}
 		case "string":
 			return obj.toString();

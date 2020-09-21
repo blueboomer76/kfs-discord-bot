@@ -92,7 +92,7 @@ function sendRedditEmbed(command, message, checkNsfw) {
 			.setImage(imageURL));
 	} else {
 		message.channel.send(imageURL + ` (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author} | ` +
-			"ID: " + postData.url.match(/comments\/[0-9a-z]+(?=\/)/)[0].slice(9) + ")");
+			"ID: " + postData.url.match(/comments\/([0-9a-z]+)(?=\/)/)[1] + ")");
 	}
 }
 
