@@ -1,6 +1,6 @@
 const {MessageEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
-	{capitalize, getDuration, getStatuses} = require("../modules/functions.js"),
+	{capitalize, getDuration, getReadableName, getStatuses} = require("../modules/functions.js"),
 	{fetchMembers} = require("../modules/memberFetcher.js"),
 	Paginator = require("../utils/paginator.js"),
 	convert = require("color-convert"),
@@ -575,6 +575,8 @@ module.exports = [
 			const channels = {text: 0, voice: 0, category: 0};
 			for (const channel of guild.channels.cache.values()) channels[channel.type]++;
 
+			const guildFeatures = guild.features.length != 0 ? guild.features.map(feat => getReadableName(feat)) : "None";
+
 			const serverInfoEmbed = new MessageEmbed()
 				.setTitle("Server Info - " + guild.name)
 				.setColor(Math.floor(Math.random() * 16777216))
@@ -606,7 +608,8 @@ module.exports = [
 			serverInfoEmbed
 				.addField(`Roles [${guild.roles.cache.size - 1} total]`, "Use `rolelist` to see all roles", true)
 				.addField(`Channels [${guild.channels.cache.size} total]`,
-					channels.text + " Text\n" + channels.voice + " Voice\n" + channels.category + " Categories", true);
+					channels.text + " Text\n" + channels.voice + " Voice\n" + channels.category + " Categories", true)
+				.addField("Features", guildFeatures);
 
 			message.channel.send(serverInfoEmbed);
 		}
@@ -653,6 +656,9 @@ module.exports = [
 				user = member.user;
 			}
 
+			const userFlags = user.flags && user.flags.bitfield != 0 ?
+				user.flags.toArray().map(feat => getReadableName(feat)) : "None";
+
 			const userEmbed = new MessageEmbed()
 				.setTitle("User Info - " + user.tag)
 				.setFooter("ID: " + user.id)
@@ -660,6 +666,8 @@ module.exports = [
 				.addField("Account created at", getDateAndDurationString(user.createdTimestamp));
 
 			if (member) userEmbed.addField("Joined this server at", getDateAndDurationString(member.joinedTimestamp));
+
+			userEmbed.addField("Features", userFlags);
 
 			if (bot.intents.has("GUILD_PRESENCES")) {
 				const rawPresence = (member && member.presence) || user.presence,

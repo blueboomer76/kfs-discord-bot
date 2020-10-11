@@ -94,8 +94,8 @@ module.exports = {
 
 	// Discord related
 	getStatuses: getStatuses,
-	parsePerm: perm => {
-		return perm.split("_").map(p => capitalize(p.toLowerCase())).join(" ");
+	getReadableName: str => {
+		return str.split("_").map(p => capitalize(p.toLowerCase())).join(" ");
 	},
 
 	// For durations such as 1 day, 2 hours

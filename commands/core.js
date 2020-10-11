@@ -1,6 +1,6 @@
 const {MessageEmbed, WebhookClient, version} = require("discord.js"),
 	Command = require("../structures/command.js"),
-	{getBotStats, getDuration, parsePerm} = require("../modules/functions.js"),
+	{getBotStats, getDuration, getReadableName} = require("../modules/functions.js"),
 	Paginator = require("../utils/paginator.js"),
 	packageInfo = require("../package.json"),
 	fs = require("fs"),
@@ -143,8 +143,8 @@ module.exports = [
 					const commandFlags = command.flags.map(f => `\`--${f.name.toLowerCase()}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`),
 						commandPerms = command.perms,
 						permReq = {
-							bot: commandPerms.bot.length > 0 ? commandPerms.bot.map(p => parsePerm(p)).join(", ") : "None",
-							user: commandPerms.user.length > 0 ? commandPerms.user.map(p => parsePerm(p)).join(", ") : "None",
+							bot: commandPerms.bot.length > 0 ? commandPerms.bot.map(p => getReadableName(p)).join(", ") : "None",
+							user: commandPerms.user.length > 0 ? commandPerms.user.map(p => getReadableName(p)).join(", ") : "None",
 							role: commandPerms.role ? `\nRequires having a role named ${commandPerms.role}.` : "",
 							level: commandPerms.level > 0 ? `\nRequires being ${bot.permLevels[commandPerms.level].name}.` : ""
 						};

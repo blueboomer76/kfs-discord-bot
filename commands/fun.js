@@ -1,6 +1,12 @@
 const {MessageEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
+	crypto = require("crypto"),
 	request = require("request");
+
+function getHash(str) {
+	const hexHash = crypto.createHash("md5").update(str).digest("hex");
+	return parseInt(hexHash.slice(0, 10), 16);
+}
 
 module.exports = [
 	class EightBallCommand extends Command {
@@ -607,12 +613,7 @@ module.exports = [
 				toRate = args[0].user.tag;
 			}
 
-			let hash = 0;
-			for (let i = 0; i < toRate.length; i++) {
-				hash = hash * 31 + toRate.charCodeAt(i);
-				hash |= 0; // Convert to 32-bit integer
-			}
-
+			const hash = getHash(toRate);
 			let rating, toSend;
 			if (toRate == message.author.tag || toRate.toLowerCase() == "me") {
 				rating = (Math.abs(hash % 50 / 10) + 5).toFixed(1);
@@ -757,11 +758,7 @@ module.exports = [
 
 			const fullShipName = toShip1 + toShip2,
 				shipName = toShip1.slice(0, Math.floor(toShip1.length / 2)) + toShip2.slice(Math.floor(toShip2.length / 2));
-			let hash = 0;
-			for (let i = 0; i < fullShipName.length; i++) {
-				hash = hash * 31 + fullShipName.charCodeAt(i);
-				hash |= 0; // Convert to 32-bit integer
-			}
+			const hash = getHash(fullShipName);
 
 			const shipRating = parseFloat((Math.abs(hash % 90) / 10 + 1).toFixed(1));
 			let shipDescription = "**Ship Name**: " + shipName + "\n" +

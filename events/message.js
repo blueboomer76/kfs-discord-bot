@@ -1,5 +1,5 @@
 const cdChecker = require("../modules/cooldownChecker.js"),
-	{parsePerm} = require("../modules/functions.js"),
+	{getReadableName} = require("../modules/functions.js"),
 	argParser = require("../utils/argsParser.js");
 
 async function execCommand(runCommand, bot, message, args) {
@@ -17,7 +17,7 @@ async function execCommand(runCommand, bot, message, args) {
 		if (requiredPerms.bot.length > 0) {
 			for (const perm of requiredPerms.bot) {
 				if (!message.channel.permissionsFor(bot.user).has(perm)) {
-					faultMsg += "I need these permissions to run this command:\n" + requiredPerms.bot.map(p => parsePerm(p)).join(", ");
+					faultMsg += "I need these permissions to run this command:\n" + requiredPerms.bot.map(p => getReadableName(p)).join(", ");
 					break;
 				}
 			}
@@ -35,10 +35,10 @@ async function execCommand(runCommand, bot, message, args) {
 			roleAllowed = message.author.id == message.guild.owner.id || message.member.roles.cache.some(role => role.name.toLowerCase() == requiredPerms.role.toLowerCase());
 		}
 		if (userPermsAllowed == false && roleAllowed == null) {
-			faultMsg += "\nYou need these permissions to run this command:\n" + requiredPerms.user.map(p => parsePerm(p)).join(", ");
+			faultMsg += "\nYou need these permissions to run this command:\n" + requiredPerms.user.map(p => getReadableName(p)).join(", ");
 		} else if (userPermsAllowed == false && roleAllowed == false) {
 			faultMsg += `\nYou need to have these permissions, be the server owner, or have a role named **${requiredPerms.role}** to run this command:\n` +
-				requiredPerms.user.map(p => parsePerm(p)).join(", ");
+				requiredPerms.user.map(p => getReadableName(p)).join(", ");
 		} else if (userPermsAllowed == null && roleAllowed == false) {
 			faultMsg += `\nYou need to be the server owner or have a role named **${requiredPerms.role}** to run this command.`;
 		}
