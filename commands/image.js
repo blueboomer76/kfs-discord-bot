@@ -2,126 +2,142 @@ const {MessageEmbed} = require("discord.js"),
 	Command = require("../structures/command.js"),
 	request = require("request");
 
-async function setCommandPosts(command, subreddit, checkNsfw, options = {}) {
-	let fetchRes;
-	await getPosts(subreddit, checkNsfw, options)
-		.then(posts => {
-			command.lastChecked = Date.now();
-			if (checkNsfw) {
-				command.cachedSfwPosts = posts.sfw;
-				command.cachedNsfwPosts = posts.nsfw;
-			} else {
-				command.cachedPosts = posts;
-			}
-		})
-		.catch(err => fetchRes = err);
-	return fetchRes;
-}
-
-function getPosts(subreddit, checkNsfw, options) {
-	return new Promise((resolve, reject) => {
-		request.get({
-			url: `https://reddit.com/r/${subreddit}/hot.json`,
-			qs: {raw_json: 1},
-			json: true
-		}, (err, res) => {
-			if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
-			if (!res) return reject("No response was received from Reddit.");
-			if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
-
-			let results = res.body.data.children.filter(r => !r.data.stickied);
-			if (options.filterLocked) results = results.filter(r => !r.data.locked);
-			if (options.filterScores) results = results.filter(r => r.data.score > 0);
-			if (checkNsfw) {
-				const sfwResults = [], nsfwResults = [];
-
-				for (const result of results) {
-					const postData = {
-						title: result.data.title,
-						url: result.data.permalink,
-						score: result.data.score,
-						comments: result.data.num_comments,
-						author: result.data.author,
-						imageURL: /v\.redd\.it/.test(result.data.url) && result.data.preview ? result.data.preview.images[0].source.url : result.data.url
-					};
-					if (result.data.over_18) {nsfwResults.push(postData)} else {sfwResults.push(postData)}
-				}
-
-				resolve({sfw: sfwResults, nsfw: nsfwResults});
-			} else {
-				resolve(results.map(r => {
-					return {
-						title: r.data.title,
-						url: r.data.permalink,
-						score: r.data.score,
-						comments: r.data.num_comments,
-						author: r.data.author,
-						imageURL: /v\.redd\.it/.test(r.data.url) && r.data.preview ? r.data.preview.images[0].source.url : r.data.url
-					};
-				}));
+class RedditBasedCommand extends Command {
+	constructor(options) {
+		super({
+			name: options.name,
+			description: options.description,
+			aliases: options.aliases,
+			cooldown: {
+				time: 15000,
+				type: "channel"
+			},
+			perms: {
+				bot: ["EMBED_LINKS"],
+				user: [],
+				level: 0
 			}
 		});
-	});
-}
 
-function sendRedditEmbed(command, message, checkNsfw) {
-	let postData;
-	if (checkNsfw) {
-		if (!message.channel.nsfw) {
-			postData = command.cachedSfwPosts.splice(Math.floor(Math.random() * command.cachedSfwPosts.length), 1);
-		} else {
-			const postPos = Math.floor(Math.random() * (command.cachedSfwPosts.length + command.cachedNsfwPosts.length));
-			if (postPos < command.cachedSfwPosts.length) {
-				postData = command.cachedSfwPosts.splice(postPos, 1);
-			} else {
-				postData = command.cachedNsfwPosts.splice(postPos - command.cachedSfwPosts.length, 1);
-			}
-		}
-	} else {
-		postData = command.cachedPosts.splice(Math.floor(Math.random() * command.cachedPosts.length), 1);
+		this.subreddit = options.subreddit || options.name;
+		this.hasNsfw = options.hasNsfw || false;
+		this.fetchOptions = options.fetchOptions || {};
+
+		this.cachedSfwPosts = [];
+		if (options.hasNsfw) this.cachedNsfwPosts = [];
+
+		this.lastChecked = 0;
 	}
-	postData = postData[0];
 
-	const embedTitle = postData.title, imageURL = postData.imageURL;
-	if (imageURL.startsWith("https://external-") || /\.(gif|jpe?g|png)$/.test(imageURL)) {
-		message.channel.send(new MessageEmbed()
-			.setTitle(embedTitle.length > 250 ? embedTitle.slice(0, 250) + "..." : embedTitle)
-			.setURL("https://reddit.com" + postData.url)
-			.setColor(Math.floor(Math.random() * 16777216))
-			.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
-			.setImage(imageURL));
-	} else {
-		message.channel.send(imageURL + ` (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author} | ` +
-			"ID: " + postData.url.match(/comments\/([0-9a-z]+)(?=\/)/)[1] + ")");
+	async run(bot, message, args, flags) {
+		if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
+			const fetchRes = await this.updatePosts();
+			if (fetchRes) return {cmdWarn: fetchRes};
+		}
+		this.sendRedditEmbed(message);
+	}
+
+	async updatePosts() {
+		let fetchRes;
+		await this.getPosts()
+			.then(posts => {
+				this.lastChecked = Date.now();
+				this.cachedSfwPosts = posts.sfw;
+				if (this.hasNsfw) this.cachedNsfwPosts = posts.nsfw;
+			})
+			.catch(err => fetchRes = err);
+		return fetchRes;
+	}
+
+	getPosts() {
+		return new Promise((resolve, reject) => {
+			request.get({
+				url: `https://reddit.com/r/${this.subreddit}/hot.json`,
+				qs: {raw_json: 1},
+				json: true
+			}, (err, res) => {
+				if (err) return reject(`Could not request to Reddit: ${err.message} (${err.code})`);
+				if (!res) return reject("No response was received from Reddit.");
+				if (res.statusCode >= 400) return reject(`An error has been returned from Reddit: ${res.statusMessage} (${res.statusCode}). Try again later.`);
+
+				let results = res.body.data.children.filter(r => !r.data.stickied);
+				if (this.fetchOptions.filterLocked) results = results.filter(r => !r.data.locked);
+				if (this.fetchOptions.filterScores) results = results.filter(r => r.data.score > 0);
+				if (this.hasNsfw) {
+					const sfwResults = [], nsfwResults = [];
+
+					for (const result of results) {
+						const postData = {
+							title: result.data.title,
+							url: result.data.permalink,
+							score: result.data.score,
+							comments: result.data.num_comments,
+							author: result.data.author,
+							imageURL: /v\.redd\.it/.test(result.data.url) && result.data.preview ? result.data.preview.images[0].source.url : result.data.url
+						};
+						if (result.data.over_18) {nsfwResults.push(postData)} else {sfwResults.push(postData)}
+					}
+
+					resolve({sfw: sfwResults, nsfw: nsfwResults});
+				} else {
+					resolve({
+						sfw: results.map(r => {
+							return {
+								title: r.data.title,
+								url: r.data.permalink,
+								score: r.data.score,
+								comments: r.data.num_comments,
+								author: r.data.author,
+								imageURL: /v\.redd\.it/.test(r.data.url) && r.data.preview ? r.data.preview.images[0].source.url : r.data.url
+							};
+						})
+					});
+				}
+			});
+		});
+	}
+
+	sendRedditEmbed(message) {
+		let postData;
+		if (this.hasNsfw) {
+			if (!message.channel.nsfw) {
+				postData = this.cachedSfwPosts.splice(Math.floor(Math.random() * this.cachedSfwPosts.length), 1);
+			} else {
+				const postPos = Math.floor(Math.random() * (this.cachedSfwPosts.length + this.cachedNsfwPosts.length));
+				if (postPos < this.cachedSfwPosts.length) {
+					postData = this.cachedSfwPosts.splice(postPos, 1);
+				} else {
+					postData = this.cachedNsfwPosts.splice(postPos - this.cachedSfwPosts.length, 1);
+				}
+			}
+		} else {
+			postData = this.cachedSfwPosts.splice(Math.floor(Math.random() * this.cachedSfwPosts.length), 1);
+		}
+		postData = postData[0];
+
+		const embedTitle = postData.title, imageURL = postData.imageURL;
+		if (imageURL.startsWith("https://external-") || /\.(gif|jpe?g|png)$/.test(imageURL)) {
+			message.channel.send(new MessageEmbed()
+				.setTitle(embedTitle.length > 250 ? embedTitle.slice(0, 250) + "..." : embedTitle)
+				.setURL("https://reddit.com" + postData.url)
+				.setColor(Math.floor(Math.random() * 16777216))
+				.setFooter(`👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author}`)
+				.setImage(imageURL));
+		} else {
+			message.channel.send(imageURL + ` (👍 ${postData.score} | 💬 ${postData.comments} | By: ${postData.author} | ` +
+				"ID: " + postData.url.match(/comments\/([0-9a-z]+)(?=\/)/)[1] + ")");
+		}
 	}
 }
 
 module.exports = [
-	class AntiMemeCommand extends Command {
+	class AntiMemeCommand extends RedditBasedCommand {
 		constructor() {
 			super({
 				name: "antimeme",
 				description: "Not actually memes",
-				cooldown: {
-					time: 15000,
-					type: "channel"
-				},
-				perms: {
-					bot: ["EMBED_LINKS"],
-					user: [],
-					level: 0
-				}
+				filterOptions: {filterScores: true}
 			});
-			this.cachedPosts = [];
-			this.lastChecked = 0;
-		}
-
-		async run(bot, message, args, flags) {
-			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "antimeme", false, {filterScores: true});
-				if (fetchRes) return {cmdWarn: fetchRes};
-			}
-			sendRedditEmbed(this, message, false);
 		}
 	},
 	class BirbCommand extends Command {
@@ -155,32 +171,14 @@ module.exports = [
 			});
 		}
 	},
-	class BoneHurtingJuiceCommand extends Command {
+	class BoneHurtingJuiceCommand extends RedditBasedCommand {
 		constructor() {
 			super({
 				name: "bonehurtingjuice",
 				description: "Memes redone to be positive and almost wholesome",
 				aliases: ["bhj"],
-				cooldown: {
-					time: 15000,
-					type: "channel"
-				},
-				perms: {
-					bot: ["EMBED_LINKS"],
-					user: [],
-					level: 0
-				}
+				filterOptions: {filterScores: true}
 			});
-			this.cachedPosts = [];
-			this.lastChecked = 0;
-		}
-
-		async run(bot, message, args, flags) {
-			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "bonehurtingjuice", false, {filterScores: true});
-				if (fetchRes) return {cmdWarn: fetchRes};
-			}
-			sendRedditEmbed(this, message, false);
 		}
 	},
 	class CatCommand extends Command {
@@ -214,33 +212,16 @@ module.exports = [
 			});
 		}
 	},
-	class DiscordIRLCommand extends Command {
+	class DiscordIRLCommand extends RedditBasedCommand {
 		constructor() {
 			super({
 				name: "discordirl",
 				description: "Memes about Discord",
 				aliases: ["discordmeme"],
-				cooldown: {
-					time: 15000,
-					type: "channel"
-				},
-				perms: {
-					bot: ["EMBED_LINKS"],
-					user: [],
-					level: 0
-				}
+				subreddit: "discord_irl",
+				hasNsfw: true,
+				filterOptions: {filterScores: true}
 			});
-			this.cachedSfwPosts = [];
-			this.cachedNsfwPosts = [];
-			this.lastChecked = 0;
-		}
-
-		async run(bot, message, args, flags) {
-			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedSfwPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "discord_irl", true, {filterScores: true});
-				if (fetchRes) return {cmdWarn: fetchRes};
-			}
-			sendRedditEmbed(this, message, true);
 		}
 	},
 	class DogCommand extends Command {
@@ -304,58 +285,21 @@ module.exports = [
 			});
 		}
 	},
-	class MeIRLCommand extends Command {
+	class MeIRLCommand extends RedditBasedCommand {
 		constructor() {
 			super({
 				name: "meirl",
 				description: "Memes that are relatable",
-				cooldown: {
-					time: 15000,
-					type: "channel"
-				},
-				perms: {
-					bot: ["EMBED_LINKS"],
-					user: [],
-					level: 0
-				}
+				subreddit: "me_irl"
 			});
-			this.cachedPosts = [];
-			this.lastChecked = 0;
-		}
-
-		async run(bot, message, args, flags) {
-			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "me_irl", false);
-				if (fetchRes) return {cmdWarn: fetchRes};
-			}
-			sendRedditEmbed(this, message, false);
 		}
 	},
-	class MemeCommand extends Command {
+	class MemeCommand extends RedditBasedCommand {
 		constructor() {
 			super({
 				name: "meme",
-				description: "Gets a meme",
-				cooldown: {
-					time: 20000,
-					type: "channel"
-				},
-				perms: {
-					bot: ["EMBED_LINKS"],
-					user: [],
-					level: 0
-				}
+				description: "Gets a meme"
 			});
-			this.cachedPosts = [];
-			this.lastChecked = 0;
-		}
-
-		async run(bot, message, args, flags) {
-			if (Date.now() > this.lastChecked + 1000*7200 || this.cachedPosts.length == 0) {
-				const fetchRes = await setCommandPosts(this, "memes", false);
-				if (fetchRes) return {cmdWarn: fetchRes};
-			}
-			sendRedditEmbed(this, message, false);
 		}
 	}
 ];
