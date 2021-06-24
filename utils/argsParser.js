@@ -4,7 +4,7 @@ const listableTypes = ["channel", "emoji", "member", "role"];
 
 function parseArgQuotes(args, findAll) {
 	const beginMatches = args.filter(a => /^"\S/.test(a)),
-		endMatches = args.filter(a => /"$/.test(a) && a.charAt(a.length - 2) != "\\");
+		endMatches = args.filter(a => /[^\\]"$/.test(a));
 	if (beginMatches && endMatches) {
 		const beginIndexes = beginMatches.map(match => args.indexOf(match)),
 			endIndexes = endMatches.map(match => args.indexOf(match));

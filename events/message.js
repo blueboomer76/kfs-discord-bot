@@ -15,30 +15,23 @@ async function execCommand(runCommand, bot, message, args) {
 	let userPermsAllowed = null, roleAllowed = null, faultMsg = "";
 	if (message.guild) {
 		if (requiredPerms.bot.length > 0) {
-			for (const perm of requiredPerms.bot) {
-				if (!message.channel.permissionsFor(bot.user).has(perm)) {
-					faultMsg += "I need these permissions to run this command:\n" + requiredPerms.bot.map(p => getReadableName(p)).join(", ");
-					break;
-				}
+			const botPerms = message.channel.permissionsFor(bot.user);
+			if (requiredPerms.bot.some(perm => !botPerms.has(perm))) {
+				faultMsg += "I need these permissions to run this command:\n" + requiredPerms.bot.map(getReadableName).join(", ");
 			}
 		}
 		if (requiredPerms.user.length > 0) {
-			userPermsAllowed = true;
-			for (const perm of requiredPerms.user) {
-				if (!message.channel.permissionsFor(message.author).has(perm)) {
-					userPermsAllowed = false;
-					break;
-				}
-			}
+			const userPerms = message.channel.permissionsFor(message.author);
+			userPermsAllowed = requiredPerms.user.every(perm => userPerms.has(perm));
 		}
 		if (requiredPerms.role) {
 			roleAllowed = message.author.id == message.guild.owner.id || message.member.roles.cache.some(role => role.name.toLowerCase() == requiredPerms.role.toLowerCase());
 		}
 		if (userPermsAllowed == false && roleAllowed == null) {
-			faultMsg += "\nYou need these permissions to run this command:\n" + requiredPerms.user.map(p => getReadableName(p)).join(", ");
+			faultMsg += "\nYou need these permissions to run this command:\n" + requiredPerms.user.map(getReadableName).join(", ");
 		} else if (userPermsAllowed == false && roleAllowed == false) {
 			faultMsg += `\nYou need to have these permissions, be the server owner, or have a role named **${requiredPerms.role}** to run this command:\n` +
-				requiredPerms.user.map(p => getReadableName(p)).join(", ");
+				requiredPerms.user.map(getReadableName).join(", ");
 		} else if (userPermsAllowed == null && roleAllowed == false) {
 			faultMsg += `\nYou need to be the server owner or have a role named **${requiredPerms.role}** to run this command.`;
 		}

@@ -575,7 +575,7 @@ module.exports = [
 			const channels = {text: 0, voice: 0, category: 0};
 			for (const channel of guild.channels.cache.values()) channels[channel.type]++;
 
-			const guildFeatures = guild.features.length != 0 ? guild.features.map(feat => getReadableName(feat)) : "None";
+			const guildFeatures = guild.features.length != 0 ? guild.features.map(getReadableName) : "None";
 
 			const serverInfoEmbed = new MessageEmbed()
 				.setTitle("Server Info - " + guild.name)
@@ -657,7 +657,7 @@ module.exports = [
 			}
 
 			const userFlags = user.flags && user.flags.bitfield != 0 ?
-				user.flags.toArray().map(feat => getReadableName(feat)) : "None";
+				user.flags.toArray().map(getReadableName) : "None";
 
 			const userEmbed = new MessageEmbed()
 				.setTitle("User Info - " + user.tag)
@@ -708,10 +708,8 @@ module.exports = [
 				}
 
 				const memRoles = [];
-				for (const role of member.roles.cache.values()) {
-					if (role.position == 0) continue;
-					memRoles.push(role.name);
-				}
+				for (const role of member.roles.cache.values()) memRoles.push(role.name);
+				memRoles.shift();
 
 				let roleList;
 				if (memRoles.length == 0) {

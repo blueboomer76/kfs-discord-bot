@@ -77,8 +77,7 @@ class Paginator {
 
 				if (this.entries[0].length <= this.limit) return;
 
-				const emojiList = ["⬅", "➡"];
-				if (!this.noStop) emojiList.splice(1, 0, "⏹");
+				const emojiList = this.noStop ? ["⬅", "➡"] : ["⬅", "⏹", "➡"];
 				if (this.maxPage > 5) emojiList.push("🔢");
 				for (let i = 0; i < emojiList.length; i++) {
 					setTimeout(() => {

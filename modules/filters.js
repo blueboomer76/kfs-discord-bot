@@ -1,5 +1,5 @@
 function getPixelFactor(img) {
-	return Math.ceil((img.bitmap.width > img.bitmap.height ? img.bitmap.width : img.bitmap.height) / 100);
+	return Math.ceil(Math.max(img.bitmap.width, img.bitmap.height) / 100);
 }
 
 module.exports.applyJimpFilter = (img, filter, options) => {

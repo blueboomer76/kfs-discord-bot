@@ -143,8 +143,8 @@ module.exports = [
 					const commandFlags = command.flags.map(f => `\`--${f.name.toLowerCase()}\` (\`-${f.name.charAt(0)}\`): ${f.desc}`),
 						commandPerms = command.perms,
 						permReq = {
-							bot: commandPerms.bot.length > 0 ? commandPerms.bot.map(p => getReadableName(p)).join(", ") : "None",
-							user: commandPerms.user.length > 0 ? commandPerms.user.map(p => getReadableName(p)).join(", ") : "None",
+							bot: commandPerms.bot.length > 0 ? commandPerms.bot.map(getReadableName).join(", ") : "None",
+							user: commandPerms.user.length > 0 ? commandPerms.user.map(getReadableName).join(", ") : "None",
 							role: commandPerms.role ? `\nRequires having a role named ${commandPerms.role}.` : "",
 							level: commandPerms.level > 0 ? `\nRequires being ${bot.permLevels[commandPerms.level].name}.` : ""
 						};
