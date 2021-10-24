@@ -4,6 +4,10 @@
 
 # 2.X (current)
 
+## 2.0.0-beta.4
+
+- Upgraded discord.js from version 12 to 13
+
 ## 2.0.0-beta.3
 
 - Changed non-CDN discordapp.com links to discord.com
