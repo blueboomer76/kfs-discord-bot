@@ -1,26 +1,28 @@
 {
   "name": "kfs-discord-bot",
-  "version": "2.0.0-beta.4",
+  "version": "2.0.0-beta.5",
   "description": "A multipurpose Discord bot for fun, moderation, utility, and more, written in discord.js",
   "main": "index.js",
   "dependencies": {
+    "@discordjs/builders": "^0.15.0",
     "canvas": "^2.8.0",
     "color-convert": "^2.0.0",
-    "discord.js": "^13.2.0",
+    "discord-api-types": "^0.36.1",
+    "discord.js": "~13.8.1",
     "gifencoder": "^2.0.1",
     "jimp": "^0.16.1",
-    "mathjs": "^9.5.1",
+    "mathjs": "^10.6.4",
     "request": "^2.88.0",
     "rss-parser": "^3.6.0",
     "svg2png": "^4.1.1",
-    "twemoji": "^13.1.0"
+    "twemoji": "^14.0.2"
   },
   "devDependencies": {
     "eslint": "^8.1.0"
   },
   "optionalDependencies": {
     "cheerio": "^1.0.0-rc.2",
-    "puppeteer": "^10.4.0"
+    "puppeteer": "^15.3.1"
   },
   "scripts": {
     "start": "node index.js",
