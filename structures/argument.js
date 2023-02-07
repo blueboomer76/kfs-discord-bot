@@ -6,21 +6,20 @@ class Argument {
 			this.testFunction = props.testFunction;
 		}
 
-		this.allowQuotes = props.allowQuotes || false;
-		this.errorMsg = props.errorMsg || null;
-		this.infiniteArgs = props.infiniteArgs || false;
-		this.missingArgMsg = props.missingArgMsg || null;
-		this.noTrim = props.noTrim || false;
-		this.optional = props.optional || false;
-		this.parseSeparately = props.parseSeparately || false;
-		this.shiftable = props.shiftable || false;
+		this.name = props.name;
+		this.description = props.description;
 		this.type = props.type;
 
-		if (props.allowedValues) this.allowedValues = props.allowedValues;
+		this.fullDescription = props.fullDescription || this.description;
+		this.errorMsg = props.errorMsg || null;
+		this.parsedType = props.parsedType;
+		this.parsedTypeParams = props.parsedTypeParams;
+		this.required = props.required || false;
+
+		if (props.choices) this.choices = props.choices;
 		if (props.min) this.min = props.min;
 		if (props.max) this.max = props.max;
-		if (props.allowRaw) this.allowRaw = props.allowRaw;
-		if (props.mentionOnly) this.mentionOnly = props.mentionOnly;
+		if (props.types) this.types = props.types;
 	}
 }
 

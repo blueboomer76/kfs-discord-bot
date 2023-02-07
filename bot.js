@@ -1,5 +1,5 @@
-const {Client, Collection, Intents, MessageEmbed} = require("discord.js"),
-	{capitalize} = require("./modules/functions.js"),
+const {Client, Collection, Constants, DiscordAPIError, Intents, MessageEmbed} = require("discord.js"),
+	{capitalize, checkRemoteRequest} = require("./modules/functions.js"),
 	config = require("./config.json"),
 	fs = require("fs"),
 	request = require("request"),
@@ -15,6 +15,7 @@ class KFSDiscordBot extends Client {
 		this.supportIDs = config.supportIDs;
 		this.commands = new Collection();
 		this.aliases = new Collection();
+		this.slashCommands = new Collection();
 		this.categories = [];
 		this.prefix = config.prefix;
 		this.permLevels = [
@@ -24,26 +25,26 @@ class KFSDiscordBot extends Client {
 			},
 			{
 				name: "Server Owner",
-				validate: message => {
-					if (!message.guild) return false;
-					return message.guild.owner.id == message.author.id;
+				validate: interaction => {
+					if (!interaction.inGuild()) return false;
+					return interaction.guild.ownerId == interaction.user.id;
 				}
 			},
 			{
 				name: "Bot Support",
-				validate: message => this.supportIDs.includes(message.author.id)
+				validate: interaction => this.supportIDs.includes(interaction.user.id)
 			},
 			{
 				name: "Bot Moderator",
-				validate: message => this.moderatorIDs.includes(message.author.id)
+				validate: interaction => this.moderatorIDs.includes(interaction.user.id)
 			},
 			{
 				name: "Bot Admin",
-				validate: message => this.adminIDs.includes(message.author.id)
+				validate: interaction => this.adminIDs.includes(interaction.user.id)
 			},
 			{
 				name: "Bot Owner",
-				validate: message => this.ownerIDs.includes(message.author.id)
+				validate: interaction => this.ownerIDs.includes(interaction.user.id)
 			}
 		];
 
@@ -57,25 +58,30 @@ class KFSDiscordBot extends Client {
 			cumulativeStats: {
 				duration: 0,
 				commandTotal: 0,
+				interactionTotal: 0,
 				callTotal: 0,
 				messageTotal: 0,
 				lastSorted: 0,
-				commandUsages: {}
+				commandUsages: {},
+				slashCommandUsages: {}
 			},
 			stats: {
 				commandCurrentTotal: 0,
 				commandSessionTotal: 0,
+				interactionCurrentTotal: 0,
+				interactionSessionTotal: 0,
 				callCurrentTotal: 0,
 				callSessionTotal: 0,
 				messageCurrentTotal: 0,
 				messageSessionTotal: 0,
 				commandUsages: {},
+				slashCommandUsages: {},
 				lastCheck: now
 			},
 			status: {randomIters: 0, pos: 0}
 		};
 
-		this.intents = new Intents(this.options.ws.intents);
+		this.intents = new Intents(this.options.intents);
 
 		this.downtimeTimestampBase = now;
 		this.unavailableGuildIDs = [];
@@ -138,6 +144,68 @@ class KFSDiscordBot extends Client {
 		});
 	}
 
+	async loadSlashCommands(altdir) {
+		const dir = altdir || "./commands/slashCommands/";
+		fs.readdir(dir, (err, files) => {
+			if (err) throw err;
+			const cmdFiles = files.filter(f => f.endsWith(".js"));
+			if (cmdFiles.length > 0) {
+				for (const rawFileName of cmdFiles) {
+					const fileName = rawFileName.split(".")[0],
+						rawCommandName = fileName.replace(/-/g, " "),
+						commandName = /[A-Z]/.test(rawCommandName) ? rawCommandName : capitalize(rawCommandName, true);
+					let CommandClass;
+					try {
+						CommandClass = require(dir + fileName + ".js");
+					} catch (err) {
+						console.error(`The command with name ${commandName} failed to load due to:`, err instanceof Error ? err.message : err);
+						continue;
+					}
+
+					const command = new CommandClass();
+					this.slashCommands.set(command.name, command);
+
+					console.log(`The command with name ${commandName} has been loaded.`);
+				}
+			} else {
+				const err = "No command files or commands found in the directory: " + dir;
+				if (altdir) {console.error(err)} else {throw new Error(err)}
+			}
+		});
+	}
+
+	replaceSlashCommands() {
+		const builderJSONArray = this.slashCommands.map(sc => sc.builder.toJSON());
+		return this.application.commands.set(builderJSONArray);
+	}
+
+	upsertSlashCommand(name) {
+		const slashCommand = this.slashCommands.get(name);
+		if (!slashCommand) throw new Error("Slash command with name " + name + " not found locally");
+
+		const builderJSON = slashCommand.builder.toJSON();
+
+		return this.application.commands.fetch()
+			.then(commands => {
+				const slashCommandFromDiscord = commands.find(sc => sc.name == name);
+				if (slashCommandFromDiscord) {
+					return this.application.commands.edit(slashCommandFromDiscord, builderJSON);
+				} else {
+					return this.application.commands.create(builderJSON);
+				}
+			});
+	}
+
+	deleteSlashCommand(name) {
+		return this.application.commands.fetch()
+			.then(commands => {
+				const slashCommandFromDiscord = commands.find(sc => sc.name == name);
+				if (!slashCommandFromDiscord) throw new Error("Slash command with name " + name + " not found from Discord");
+
+				return this.application.commands.delete(slashCommandFromDiscord);
+			});
+	}
+
 	loadEvents() {
 		fs.readdir("./events/", (err, files) => {
 			if (err) throw err;
@@ -174,6 +242,16 @@ class KFSDiscordBot extends Client {
 			commandCurrentTotal += cachedUsages[cmdName];
 		}
 		cumulativeStats.commandTotal += commandCurrentTotal;
+
+		const cachedUsages2 = cachedStats.slashCommandUsages,
+			storedUsages2 = cumulativeStats.slashCommandUsages;
+		let interactionCurrentTotal = cachedStats.interactionCurrentTotal;
+		for (const cmdName in cachedUsages2) {
+			storedUsages2[cmdName] = (storedUsages2[cmdName] || 0) + cachedUsages2[cmdName];
+			interactionCurrentTotal += cachedUsages2[cmdName];
+		}
+		cumulativeStats.interactionTotal += interactionCurrentTotal;
+
 		cumulativeStats.callTotal += cachedStats.callCurrentTotal;
 		cumulativeStats.messageTotal += cachedStats.messageCurrentTotal;
 
@@ -215,13 +293,6 @@ class KFSDiscordBot extends Client {
 		}
 	}
 
-	checkRemoteRequest(site, err, res) {
-		if (err) return `Could not request to ${site}: ${err.message} (${err.code})`;
-		if (!res) return `No response was received from ${site}.`;
-		if (res.statusCode >= 400) return `An error has been returned from ${site}: ${res.statusCode} (${res.statusMessage}). Try again later.`;
-		return true;
-	}
-
 	// General function for posting stats
 	postStatsToWebsite(website, requestHeader, requestBody) {
 		request.post({
@@ -230,7 +301,7 @@ class KFSDiscordBot extends Client {
 			body: requestBody,
 			json: true
 		}, (err, res) => {
-			const requestRes = this.checkRemoteRequest(website, err, res);
+			const requestRes = checkRemoteRequest(website, err, res);
 			if (requestRes != true) {
 				console.error(`[Stats Posting] ${requestRes}`);
 			} else {
@@ -244,18 +315,21 @@ class KFSDiscordBot extends Client {
 			url: "https://reddit.com/r/memes/hot.json",
 			json: true
 		}, (err, res) => {
-			const requestRes = this.checkRemoteRequest("Reddit", err, res);
+			const requestRes = checkRemoteRequest("Reddit", err, res);
 			if (requestRes != true) {
 				console.error(`Failed to obtain a meme from Reddit: ${requestRes}`);
 			} else {
 				const meme = res.body.data.children.filter(r => !r.data.stickied)[0].data;
-				this.channels.cache.get(config.memeFeedChannel).send(new MessageEmbed()
-					.setTitle(meme.title)
-					.setURL("https://reddit.com" + meme.permalink)
-					.setColor(Math.floor(Math.random() * 16777216))
-					.setFooter(`👍 ${meme.score} | 💬 ${meme.num_comments} | By: ${meme.author}`)
-					.setImage(/v\.redd\.it/.test(meme.url) && meme.preview ? meme.preview.images[0].source.url : meme.url)
-				);
+				this.channels.cache.get(config.memeFeedChannel).send({
+					embeds: [
+						new MessageEmbed()
+							.setTitle(meme.title)
+							.setURL("https://reddit.com" + meme.permalink)
+							.setColor(Math.floor(Math.random() * 16777216))
+							.setFooter({text: `👍 ${meme.score} | 💬 ${meme.num_comments} | 👤 ${meme.author}`})
+							.setImage(/v\.redd\.it/.test(meme.url) && meme.preview ? meme.preview.images[0].source.url : meme.url)
+					]
+				});
 			}
 		});
 	}
@@ -286,10 +360,17 @@ class KFSDiscordBot extends Client {
 		phoneCache.msgCount++;
 		setTimeout(() => phoneCache.msgCount--, 5000);
 
-		phoneCache.channels[affected].send(`📞 ${toSend}`);
-		if (phoneCache.msgCount >= 4) {
-			this.resetPhone("☎ The phone connection was cut off due to possible overload.", true);
-		}
+		phoneCache.channels[affected].send(`📞 ${toSend}`)
+			.then(() => {
+				if (phoneCache.msgCount >= 4) {
+					this.resetPhone("☎ The phone connection was cut off due to possible overload.", true);
+				}
+			})
+			.catch(err => {
+				if (err instanceof DiscordAPIError && err.code == Constants.APIErrors.UNKNOWN_CHANNEL) {
+					this.handlePhoneChannelDelete(phoneCache.channels[affected]);
+				}
+			});
 	}
 
 	async checkPhone() {
@@ -325,21 +406,10 @@ class KFSDiscordBot extends Client {
 		if (phoneTimeout) {clearTimeout(phoneTimeout); phoneTimeout = null}
 	}
 
-	checkDeletedPhoneChannels() {
-		const phoneCache = this.cache.phone,
-			ch0deleted = phoneCache.channels[0] ? phoneCache.channels[0].deleted : null,
-			ch1deleted = phoneCache.channels[1] ? phoneCache.channels[1].deleted : null;
-		if (ch0deleted == true || ch1deleted == true) {
-			const phoneMsg = "⚠ The other side has deleted their channel for which the phone call was made.";
-			if (ch0deleted == true && ch1deleted == false) {
-				phoneCache.channels[1].send(phoneMsg);
-			} else if (ch0deleted == false && ch1deleted == true) {
-				phoneCache.channels[0].send(phoneMsg);
-			}
-			this.resetPhone();
-			return true;
-		}
-		return false;
+	handlePhoneChannelDelete(deletedChannel) {
+		const toSend = deletedChannel.id == this.cache.phone.channels[0].id ? 1 : 0;
+		this.cache.phone.channels[toSend].send("⚠ The other side has deleted their channel for which the phone call was made.");
+		this.resetPhone();
 	}
 }
 

@@ -4,6 +4,10 @@
 
 # 2.X (current)
 
+## 2.0.0-beta.6
+
+- Added support for slash commands
+
 ## 2.0.0-beta.4
 
 - Upgraded discord.js from version 12 to 13

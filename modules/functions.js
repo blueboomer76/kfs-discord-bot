@@ -51,7 +51,9 @@ function getStatuses(users, rawOffline = 0) {
 		notOffline: null
 	};
 
-	for (const user of users.values()) statuses[user.presence.status]++;
+	for (const user of users.values()) {
+		if (user.presence) statuses[user.presence.status]++;
+	}
 	statuses.notOffline = statuses.online + statuses.idle + statuses.dnd;
 	return statuses;
 }
@@ -59,6 +61,12 @@ function getStatuses(users, rawOffline = 0) {
 module.exports = {
 	// General purpose
 	capitalize: capitalize,
+	checkRemoteRequest: (site, err, res) => {
+		if (err) return `Could not request to ${site}: ${err.message} (${err.code})`;
+		if (!res) return `No response was received from ${site}.`;
+		if (res.statusCode >= 400) return `An error has been returned from ${site}: ${res.statusCode} (${res.statusMessage}). Try again later.`;
+		return true;
+	},
 
 	// For the bot
 	getBotStats: bot => {
@@ -68,23 +76,33 @@ module.exports = {
 		for (const cmdName in cachedStats.commandUsages) {
 			commandCurrentTotal += cachedStats.commandUsages[cmdName];
 		}
+		let interactionCurrentTotal = cachedStats.interactionCurrentTotal;
+		for (const cmdName in cachedStats.slashCommandUsages) {
+			interactionCurrentTotal += cachedStats.slashCommandUsages[cmdName];
+		}
 
 		const statuses = getStatuses(bot.users.cache),
-			channels = {text: 0, voice: 0, category: 0, dm: 0};
-		for (const channel of bot.channels.cache.values()) channels[channel.type]++;
+			channels = {text: 0, voice: 0, categories: 0};
+		for (const channel of bot.channels.cache.values()) {
+			if (channel.type == "GUILD_TEXT") {
+				channels.text++;
+			} else if (channel.type == "GUILD_VOICE") {
+				channels.voice++;
+			} else if (channel.type == "GUILD_CATEGORY") {
+				channels.categories++;
+			}
+		}
 
 		return {
 			servers: bot.guilds.cache.size,
 			largeServers: bot.guilds.cache.filter(g => g.large).size,
 			users: bot.users.cache.size,
 			statuses: statuses,
-			channels: {
-				text: channels.text,
-				voice: channels.voice,
-				categories: channels.category
-			},
+			channels: channels,
 			sessionCommands: cachedStats.commandSessionTotal + commandCurrentTotal,
 			totalCommands: cumulativeStats.commandTotal + commandCurrentTotal,
+			sessionInteractions: cachedStats.interactionSessionTotal + interactionCurrentTotal,
+			totalInteractions: cumulativeStats.interactionTotal + interactionCurrentTotal,
 			sessionCalls: cachedStats.callSessionTotal + cachedStats.callCurrentTotal,
 			totalCalls: cumulativeStats.callTotal + cachedStats.callCurrentTotal,
 			sessionMessages: cachedStats.messageSessionTotal + cachedStats.messageCurrentTotal,
@@ -96,6 +114,10 @@ module.exports = {
 	getStatuses: getStatuses,
 	getReadableName: str => {
 		return str.split("_").map(p => capitalize(p.toLowerCase())).join(" ");
+	},
+	getDateAndDurationString: (timestamp, long = true) => {
+		const unixSeconds = Math.floor(timestamp / 1000);
+		return long ? `<t:${unixSeconds}:d> <t:${unixSeconds}:T> (<t:${unixSeconds}:R>)` : `<t:${unixSeconds}:D> (<t:${unixSeconds}:R>)`;
 	},
 
 	// For durations such as 1 day, 2 hours

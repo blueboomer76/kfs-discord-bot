@@ -20,7 +20,7 @@ module.exports = async bot => {
 
 	console.log("=".repeat(30) + " READY " + "=".repeat(30));
 	console.log(`[${now.toJSON()}] Bot has entered ready state.`);
-	bot.user.setActivity(`${bot.prefix}help | with you in ${bot.guilds.cache.size} servers`);
+	bot.user.setActivity(`/help | with you in ${bot.guilds.cache.size} servers`);
 
 	bot.cache.guildCount = bot.guilds.cache.size;
 	bot.cache.userCount = bot.users.cache.size;
@@ -35,6 +35,31 @@ module.exports = async bot => {
 	if (!initialized) {
 		initialized = true;
 		bot.mentionPrefix = new RegExp(`^<@!?${bot.user.id}>`);
+
+		if (process.argv[2] == "--init") {
+			// If the --init flag is set, set up built-in slash commands
+			bot.replaceSlashCommands()
+				.then(() => console.log("Successfully replaced slash commands!"));
+		} else {
+			// Make sure the "commands" slash command exists on Discord, not just on the local bot instance
+			const commands = await bot.application.commands.fetch();
+
+			const slashCommandsFromDiscord = [...commands.values()];
+			if (!slashCommandsFromDiscord.some(sc => sc.name == "commands")) {
+				bot.upsertSlashCommand("commands");
+			}
+
+			// Check if any commands are mismatched between Discord and this bot instance
+			const namesFromDiscord = slashCommandsFromDiscord.map(sc => sc.name),
+				namesFromBot = [...bot.slashCommands.keys()];
+
+			const diff1 = namesFromDiscord.filter(n => !namesFromBot.includes(n)),
+				diff2 = namesFromBot.filter(n => !namesFromDiscord.includes(n));
+			if (diff1.length > 0) console.log("These commands from Discord were not found on the bot:", diff1);
+			if (diff2.length > 0) console.log("These commands from the bot were not found on Discord:", diff2);
+		}
+
+		// Set bot's status regularly
 		setInterval(() => {
 			let newBotGame;
 			if (Math.random() < 0.5 && bot.cache.status.randomIters < 2) {
@@ -50,17 +75,14 @@ module.exports = async bot => {
 						newBotGame = `with ${parseLargeNumber(bot.cache.channelCount, parserOptions)} channels`;
 						break;
 					case 2:
-						newBotGame = parseLargeNumber(bot.cache.cumulativeStats.commandTotal, parserOptions) + " run commands";
+						newBotGame = parseLargeNumber(bot.cache.cumulativeStats.interactionTotal, parserOptions) + " run commands";
 						break;
 					case 3:
-						newBotGame = parseLargeNumber(bot.cache.cumulativeStats.messageTotal, parserOptions) + " read messages";
-						break;
-					case 4:
 						newBotGame = "on version " + version;
 						break;
 				}
 
-				if (bot.cache.status.pos < 5) {
+				if (bot.cache.status.pos < 4) {
 					bot.cache.status.pos++;
 				} else {
 					bot.cache.status.pos = 0;
@@ -70,7 +92,7 @@ module.exports = async bot => {
 					newBotGame = `with you in ${bot.cache.guildCount} servers`;
 				}
 			}
-			bot.user.setActivity(bot.prefix + "help | " + newBotGame);
+			bot.user.setActivity("/help | " + newBotGame);
 		}, 1000 * 300);
 
 		setInterval(() => {

@@ -18,6 +18,7 @@ stats.json
 test/
 test.js
 commands/advanced/
+commands/slashCommandsAdvanced/
 
 # Visual Studio Code
 .vscode/

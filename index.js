@@ -4,21 +4,22 @@ const {Constants, DiscordAPIError, Intents} = require("discord.js"),
 	fs = require("fs");
 
 // Check system requirements
-if (parseInt(process.versions.node) < 12) {
-	throw new Error("Incompatible Node.js version: v12 or newer required");
+const nodeVersionMatch = process.versions.node.match(/^(\d+)\.(\d+)/);
+if (parseInt(nodeVersionMatch[1]) < 16 || parseInt(nodeVersionMatch[2]) < 6) {
+	throw new Error("Incompatible Node.js version: v16.6.0 or newer required");
 }
 if (process.arch == "ia32") {
 	throw new Error("Incompatible operating system: 64-bit required");
 }
 
-const parsedIntents = new Intents(["GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS"]);
+// Intents
+const parsedIntents = new Intents(["GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGES"]);
 if (Array.isArray(intents) || !isNaN(parseInt(intents))) parsedIntents.add(intents);
 
+// Initialize the bot object
 const bot = new KFSDiscordBot({
 	disableMentions: "everyone",
-	ws: {
-		intents: parsedIntents
-	}
+	intents: parsedIntents
 });
 
 let storedStats;
@@ -26,6 +27,7 @@ try {
 	storedStats = require("./modules/stats.json");
 	if (isNaN(parseInt(storedStats.duration))) storedStats.duration = 0;
 	if (isNaN(parseInt(storedStats.commandTotal))) storedStats.commandTotal = 0;
+	if (isNaN(parseInt(storedStats.interactionTotal))) storedStats.interactionTotal = 0;
 	if (isNaN(parseInt(storedStats.callTotal))) storedStats.callTotal = 0;
 	if (isNaN(parseInt(storedStats.messageTotal))) storedStats.messageTotal = 0;
 	if (isNaN(parseInt(storedStats.lastSorted))) storedStats.lastSorted = 0;
@@ -38,14 +40,25 @@ try {
 	} catch (err2) {
 		storedStats.commandUsages = {};
 	}
+	try {
+		for (const cmdName in storedStats.slashCommandUsages) {
+			if (isNaN(parseInt(storedStats.slashCommandUsages[cmdName]))) {
+				delete storedStats.slashCommandUsages[cmdName];
+			}
+		}
+	} catch (err2) {
+		storedStats.slashCommandUsages = {};
+	}
 } catch (err) {
 	storedStats = {
 		duration: 0,
 		commandTotal: 0,
+		interactionTotal: 0,
 		callTotal: 0,
 		messageTotal: 0,
 		lastSorted: 0,
-		commandUsages: {}
+		commandUsages: {},
+		slashCommandUsages: {}
 	};
 }
 
@@ -54,8 +67,8 @@ fs.writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => 
 	bot.cache.cumulativeStats = require("./modules/stats.json");
 });
 
-bot.loadCommands();
-if (fs.existsSync("./commands/advanced")) bot.loadCommands("./commands/advanced/");
+bot.loadSlashCommands("./commands/slashCommands/");
+if (fs.existsSync("./commands/slashCommandsAdvanced")) bot.loadSlashCommands("./commands/slashCommandsAdvanced/");
 bot.loadEvents();
 
 process.on("uncaughtException", err => {
@@ -67,6 +80,7 @@ process.on("unhandledRejection", reason => {
 	if (reason instanceof DiscordAPIError) {
 		console.error(`[${new Date().toJSON()}] Discord API has returned an error: ${reason.message}`);
 		console.error(`Details - Code: ${reason.code}, Method: ${reason.method}, Path: ${reason.path}`);
+		console.error(reason.requestData);
 	} else {
 		console.error(`[${new Date().toJSON()}] Promise Rejection:`);
 		console.error(reason);

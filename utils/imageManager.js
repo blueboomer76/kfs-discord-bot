@@ -20,16 +20,16 @@ function getEmojiImage(url) {
 }
 
 module.exports = {
-	getImageResolvable: async (message, userInput) => {
+	getImageResolvable: async (ctx, userInput) => {
 		const result = {data: null, error: null};
 		if (userInput && userInput.isEmoji) {
 			// User input is an emoji
 			await getEmojiImage(userInput.content)
 				.then(data => result.data = data)
 				.catch(err => result.error = err);
-		} else if (!userInput) {
+		} else if (!userInput && ctx.bot.intents.has("GUILD_MESSAGES")) {
 			// No user input given, search through messages
-			await message.channel.messages.fetch({limit: 25})
+			await ctx.interaction.channel.messages.fetch({limit: 25})
 				.then(msgs => {
 					for (const msg of msgs.values()) {
 						if (msg.attachments.size > 0) {
@@ -76,27 +76,27 @@ module.exports = {
 			});
 		}
 	}),
-	applyJimpFilterAndPost: (msg, imgResolvable, filter, options = {}) => {
+	applyJimpFilterAndPost: (ctx, imgResolvable, filter, options = {}) => {
 		Jimp.read(imgResolvable)
 			.then(img => {
 				applyJimpFilter(img, filter, options);
 				img.getBufferAsync(options.jpeg ? Jimp.MIME_JPEG : Jimp.MIME_PNG)
 					.then(imgToSend => {
-						msg.channel.send({
+						ctx.respond({
 							files: [{attachment: imgToSend, name: filter + (options.jpeg ? ".jpg" : ".png")}]
 						});
 					})
-					.catch(() => msg.channel.send("⚠ Failed to generate the image."));
+					.catch(() => ctx.respond("Failed to generate the image.", {level: "warning"}));
 			})
-			.catch(() => msg.channel.send("⚠ Failed to read image contents."));
+			.catch(() => ctx.respond("Failed to read image contents.", {level: "warning"}));
 	},
-	postJimpImage: (msg, img, fileName) => {
+	postJimpImage: (ctx, img, fileName) => {
 		img.getBufferAsync(Jimp.MIME_PNG)
 			.then(imgToSend => {
-				msg.channel.send({
+				ctx.respond({
 					files: [{attachment: imgToSend, name: fileName}]
 				});
 			})
-			.catch(() => msg.channel.send("⚠ Failed to generate the image."));
+			.catch(() => ctx.respond("Failed to generate the image.", {level: "warning"}));
 	}
 };

@@ -91,14 +91,11 @@ function getListableObjects(rawTestObjs, testRegex, key) {
 	return inclusiveMatches.length > 0 ? inclusiveMatches : null;
 }
 
-module.exports.resolve = async (bot, message, obj, type, params) => {
+module.exports.resolve = async (interaction, obj, argData) => {
+	const bot = interaction.client;
+
 	const lowerObj = obj.toLowerCase();
-	switch (type) {
-		case "boolean":
-			if (["yes", "y", "true", "enable"].includes(lowerObj)) return true;
-			return ["no", "n", "false", "disable"].includes(lowerObj) ? false : null;
-		case "channel":
-			return getListableObjects(message.guild.channels.cache, /^<#(\d{17,19})>$/, obj);
+	switch (argData.parsedType) {
 		case "color": {
 			const objWithNoSpaces = lowerObj.replace(/[ %]/g, "").toLowerCase();
 			let i, colorMatch;
@@ -146,17 +143,13 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 		case "command":
 			return bot.commands.get(lowerObj) || bot.commands.get(bot.aliases.get(lowerObj)) || null;
 		case "emoji":
-			return getListableObjects(message.guild.emojis.cache, emojiRegex, obj);
-		case "float": {
-			const num = parseFloat(obj);
-			return !isNaN(num) && num >= params.min && num <= params.max ? num : null;
-		}
+			return getListableObjects(interaction.guild.emojis.cache, emojiRegex, obj);
 		case "function":
-			return params.testFunction(obj) ? obj : null;
+			return argData.parsedTypeParams.testFunction(obj) ? obj : null;
 		case "image": {
 			const memberMatch = obj.match(memberRegex);
 			if (memberMatch) {
-				const member = await fetchMemberByID(message, memberMatch[1], false);
+				const member = await fetchMemberByID(interaction, memberMatch[1], false);
 				if (member) {
 					return member.user.avatarURL({format: "png"}) || `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`;
 				} else {
@@ -164,8 +157,8 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 				}
 			}
 			if (/^https?:\/\/.+\.(gif|jpe?g|png)$/i.test(obj)) return obj;
-			if (lowerObj == "guild" || lowerObj == "server") return message.guild.iconURL({format: "png"}) || null;
-			if (lowerObj == "avatar") return message.author.avatarURL({format: "png"}) || null;
+			if (lowerObj == "guild" || lowerObj == "server") return interaction.guild.iconURL({format: "png"}) || null;
+			if (lowerObj == "avatar") return interaction.user.avatarURL({format: "png"}) || null;
 
 			const emojiMatch = obj.match(emojiRegex);
 			if (emojiMatch) {
@@ -181,39 +174,60 @@ module.exports.resolve = async (bot, message, obj, type, params) => {
 			return i != -1 ? {isEmoji: true, content: parsedEmoji.slice(i, parsedEmoji.indexOf(".svg", i) + 4)} : null;
 		}
 		case "member": {
-			const memberMatch = obj.match(memberRegex), allowRaw = params.allowRaw;
+			const memberMatch = obj.match(memberRegex), allowRaw = argData.parsedTypeParams.allowRaw;
 			let member;
 
 			if (memberMatch) {
-				member = await fetchMemberByID(message, memberMatch[1], allowRaw);
+				member = await fetchMemberByID(interaction, memberMatch[1], allowRaw);
 				return member ? [member] : (allowRaw ? obj : null);
-			} else if (params.mentionOnly) {
+			} else if (argData.parsedTypeParams.mentionOnly) {
 				return allowRaw ? obj : null;
 			} else {
 				const idMatch = obj.match(/^\d{17,19}$/);
 				if (idMatch) {
-					member = await fetchMemberByID(message, idMatch[0], allowRaw);
+					member = await fetchMemberByID(interaction, idMatch[0], allowRaw);
 					if (member) return [member];
 				}
 			}
 
 			if (!userFetcherFunction) getUserFetcherFunction(bot);
 
-			return await userFetcherFunction(message, obj, allowRaw);
+			return await userFetcherFunction(interaction, obj, allowRaw);
 		}
-		case "number": {
-			const num = Math.floor(obj);
-			return !isNaN(num) && num >= params.min && num <= params.max ? num : null;
-		}
-		case "oneof":
-			return params.list.includes(lowerObj) ? lowerObj : null;
-		case "role": {
-			const guildRoles = message.guild.roles.cache.clone();
-			guildRoles.delete(message.guild.roles.everyone.id);
-			return getListableObjects(guildRoles, /^<@&(\d{17,19})>$/, obj);
-		}
-		case "string":
-			return obj.toString();
+		case "slashCommand":
+			if (argData.parsedTypeParams.matchType == "whole" || argData.parsedTypeParams.matchType == "partial") {
+				const slashCommandParts = lowerObj.split(" ");
+				const rawCommand = slashCommandParts[0];
+
+				const slashCommand = bot.slashCommands.get(rawCommand);
+				if (!slashCommand) return null;
+
+				const targetType = slashCommand.getType();
+				if (targetType == "subcommandGroup") {
+					const rawSubcommandGroup = slashCommandParts[1];
+					if (argData.parsedTypeParams.matchType == "partial" && !rawSubcommandGroup) return slashCommand;
+					const subcommandGroup = slashCommand.subcommandGroups.find(scg => scg.name == rawSubcommandGroup);
+					if (!subcommandGroup) return null;
+
+					const rawSubcommand = slashCommandParts[2];
+					if (argData.parsedTypeParams.matchType == "partial" && !rawSubcommand) return subcommandGroup;
+					const subcommand = subcommandGroup.subcommands.find(sc => sc.name == rawSubcommand);
+					if (!subcommand) return null;
+
+					return subcommand;
+				} else if (targetType == "subcommand") {
+					const rawSubcommand = slashCommandParts[1];
+					if (argData.parsedTypeParams.matchType == "partial" && !rawSubcommand) return slashCommand;
+					const subcommand = slashCommand.subcommands.find(sc => sc.name == rawSubcommand);
+					if (!subcommand) return null;
+
+					return subcommand;
+				} else {
+					return slashCommand.command;
+				}
+			} else {
+				return bot.slashCommands.get(lowerObj) || null;
+			}
 		default:
 			throw new Error("Invalid argument type to check");
 	}

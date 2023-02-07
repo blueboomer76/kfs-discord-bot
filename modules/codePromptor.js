@@ -1,26 +1,47 @@
-module.exports.prompt = async (message, notice) => {
+const {MessageButton, MessageActionRow} = require("discord.js");
+
+module.exports.prompt = async (ctx, notice) => {
 	const promptRes = {
+		originalMsg: null,
 		noticeMsg: null,
-		responseMsg: null,
 		error: null
 	};
-	let code = Math.floor(Math.random() * 100000).toString();
-	if (code.length < 5) {while (code.length < 5) code = "0" + code;}
 
-	await message.channel.send(notice + "\nType `" + code + "` to proceed. This operation will time out in 30 seconds.")
-		.then(async noticeMsg => {
-			promptRes.noticeMsg = noticeMsg;
-			await message.channel.awaitMessages(msg => msg.author.id == message.author.id, {
-				max: 1,
-				time: 30000,
-				errors: ["time"]
-			})
-				.then(collected => {
-					promptRes.responseMsg = collected.values().next().value;
-					if (promptRes.responseMsg.content != code) promptRes.error = "You provided an invalid response, cancelling the operation.";
-				})
-				.catch(() => promptRes.error = "Operation has timed out after 30 seconds.");
-		})
-		.catch(() => promptRes.error = "Error occurred with the code promptor. Maybe try again?");
+	const confirmButton = new MessageButton().setCustomId("confirm").setLabel("Confirm").setStyle("SUCCESS"),
+		cancelButton = new MessageButton().setCustomId("cancel").setLabel("Cancel").setStyle("DANGER");
+	const actionRow = new MessageActionRow();
+	actionRow.addComponents([confirmButton, cancelButton]);
+
+	promptRes.originalMsg = await ctx.respond({
+		content: "Waiting for confirmation...",
+		fetchReply: true
+	});
+	promptRes.noticeMsg = await ctx.respond({
+		content: notice + "\n\nClick \"Confirm\" below to confirm. This operation will time out in 30 seconds.",
+		components: [actionRow],
+		ephemeral: true,
+		fetchReply: true
+	}, {followUp: true});
+
+	const id = ctx.interaction.user.id;
+	try {
+		const confirmInteraction = await ctx.interaction.channel.awaitMessageComponent({
+			filter: interaction2 => interaction2.user.id == id && promptRes.noticeMsg.id == interaction2.message.id,
+			time: 30000
+		});
+
+		if (confirmInteraction.customId != "confirm") promptRes.error = "This operation has been canceled.";
+	} catch (err) {
+		promptRes.error = "This operation has timed out after 30 seconds.";
+	} finally {
+		confirmButton.setDisabled(true);
+		cancelButton.setDisabled(true);
+
+		promptRes.noticeMsg.edit({
+			content: notice + "\n\nClick \"Confirm\" below to confirm. This operation will time out in 30 seconds.",
+			components: [actionRow]
+		});
+	}
+
 	return promptRes;
 };

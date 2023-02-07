@@ -1,7 +1,7 @@
-const {MessageEmbed} = require("discord.js");
+const {MessageActionRow, MessageButton, MessageEmbed, Modal, TextInputComponent} = require("discord.js");
 
 class Paginator {
-	constructor(message, entries, embedProps, options) {
+	constructor(ctx, entries, embedProps, options) {
 		/*
 			Paginator options:
 			- embedColor
@@ -19,7 +19,7 @@ class Paginator {
 		this.paginatorEmbed = new MessageEmbed(embedProps)
 			.setColor(options.embedColor || options.embedColor == 0 ? options.embedColor : Math.floor(Math.random() * 16777216));
 
-		this.message = message;
+		this.ctx = ctx;
 		this.entries = entries;
 		if (options.numbered) this.entries[0] = this.entries[0].map((e, i) => `${i+1}. ${e}`);
 
@@ -30,11 +30,11 @@ class Paginator {
 
 		this.newLineAfterEntry = options.newLineAfterEntry || false;
 		this.pinnedMsg = options.pinnedMsg;
-		this.embedText = options.embedText || "";
+		this.embedText = options.embedText || null;
 
-		// After message is sent
+		// After interaction is sent
 		this.noStop = options.noStop || false;
-		this.reactTimeLimit = options.reactTimeLimit || 30000;
+		this.interactTimeLimit = options.interactTimeLimit || 30000;
 		this.removeReactAfter = options.removeReactAfter;
 	}
 
@@ -65,92 +65,100 @@ class Paginator {
 		if (this.pinnedMsg) {
 			this.paginatorEmbed.setDescription(this.pinnedMsg + "\n\n" + (this.paginatorEmbed.description || ""));
 		}
-		this.paginatorEmbed.setFooter(`Page ${this.page} / ${this.maxPage} [${this.entries[0].length} entries]`);
+		this.paginatorEmbed.setFooter({
+			text: `Page ${this.page} / ${this.maxPage} [${this.entries[0].length} entries]`
+		});
 
 		return this.paginatorEmbed;
 	}
 
 	start() {
-		this.message.channel.send(this.embedText, {embed: this.setEmbed()})
-			.then(newMessage => {
-				this.paginatorMessage = newMessage;
+		if (this.entries[0].length > this.limit) {
+			const buttons = {
+				prev: new MessageButton().setCustomId("prev").setEmoji({name: "⬅"}).setLabel("Prev").setStyle("PRIMARY"),
+				close: new MessageButton().setCustomId("close").setEmoji({name: "⏹"}).setLabel("Close").setStyle("DANGER"),
+				next: new MessageButton().setCustomId("next").setEmoji({name: "➡"}).setLabel("Next").setStyle("PRIMARY"),
+				goTo: new MessageButton().setCustomId("goto").setEmoji({name: "🔢"}).setLabel("Go To...").setStyle("SECONDARY")
+			};
 
-				if (this.entries[0].length <= this.limit) return;
+			const buttonList = this.noStop ? [buttons.prev, buttons.next] : [buttons.prev, buttons.close, buttons.next];
+			if (this.maxPage > 5) buttonList.push(buttons.goTo);
 
-				const emojiList = this.noStop ? ["⬅", "➡"] : ["⬅", "⏹", "➡"];
-				if (this.maxPage > 5) emojiList.push("🔢");
-				for (let i = 0; i < emojiList.length; i++) {
-					setTimeout(() => {
-						this.paginatorMessage.react(emojiList[i]).catch(err => console.error(err));
-					}, i * 1000);
-				}
-				this.addReactionCollector(emojiList);
-			});
-	}
+			this.actionRow = new MessageActionRow().addComponents(buttonList);
 
-	addReactionCollector(emojis) {
-		const id = this.message.author.id;
-
-		this.collector = this.paginatorMessage.createReactionCollector((reaction, user) => {
-			return user.id == id && emojis.includes(reaction.emoji.name);
-		}, this.removeReactAfter ? {time: this.removeReactAfter} : {});
-		this.collector.on("collect", async reaction => {
-			this.lastReactionTime = Date.now();
-			switch (reaction.emoji.name) {
-				case "⬅":
-					this.paginateOnEdit(this.page - 1);
-					break;
-				case "➡":
-					this.paginateOnEdit(this.page + 1);
-					break;
-				case "⏹":
-					this.collector.stop();
-					this.paginatorMessage.delete();
-					return;
-				case "🔢": {
-					const newMessage2 = await this.message.channel.send("What page do you want to go to?");
-					this.message.channel.awaitMessages(msg => msg.author.id == id && !isNaN(msg.content), {
-						max: 1,
-						time: 30000,
-						errors: ["time"]
-					})
-						.then(collected => {
-							const cMsg = collected.values().next().value;
-							this.paginateOnEdit(parseInt(cMsg.content));
-
-							const toDelete = [];
-							if (this.message.channel.messages.cache.has(newMessage2.id)) toDelete.push(newMessage2.id);
-							if (this.message.channel.messages.cache.has(cMsg.id)) toDelete.push(cMsg.id);
-							if (toDelete.length > 0) this.message.channel.bulkDelete(toDelete);
-						})
-						.catch(() => {});
-					break;
-				}
-				default:
-					return;
-			}
-			reaction.users.remove(id);
-		});
-		this.collector.on("end", reactions => {
-			if (this.message.channel.messages.cache.has(this.paginatorMessage.id) && !reactions.has("⏹")) this.paginatorMessage.reactions.removeAll();
-		});
-		this.lastReactionTime = 0;
-		setTimeout(() => this.checkReaction(), this.reactTimeLimit);
-	}
-
-	paginateOnEdit(page) {
-		this.setPage(page);
-		if (!this.message.channel.messages.cache.has(this.paginatorMessage.id)) return;
-		this.paginatorMessage.edit(this.embedText, this.setEmbed());
-	}
-
-	checkReaction() {
-		const reactTimeLeft = (this.lastReactionTime + this.reactTimeLimit) - Date.now();
-		if (reactTimeLeft > 1000) {
-			setTimeout(() => this.checkReaction(), reactTimeLeft);
+			this.ctx.respond({
+				content: this.embedText,
+				embeds: [this.setEmbed()],
+				components: [this.actionRow.toJSON()]
+			})
+				.then(() => {
+					if (this.entries[0].length > this.limit) this.addInteractionCollector(buttonList);
+				});
 		} else {
-			this.collector.stop();
+			// No paginator needed, there's only one page
+			this.ctx.respond({content: this.embedText, embeds: [this.setEmbed()]});
 		}
+	}
+
+	addInteractionCollector() {
+		const id = this.ctx.interaction.user.id;
+
+		this.collector = this.ctx.interaction.channel.createMessageComponentCollector({
+			filter: interaction => interaction.user.id == id,
+			time: this.removeReactAfter,
+			idle: this.interactTimeLimit
+		});
+		this.collector.on("collect", interaction => {
+			if (interaction.customId == "prev") {
+				this.paginateOnEdit(interaction, this.page - 1);
+			} else if (interaction.customId == "next") {
+				this.paginateOnEdit(interaction, this.page + 1);
+			} else if (interaction.customId == "stop") {
+				this.collector.stop("force");
+				this.ctx.interaction.deleteReply();
+			} else if (interaction.customId == "goto") {
+				this.showGoToModal(interaction);
+				interaction.awaitModalSubmit({
+					filter: interaction2 => {
+						return interaction2.user.id == id && interaction2.customId == "goToModal";
+					},
+					time: 30000
+				})
+					.then(response => {
+						const page = parseInt(response.fields.getTextInputValue("page"));
+						if (!isNaN(page)) this.paginateOnEdit(response, page);
+					})
+					.catch(() => {});
+			}
+		});
+		this.collector.on("end", (collected, reason) => {
+			if (reason != "force") {
+				this.ctx.interaction.editReply({components: []});
+			}
+		});
+	}
+
+	showGoToModal(interaction) {
+		const modal = new Modal()
+			.setCustomId("goToModal")
+			.setTitle("Go To...");
+		const pageInput = new TextInputComponent()
+			.setCustomId("page")
+			.setLabel("What page do you want to go to?")
+			.setStyle("SHORT");
+		const actionRow = new MessageActionRow().addComponents([pageInput]);
+
+		modal.addComponents(actionRow);
+
+		interaction.showModal(modal);
+	}
+
+	paginateOnEdit(interaction, page) {
+		this.setPage(page);
+		interaction.update({
+			content: this.embedText,
+			embeds: [this.setEmbed()]
+		});
 	}
 }
 
