@@ -24,7 +24,7 @@ const bot = new KFSDiscordBot({
 
 let storedStats;
 try {
-	storedStats = require("./modules/stats.json");
+	storedStats = require("./data/stats.json");
 	if (isNaN(parseInt(storedStats.duration))) storedStats.duration = 0;
 	if (isNaN(parseInt(storedStats.commandTotal))) storedStats.commandTotal = 0;
 	if (isNaN(parseInt(storedStats.interactionTotal))) storedStats.interactionTotal = 0;
@@ -62,9 +62,9 @@ try {
 	};
 }
 
-fs.writeFile("modules/stats.json", JSON.stringify(storedStats, null, 4), err => {
+fs.writeFile("data/stats.json", JSON.stringify(storedStats, null, 4), err => {
 	if (err) throw err;
-	bot.cache.cumulativeStats = require("./modules/stats.json");
+	bot.cache.cumulativeStats = require("./data/stats.json");
 });
 
 bot.loadSlashCommands("./commands/slashCommands/");

@@ -282,10 +282,10 @@ class KFSDiscordBot extends Client {
 
 		const jsonString = JSON.stringify(cumulativeStats, null, 4);
 		if (writeSync) {
-			fs.writeFileSync("modules/stats.json", jsonString);
+			fs.writeFileSync("data/stats.json", jsonString);
 		} else {
 			return new Promise((resolve, reject) => {
-				fs.writeFile("modules/stats.json", jsonString, err => {
+				fs.writeFile("data/stats.json", jsonString, err => {
 					if (err) reject(err);
 					resolve();
 				});

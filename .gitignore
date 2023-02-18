@@ -11,11 +11,11 @@ package-lock.json
 # For starting the bot
 start-bot.bat
 
-# Stats JSON file
-stats.json
+# Data
+data/
 
 # Test and advanced commands directory
-test/
+temp/
 test.js
 commands/advanced/
 commands/slashCommandsAdvanced/

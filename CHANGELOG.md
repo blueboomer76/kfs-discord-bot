@@ -4,6 +4,10 @@
 
 # 2.X (current)
 
+## 2.0.0-beta.7
+
+- Changed data directory to `data`
+
 ## 2.0.0-beta.6
 
 - Added support for slash commands

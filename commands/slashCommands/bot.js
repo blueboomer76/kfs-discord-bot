@@ -242,7 +242,7 @@ const subcommands = [
 		}
 
 		async run(ctx) {
-			const storedUsages = require("../../modules/stats.json").slashCommandUsages,
+			const storedUsages = require("../../data/stats.json").slashCommandUsages,
 				cmdNames = Object.keys(storedUsages),
 				cmdUses = Object.values(storedUsages),
 				tempArray = [];
