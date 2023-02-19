@@ -21,4 +21,4 @@ Update the bot by running `git pull` to get the latest features and bug fixes.
 
 [Bot Invite](https://discord.com/oauth2/authorize?client_id=333058410465722368&permissions=405921878&scope=applications.commands%20bot) (not guaranteed due to introduction of Discord intents starting from October 2020)
 
-Official Discord Server: [![Server Widget](https://discord.com/api/guilds/308063187696091140/widget.png)](https://discord.gg/yB8TvWU)
+Official Discord Server: [![Server Widget](https://discord.com/api/guilds/308063187696091140/widget.png)](https://disboard.org/servers/308063187696091140)

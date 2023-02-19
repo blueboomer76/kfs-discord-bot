@@ -42,7 +42,7 @@ const subcommands = [
 					ctx.bot.cache.channelCount + " Channels", true)
 				.addField("Bot Invite",
 					`[Go!](https://discord.com/oauth2/authorize?client_id=${ctx.bot.user.id}&permissions=405921878&scope=bot)`, true)
-				.addField("Support Server", "[Go!](https://discord.gg/yB8TvWU)", true)
+				.addField("Support Server", "[Go!](https://disboard.org/servers/308063187696091140)", true)
 				.addField("Upvote this bot", "discordbots.org: [Go!](https://discordbots.org/bots/333058410465722368/vote)\n" +
 					"bots.ondiscord.xyz: [Go!](https://bots.ondiscord.xyz/bots/333058410465722368)\n" +
 					"botsfordiscord.com: [Go!](https://botsfordiscord.com/bots/333058410465722368/vote)", true)
